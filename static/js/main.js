@@ -12,6 +12,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let awCharacters = window.AW_CHARACTERS || [];
   let idToChar = new Map();
 
+  // --- Graveyard / archived cache (optional) ---
+  // Expect window.AW_GRAVEYARD to be an object: { "12": {id:12,name:"...", gender:"...", ...}, ... }
+  let awGraveyard = window.AW_GRAVEYARD || {};
+  let idToGrave = new Map();
+
   // Pinned villager elements (only exist on admin page)
   const pinned = {
     card: document.getElementById("admin-pinned-card"),
@@ -40,11 +45,21 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedRow = null;
 
   function rebuildIndex() {
-    idToChar = new Map(
-      (awCharacters || []).map((c) => [c.id, c])
-    );
+    idToChar = new Map((awCharacters || []).map((c) => [Number(c.id), c]));
   }
+
+  function rebuildGraveyardIndex() {
+    idToGrave = new Map();
+    const src = awGraveyard && typeof awGraveyard === "object" ? awGraveyard : {};
+    for (const [k, v] of Object.entries(src)) {
+      const id = parseInt(k, 10);
+      if (!id || Number.isNaN(id) || id <= 0) continue;
+      idToGrave.set(id, v || {});
+    }
+  }
+
   rebuildIndex();
+  rebuildGraveyardIndex();
 
   // -------------------------------------------------------------------------
   //  Sorting
@@ -143,10 +158,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /**
-   * Filter rows based on the text typed into the search input.
-   * Now just delegates to applyFilters().
-   */
   function setupSearchFilter() {
     if (!searchInput || !tbody) return;
 
@@ -188,16 +199,73 @@ document.addEventListener("DOMContentLoaded", () => {
     return v === null || v === undefined || v === "" ? "–" : String(v);
   }
 
-  function resolveNameById(idRaw) {
+  /**
+   * Resolve ID into a person object from:
+   * 1) active villagers
+   * 2) graveyard (archived)
+   * 3) fallback unknown
+   *
+   * status: "alive" | "dead" | "archived" | "unknown"
+   */
+  function resolvePersonById(idRaw) {
     const id = parseInt(idRaw, 10);
     if (!id || Number.isNaN(id) || id <= 0) return null;
 
-    const person = idToChar.get(id);
-    if (!person) return `#${id}`;
+    const active = idToChar.get(id);
+    if (active) {
+      const alive = active.alive !== false;
+      return {
+        id,
+        name: active.name || `#${id}`,
+        gender: active.gender || null,
+        status: alive ? "alive" : "dead",
+      };
+    }
 
-    const name = person.name || `#${id}`;
-    const alive = person.alive !== false;
-    return alive ? name : `${name} (dead)`;
+    const gy = idToGrave.get(id);
+    if (gy) {
+      return {
+        id,
+        name: gy.name || `#${id}`,
+        gender: gy.gender || null,
+        status: "archived",
+      };
+    }
+
+    return { id, name: `#${id}`, gender: null, status: "unknown" };
+  }
+
+  /**
+   * Backward-compatible: returns a string label.
+   * - alive: "Name"
+   * - dead: "Name (dead)"
+   * - archived: "Name (archived)"
+   * - unknown: "#id"
+   */
+  function resolveNameById(idRaw) {
+    const p = resolvePersonById(idRaw);
+    if (!p) return null;
+
+    if (p.status === "dead") return `${p.name} (dead)`;
+    if (p.status === "archived") return `${p.name} (archived)`;
+    return p.name;
+  }
+
+  function personHtmlStrong(p, { unknownLabel = "Unknown", noneLabel = "None" } = {}) {
+    if (!p) return `<span class="text-muted">${escapeHtml(noneLabel)}</span>`;
+
+    const name = escapeHtml(p.name || `#${p.id}`);
+
+    if (p.status === "dead") {
+      return `<strong>${name}</strong> <span class="text-danger">(dead)</span>`;
+    }
+    if (p.status === "archived") {
+      return `<strong>${name}</strong> <span class="text-muted">(archived)</span>`;
+    }
+    if (p.status === "unknown") {
+      return `<strong>${name}</strong> <span class="text-muted">(${escapeHtml(unknownLabel)})</span>`;
+    }
+    return `<strong>${name}</strong>`;
   }
 
   function normalizeChildrenIds(raw) {
@@ -263,17 +331,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const otherId = parseInt(otherIdStr, 10);
       if (!otherId) return;
 
-      const other = idToChar.get(otherId);
-      if (!other) return;
+      const otherInfo = resolvePersonById(otherId);
+      if (!otherInfo) return;
 
       const score = parseInt(scoreVal, 10);
       if (Number.isNaN(score)) return;
 
       const g1 = v.gender;
-      const g2 = other.gender;
+      const g2 = otherInfo.gender;
+
+      const g1ok = g1 === "Male" || g1 === "Female";
+      const g2ok = g2 === "Male" || g2 === "Female";
       const isMfPair =
-        (g1 === "Male" && g2 === "Female") ||
-        (g1 === "Female" && g2 === "Male");
+        g1ok && g2ok && ((g1 === "Male" && g2 === "Female") || (g1 === "Female" && g2 === "Male"));
 
       let label = null;
       if (isMfPair && score >= 80) {
@@ -294,9 +364,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       entries.push({
         id: otherId,
-        name: other.name || `#${otherId}`,
+        name: otherInfo.name || `#${otherId}`,
         score,
         label,
+        status: otherInfo.status,
       });
     });
 
@@ -327,7 +398,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     items.forEach((r) => {
       const li = document.createElement("li");
-      li.textContent = `${r.name} (${r.label}, ${r.score})`;
+
+      let suffix = "";
+      if (r.status === "dead") suffix = " (dead)";
+      else if (r.status === "archived") suffix = " (archived)";
+
+      li.textContent = `${r.name}${suffix} (${r.label}, ${r.score})`;
       listEl.appendChild(li);
     });
   }
@@ -375,36 +451,33 @@ document.addEventListener("DOMContentLoaded", () => {
       )} / Hunger ${textOrDash(villager.hunger)}`;
     }
 
-    // --- Spouse (resolve spouseId -> name) ---
+    // --- Spouse ---
     if (pinned.spouseEl) {
       const sidRaw = villager.spouseId ?? villager.spouse_id ?? 0;
-      const sid = parseInt(sidRaw, 10);
+      const spouseInfo = resolvePersonById(sidRaw);
 
-      if (!sid || Number.isNaN(sid) || sid <= 0) {
+      if (!spouseInfo) {
         pinned.spouseEl.innerHTML = '<span class="text-muted">None</span>';
       } else {
-        const spouse = idToChar.get(sid);
-        const spouseName = spouse?.name || `#${sid}`;
-        const spouseAlive = spouse?.alive !== false;
-
-        pinned.spouseEl.innerHTML = spouseAlive
-          ? `<strong>${escapeHtml(spouseName)}</strong>`
-          : `<strong>${escapeHtml(spouseName)}</strong> <span class="text-danger">(dead)</span>`;
+        pinned.spouseEl.innerHTML = personHtmlStrong(spouseInfo, {
+          unknownLabel: "unknown",
+          noneLabel: "None",
+        });
       }
     }
 
     // --- Mother / Father ---
     if (pinned.motherEl) {
-      const motherName = resolveNameById(villager.motherId);
-      pinned.motherEl.innerHTML = motherName
-        ? `<strong>${escapeHtml(motherName)}</strong>`
+      const motherInfo = resolvePersonById(villager.motherId);
+      pinned.motherEl.innerHTML = motherInfo
+        ? personHtmlStrong(motherInfo, { unknownLabel: "unknown" })
         : '<span class="text-muted">Unknown</span>';
     }
 
     if (pinned.fatherEl) {
-      const fatherName = resolveNameById(villager.fatherId);
-      pinned.fatherEl.innerHTML = fatherName
-        ? `<strong>${escapeHtml(fatherName)}</strong>`
+      const fatherInfo = resolvePersonById(villager.fatherId);
+      pinned.fatherEl.innerHTML = fatherInfo
+        ? personHtmlStrong(fatherInfo, { unknownLabel: "unknown" })
         : '<span class="text-muted">Unknown</span>';
     }
 
@@ -415,25 +488,37 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!childIds.length) {
         pinned.childrenEl.innerHTML = '<span class="text-muted">None</span>';
       } else {
-        // Map to names, keep stable ordering by id
-        const names = childIds
-          .map((cid) => resolveNameById(cid))
+        const infos = childIds
+          .map((cid) => resolvePersonById(cid))
           .filter(Boolean);
 
-        // If you want a compact display:
-        // - show first 6 names + "+N more"
+        const labels = infos.map((p) => {
+          if (p.status === "dead") return `${p.name} (dead)`;
+          if (p.status === "archived") return `${p.name} (archived)`;
+          return p.name;
+        });
+
         const MAX_SHOW = 6;
-        const shown = names.slice(0, MAX_SHOW);
-        const more = names.length - shown.length;
+        const shown = labels.slice(0, MAX_SHOW);
+        const more = labels.length - shown.length;
 
         const listHtml = shown
-          .map((n) => `<span class="badge rounded-pill bg-light text-dark border me-1 mb-1">${escapeHtml(n)}</span>`)
+          .map(
+            (n) =>
+              `<span class="badge rounded-pill bg-light text-dark border me-1 mb-1">${escapeHtml(
+                n
+              )}</span>`
+          )
           .join("");
 
-        pinned.childrenEl.innerHTML =
-          `<div class="d-flex flex-wrap align-items-center">
+        pinned.childrenEl.innerHTML = `
+          <div class="d-flex flex-wrap align-items-center">
             ${listHtml}
-            ${more > 0 ? `<span class="text-muted small ms-1">+${more} more</span>` : ""}
+            ${
+              more > 0
+                ? `<span class="text-muted small ms-1">+${more} more</span>`
+                : ""
+            }
           </div>`;
       }
     }
@@ -456,61 +541,63 @@ document.addEventListener("DOMContentLoaded", () => {
   //  Rebuild table body from characters JSON
   // -------------------------------------------------------------------------
   function rebuildTable(characters) {
-  if (!tbody || !Array.isArray(characters)) return;
+    if (!tbody || !Array.isArray(characters)) return;
 
-  awCharacters = characters;
-  rebuildIndex();
+    awCharacters = characters;
+    rebuildIndex();
 
-  // Detect if this table expects an "Origin" column (admin page does)
-  const hasOriginCol = !!(table && table.querySelector('thead th[data-key="origin"]'));
+    // Detect if this table expects an "Origin" column (admin page does)
+    const hasOriginCol = !!(
+      table && table.querySelector('thead th[data-key="origin"]')
+    );
 
-  let html = "";
+    let html = "";
 
-  characters.forEach((c) => {
-    const alive = c.alive !== false; // treat missing as alive
-    const classes = ["aw-row-clickable"];
-    if (!alive) classes.push("aw-row-dead");
-    const rowClass = classes.join(" ");
-    const nameClass = alive ? "" : "aw-name-dead";
+    characters.forEach((c) => {
+      const alive = c.alive !== false; // treat missing as alive
+      const classes = ["aw-row-clickable"];
+      if (!alive) classes.push("aw-row-dead");
+      const rowClass = classes.join(" ");
+      const nameClass = alive ? "" : "aw-name-dead";
 
-    const statusBadge = alive
-      ? '<span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle aw-status-badge">Alive</span>'
-      : '<span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle aw-status-badge">Dead</span>';
+      const statusBadge = alive
+        ? '<span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle aw-status-badge">Alive</span>'
+        : '<span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle aw-status-badge">Dead</span>';
 
-    const originLabel = c.origin === "player" ? "Player" : "NPC";
+      const originLabel = c.origin === "player" ? "Player" : "NPC";
 
-    html += `
-      <tr class="${rowClass}" data-char-id="${c.id}">
-        <td class="${nameClass}">${escapeHtml(c.name)}</td>
-        <td>${escapeHtml(c.gender)}</td>
-        <td>${escapeHtml(c.job)}</td>
-        <td class="text-end">${c.coins ?? 0}</td>
-        <td class="text-end">${c.age ?? 0}</td>
-        <td class="text-end">${c.int ?? 0}</td>
-        <td class="text-end">${c.rep ?? 0}</td>
-        <td class="text-end">${c.level ?? 0}</td>
-        <td class="text-end">${c.exp ?? 0}</td>
-        <td class="text-end">${c.atk ?? 0}</td>
-        <td class="text-end">${c.def ?? 0}</td>
-        <td class="text-end">${c.hp ?? 0}</td>
-        <td class="text-end">${c.hunger ?? 0}</td>
-        <td class="aw-traits-cell">${escapeHtml(c.traits || "")}</td>
-        <td>${escapeHtml(c.last_action || "")}</td>
+      html += `
+        <tr class="${rowClass}" data-char-id="${c.id}">
+          <td class="${nameClass}">${escapeHtml(c.name)}</td>
+          <td>${escapeHtml(c.gender)}</td>
+          <td>${escapeHtml(c.job)}</td>
+          <td class="text-end">${c.coins ?? 0}</td>
+          <td class="text-end">${c.age ?? 0}</td>
+          <td class="text-end">${c.int ?? 0}</td>
+          <td class="text-end">${c.rep ?? 0}</td>
+          <td class="text-end">${c.level ?? 0}</td>
+          <td class="text-end">${c.exp ?? 0}</td>
+          <td class="text-end">${c.atk ?? 0}</td>
+          <td class="text-end">${c.def ?? 0}</td>
+          <td class="text-end">${c.hp ?? 0}</td>
+          <td class="text-end">${c.hunger ?? 0}</td>
+          <td class="aw-traits-cell">${escapeHtml(c.traits || "")}</td>
+          <td>${escapeHtml(c.last_action || "")}</td>
 
-        ${hasOriginCol ? `<td>${escapeHtml(originLabel)}</td>` : ""}
+          ${hasOriginCol ? `<td>${escapeHtml(originLabel)}</td>` : ""}
 
-        <td>${statusBadge}</td>
-      </tr>
-    `;
-  });
+          <td>${statusBadge}</td>
+        </tr>
+      `;
+    });
 
-  tbody.innerHTML = html;
+    tbody.innerHTML = html;
 
-  selectedRow = null;
-  resetPinnedCard();
+    selectedRow = null;
+    resetPinnedCard();
 
-  applyFilters();
-}
+    applyFilters();
+  }
 
   // -------------------------------------------------------------------------
   //  Rebuild admin buildings card from JSON
@@ -649,6 +736,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (typeof data.day === "number" && daySpan) {
         daySpan.textContent = data.day;
+      }
+
+      // Update graveyard if provided by API (optional)
+      if (data.graveyard_index && typeof data.graveyard_index === "object") {
+        awGraveyard = data.graveyard_index;
+        window.AW_GRAVEYARD = awGraveyard;
+        rebuildGraveyardIndex();
       }
 
       // Rebuild table with the updated characters

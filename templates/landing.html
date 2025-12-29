@@ -195,9 +195,13 @@
                       <span class="text-muted">Spouse:</span>
                       {% if pinned_spouse_name %}
                         <strong>{{ pinned_spouse_name }}</strong>
-                        {% if not pinned_spouse_alive %}
+
+                        {% if pinned_spouse_alive is none %}
+                          <span class="text-muted">(archived)</span>
+                        {% elif not pinned_spouse_alive %}
                           <span class="text-danger">(dead)</span>
                         {% endif %}
+
                       {% else %}
                         <span class="text-muted">None</span>
                       {% endif %}
@@ -207,7 +211,9 @@
                       <span class="text-muted">Mother:</span>
                       {% if pinned_mother %}
                         <strong>{{ pinned_mother.name }}</strong>
-                        {% if pinned_mother.alive is not none and not pinned_mother.alive %}
+                        {% if pinned_mother.alive is none %}
+                          <span class="text-muted">(archived)</span>
+                        {% elif not pinned_mother.alive %}
                           <span class="text-danger">(dead)</span>
                         {% endif %}
                       {% else %}
@@ -219,7 +225,9 @@
                       <span class="text-muted">Father:</span>
                       {% if pinned_father %}
                         <strong>{{ pinned_father.name }}</strong>
-                        {% if pinned_father.alive is not none and not pinned_father.alive %}
+                        {% if pinned_father.alive is none %}
+                          <span class="text-muted">(archived)</span>
+                        {% elif not pinned_father.alive %}
                           <span class="text-danger">(dead)</span>
                         {% endif %}
                       {% else %}
@@ -233,7 +241,12 @@
                         <div class="d-flex flex-wrap align-items-center mt-1">
                           {% for ch in pinned_children[:6] %}
                             <span class="badge rounded-pill bg-light text-dark border me-1 mb-1">
-                              {{ ch.name }}{% if ch.alive is not none and not ch.alive %} (dead){% endif %}
+                              {{ ch.name }}
+                              {% if ch.alive is none %}
+                                (archived)
+                              {% elif not ch.alive %}
+                                (dead)
+                              {% endif %}
                             </span>
                           {% endfor %}
                           {% if pinned_children|length > 6 %}

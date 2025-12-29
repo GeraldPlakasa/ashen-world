@@ -39,6 +39,8 @@ from storage import (
     get_year_entry,
     clear_yearly_stats,
     get_all_time_leaders,
+    graveyard_get_many,
+    graveyard_upsert_from_villager,
 )
 from villagers import (
     generate_characters,
@@ -281,7 +283,7 @@ def advance_one_day():
             interest = max(1, int(bank["balance"] * interest_rate))
             bank["balance"] += interest
 
-        #  6) Prune
+        #  6) Prune (archive to graveyard first)
         max_dead_days = MAX_DEAD_YEARS * DAYS_PER_YEAR
 
         pruned_characters = []
@@ -295,13 +297,22 @@ def advance_one_day():
             except (TypeError, ValueError):
                 death_day = 0
 
+            # if no death_day, keep (data anomaly)
             if death_day <= 0:
                 pruned_characters.append(v)
                 continue
 
+            # keep if not old enough
             if new_total_day - death_day < max_dead_days:
                 pruned_characters.append(v)
                 continue
+
+            try:
+                graveyard_upsert_from_villager(v)
+            except Exception as exc:
+                print("[prune] graveyard_upsert failed:", exc)
+
+            # DO NOT append (means pruned)
 
         characters = pruned_characters
 
@@ -380,7 +391,7 @@ def landing():
     total_day = load_day()
     year, day_in_year = compute_year_and_day(total_day)
     pinned_spouse_name = None
-    pinned_spouse_alive = True
+    pinned_spouse_alive = None
 
     total = len(characters)
     alive_count = sum(1 for c in characters if c.get("alive", True))
@@ -459,51 +470,75 @@ def landing():
                 pinned_character = c
 
                 # --- Spouse name (if any) ---
-                spouse_id = c.get("spouseId", 0) or 0
-                try:
-                    spouse_id = int(spouse_id)
-                except (TypeError, ValueError):
-                    spouse_id = 0
+                rel_raw = c.get("relationships") or {}
+                rel_ids = []
+                if isinstance(rel_raw, dict):
+                    for k in rel_raw.keys():
+                        try:
+                            rel_ids.append(int(k))
+                        except Exception:
+                            continue
 
-                if spouse_id > 0:
-                    spouse = id_to_char.get(spouse_id)
-                    if spouse:
-                        pinned_spouse_name = spouse.get("name", f"#{spouse_id}")
-                        pinned_spouse_alive = spouse.get("alive", True)
-                    else:
-                        pinned_spouse_name = f"#{spouse_id}"
-                        pinned_spouse_alive = True
-                
-                # --- Mother / Father ---
+                spouse_id = _safe_int(c.get("spouseId"))
                 mother_id = _safe_int(c.get("motherId"))
                 father_id = _safe_int(c.get("fatherId"))
+                child_ids = _parse_children_ids(c.get("childrenIds"))
 
+                referenced_ids = set([spouse_id, mother_id, father_id] + child_ids + rel_ids)
+                referenced_ids = {i for i in referenced_ids if i > 0}
+
+                missing_ids = [i for i in referenced_ids if i not in id_to_char]
+                gy_map = graveyard_get_many(missing_ids) if missing_ids else {}
+
+                def _resolve_person(pid: int):
+                    """
+                    Return (name, alive, gender, raw_obj)
+                    alive = True/False if in current villagers
+                          = None if only in graveyard
+                    """
+                    if pid <= 0:
+                        return (None, None, None, None)
+
+                    live = id_to_char.get(pid)
+                    if live:
+                        return (
+                            live.get("name", f"#{pid}"),
+                            live.get("alive", True),
+                            live.get("gender"),
+                            live,
+                        )
+
+                    gy = gy_map.get(pid)
+                    if gy:
+                        return (
+                            gy.get("name", f"#{pid}"),
+                            None,
+                            gy.get("gender"),
+                            gy,
+                        )
+
+                    return (f"#{pid}", None, None, None)
+
+                # --- Spouse ---
+                if spouse_id > 0:
+                    s_name, s_alive, _, _ = _resolve_person(spouse_id)
+                    pinned_spouse_name = s_name
+                    pinned_spouse_alive = s_alive
+
+                # --- Mother / Father ---
                 if mother_id > 0:
-                    mom = id_to_char.get(mother_id)
-                    pinned_mother = {
-                        "id": mother_id,
-                        "name": (mom.get("name") if mom else f"#{mother_id}"),
-                        "alive": (mom.get("alive", True) if mom else None),
-                    }
+                    m_name, m_alive, _, _ = _resolve_person(mother_id)
+                    pinned_mother = {"id": mother_id, "name": m_name, "alive": m_alive}
 
                 if father_id > 0:
-                    dad = id_to_char.get(father_id)
-                    pinned_father = {
-                        "id": father_id,
-                        "name": (dad.get("name") if dad else f"#{father_id}"),
-                        "alive": (dad.get("alive", True) if dad else None),
-                    }
+                    f_name, f_alive, _, _ = _resolve_person(father_id)
+                    pinned_father = {"id": father_id, "name": f_name, "alive": f_alive}
 
                 # --- Children ---
-                child_ids = _parse_children_ids(c.get("childrenIds"))
                 pinned_children = []
                 for cid in child_ids:
-                    ch = id_to_char.get(cid)
-                    pinned_children.append({
-                        "id": cid,
-                        "name": (ch.get("name") if ch else f"#{cid}"),
-                        "alive": (ch.get("alive", True) if ch else None),
-                    })
+                    ch_name, ch_alive, _, _ = _resolve_person(cid)
+                    pinned_children.append({"id": cid, "name": ch_name, "alive": ch_alive})
 
                 # --- Action history ---
                 hist_str = c.get("action_log", "") or ""
@@ -511,10 +546,13 @@ def landing():
                     actions = [a.strip() for a in hist_str.split("||") if a.strip()]
                     pinned_actions = list(reversed(actions))
 
-                # --- Relationship summary ---
-                rel_raw = c.get("relationships") or {}
+                # --- Relationship summary (now supports graveyard) ---
+                pinned_rel_bonds = []
+                pinned_rel_conflicts = []
+
                 if isinstance(rel_raw, dict):
                     rel_entries = []
+                    g1 = c.get("gender")
 
                     for other_id_str, score in rel_raw.items():
                         try:
@@ -523,13 +561,11 @@ def landing():
                         except (TypeError, ValueError):
                             continue
 
-                        other = id_to_char.get(oid)
-                        if not other:
+                        o_name, o_alive, g2, other_obj = _resolve_person(oid)
+                        if not other_obj:
                             continue
 
-                        g1 = c.get("gender")
-                        g2 = other.get("gender")
-                        is_mf_pair = {g1, g2} == {"Male", "Female"}
+                        is_mf_pair = {g1, g2} == {"Male", "Female"} if g1 and g2 else False
 
                         label = None
                         if is_mf_pair and score_int >= 80:
@@ -542,8 +578,6 @@ def landing():
                             label = "enemy"
                         elif score_int <= -30:
                             label = "rival"
-                        else:
-                            label = None
 
                         if label is None:
                             continue
@@ -551,13 +585,12 @@ def landing():
                         rel_entries.append(
                             {
                                 "id": oid,
-                                "name": other.get("name", f"#{oid}"),
+                                "name": o_name,
                                 "score": score_int,
                                 "label": label,
                             }
                         )
 
-                    # Split into positive & negative
                     positives = [r for r in rel_entries if r["score"] > 0]
                     negatives = [r for r in rel_entries if r["score"] < 0]
 

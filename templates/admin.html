@@ -193,7 +193,7 @@
                         {{ characters|length }} villagers
                       </div>
                       <div class="text-muted small">
-                        Loaded from the latest <code>characters.csv</code>.
+                        Loaded from SQLite (<code>villagers</code> table).
                       </div>
                     {% else %}
                       <div class="h6 mb-1">
@@ -331,6 +331,9 @@
                   </div>
                   <div class="text-muted small" id="pinned-subtitle">
                     Click a row in the table below to inspect their details.
+                  </div>
+                  <div class="text-muted small mt-1">
+                    Note: “archived” means the villager was pruned from active records but kept in the graveyard.
                   </div>
                 </div>
 
@@ -525,6 +528,7 @@
   <script>
     // Expose current characters to JS on admin page
     window.AW_CHARACTERS = {{ characters | tojson | safe }};
+    window.AW_GRAVEYARD  = {{ graveyard_index | default({}) | tojson | safe }};
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>

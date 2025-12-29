@@ -145,11 +145,33 @@ def init_db():
             """
         )
 
+        # Graveyard: lightweight identity records for pruned/dead/archived villagers
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS graveyard (
+                id INTEGER PRIMARY KEY,
+                name TEXT DEFAULT '',
+                family TEXT DEFAULT '',
+                gender TEXT DEFAULT '',
+                traits TEXT DEFAULT '',
+                origin TEXT DEFAULT '',
+                owner TEXT DEFAULT '',
+                motherId INTEGER DEFAULT 0,
+                fatherId INTEGER DEFAULT 0,
+                childrenIds TEXT DEFAULT '[]',
+                spouseId INTEGER DEFAULT 0,
+                born_day INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT (datetime('now'))
+            );
+            """
+        )
+
         # Ensure defaults exist
         _ensure_world_defaults(conn)
         _ensure_bank_defaults(conn)
         _ensure_villagers_columns(conn)
         _ensure_yearly_columns(conn)
+        _ensure_graveyard_columns(conn)
 
 def _ensure_villagers_columns(conn: sqlite3.Connection):
     existing = {r["name"] for r in conn.execute("PRAGMA table_info(villagers);").fetchall()}
@@ -223,6 +245,26 @@ def _ensure_yearly_columns(conn: sqlite3.Connection):
     for col, ddl in desired.items():
         if col not in existing:
             conn.execute(f"ALTER TABLE yearly_stats ADD COLUMN {ddl};")
+
+def _ensure_graveyard_columns(conn: sqlite3.Connection):
+    existing = {r["name"] for r in conn.execute("PRAGMA table_info(graveyard);").fetchall()}
+    desired = {
+        "name": "name TEXT DEFAULT ''",
+        "family": "family TEXT DEFAULT ''",
+        "gender": "gender TEXT DEFAULT ''",
+        "traits": "traits TEXT DEFAULT ''",
+        "origin": "origin TEXT DEFAULT ''",
+        "owner": "owner TEXT DEFAULT ''",
+        "motherId": "motherId INTEGER DEFAULT 0",
+        "fatherId": "fatherId INTEGER DEFAULT 0",
+        "childrenIds": "childrenIds TEXT DEFAULT '[]'",
+        "spouseId": "spouseId INTEGER DEFAULT 0",
+        "born_day": "born_day INTEGER DEFAULT 0",
+        "created_at": "created_at TEXT DEFAULT (datetime('now'))",
+    }
+    for col, ddl in desired.items():
+        if col not in existing:
+            conn.execute(f"ALTER TABLE graveyard ADD COLUMN {ddl};")
 
 # ---------------------------------------------------------------------------
 #  Villagers (replaces characters.csv)
@@ -859,3 +901,112 @@ def get_all_time_leaders(finalized_only: bool = True):
         "richest": get_all_time_leader("richest", finalized_only=finalized_only),
         "top_hunter": get_all_time_leader("top_hunter", finalized_only=finalized_only),
     }
+
+
+def graveyard_upsert_from_villager(v: Dict[str, Any]):
+    """
+    Save a lightweight identity snapshot into graveyard.
+    Upsert by id (so repeated calls are safe).
+    """
+    init_db()
+
+    vid = int(v.get("id", 0) or 0)
+    if vid <= 0:
+        return
+
+    payload = {
+        "id": vid,
+        "name": (v.get("name") or ""),
+        "family": (v.get("family") or ""),
+        "gender": (v.get("gender") or ""),
+        "traits": (v.get("traits") or ""),
+        "origin": (v.get("origin") or ""),
+        "owner": (v.get("owner") or ""),
+        "motherId": int(v.get("motherId", 0) or 0),
+        "fatherId": int(v.get("fatherId", 0) or 0),
+        "childrenIds": json.dumps(v.get("childrenIds", []) or [], ensure_ascii=False),
+        "spouseId": int(v.get("spouseId", 0) or 0),
+        "born_day": int(v.get("born_day", 0) or 0),
+    }
+
+    with db_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO graveyard (
+                id, name, family, gender, traits, origin, owner,
+                motherId, fatherId, childrenIds, spouseId, born_day
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                name=excluded.name,
+                family=excluded.family,
+                gender=excluded.gender,
+                traits=excluded.traits,
+                origin=excluded.origin,
+                owner=excluded.owner,
+                motherId=excluded.motherId,
+                fatherId=excluded.fatherId,
+                childrenIds=excluded.childrenIds,
+                spouseId=excluded.spouseId,
+                born_day=excluded.born_day;
+            """,
+            (
+                payload["id"],
+                payload["name"],
+                payload["family"],
+                payload["gender"],
+                payload["traits"],
+                payload["origin"],
+                payload["owner"],
+                payload["motherId"],
+                payload["fatherId"],
+                payload["childrenIds"],
+                payload["spouseId"],
+                payload["born_day"],
+            ),
+        )
+
+
+def graveyard_get(vid: int) -> Dict[str, Any] | None:
+    init_db()
+    with db_conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM graveyard WHERE id=? LIMIT 1;",
+            (int(vid),),
+        ).fetchone()
+        if not row:
+            return None
+        r = dict(row)
+        # decode childrenIds back to list
+        try:
+            r["childrenIds"] = json.loads(r.get("childrenIds") or "[]")
+        except Exception:
+            r["childrenIds"] = []
+        return r
+
+
+def graveyard_get_many(ids: List[int]) -> Dict[int, Dict[str, Any]]:
+    """
+    Return {id: record} for quick lookup (useful for pinned view).
+    """
+    init_db()
+    ids = [int(x) for x in ids if str(x).strip().isdigit()]
+    if not ids:
+        return {}
+
+    placeholders = ",".join(["?"] * len(ids))
+    with db_conn() as conn:
+        rows = conn.execute(
+            f"SELECT * FROM graveyard WHERE id IN ({placeholders});",
+            ids,
+        ).fetchall()
+
+    out = {}
+    for row in rows:
+        r = dict(row)
+        try:
+            r["childrenIds"] = json.loads(r.get("childrenIds") or "[]")
+        except Exception:
+            r["childrenIds"] = []
+        out[int(r["id"])] = r
+    return out
