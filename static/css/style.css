@@ -1,0 +1,448 @@
+/* =========================================================
+   Base layout & typography
+   ========================================================= */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #f5f5f7;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #111827;
+}
+
+.page-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+/* =========================================================
+   Shell layout with sidebar
+   ========================================================= */
+.aw-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f5f7;
+}
+
+/* Sidebar */
+.aw-sidebar {
+  position: fixed;               /* NEW: pin it */
+  top: 0;                        /* NEW */
+  left: 0;                       /* NEW */
+  height: 100vh;                 /* NEW: full viewport height */
+  z-index: 1000;                 /* NEW: stay above content */
+
+  width: 240px;
+  background: linear-gradient(
+    180deg,
+    #0b79ab 0%,   /* cyan ocean surface */
+    #024366 40%,  /* deep teal */
+    #011723 100%  /* deep ocean navy */
+  );
+  color: #e5e7eb;
+  padding: 20px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 18px rgba(15, 23, 42, 0.6);
+  border-right: 1px solid rgba(15, 23, 42, 0.8);
+}
+
+.aw-sidebar-brand {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aw-sidebar-subtitle {
+  font-size: 11px;
+  color: #cbd5f5;  /* light bluish */
+  margin-top: 4px;
+}
+
+/* Nav links */
+.aw-nav {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aw-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #cbd5f5; /* light blue text on dark ocean */
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease,
+    transform 0.08s ease;
+}
+
+.aw-nav-link-icon {
+  width: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.aw-nav-link-label {
+  flex: 1;
+}
+
+.aw-nav-link:hover {
+  background-color: rgba(15, 23, 42, 0.55);
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+/* Active nav */
+.aw-nav-link-active {
+  background: #ffffff;
+  color: #011723;
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.35);
+}
+
+.aw-nav-link-active .aw-nav-link-icon {
+  opacity: 0.9;
+}
+
+/* Sidebar footer */
+.aw-sidebar-footer {
+  margin-top: auto;
+  font-size: 11px;
+  color: #6b7280;
+  border-top: 1px solid rgba(55, 65, 81, 0.7);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aw-sidebar-logout-link {
+  font-size: 12px;
+  color: #e5e7eb;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.aw-sidebar-logout-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* Content shell (right side) */
+.aw-main-shell {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 40px;
+  overflow-x: hidden;
+
+  margin-left: 240px;   /* NEW: same as sidebar width */
+  min-height: 100vh;    /* NEW: stretch with viewport */
+}
+
+/* Override page-shell to live inside main-shell */
+.page-shell {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* =========================================================
+   Header
+   ========================================================= */
+.aw-header {
+  margin-bottom: 20px;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+.aw-btn-primary {
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 999px;
+}
+
+/* =========================================================
+   Main layout
+   ========================================================= */
+.aw-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* =========================================================
+   Card
+   ========================================================= */
+.aw-card {
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+/* =========================================================
+   Flash alert
+   ========================================================= */
+.aw-alert {
+  font-size: 13px;
+}
+
+/* =========================================================
+   Table container
+   ========================================================= */
+.aw-table-wrapper {
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+/* =========================================================
+   Table base styles
+   ========================================================= */
+.aw-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* =========================================================
+   Table head (sticky header + sorting)
+   ========================================================= */
+.aw-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 12px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.aw-table thead th.sortable {
+  cursor: pointer;
+}
+
+/* Sort direction markers */
+.aw-table thead th.sort-asc::after {
+  content: " ▲";
+  font-size: 0.7em;
+}
+
+.aw-table thead th.sort-desc::after {
+  content: " ▼";
+  font-size: 0.7em;
+}
+
+/* =========================================================
+   Table body (rows & cells)
+   ========================================================= */
+.aw-table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.aw-table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+/* Smooth hover transition */
+.aw-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+/* Slightly darker on hover to highlight row */
+.aw-table tbody tr:hover {
+  background-color: #e2e8f0; /* light gray-blue */
+}
+
+.aw-table td {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* =========================================================
+   Clickable & selected rows (admin pinned view)
+   ========================================================= */
+.aw-row-clickable {
+  cursor: pointer;
+}
+
+/* Ocean-tinted highlight for selected row */
+.aw-row-selected {
+  box-shadow: inset 0 0 0 9999px rgba(11, 121, 171, 0.06); /* soft ocean overlay */
+  outline: 2px solid rgba(11, 121, 171, 0.85);
+  outline-offset: -1px;
+}
+
+/* =========================================================
+   Search box
+   ========================================================= */
+.aw-search-wrapper {
+  min-width: 220px;
+}
+
+/* =========================================================
+   Traits column (truncate long text)
+   ========================================================= */
+.aw-traits-cell {
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   Custom scrollbar for table (optional)
+   ========================================================= */
+.aw-table-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.aw-table-wrapper::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.aw-table-wrapper::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.aw-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* =========================================================
+   Status badge
+   ========================================================= */
+.aw-status-badge {
+  font-size: 11px;
+  padding-inline: 8px;
+}
+
+/* =========================================================
+   Dead villager styling
+   ========================================================= */
+.aw-row-dead {
+  background-color: #fef2f2; /* soft red */
+}
+
+/* Slightly darker on hover for dead rows */
+.aw-table tbody tr.aw-row-dead:hover {
+  background-color: #fee2e2;
+}
+
+/* Name styling for dead villager */
+.aw-name-dead {
+  text-decoration: line-through;
+  color: #b91c1c;
+  font-style: italic;
+}
+
+/* =========================================================
+   Auth / Login card
+   ========================================================= */
+.aw-login-card {
+  max-width: 420px;
+  width: 100%;
+}
+
+/* =========================================================
+   Responsive tweaks
+   ========================================================= */
+@media (max-width: 768px) {
+  .aw-layout {
+    flex-direction: column;
+  }
+
+  .aw-sidebar {
+    position: static;       /* NEW: undo fixed on mobile */
+    width: 100%;
+    height: auto;           /* NEW: no 100vh on mobile */
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.6);
+    border-right: none;     /* NEW: sidebar now top bar, no vertical border */
+  }
+
+  .aw-sidebar > div:first-child {
+    flex: 1;
+  }
+
+  .aw-nav {
+    flex-direction: row;
+    margin: 0 0 0 12px;
+    gap: 4px;
+  }
+
+  .aw-nav-link {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* .aw-sidebar-footer {
+    display: none;
+  } */
+
+  .aw-main-shell {
+    margin-left: 0;         /* NEW: no left offset on mobile */
+  }
+
+  .page-shell {
+    padding-inline: 12px;
+  }
+
+  .aw-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .aw-btn-primary {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   Collapsible pinned character (landing)
+   ========================================================= */
+.aw-collapse-toggle {
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aw-collapse-icon {
+  display: inline-block;
+  transition: transform 0.15s ease;
+  line-height: 1;
+}
+
+/* Rotate arrow when expanded */
+.aw-collapse-toggle[aria-expanded="true"] .aw-collapse-icon {
+  transform: rotate(180deg);
+}
