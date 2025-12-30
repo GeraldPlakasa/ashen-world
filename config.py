@@ -25,7 +25,7 @@ DAYS_PER_YEAR = 90
 # WARNING: in Flask debug mode, reloader can spawn twice; start auto-sim with use_reloader=False.
 # Backend auto-simulation config
 AUTO_SIM_ENABLED = True          # set to False if you ever want to disable auto-run
-AUTO_SIM_SECONDS = 1.0           # real seconds per simulated day
+AUTO_SIM_SECONDS = 192.0           # real seconds per simulated day
 # AUTO_SIM_SECONDS = 960.0
 
 # Simple admin credentials
@@ -41,8 +41,8 @@ REPAIR_THRESHOLD = 60    # repair if building health < 60%
 _next_villager_id = 0 
 
 # --- Leadership / election config ---
-ELECTION_INTERVAL_YEARS = 7      # hold election every 7 game years
-KING_MAX_TERMS = 2               # lifetime limit for one villager as King
+ELECTION_INTERVAL_YEARS = 5      # hold election every 7 game years
+KING_MAX_TERMS = 3               # lifetime limit for one villager as King
 DYNASTY_BONUS = 1000             # extra leadership if same family as previous King
 
 MAX_DEAD_YEARS = 25
