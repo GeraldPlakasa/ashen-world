@@ -39,6 +39,7 @@ from storage import (
     get_year_entry,
     clear_yearly_stats,
     get_all_time_leaders,
+    graveyard_get,
     graveyard_get_many,
     graveyard_upsert_from_villager,
 )
@@ -89,6 +90,303 @@ def compute_year_champions(characters: list[dict]) -> dict:
         "most_int": top_by("int"),
         "richest":  top_by("coins"),
         "top_hunter": top_by("huntWinsYear"),
+    }
+
+def _parse_relationship_ids(raw):
+    """
+    Accept dict or JSON-string dict.
+    Returns list[int] of other villager IDs.
+    """
+    if not raw:
+        return []
+    rel = raw
+    if isinstance(rel, str) and rel.strip():
+        try:
+            rel = json.loads(rel)
+        except Exception:
+            return []
+    if isinstance(rel, dict):
+        out = []
+        for k in rel.keys():
+            try:
+                oid = int(k)
+            except Exception:
+                continue
+            if oid > 0:
+                out.append(oid)
+        return out
+    return []
+
+def build_graveyard_index_for(characters: list[dict]) -> dict:
+    """
+    Collect IDs referenced by current villagers (spouse/parents/children/relationships)
+    that are missing from the live list, then fetch them from graveyard in one batch.
+
+    Returns: {id: graveyard_row_dict}
+    """
+    live_ids = {_safe_int(c.get("id")) for c in characters if _safe_int(c.get("id")) > 0}
+    need_ids: set[int] = set()
+
+    for c in characters:
+        # direct family refs
+        for k in ("spouseId", "motherId", "fatherId"):
+            pid = _safe_int(c.get(k))
+            if pid > 0 and pid not in live_ids:
+                need_ids.add(pid)
+
+        # children
+        for cid in _parse_children_ids(c.get("childrenIds")):
+            if cid > 0 and cid not in live_ids:
+                need_ids.add(cid)
+
+        # relationships targets
+        for oid in _parse_relationship_ids(c.get("relationships")):
+            if oid > 0 and oid not in live_ids:
+                need_ids.add(oid)
+
+    if not need_ids:
+        return {}
+
+    # returns dict keyed by int IDs
+    return graveyard_get_many(sorted(need_ids)) or {}
+
+def _safe_int(x, default=0):
+    try:
+        return int(x or 0)
+    except (TypeError, ValueError):
+        return default
+
+def _parse_children_ids(raw):
+    if not raw:
+        return []
+    if isinstance(raw, list):
+        return [_safe_int(i) for i in raw if _safe_int(i) > 0]
+    if isinstance(raw, str) and raw.strip():
+        try:
+            data = json.loads(raw)
+            if isinstance(data, list):
+                return [_safe_int(i) for i in data if _safe_int(i) > 0]
+        except Exception:
+            return []
+    return []
+
+def build_family_graph(characters: list[dict], root_id: int, up_depth: int = 3, down_depth: int = 3, max_nodes: int = 250):
+    """
+    Build a vis-network graph payload (nodes + edges) for family tree.
+    Includes graveyard fallback for pruned villagers.
+    """
+
+    live_by_id: dict[int, dict] = {}
+    for c in characters:
+        cid = _safe_int(c.get("id"))
+        if cid > 0:
+            live_by_id[cid] = c
+
+    gy_cache: dict[int, dict] = {}
+
+    def get_person(pid: int) -> dict | None:
+        """Return unified person dict with _source field: live/graveyard."""
+        if pid <= 0:
+            return None
+        if pid in live_by_id:
+            p = dict(live_by_id[pid])
+            p["_source"] = "live"
+            return p
+        if pid in gy_cache:
+            p = dict(gy_cache[pid])
+            p["_source"] = "graveyard"
+            return p
+
+        gy = graveyard_get(pid)
+        if gy:
+            gy_cache[pid] = gy
+            p = dict(gy)
+            p["_source"] = "graveyard"
+            return p
+
+        return None
+
+    def node_group(p: dict, pid: int) -> str:
+        if pid == root_id:
+            return "root"
+        if p.get("_source") == "graveyard":
+            return "archived"
+        alive = p.get("alive", True)
+        if alive is False:
+            return "dead"
+        if (p.get("origin") or "") == "player":
+            return "player"
+        return "npc"
+
+    def node_label(p: dict, pid: int) -> str:
+        name = (p.get("name") or f"#{pid}").strip()
+        src = p.get("_source")
+        if src == "graveyard":
+            return f"{name}\n(archived)"
+        job = (p.get("job") or "").strip()
+        lvl = _safe_int(p.get("level"))
+        if job:
+            return f"{name}\n{job} • Lv {lvl}"
+        return f"{name}\nLv {lvl}"
+
+    def node_title(p: dict, pid: int) -> str:
+        # Tooltip HTML (vis uses "title" as HTML)
+        name = (p.get("name") or f"#{pid}").strip()
+        src = p.get("_source")
+        gender = p.get("gender") or "?"
+        origin = p.get("origin") or "?"
+        owner = p.get("owner") or ""
+        traits = (p.get("traits") or "").strip()
+
+        if src == "graveyard":
+            return f"<b>{name}</b><br>Gender: {gender}<br>Origin: {origin}<br>{('Owner: ' + owner + '<br>') if owner else ''}<i>Archived record</i><br>Traits: {traits}"
+
+        alive = p.get("alive", True)
+        job = p.get("job") or "-"
+        age = _safe_int(p.get("age"))
+        lvl = _safe_int(p.get("level"))
+        rep = _safe_int(p.get("rep"))
+        coins = _safe_int(p.get("coins"))
+
+        return (
+            f"<b>{name}</b><br>"
+            f"Status: {'Alive' if alive else 'Dead'}<br>"
+            f"Job: {job}<br>"
+            f"Gender: {gender}<br>"
+            f"Age: {age}<br>"
+            f"Lv: {lvl}<br>"
+            f"REP: {rep}<br>"
+            f"Coins: {coins}<br>"
+            f"Origin: {origin}<br>"
+            f"{('Owner: ' + owner + '<br>') if owner else ''}"
+            f"Traits: {traits}"
+        )
+
+    nodes: dict[int, dict] = {}
+    edges: dict[str, dict] = {}
+
+    def add_node(pid: int):
+        if pid <= 0:
+            return
+        if pid in nodes:
+            return
+        if len(nodes) >= max_nodes:
+            return
+
+        p = get_person(pid)
+        if not p:
+            # Unknown id -> still show placeholder node
+            nodes[pid] = {
+                "id": pid,
+                "label": f"#{pid}\n(unknown)",
+                "group": "unknown",
+                "title": f"<b>#{pid}</b><br><i>Missing record</i>",
+            }
+            return
+
+        nodes[pid] = {
+            "id": pid,
+            "label": node_label(p, pid),
+            "group": node_group(p, pid),
+            "title": node_title(p, pid),
+        }
+
+    def add_edge(fr: int, to: int, kind: str):
+        if fr <= 0 or to <= 0 or fr == to:
+            return
+        key = f"{fr}->{to}:{kind}"
+        if key in edges:
+            return
+
+        if kind == "parent":
+            edges[key] = {
+                "from": fr,
+                "to": to,
+                "arrows": "to",
+                "label": "",
+            }
+        elif kind == "spouse":
+            edges[key] = {
+                "from": fr,
+                "to": to,
+                "dashes": True,
+                "label": "spouse",
+                "arrows": "",
+            }
+        else:
+            edges[key] = {"from": fr, "to": to}
+
+    # ---- Build root base
+    add_node(root_id)
+    root = get_person(root_id)
+
+    if root:
+        # spouse (show node + dashed link)
+        sid = _safe_int(root.get("spouseId") or root.get("spouse_id"))
+        if sid > 0 and len(nodes) < max_nodes:
+            add_node(sid)
+            add_edge(root_id, sid, "spouse")
+            add_edge(sid, root_id, "spouse")
+
+    # ---- Ancestors BFS (up)
+    up_q = [(root_id, 0)]
+    up_seen = set([root_id])
+
+    while up_q and len(nodes) < max_nodes:
+        pid, d = up_q.pop(0)
+        if d >= up_depth:
+            continue
+        p = get_person(pid)
+        if not p:
+            continue
+
+        mother = _safe_int(p.get("motherId"))
+        father = _safe_int(p.get("fatherId"))
+
+        for par_id in (mother, father):
+            if par_id <= 0:
+                continue
+            add_node(par_id)
+            add_edge(par_id, pid, "parent")
+
+            if par_id not in up_seen:
+                up_seen.add(par_id)
+                up_q.append((par_id, d + 1))
+
+    # ---- Descendants BFS (down)
+    down_q = [(root_id, 0)]
+    down_seen = set([root_id])
+
+    while down_q and len(nodes) < max_nodes:
+        pid, d = down_q.pop(0)
+        if d >= down_depth:
+            continue
+        p = get_person(pid)
+        if not p:
+            continue
+
+        child_ids = _parse_children_ids(p.get("childrenIds"))
+        for ch_id in child_ids:
+            if ch_id <= 0:
+                continue
+            add_node(ch_id)
+            add_edge(pid, ch_id, "parent")  # parent -> child
+
+            if ch_id not in down_seen:
+                down_seen.add(ch_id)
+                down_q.append((ch_id, d + 1))
+
+    return {
+        "root_id": root_id,
+        "nodes": list(nodes.values()),
+        "edges": list(edges.values()),
+        "meta": {
+            "up_depth": up_depth,
+            "down_depth": down_depth,
+            "max_nodes": max_nodes,
+            "live_count": len(live_by_id),
+            "graph_nodes": len(nodes),
+        },
     }
 
 # ---------------------------------------------------------------------------
@@ -781,6 +1079,8 @@ def admin():
     # GET: load current state (thread-safe)
     characters, year, day_in_year, _ = get_current_state()
 
+    graveyard_index = build_graveyard_index_for(characters)
+
     # Load village bank for building info
     village_bank = load_bank()
     raw_levels = village_bank.get("building_levels") or {}
@@ -830,6 +1130,7 @@ def admin():
         active_page="admin",
         total_users=total_users,
         village_buildings=village_buildings,
+        graveyard_index=graveyard_index,
     )
 
 @app.route("/leaderboard", methods=["GET"])
@@ -982,6 +1283,90 @@ def create_character():
     flash(f"Created new character: {full_name} (Player).", "success")
     return redirect(url_for("landing"))
 
+@app.route("/family-tree", methods=["GET"])
+def family_tree():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+
+    username = session.get("username")
+    is_admin = bool(session.get("is_admin"))
+
+    # get current world time
+    characters, year, day_in_year, _ = get_current_state()
+
+    # default root: user's player character
+    root = None
+    root_id = request.args.get("root_id")
+
+    if is_admin and root_id and str(root_id).isdigit():
+        rid = int(root_id)
+        root = next((c for c in characters if _safe_int(c.get("id")) == rid), None) or graveyard_get(rid)
+    else:
+        # normal user: only their own player char
+        root = next((c for c in characters if c.get("origin") == "player" and c.get("owner") == username), None)
+
+        # If not in live (maybe dead/pruned), try graveyard by scanning (cheap, since one player per user)
+        if root is None:
+            # Optional: if you store player in graveyard with owner, you can search via SQL later.
+            # For now, keep simple: no root found.
+            root = None
+
+    if not root:
+        flash("You don’t have a player character yet. Create one first.", "info")
+        return redirect(url_for("create_character"))
+
+    rid = _safe_int(root.get("id"))
+    rname = root.get("name") or f"#{rid}"
+
+    return render_template(
+        "family_tree.html",
+        active_page="family_tree",
+        username=username,
+        year=year,
+        day=day_in_year,
+        root_id=rid,
+        root_name=rname,
+    )
+
+@app.route("/api/family-tree/<int:root_id>", methods=["GET"])
+def api_family_tree(root_id: int):
+    if not session.get("logged_in"):
+        return jsonify({"ok": False, "message": "Unauthorized"}), 401
+
+    username = session.get("username")
+    is_admin = bool(session.get("is_admin"))
+
+    up_depth = _safe_int(request.args.get("up", 3), 3)
+    down_depth = _safe_int(request.args.get("down", 3), 3)
+
+    # guardrails
+    up_depth = max(0, min(10, up_depth))
+    down_depth = max(0, min(10, down_depth))
+
+    with _state_lock:
+        characters = load_from_csv()
+
+    # Authorization:
+    # - admin can view any root
+    # - user can only view their own player character as root
+    if not is_admin:
+        root_live = next((c for c in characters if _safe_int(c.get("id")) == root_id), None)
+        if not root_live:
+            return jsonify({"ok": False, "message": "Root not found"}), 404
+
+        if root_live.get("origin") != "player" or root_live.get("owner") != username:
+            return jsonify({"ok": False, "message": "Forbidden"}), 403
+
+    payload = build_family_graph(
+        characters=characters,
+        root_id=root_id,
+        up_depth=up_depth,
+        down_depth=down_depth,
+        max_nodes=250,
+    )
+    payload["ok"] = True
+    return jsonify(payload)
+
 @app.route("/api/state", methods=["GET"])
 def api_state():
     """
@@ -992,6 +1377,7 @@ def api_state():
     auto-refresh can update KPI and buildings card.
     """
     characters, year, day_in_year, total_day = get_current_state()
+    graveyard_index = build_graveyard_index_for(characters)
     bank = load_bank()
 
     building_levels = bank.get("building_levels") or {}
@@ -1032,6 +1418,7 @@ def api_state():
         "day": day_in_year,
         "total_day": total_day,
         "characters": characters,
+        "graveyard_index": graveyard_index,
         "bank_balance": bank.get("balance", 0),
         "tax_rate": bank.get("tax_rate", 0.10),
         "buildings": buildings_payload,

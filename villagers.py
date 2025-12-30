@@ -152,6 +152,7 @@ def make_row(taken_names: set, jobs_pool=None, forced_gender=None, forced_job=No
         "death_day": 0,
         "spouseId": 0,
         "spouseSinceDay": 0,
+        "spouseId_at_death": 0,
         "huntWins": 0,
         "huntWinsYear": 0,
         "born_day": 0,
@@ -1427,8 +1428,9 @@ def enforce_one_player_per_owner(characters: list[dict]):
 
 def player_inheritance_phase(characters: list[dict], current_day: int = 0):
     """
-    If a player character dies and has alive children:
-      - promote ONE alive child -> player, same owner
+    If a player character dies:
+      - promote ONE alive CHILD -> player, same owner
+      - else promote ONE alive SIBLING -> player, same owner
       - demote dead player -> npc (owner cleared)
       - ensure owner has only one player char
     """
@@ -1456,19 +1458,22 @@ def player_inheritance_phase(characters: list[dict], current_day: int = 0):
             _demote_to_npc(parent)
             continue
 
-        # 1) Try children first
+        heir = None
+        heir_kind = None
+
+        # 1) Children first
         children = _find_children(parent, characters, id_map)
         heir = _choose_heir(children, owner=owner)
         heir_kind = "child"
 
-        # 2) If no alive child, try siblings (brother/sister)
+        # 2) Then siblings
         if not heir:
             siblings = _find_siblings(parent, characters)
             heir = _choose_heir(siblings, owner=owner)
             heir_kind = "sibling"
 
         if not heir:
-            continue  # no valid heir => keep parent as player-dead
+            continue  # no valid heir => keep parent as player-dead (still owned)
 
         # Transfer: parent becomes NPC, heir becomes player
         parent_name = parent.get("name", "Unknown")
@@ -1529,6 +1534,10 @@ def simulate_one_day(characters, bank: dict, current_day: int = 0):
         apply_action(v, action, bank, characters)
 
         hp_loss = apply_starvation_damage(v, bank)
+
+        if not v.get("alive", True) and int(v.get("spouseId", 0) or 0) > 0 and not v.get("spouseId_at_death"):
+            v["spouseId_at_death"] = int(v["spouseId"])
+
         if hp_loss:
             if v["alive"]:
                 v["last_action"] = f"{v['last_action']} / starvation -{hp_loss} HP"

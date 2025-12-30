@@ -847,6 +847,292 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // -------------------------------------------------------------------------
+  //  Family Tree (vis-network) page
+  // -------------------------------------------------------------------------
+  function initFamilyTree() {
+    const container = document.getElementById("family-tree");
+    if (!container) return; // not on family tree page
+    if (!window.vis || !window.vis.Network) {
+      console.error("vis-network not loaded");
+      return;
+    }
+
+    const rootId = window.AW_FAMILY_ROOT_ID;
+    const upInput = document.getElementById("ft-up");
+    const downInput = document.getElementById("ft-down");
+    const reloadBtn = document.getElementById("ft-reload");
+    const fitBtn = document.getElementById("ft-fit");
+    const statusEl = document.getElementById("ft-status");
+    const selectedEl = document.getElementById("ft-selected");
+
+    let network = null;
+    let nodesDS = null;
+    let edgesDS = null;
+
+    function setStatus(text) {
+      if (statusEl) statusEl.textContent = text;
+    }
+
+    function clampInt(v, min, max, fallback) {
+      const n = parseInt(v, 10);
+      if (Number.isNaN(n)) return fallback;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function decodeHtmlEntities(str) {
+      if (str === null || str === undefined) return "";
+      const el = document.createElement("textarea");
+      el.innerHTML = String(str);
+      return el.value;
+    }
+
+    function stripTags(str) {
+      return String(str).replace(/<\/?[^>]+(>|$)/g, "");
+    }
+
+    // IMPORTANT: keep line breaks from <br>, </div>, </p>, etc.
+    function htmlTitleToMultilineText(rawTitle) {
+      let s = decodeHtmlEntities(rawTitle);
+
+      // Convert common HTML breaks to new lines BEFORE stripping tags
+      s = s.replace(/<\s*br\s*\/?\s*>/gi, "\n");
+      s = s.replace(/<\/\s*(div|p|li|tr)\s*>/gi, "\n");
+      s = s.replace(/<\s*li\s*>/gi, "• ");
+
+      s = stripTags(s);
+
+      // Normalize whitespace/newlines
+      s = s.replace(/\r/g, "");
+      s = s.replace(/[ \t]+\n/g, "\n");
+      s = s.replace(/\n{3,}/g, "\n\n").trim();
+
+      // Extra fallback: if backend had no <br> and it got concatenated,
+      // insert line breaks before known keys.
+      const keys = [
+        "Status:", "Job:", "Gender:", "Age:", "Lv:", "Level:",
+        "REP:", "Rep:", "Coins:", "Origin:", "Traits:",
+        "Spouse:", "Mother:", "Father:", "Children:"
+      ];
+      for (const k of keys) {
+        s = s.replace(new RegExp(`\\s*${k.replace(":", "\\:")}`, "g"), `\n${k}`);
+      }
+      s = s.replace(/^\n+/, "").trim();
+
+      return s;
+    }
+
+    function toDisplayName(label, fallback) {
+      const decoded = decodeHtmlEntities(label || "");
+      const clean = stripTags(decoded).trim();
+      if (!clean) return fallback;
+      return clean.split("\n")[0];
+    }
+
+    function parseKeyValueLines(multilineText) {
+      const lines = String(multilineText || "")
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+      const pairs = [];
+      for (const line of lines) {
+        const idx = line.indexOf(":");
+        if (idx > 0) {
+          const k = line.slice(0, idx).trim();
+          const v = line.slice(idx + 1).trim();
+          pairs.push({ k, v });
+        } else {
+          pairs.push({ k: "", v: line });
+        }
+      }
+      return pairs;
+    }
+
+    async function loadGraph() {
+      const up = clampInt(upInput?.value, 0, 10, 3);
+      const down = clampInt(downInput?.value, 0, 10, 3);
+
+      setStatus(`Loading graph (up=${up}, down=${down})...`);
+
+      // Destroy old network to avoid stacked listeners
+      if (network) {
+        try { network.destroy(); } catch {}
+        network = null;
+      }
+
+      const resp = await fetch(`/api/family-tree/${rootId}?up=${up}&down=${down}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+
+      if (!resp.ok) {
+        setStatus(`Error: ${resp.status}`);
+        return;
+      }
+
+      const data = await resp.json();
+      if (!data.ok) {
+        setStatus(`Error: ${data.message || "failed"}`);
+        return;
+      }
+
+      const nodes = (data.nodes || []).map((n) => {
+        const out = { ...n };
+
+        // Clean label
+        if (typeof out.label === "string") {
+          out.label = decodeHtmlEntities(out.label);
+        }
+
+        // REMOVE hover tooltip completely:
+        // (Even if backend sends title, we don't want hover content)
+        const titleText = out.title ? htmlTitleToMultilineText(out.title) : "";
+        out._awTitleText = titleText;
+        delete out.title;
+
+        return out;
+      });
+
+      const edges = (data.edges || []).map((e) => ({ ...e }));
+
+      nodesDS = new vis.DataSet(nodes);
+      edgesDS = new vis.DataSet(edges);
+
+      const options = {
+        layout: {
+          improvedLayout: true,
+          hierarchical: {
+            enabled: true,
+            direction: "UD",
+            sortMethod: "directed",
+
+            // Helps reduce collisions/crossings
+            nodeSpacing: 180,
+            levelSeparation: 180,
+            treeSpacing: 220,
+            blockShifting: true,
+            edgeMinimization: true,
+            parentCentralization: true,
+          },
+        },
+
+        // short stabilization to auto-spread left/right, then freeze
+        physics: {
+          enabled: true,
+          solver: "hierarchicalRepulsion",
+          hierarchicalRepulsion: {
+            nodeDistance: 210,
+            springLength: 150,
+            springConstant: 0.01,
+            damping: 0.12,
+            avoidOverlap: 1,
+          },
+          stabilization: {
+            enabled: true,
+            iterations: 240,
+            updateInterval: 25,
+          },
+        },
+
+        // Disable hover so nothing appears on hover
+        interaction: {
+          hover: false,
+          tooltipDelay: 0,
+        },
+
+        groups: {
+          root: { shape: "star" },
+          player: { shape: "box" },
+          npc: { shape: "ellipse" },
+          dead: { shape: "diamond" },
+          archived: { shape: "triangle" },
+          unknown: { shape: "dot" },
+        },
+
+        edges: {
+          smooth: {
+            enabled: true,
+            type: "cubicBezier",
+            forceDirection: "vertical",
+            roundness: 0.25,
+          },
+          font: { size: 10 },
+        },
+
+        nodes: {
+          font: { multi: "html" },
+          margin: 10,
+          widthConstraint: { maximum: 220 },
+        },
+      };
+
+      network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, options);
+
+      network.once("stabilizationIterationsDone", () => {
+        network.setOptions({ physics: { enabled: false } });
+        network.fit({ animation: true });
+      });
+
+      network.on("selectNode", (params) => {
+        const id = params.nodes?.[0];
+        if (!id) return;
+        const node = nodesDS.get(id);
+        if (!node) return;
+
+        const displayName = toDisplayName(node.label, `#${node.id}`);
+        const pairs = parseKeyValueLines(node._awTitleText || "").filter(
+          (p) => (p.k || "").toLowerCase() !== "origin"
+        );
+
+        const detailsHtml = pairs.length
+          ? pairs
+              .map((p) => {
+                if (!p.k) return `<div class="text-muted">${escapeHtml(p.v)}</div>`;
+                return `
+                  <div class="d-flex justify-content-between gap-2">
+                    <span class="text-muted">${escapeHtml(p.k)}:</span>
+                    <span class="text-end">${escapeHtml(p.v)}</span>
+                  </div>
+                `;
+              })
+              .join("")
+          : `<div class="text-muted">No extra details.</div>`;
+
+        if (selectedEl) {
+          selectedEl.innerHTML = `
+            <div class="fw-semibold">${escapeHtml(displayName)}</div>
+            <div class="text-muted small mt-1">
+              <div><span class="text-muted">ID:</span> ${escapeHtml(node.id)}</div>
+              <div><span class="text-muted">Group:</span> ${escapeHtml(node.group || "")}</div>
+            </div>
+            <hr class="my-2"/>
+            <div class="small" style="white-space: normal; word-break: break-word;">
+              ${detailsHtml}
+            </div>
+          `;
+        }
+      });
+
+      network.on("deselectNode", () => {
+        if (selectedEl) selectedEl.textContent = "Click a node to see details.";
+      });
+
+      setStatus(`Loaded. Nodes: ${data.meta?.graph_nodes || nodes.length}`);
+    }
+
+    if (reloadBtn) reloadBtn.addEventListener("click", () => loadGraph().catch(console.error));
+    if (fitBtn) fitBtn.addEventListener("click", () => network && network.fit({ animation: true }));
+
+    loadGraph().catch((e) => {
+      console.error(e);
+      setStatus("Error loading graph.");
+    });
+  }
+
+// call it
+initFamilyTree();
+
   // Initial filter pass (in case table is already rendered)
   applyFilters();
 });

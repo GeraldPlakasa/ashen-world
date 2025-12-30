@@ -426,6 +426,21 @@ def sync_queen_to_king_spouse(characters: list[dict], current_day: int | None = 
 #  Relationship helpers
 # ---------------------------------------------------------------------------
 
+def _family_key(v: dict) -> str:
+    """Normalized family name. Falls back to last token of `name` if `family` is empty."""
+    fam = (v.get("family") or "").strip().lower()
+    if fam:
+        return fam
+    nm = (v.get("name") or "").strip()
+    if nm and " " in nm:
+        return nm.split()[-1].strip().lower()
+    return ""
+
+def _same_family(a: dict, b: dict) -> bool:
+    fa = _family_key(a)
+    fb = _family_key(b)
+    return bool(fa and fb and fa == fb)
+
 def _get_relations_dict(v: dict) -> dict:
     """
     Ensure v['relationships'] is a dict and return it.
@@ -534,6 +549,10 @@ def _is_spouse_eligible(a: dict, b: dict) -> bool:
     if {a.get("gender"), b.get("gender")} != {"Male", "Female"}:
         return False
 
+    # forbid same family name
+    if _same_family(a, b):
+        return False
+
     # Age constraints
     a_age = int(a.get("age", 0) or 0)
     b_age = int(b.get("age", 0) or 0)
@@ -598,24 +617,28 @@ def spouse_daily_phase(characters: list[dict], current_day: int):
         b = _get_by_id(characters, sid)
         if b is None or not b.get("alive", True):
             continue
-        if a["id"] > b["id"]:
+        if _safe_int(a.get("id")) > _safe_int(b.get("id")):
             continue  # handle each couple once
 
         if not _is_mutual_spouse(a, b):
             continue
 
-        score_ab = get_relationship_score(a, b["id"])
-        score_ba = get_relationship_score(b, a["id"])
+        score_ab = get_relationship_score(a, _safe_int(b.get("id")))
+        score_ba = get_relationship_score(b, _safe_int(a.get("id")))
         score = min(score_ab, score_ba)
 
-        # base tiny breakup chance
-        p = 0.0005
-        if score < 80: p += 0.002
-        if score < 60: p += 0.006
-        if score < 40: p += 0.012
+        # Base: extremely small because this runs every day
+        p = 0.00002  # 0.002% per day (~0.73% per year)
 
-        # Clamp
-        p = min(0.04, max(0.0, p))
+        # Only increase a bit if relationship is truly bad
+        if score < 70: p += 0.00003   # +0.003%
+        if score < 50: p += 0.00006   # +0.006%
+        if score < 30: p += 0.00012   # +0.012%
+        if score < 10: p += 0.00025   # +0.025%
+        if score < 0:  p += 0.00040   # +0.04%
+
+        # Cap: still small even at worst
+        p = min(0.001, max(0.0, p))   # max 0.1% per day
 
         if random.random() < p:
             _clear_spouses(a, b, "broke up")
