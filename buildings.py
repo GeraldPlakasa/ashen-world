@@ -7,6 +7,7 @@ from config import (
 )
 from world_utils import (
     rand_int,
+    pick_weighted,
 )
 
 # ---------------------------------------------------------------------------
@@ -139,6 +140,8 @@ def has_building(key: str, bank: dict) -> bool:
     levels, health = _ensure_building_dicts(bank)
     lvl = int(levels.get(key, 0) or 0)
     h = int(health.get(key, 100 if lvl > 0 else 0))
+    if key not in health and lvl > 0:
+        health[key] = 100
     return lvl >= 1 and h > 0
 
 
@@ -228,7 +231,10 @@ def choose_building_to_construct(characters: list[dict], bank: dict):
         return None
 
     candidates.sort(key=lambda b: w.get(b["key"], 0.0), reverse=True)
-    return candidates[0]
+    weights = {b["key"]: w.get(b["key"], 1.0) for b in candidates}
+    picked_key = pick_weighted(weights)
+    choice = next(b for b in candidates if b["key"] == picked_key)
+    return choice
 
 
 def maybe_construct_building(
@@ -267,17 +273,19 @@ def upgrade_cost(key: str, bank: dict) -> int:
     """
     base = _find_building(key)
     if not base:
-        return 0
+        return -1  # <- sentinel for "invalid"
 
     levels, _ = _ensure_building_dicts(bank)
     lvl = int(levels.get(key, 1) or 1)
     next_lvl = lvl + 1
-    mult = 1 + (next_lvl - 1) * 0.75  # Lv2=1.75x, Lv3=2.5x
+    mult = 1 + (next_lvl - 1) * 0.75
     return math.ceil(base["cost"] * mult)
 
 
 def can_upgrade_building(key: str, bank: dict) -> bool:
     if not has_building(key, bank):
+        return False
+    if not _find_building(key):
         return False
 
     levels, _ = _ensure_building_dicts(bank)
@@ -285,8 +293,11 @@ def can_upgrade_building(key: str, bank: dict) -> bool:
     if lvl >= MAX_BUILDING_LEVEL:
         return False
 
-    balance = int(bank.get("balance", 0))
-    return balance >= upgrade_cost(key, bank)
+    cost = upgrade_cost(key, bank)
+    if cost <= 0:
+        return False
+
+    return int(bank.get("balance", 0)) >= cost
 
 
 def choose_building_to_upgrade(characters: list[dict], bank: dict):
@@ -333,6 +344,8 @@ def upgrade_building(
     Perform the actual upgrade of a building, if affordable.
     """
     if not can_upgrade_building(key, bank):
+        return bank, None
+    if not _find_building(key):
         return bank, None
 
     cost = upgrade_cost(key, bank)
@@ -383,8 +396,9 @@ def decay_buildings(bank: dict, current_day: int | None = None):
             continue
 
         cur = int(health.get(key, 100))
-        # base daily decay (you can tune min/max later)
-        drop = rand_int(1, 20)
+        # slower decay; higher level decays slightly slower
+        drop = rand_int(1, 10)
+        drop = max(1, int(round(drop * (1.0 - 0.05 * int(lvl)))))
 
         next_hp = max(0, cur - drop)
         if cur > 0 and next_hp == 0:

@@ -16,7 +16,6 @@ from config import (
     DAYS_PER_YEAR,
     INT_FIELDS,
     FIELDNAMES,
-    USERS_FIELDNAMES,
 )
 
 # ---------------------------------------------------------------------------
@@ -294,8 +293,7 @@ def save_villagers(rows: List[Dict[str, Any]]):
         for r in rows:
             r2 = dict(r)
 
-            # bool -> store as 0/1 integer or text, but our schema for alive is TEXT by default
-            # We'll store as "true"/"false" to match your existing logic.
+            # Store boolean alive as TEXT "true"/"false"
             r2["alive"] = "true" if r2.get("alive", True) else "false"
 
             # JSON fields stored as TEXT

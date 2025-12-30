@@ -1,17 +1,14 @@
-import csv
 import json
-import math
-import os
 import random
 import threading
 import time
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash
 
 from config import (
-    ADMIN_USERNAME,
-    ADMIN_PASSWORD,
+    ENV_ADMIN_USERNAME,
+    ENV_ADMIN_PASSWORD,
     TRAITS,
     JOBS_NO_ROYAL,
     DAYS_PER_YEAR,
@@ -20,7 +17,8 @@ from config import (
     BUILDINGS,
     _next_villager_id,
     ELECTION_INTERVAL_YEARS,
-    MAX_DEAD_YEARS
+    MAX_DEAD_YEARS,
+    ENV_FLASK_SECRET_KEY,
 )
 from storage import (
     save_to_csv,
@@ -60,8 +58,7 @@ from buildings import (
 from villagers_social import settle_inheritance_phase
 
 app = Flask(__name__)
-# NOTE: Change this in production and load it from a safe place (env/secret store).
-app.secret_key = "super-secret-key"
+app.secret_key = ENV_FLASK_SECRET_KEY
 
 _state_lock = threading.Lock()   # guard CSV + world_time read/writes
 
@@ -403,9 +400,10 @@ def get_current_state():
     with _state_lock:
         characters = load_from_csv()
         total_day = load_day()
+        bank = load_bank()
 
     year, day_in_year = compute_year_and_day(total_day)
-    return characters, year, day_in_year, total_day
+    return characters, bank, year, day_in_year, total_day
 
 def advance_one_day():
     """
@@ -445,7 +443,7 @@ def advance_one_day():
 
         yr_now, day_now = compute_year_and_day(new_total_day)
 
-        # If this is the first day (Day 0) of a year, capture treasury_start before spending
+        # If day_in_year == 0, we are on the first day of a new year.
         if day_now == 0:
             ensure_year_row(yr_now, treasury_start=int(bank.get("balance", 0) or 0))
         else:
@@ -554,10 +552,6 @@ def advance_one_day():
         # --- Yearly stats bucket for CURRENT year (after elections/emergency) ---
         yr_now, _ = compute_year_and_day(new_total_day)
 
-
-        # Update king info for this year (keep last known king)
-        final_king = next((v for v in characters if v.get("job") == "King" and v.get("alive", True)), None)
-
         # -------------------------------------------------------------------
         #  Buildings + treasury interest
         # -------------------------------------------------------------------
@@ -665,8 +659,7 @@ def auto_simulation_loop():
 
 with app.app_context():
     """
-    Kick off the background auto-simulation loop once the server
-    receives its first real request.
+    Start background auto-simulation thread at startup (beware debug reloader).
     """
     if AUTO_SIM_ENABLED:
         t = threading.Thread(target=auto_simulation_loop, daemon=True)
@@ -685,9 +678,7 @@ def landing():
     - Read-only table of villagers
     - Shows pinned character for logged-in user (if any).
     """
-    characters = load_from_csv()
-    total_day = load_day()
-    year, day_in_year = compute_year_and_day(total_day)
+    characters, village_bank, year, day_in_year, total_day = get_current_state()
     pinned_spouse_name = None
     pinned_spouse_alive = None
 
@@ -697,7 +688,6 @@ def landing():
 
     username = session.get("username")
 
-    village_bank = load_bank()
     bank_balance = village_bank.get("balance", 0)
     tax_rate = village_bank.get("tax_rate", 0.10)
     last_election_year = village_bank.get("last_election_year")
@@ -736,26 +726,6 @@ def landing():
     pinned_children = []
 
     if username:
-        def _safe_int(x, default=0):
-            try:
-                return int(x or 0)
-            except (TypeError, ValueError):
-                return default
-
-        def _parse_children_ids(raw):
-            if not raw:
-                return []
-            if isinstance(raw, list):
-                return [_safe_int(i) for i in raw if _safe_int(i) > 0]
-            if isinstance(raw, str) and raw.strip():
-                try:
-                    data = json.loads(raw)
-                    if isinstance(data, list):
-                        return [_safe_int(i) for i in data if _safe_int(i) > 0]
-                except Exception:
-                    return []
-            return []
-
         # quick index to map id(int) -> character
         id_to_char = {}
         for cc in characters:
@@ -956,7 +926,7 @@ def register():
             return render_template("register.html")
 
         # 💠 Username cannot be same as reserved admin username
-        if username.lower() == ADMIN_USERNAME.lower():
+        if username.lower() == ENV_ADMIN_USERNAME.lower():
             flash("This username is reserved for the high steward. Please choose another.", "info")
             return render_template("register.html")
 
@@ -998,7 +968,7 @@ def login():
             return redirect(url_for("landing"))
 
         # 2) Fallback: hardcoded admin (opsional)
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        if username == ENV_ADMIN_USERNAME and password == ENV_ADMIN_PASSWORD:
             session["logged_in"] = True
             session["username"] = username
             session["is_admin"] = True
@@ -1077,12 +1047,11 @@ def admin():
             return redirect(url_for("admin"))
 
     # GET: load current state (thread-safe)
-    characters, year, day_in_year, _ = get_current_state()
+    characters, village_bank, year, day_in_year, _ = get_current_state()
 
     graveyard_index = build_graveyard_index_for(characters)
 
     # Load village bank for building info
-    village_bank = load_bank()
     raw_levels = village_bank.get("building_levels") or {}
     raw_health = village_bank.get("building_health") or {}
 
@@ -1138,13 +1107,11 @@ def leaderboard():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
 
-    total_day = load_day()
-    year, day_in_year = compute_year_and_day(total_day)
+    characters, bank, year, day_in_year, total_day = get_current_state()
 
     history_sorted = list_yearly_history(finalized_only=True)
     current_entry = get_year_entry(year)
 
-    characters = load_from_csv()
     current_champions = compute_year_champions(characters)
 
     # All-time legends from archived years
@@ -1178,7 +1145,7 @@ def create_character():
     username = session.get("username") or ""
 
     # Get current state (characters + world time)
-    characters, year, day_in_year, _ = get_current_state()
+    characters, bank, year, day_in_year, _ = get_current_state()
 
     # Check if this user already has a player character
     existing_player = None
@@ -1256,9 +1223,9 @@ def create_character():
             )
 
         # ensure internal ID counter is at least current max ID
-        global _next_villager_id
         if characters:
             max_id = max(c.get("id", 0) for c in characters)
+            global _next_villager_id
             if _next_villager_id < max_id:
                 _next_villager_id = max_id
 
@@ -1292,7 +1259,7 @@ def family_tree():
     is_admin = bool(session.get("is_admin"))
 
     # get current world time
-    characters, year, day_in_year, _ = get_current_state()
+    characters, bank, year, day_in_year, _ = get_current_state()
 
     # default root: user's player character
     root = None
@@ -1376,9 +1343,8 @@ def api_state():
     Now also returns village bank + building info so the admin
     auto-refresh can update KPI and buildings card.
     """
-    characters, year, day_in_year, total_day = get_current_state()
+    characters, bank, year, day_in_year, total_day = get_current_state()
     graveyard_index = build_graveyard_index_for(characters)
-    bank = load_bank()
 
     building_levels = bank.get("building_levels") or {}
     building_health = bank.get("building_health") or {}

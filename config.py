@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 
 # ---------------------------------------------------------------------------
 #  Paths & basic world config
@@ -6,6 +7,8 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
+os.makedirs(DATA_DIR, exist_ok=True)
+
 CSV_PATH = os.path.join(DATA_DIR, "characters.csv")
 DAY_PATH = os.path.join(DATA_DIR, "world_time.json")
 BANK_PATH = os.path.join(DATA_DIR, "bank.json")
@@ -13,22 +16,29 @@ USERS_CSV = os.path.join(DATA_DIR, "users.csv")
 
 DB_PATH = os.path.join(DATA_DIR, "ashen_world.sqlite3")
 
+# Load optional .env (local dev). In production, prefer real env vars.
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+
 # In-world: 1 year = 90 days
 DAYS_PER_YEAR = 90
 
+# WARNING: in Flask debug mode, reloader can spawn twice; start auto-sim with use_reloader=False.
 # Backend auto-simulation config
 AUTO_SIM_ENABLED = True          # set to False if you ever want to disable auto-run
 AUTO_SIM_SECONDS = 1.0           # real seconds per simulated day
 # AUTO_SIM_SECONDS = 960.0
 
-# Simple admin credentials (change as you like)
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "ashenworld"
+# Simple admin credentials
+ENV_ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+ENV_ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+
+ENV_FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
 
 MAX_BUILDING_LEVEL = 3   # e.g. Lv1–Lv3
 REPAIR_THRESHOLD = 60    # repair if building health < 60%
 
-_next_villager_id = 0  # keep the same global behaviour
+# NOTE: ID sequencing is managed by villagers.py (preferred). Keep here only if you centralize imports.
+_next_villager_id = 0 
 
 # --- Leadership / election config ---
 ELECTION_INTERVAL_YEARS = 7      # hold election every 7 game years
@@ -39,7 +49,7 @@ MAX_DEAD_YEARS = 25
 
 CHILD_MAX_AGE = 16
 
-BIRTH_BASE_P = 0.006          # ~0.5 births/year per couple (90-day year) before reductions
+BIRTH_BASE_P = 0.006          # Base daily probability per eligible couple (before cooldown/decay modifiers).
 BIRTH_COOLDOWN_DAYS = 45      # prevents back-to-back births
 COUPLE_DECAY = 0.55           # each additional child reduces chance strongly
 FAMILY_DECAY = 0.85           # more kids under same father family -> lower chance
@@ -170,7 +180,7 @@ INT_FIELDS = [
     "id", "coins", "age", "int", "rep", "level", "exp",
     "atk", "def", "hp", "hunger", "gen",
     "immigrantGen", "motherId", "fatherId",
-    "kingTerms", "death_day",
+    "kingTerms", "death_day", "spouseId_at_death",
     "spouseId", "spouseSinceDay",
     "born_day","last_birth_day",
 ]
@@ -181,7 +191,7 @@ FIELDNAMES = [
     "coins", "age", "int", "rep", "level", "exp",
     "atk", "def", "hp", "hunger", "traits", "last_action",
     "action_log", "relationships",
-    "spouseId", "spouseSinceDay",
+    "spouseId", "spouseSinceDay", "spouseId_at_death",
     "alive", "origin", "owner", "gen", "immigrantGen",
     "motherId", "fatherId", "childrenIds","kingTerms",
     "death_day", "huntWins", "huntWinsYear",

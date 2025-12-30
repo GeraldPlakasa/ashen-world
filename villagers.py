@@ -75,6 +75,8 @@ def unique_full_name(taken: set):
             break
         attempt += 1
 
+    if full in taken:
+        full = f"{full} #{rand_int(1000, 9999)}"
     taken.add(full)
     return full, family
 
@@ -549,7 +551,7 @@ def apply_starvation_damage(v: dict, bank: dict | None = None):
     Granary & Clinic reduce starvation damage.
     Returns the HP lost (int) if damage is applied, or None if not.
     """
-    if int(v.get("age", 0) or 0) <= 16:
+    if is_child(v):
         v["hunger"] = 0
         return None
     
@@ -937,7 +939,7 @@ def apply_action(
 
                 total_delta_pos = 0
                 # base stats
-                hunger_delta = -rand_int(4, 10)
+                hunger_delta = rand_int(4, 10)
                 hp_delta = rand_int(1, 5)
                 extra_rep = 0
 
@@ -972,7 +974,7 @@ def apply_action(
                     if delta > 0:
                         total_delta_pos += delta
 
-                v["hunger"] += hunger_delta
+                v["hunger"] -= hunger_delta
                 v["hp"] += hp_delta
 
                 # EXP & REP scale a bit with how good the hangout was
@@ -1180,6 +1182,7 @@ def apply_action(
     # Clamp hunger & HP (HP can stay at 0 if dead)
     v["hunger"] = clamp(v["hunger"], 0, 100)
     v["hp"] = min(v["hp"], 260)
+    v["rep"] = clamp(int(v.get("rep", 0) or 0), -100, 100)
 
     # Level-up check using the updated EXP
     handle_level_up(v)

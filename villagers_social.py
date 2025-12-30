@@ -384,7 +384,9 @@ def _demote_queen(q: dict):
 
     # Reassign to non-royal job (trait-weighted would be nicer, but keep minimal)
     # If you want trait-weighted, we can reuse your reassign_job_by_traits with a pool.
-    q["job"] = pick(JOBS_NO_ROYAL)
+    prev = q.get("job_before_queen")
+    q["job"] = prev if prev else pick(JOBS_NO_ROYAL)
+    q.pop("job_before_queen", None)
 
 
 def sync_queen_to_king_spouse(characters: list[dict], current_day: int | None = None):
@@ -416,6 +418,7 @@ def sync_queen_to_king_spouse(characters: list[dict], current_day: int | None = 
         return
 
     # 3) Assign spouse as Queen
+    spouse["job_before_queen"] = spouse.get("job")
     spouse["job"] = "Queen"
 
     # Optional: add small log (won't overwrite important logs)
@@ -488,7 +491,7 @@ def set_relationship_score(v: dict, other_id: int, score: int):
 
 def adjust_relationship(v: dict, other: dict, delta: int):
     """
-    Adjust relationship score between v -> other by delta, clamped [-100, 100].
+    Adjust relationship score between v -> other by delta, clamped [-100, 120].
     """
     oid = other.get("id")
     if oid is None:
@@ -600,11 +603,13 @@ def spouse_daily_phase(characters: list[dict], current_day: int):
         if spouse is None or not spouse.get("alive", True):
             # widow/widower
             v["spouseId"] = 0
+            v["spouseSinceDay"] = 0
             _append_last_action(v, "widowed")
             continue
         # must be mutual; otherwise clear
         if int(spouse.get("spouseId", 0) or 0) != v.get("id"):
             v["spouseId"] = 0
+            v["spouseSinceDay"] = 0
 
     # --------- Breakup phase (very small) ----------
     # Evaluate only once per couple (use id ordering)
