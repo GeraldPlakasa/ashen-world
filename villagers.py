@@ -436,13 +436,15 @@ def create_shop_offer(v: dict) -> dict:
     """
     Create a gear shop offer for a villager.
 
-    This is a Python translation of your JS `createShopOffer(r)` idea.
-    Currently only permanent stat items (no potions/companions) so we
-    don't add extra keys that would break CSV saving.
+    Permanent stat items only (type, cost, bonuses) to keep storage stable.
+    Adds higher-tier (more expensive) items and level-based tier selection.
     """
-    lvl = v.get("level", 1)
+    lvl = int(v.get("level", 1) or 1)
 
-    offers = [
+    # ----------------------------
+    #  Tier 1: common / early
+    # ----------------------------
+    t1 = [
         {"type": "Weapon",   "cost": rand_int(40, 120) + lvl * 5,
          "bonuses": [{"key": "atk", "amt": rand_int(3, 8)}]},
         {"type": "Armor",    "cost": rand_int(40, 120) + lvl * 5,
@@ -452,47 +454,102 @@ def create_shop_offer(v: dict) -> dict:
         {"type": "Elixir",   "cost": rand_int(25, 75) + lvl * 3,
          "bonuses": [{"key": "hp",  "amt": rand_int(10, 25)}]},
         {"type": "Ring",     "cost": rand_int(50, 120) + lvl * 4,
-         "bonuses": [
-             {"key": "rep", "amt": rand_int(2, 5)},
-             {"key": "int", "amt": rand_int(1, 3)},
-         ]},
+         "bonuses": [{"key": "rep", "amt": rand_int(2, 5)},
+                     {"key": "int", "amt": rand_int(1, 3)}]},
         {"type": "Shield",   "cost": rand_int(60, 140) + lvl * 5,
          "bonuses": [{"key": "def", "amt": rand_int(5, 12)}]},
         {"type": "Boots",    "cost": rand_int(35, 95) + lvl * 3,
          "bonuses": [{"key": "hp",  "amt": rand_int(8, 18)}]},
         {"type": "Banner",   "cost": rand_int(55, 130) + lvl * 5,
-         "bonuses": [
-             {"key": "atk", "amt": rand_int(2, 5)},
-             {"key": "rep", "amt": rand_int(1, 2)},
-         ]},
+         "bonuses": [{"key": "atk", "amt": rand_int(2, 5)},
+                     {"key": "rep", "amt": rand_int(1, 2)}]},
         {"type": "Charm",    "cost": rand_int(40, 110) + lvl * 3,
          "bonuses": [{"key": "rep", "amt": rand_int(3, 8)}]},
+        {"type": "Traveler’s Bedroll", "cost": 75 + lvl * 4,
+         "bonuses": [{"key": "hp", "amt": rand_int(10, 20)}]},
+    ]
+
+    # ----------------------------
+    #  Tier 2: rare / midgame
+    # ----------------------------
+    t2 = [
         {"type": "Vitality Belt",      "cost": 90 + lvl * 6,
          "bonuses": [{"key": "hp", "amt": rand_int(14, 28)}]},
         {"type": "Sturdy Cloak",       "cost": 110 + lvl * 7,
-         "bonuses": [
-             {"key": "hp",  "amt": rand_int(12, 22)},
-             {"key": "def", "amt": rand_int(2, 5)},
-         ]},
+         "bonuses": [{"key": "hp",  "amt": rand_int(12, 22)},
+                     {"key": "def", "amt": rand_int(2, 5)}]},
         {"type": "Reinforced Vest",    "cost": 130 + lvl * 8,
-         "bonuses": [
-             {"key": "hp",  "amt": rand_int(16, 30)},
-             {"key": "def", "amt": rand_int(3, 7)},
-         ]},
+         "bonuses": [{"key": "hp",  "amt": rand_int(16, 30)},
+                     {"key": "def", "amt": rand_int(3, 7)}]},
         {"type": "Oak Talisman",       "cost": 100 + lvl * 7,
          "bonuses": [{"key": "hp", "amt": rand_int(18, 34)}]},
-        {"type": "Traveler’s Bedroll", "cost": 75 + lvl * 4,
-         "bonuses": [{"key": "hp", "amt": rand_int(10, 20)}]},
         {"type": "Stamina Bracers",    "cost": 120 + lvl * 8,
-         "bonuses": [
-             {"key": "hp",  "amt": rand_int(20, 36)},
-             {"key": "atk", "amt": rand_int(1, 3)},
-         ]},
+         "bonuses": [{"key": "hp",  "amt": rand_int(20, 36)},
+                     {"key": "atk", "amt": rand_int(1, 3)}]},
         {"type": "Ironheart Pendant",  "cost": 150 + lvl * 10,
          "bonuses": [{"key": "hp", "amt": rand_int(24, 44)}]},
+
+        # NEW mid-tier items
+        {"type": "Warhorn of Resolve", "cost": 180 + lvl * 11,
+         "bonuses": [{"key": "rep", "amt": rand_int(5, 10)},
+                     {"key": "atk", "amt": rand_int(2, 4)}]},
+        {"type": "Mageweave Robe",     "cost": 170 + lvl * 10,
+         "bonuses": [{"key": "int", "amt": rand_int(5, 10)},
+                     {"key": "hp",  "amt": rand_int(10, 22)}]},
+        {"type": "Knight’s Buckler",   "cost": 190 + lvl * 11,
+         "bonuses": [{"key": "def", "amt": rand_int(7, 14)},
+                     {"key": "hp",  "amt": rand_int(8, 18)}]},
+        {"type": "Duelist Rapier",     "cost": 200 + lvl * 12,
+         "bonuses": [{"key": "atk", "amt": rand_int(7, 14)},
+                     {"key": "rep", "amt": rand_int(2, 5)}]},
+        {"type": "Scholar’s Codex",    "cost": 185 + lvl * 11,
+         "bonuses": [{"key": "int", "amt": rand_int(6, 12)},
+                     {"key": "rep", "amt": rand_int(2, 4)}]},
     ]
 
-    return random.choice(offers)
+    # ----------------------------
+    #  Tier 3: epic/legendary / expensive
+    # ----------------------------
+    t3 = [
+        {"type": "Dragonbone Plate",   "cost": 420 + lvl * 20,
+         "bonuses": [{"key": "def", "amt": rand_int(14, 24)},
+                     {"key": "hp",  "amt": rand_int(30, 55)}]},
+        {"type": "Stormforged Aegis",  "cost": 380 + lvl * 18,
+         "bonuses": [{"key": "def", "amt": rand_int(16, 26)},
+                     {"key": "rep", "amt": rand_int(4, 8)}]},
+        {"type": "Voidsteel Greatblade","cost": 450 + lvl * 22,
+         "bonuses": [{"key": "atk", "amt": rand_int(18, 30)},
+                     {"key": "hp",  "amt": rand_int(12, 25)}]},
+        {"type": "Crown of Counsel",   "cost": 500 + lvl * 24,
+         "bonuses": [{"key": "int", "amt": rand_int(14, 24)},
+                     {"key": "rep", "amt": rand_int(8, 14)}]},
+        {"type": "Relic of the Dawn",  "cost": 520 + lvl * 25,
+         "bonuses": [{"key": "hp",  "amt": rand_int(45, 75)},
+                     {"key": "rep", "amt": rand_int(6, 12)}]},
+        {"type": "Emperor’s Signet",   "cost": 600 + lvl * 28,
+         "bonuses": [{"key": "rep", "amt": rand_int(10, 18)},
+                     {"key": "atk", "amt": rand_int(6, 10)},
+                     {"key": "def", "amt": rand_int(6, 10)}]},
+        {"type": "Archmage Focus",     "cost": 580 + lvl * 27,
+         "bonuses": [{"key": "int", "amt": rand_int(16, 28)},
+                     {"key": "hp",  "amt": rand_int(20, 40)}]},
+        {"type": "Titan’s Girdle",     "cost": 540 + lvl * 26,
+         "bonuses": [{"key": "hp",  "amt": rand_int(60, 95)},
+                     {"key": "def", "amt": rand_int(6, 12)}]},
+    ]
+
+    # Level-based tier weights:
+    # - low level: mostly t1
+    # - mid: more t2
+    # - high: t3 can appear
+    if lvl <= 3:
+        pool = t1 + random.sample(t2, k=min(2, len(t2)))  # sprinkle
+    elif lvl <= 8:
+        pool = t1 + t2 + random.sample(t3, k=min(2, len(t3)))  # rare epic chance
+    else:
+        pool = t2 + t3 + random.sample(t1, k=min(3, len(t1)))  # still can see basics
+
+    return random.choice(pool)
 
 def create_enemy_for(v: dict) -> dict:
     """
@@ -521,7 +578,7 @@ def create_enemy_for(v: dict) -> dict:
     hp = round((50 + lvl * 8) * multiplier * (0.9 + random.random() * 0.2))
 
     base_coin = 20 + lvl * 4
-    coin_factor = 6.0 if tier == "legendary" else 4.0 if tier == "elite" else 1.5
+    coin_factor = 4.0 if tier == "legendary" else 2.0 if tier == "elite" else 1.5
     coin_reward = round(base_coin * coin_factor * (0.9 + random.random() * 0.6))
 
     exp_reward = round(
@@ -813,7 +870,7 @@ def apply_action(
 
     # -------------------- WORK --------------------
     elif action == "work":
-        gross        = rand_int(5, 20)
+        gross        = rand_int(10, 100)
         hunger_delta = rand_int(6, 12)
         exp_delta    = rand_int(1, 4)
 

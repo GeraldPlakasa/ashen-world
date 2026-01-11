@@ -25,7 +25,7 @@ DAYS_PER_YEAR = 90
 # WARNING: in Flask debug mode, reloader can spawn twice; start auto-sim with use_reloader=False.
 # Backend auto-simulation config
 AUTO_SIM_ENABLED = True          # set to False if you ever want to disable auto-run
-AUTO_SIM_SECONDS = 192.0           # real seconds per simulated day
+AUTO_SIM_SECONDS = 1.0           # real seconds per simulated day
 # AUTO_SIM_SECONDS = 960.0
 
 # Simple admin credentials

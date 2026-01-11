@@ -278,7 +278,7 @@ def upgrade_cost(key: str, bank: dict) -> int:
     levels, _ = _ensure_building_dicts(bank)
     lvl = int(levels.get(key, 1) or 1)
     next_lvl = lvl + 1
-    mult = 1 + (next_lvl - 1) * 0.75
+    mult = 1 + (next_lvl - 1) * 1
     return math.ceil(base["cost"] * mult)
 
 
@@ -397,8 +397,8 @@ def decay_buildings(bank: dict, current_day: int | None = None):
 
         cur = int(health.get(key, 100))
         # slower decay; higher level decays slightly slower
-        drop = rand_int(1, 10)
-        drop = max(1, int(round(drop * (1.0 - 0.05 * int(lvl)))))
+        drop = rand_int(1, 25)
+        # drop = max(1, int(round(drop * (1.0 - 0.05 * int(lvl)))))
 
         next_hp = max(0, cur - drop)
         if cur > 0 and next_hp == 0:
