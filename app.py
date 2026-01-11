@@ -1392,6 +1392,20 @@ def api_state():
         "last_election_message": bank.get("last_election_message", ""),
     })
 
+@app.route("/features", methods=["GET"])
+def features():
+
+    # optional: you can show current year/day at top like other pages
+    _, _, year, day_in_year, _ = get_current_state()
+
+    return render_template(
+        "features.html",
+        active_page="features",
+        username=session.get("username"),
+        year=year,
+        day=day_in_year,
+    )
+
 if __name__ == "__main__":
     app.run(debug=True)
 

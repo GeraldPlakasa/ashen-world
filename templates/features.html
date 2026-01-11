@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Ashen World • Features</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+  />
+</head>
+
+<body>
+  <div class="aw-layout">
+    <!-- Sidebar -->
+    <aside class="aw-sidebar">
+      <div>
+        <div class="aw-sidebar-brand">Ashen World</div>
+        <div class="aw-sidebar-subtitle">Living village simulation</div>
+      </div>
+
+      <ul class="aw-nav">
+        <li>
+          <a href="{{ url_for('landing') }}"
+             class="aw-nav-link {% if active_page == 'dashboard' %}aw-nav-link-active{% endif %}">
+            <span class="aw-nav-link-icon">📊</span>
+            <span class="aw-nav-link-label">Kingdom</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="{{ url_for('features') }}"
+             class="aw-nav-link {% if active_page == 'features' %}aw-nav-link-active{% endif %}">
+            <span class="aw-nav-link-icon">📜</span>
+            <span class="aw-nav-link-label">Features</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="{{ url_for('leaderboard') }}"
+             class="aw-nav-link {% if active_page == 'leaderboard' %}aw-nav-link-active{% endif %}">
+            <span class="aw-nav-link-icon">🏛️</span>
+            <span class="aw-nav-link-label">Leaderboard</span>
+          </a>
+        </li>
+
+        {% if session.get('is_admin') %}
+          <li>
+            <a href="{{ url_for('admin') }}"
+               class="aw-nav-link {% if active_page == 'admin' %}aw-nav-link-active{% endif %}">
+              <span class="aw-nav-link-icon">🛠️</span>
+              <span class="aw-nav-link-label">Control Hall</span>
+            </a>
+          </li>
+        {% endif %}
+
+        <li>
+          <a href="{{ url_for('family_tree') }}"
+             class="aw-nav-link {% if active_page == 'family_tree' %}aw-nav-link-active{% endif %}">
+            <span class="aw-nav-link-icon">🌳</span>
+            <span class="aw-nav-link-label">Family Tree</span>
+          </a>
+        </li>
+
+        {% if session.get('logged_in') %}
+          <li>
+            <a href="{{ url_for('create_character') }}"
+               class="aw-nav-link {% if active_page == 'create_character' %}aw-nav-link-active{% endif %}">
+              <span class="aw-nav-link-icon">✨</span>
+              <span class="aw-nav-link-label">Create Character</span>
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+
+      <div class="aw-sidebar-footer">
+        <div>World tick: backend auto-run</div>
+
+        {% if session.get('logged_in') %}
+          <a href="{{ url_for('logout') }}" class="aw-sidebar-logout-link">⎋ Logout</a>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="aw-sidebar-logout-link">⏁ Login</a>
+        {% endif %}
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="aw-main-shell">
+      <div class="page-shell">
+        <!-- Header -->
+        <header class="aw-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+          <div>
+            <div class="header-title">
+              📜 Feature List
+            </div>
+            <div class="header-subtitle">
+              A structured overview of systems currently implemented in Ashen World.
+              {% if year is not none and day is not none %}
+                <span class="ms-1 text-muted">• Year {{ year }}, Day {{ day }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if username %}
+            <div class="small text-muted">
+              Logged in as <span class="fw-semibold">{{ username }}</span>
+            </div>
+          {% endif %}
+        </header>
+
+        <main class="aw-main">
+
+          <div class="row g-3">
+            <!-- TOC -->
+            <div class="col-12 col-lg-4">
+              <section class="card aw-card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                      <div class="small text-muted mb-1">Navigate</div>
+                      <div class="h6 mb-0">Table of contents</div>
+                    </div>
+                  </div>
+
+                  <div class="list-group list-group-flush">
+                    <a class="list-group-item list-group-item-action" href="#pop">1) Village Population</a>
+                    <a class="list-group-item list-group-item-action" href="#actions">2) Daily Actions</a>
+                    <a class="list-group-item list-group-item-action" href="#combat">3) Combat & Progression</a>
+                    <a class="list-group-item list-group-item-action" href="#relations">4) Relationship System</a>
+                    <a class="list-group-item list-group-item-action" href="#marriage">5) Marriage & Family</a>
+                    <a class="list-group-item list-group-item-action" href="#birth">6) Birth & Childhood</a>
+                    <a class="list-group-item list-group-item-action" href="#inherit">7) Inheritance</a>
+                    <a class="list-group-item list-group-item-action" href="#politics">8) Leadership & Politics</a>
+                    <a class="list-group-item list-group-item-action" href="#economy">9) Economy & Tax</a>
+                    <a class="list-group-item list-group-item-action" href="#buildings">10) Building System</a>
+                    <a class="list-group-item list-group-item-action" href="#rules">11) Rules & Constraints</a>
+                    <a class="list-group-item list-group-item-action" href="#traits">12) Trait-Based Behavior</a>
+                    <a class="list-group-item list-group-item-action" href="#gear">13) Item / Gear</a>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="col-12 col-lg-8">
+              <section class="card aw-card">
+                <div class="card-body">
+                  <div class="small text-muted mb-1">Details</div>
+                  <div class="h6 mb-3">Systems</div>
+
+                  <div class="accordion" id="featuresAccordion">
+
+                    <!-- 1) Population -->
+                    <div class="accordion-item" id="pop">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cPop">
+                          1) Village Population System
+                        </button>
+                      </h2>
+                      <div id="cPop" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <ul class="mb-0">
+                            <li>Auto-generation of <strong>50 initial villagers</strong> with randomized stats (ATK, DEF, HP, INT, REP, etc.)</li>
+                            <li>Gender-based system (Male/Female)</li>
+                            <li>Age progression: <strong>1 year = 90 in-game days</strong></li>
+                            <li>Job assignment from <strong>50+ occupations</strong></li>
+                            <li>Trait system (~20 traits affecting behavior)</li>
+                            <li>Family name inheritance system</li>
+                            <li>Immigration system (new villagers can join the village)</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 2) Daily Actions -->
+                    <div class="accordion-item" id="actions">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cActions">
+                          2) Daily Action System
+                        </button>
+                      </h2>
+                      <div id="cActions" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <div class="text-muted small mb-2">Villagers choose actions via AI weights (traits, jobs, needs, buildings).</div>
+
+                          <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                              <div class="border rounded-3 p-2 bg-body">
+                                <div class="fw-semibold small mb-1">Core actions</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Train</strong> — increase ATK/DEF</li>
+                                  <li><strong>Study</strong> — increase INT</li>
+                                  <li><strong>Work</strong> — earn coins (taxed)</li>
+                                  <li><strong>Rest</strong> — restore HP</li>
+                                  <li><strong>Buy Food</strong> — reduce hunger</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                              <div class="border rounded-3 p-2 bg-body">
+                                <div class="fw-semibold small mb-1">Social / risk actions</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Buy Gear</strong> — items with bonuses</li>
+                                  <li><strong>Hunt</strong> — combat for coins/EXP/REP (taxed)</li>
+                                  <li><strong>Socialize</strong> — improve relationship (1 target)</li>
+                                  <li><strong>Hangout</strong> — group social action</li>
+                                  <li><strong>Steal</strong> — take coins (damages relationships)</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 3) Combat -->
+                    <div class="accordion-item" id="combat">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cCombat">
+                          3) Combat & Progression
+                        </button>
+                      </h2>
+                      <div id="cCombat" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <ul class="mb-0">
+                            <li>Hunt system with procedural enemies (tiers: common, elite, legendary)</li>
+                            <li>Enemy scaling based on villager level</li>
+                            <li>Combat resolution with win/loss/death outcomes</li>
+                            <li>Experience and leveling system</li>
+                            <li>Starvation damage mechanics</li>
+                            <li>Death system integrated with inheritance</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 4) Relationships -->
+                    <div class="accordion-item" id="relations">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRel">
+                          4) Relationship System
+                        </button>
+                      </h2>
+                      <div id="cRel" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <ul class="mb-0">
+                            <li>Dynamic relationship scores (<strong>-100 to +120</strong>) between villagers</li>
+                            <li>Labels: friend, bestfriend, love, rival, enemy</li>
+                            <li>Relationship-based actions: socialize, hangout, conflicts</li>
+                            <li>Relationship decay/growth over time and interactions</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 5) Marriage -->
+                    <div class="accordion-item" id="marriage">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cMarriage">
+                          5) Marriage & Family System
+                        </button>
+                      </h2>
+                      <div id="cMarriage" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <ul class="mb-0">
+                            <li>Male-female pairing only</li>
+                            <li>Love threshold triggers marriage chance</li>
+                            <li>Spouse system with mutual tracking</li>
+                            <li>Breakup mechanics based on relationship deterioration</li>
+                            <li>Prohibition of same-family marriages</li>
+                            <li>Widowing system when spouse dies</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 6) Birth & Childhood -->
+                    <div class="accordion-item" id="birth">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cBirth">
+                          6) Birth & Childhood System
+                        </button>
+                      </h2>
+                      <div id="cBirth" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <div class="row g-2">
+                            <div class="col-12">
+                              <div class="border rounded-3 p-2 bg-body">
+                                <div class="fw-semibold small mb-1">Birth logic</div>
+                                <ul class="small mb-0">
+                                  <li>Childbirth system for married couples</li>
+                                  <li>Fertility windows: mothers 18–42, fathers 18–65</li>
+                                  <li>Birth cooldown: 45 days</li>
+                                  <li>Probability influenced by love score + decay by number of children</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <div class="col-12">
+                              <div class="border rounded-3 p-2 bg-body">
+                                <div class="fw-semibold small mb-1">Children (0–16)</div>
+                                <ul class="small mb-0">
+                                  <li>Immune to hunger</li>
+                                  <li>Limited action set (train, study, rest, hangout, socialize)</li>
+                                  <li>Stat inheritance from parents</li>
+                                  <li>Trait inheritance with mutation chance</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <div class="col-12">
+                              <div class="border rounded-3 p-2 bg-body">
+                                <div class="fw-semibold small mb-1">Coming of age (17+)</div>
+                                <div class="small text-muted">
+                                  Automatic job assignment based on stats/traits.
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 7) Inheritance -->
+                    <div class="accordion-item" id="inherit">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cInherit">
+                          7) Inheritance System
+                        </button>
+                      </h2>
+                      <div id="cInherit" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <ul class="mb-0">
+                            <li>Estate distribution on death</li>
+                            <li>Heir priority: children → spouse → same-family adults → treasury</li>
+                            <li>Player character inheritance: child → sibling succession</li>
+                            <li>Automatic transfer of coins to heirs</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 8) Politics -->
+                    <div class="accordion-item" id="politics">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cPolitics">
+                          8) Leadership & Politics
+                        </button>
+                      </h2>
+                      <div id="cPolitics" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <div class="row g-2">
+                            <div class="col-12">
+                              <div class="border rounded-3 p-2 bg-body">
+                                <div class="fw-semibold small mb-1">King / Queen system</div>
+                                <ul class="small mb-0">
+                                  <li>Elections every 5 years</li>
+                                  <li>Emergency elections when King dies</li>
+                                  <li>Voting system with leadership scores</li>
+                                  <li>Term limits: 3 terms max</li>
+                                  <li>Dynasty bonus for same-family candidates</li>
+                                  <li>Queen assigned as King’s spouse</li>
+                                  <li>Job reassignment for dethroned kings</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <div class="col-12">
+                              <div class="border rounded-3 p-2 bg-body">
+                                <div class="fw-semibold small mb-1">Assassination mechanics</div>
+                                <ul class="small mb-0">
+                                  <li>Small daily chance to assassinate enemies</li>
+                                  <li>Influenced by King traits + village buildings</li>
+                                  <li>Relationship-driven targets</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 9) Economy -->
+                    <div class="accordion-item" id="economy">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cEco">
+                          9) Economy & Tax System
+                        </button>
+                      </h2>
+                      <div id="cEco" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <ul class="mb-0">
+                            <li>Village bank / treasury</li>
+                            <li>Dynamic tax rates (0–35%) based on King traits + building levels</li>
+                            <li>Tax collection on work and hunt income</li>
+                            <li>Corruption mechanics (King/Queen/Nobles can steal from treasury)</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 10) Buildings -->
+                    <div class="accordion-item" id="buildings">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cBuildings">
+                          10) Building System
+                        </button>
+                      </h2>
+                      <div id="cBuildings" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+
+                          <div class="fw-semibold small mb-2">Buildings (12)</div>
+                          <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                              <ul class="small mb-0">
+                                <li>Marketplace — boosts work income, reduces food cost</li>
+                                <li>Library — boosts study effectiveness</li>
+                                <li>Barracks — training bonuses, hunt success</li>
+                                <li>Granary — reduces hunger consumption</li>
+                                <li>Clinic — reduces damage, lowers death rate</li>
+                                <li>City Walls — defense bonuses</li>
+                              </ul>
+                            </div>
+                            <div class="col-12 col-md-6">
+                              <ul class="small mb-0">
+                                <li>Temple — REP gains, lowers death chance</li>
+                                <li>Blacksmith — ATK/DEF bonuses, gear cost reduction</li>
+                                <li>Treasury — passive daily interest</li>
+                                <li>Royal Court — prestige building</li>
+                                <li>Tax Office — increases tax rate</li>
+                                <li>Tavern — social bonuses, hangout effectiveness</li>
+                              </ul>
+                            </div>
+                          </div>
+
+                          <hr class="my-2"/>
+
+                          <div class="fw-semibold small mb-1">Mechanics</div>
+                          <ul class="small mb-0">
+                            <li>3 levels per building</li>
+                            <li>Construction / upgrade cost scaling</li>
+                            <li>Health system (0–100%) with daily decay</li>
+                            <li>Auto-repair when damaged below 60%</li>
+                            <li>Traits influence building priorities</li>
+                            <li>Collapse if health reaches 0</li>
+                          </ul>
+
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 11) Rules -->
+                    <div class="accordion-item" id="rules">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRules">
+                          11) World Rules & Constraints
+                        </button>
+                      </h2>
+                      <div id="cRules" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <ul class="mb-0">
+                            <li>Children can’t work/earn; limited actions until age 17</li>
+                            <li>Marriage age window: 18–60</li>
+                            <li>Fertility: mothers 18–42, fathers 18–65</li>
+                            <li>Birth cooldown: 45 days</li>
+                            <li>Death archival (graveyard after 25 years dead)</li>
+                            <li>One player character per user (duplicate prevention)</li>
+                            <li>Same-family marriage prohibition</li>
+                            <li>King term limits: 3 terms lifetime</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 12) Traits -->
+                    <div class="accordion-item" id="traits">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cTraits">
+                          12) Trait-Based Behavior
+                        </button>
+                      </h2>
+                      <div id="cTraits" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <div class="text-muted small mb-2">
+                            Villagers choose actions with weighted preferences influenced by traits.
+                          </div>
+                          <ul class="mb-0">
+                            <li>Brave → more train/hunt</li>
+                            <li>Cautious → more study, less steal/hunt</li>
+                            <li>Greedy → more work/steal; prioritizes treasury/market</li>
+                            <li>Generous → more socialize; prioritizes clinic/granary</li>
+                            <li>Wise → more study; prioritizes library</li>
+                            <li>Hot-headed → more train/combat</li>
+                            <li>Diligent → more work/train</li>
+                            <li>Lazy → more rest, less work/train</li>
+                            <li>Deceitful → more steal; higher corruption chance</li>
+                            <li>Empathic → more socialize</li>
+                            <li>…and more</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 13) Gear -->
+                    <div class="accordion-item" id="gear">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cGear">
+                          13) Item / Gear System
+                        </button>
+                      </h2>
+                      <div id="cGear" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <ul class="mb-0">
+                            <li>Dynamic shop offers with <strong>30+ item types</strong> across 3 tiers</li>
+                            <li>Tier 1 (common): Weapon, Armor, Tome, Elixir, etc.</li>
+                            <li>Tier 2 (rare): Vitality Belt, Mageweave Robe, etc.</li>
+                            <li>Tier 3 (legendary): Dragonbone Plate, Voidsteel Greatblade, etc.</li>
+                            <li>Permanent stat bonuses (ATK, DEF, HP, INT, REP)</li>
+                            <li>Level-based tier weighting</li>
+                            <li>Blacksmith building reduces gear cost</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div><!-- /accordion -->
+                </div>
+              </section>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
