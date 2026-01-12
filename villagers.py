@@ -11,6 +11,7 @@ from config import (
     JOBS_NO_ROYAL,
     ENEMY_BASE,
     _next_villager_id,
+    WEATHER_TYPES
 )
 from world_utils import (
     clamp,
@@ -38,6 +39,8 @@ from villagers_social import (
     child_daily_phase,
     coming_of_age_phase,
 )
+
+from storage import maybe_roll_weather, load_weather
 
 # ---------------------------------------------------------------------------
 #  Villager generation
@@ -221,7 +224,7 @@ def generate_characters(n: int = 50):
 #  Combat & Action
 # ---------------------------------------------------------------------------
 
-def choose_action(villager: dict, bank: dict | None = None) -> str:
+def choose_action(villager: dict, bank: dict | None = None, weather: str | None = None) -> str:
     """
     Decide the villager's action for the day based on:
     - traits
@@ -359,6 +362,26 @@ def choose_action(villager: dict, bank: dict | None = None) -> str:
     if job in ["Spy"]:
         weights["steal"] += 0.8
         weights["socialize"] += 0.3
+
+    # Weather-based adjustments
+    w = (weather or "sunny").strip().lower()
+    if w not in WEATHER_TYPES:
+        w = "sunny"
+
+    if w == "rain":
+        # Rain makes outdoor / social actions less likely
+        weights["hunt"] *= 0.65
+        weights["train"] *= 0.85
+        weights["work"] *= 0.90
+        weights["socialize"] *= 0.80
+        weights["hangout"] *= 0.75
+
+        # Rain increases indoor actions
+        weights["study"] *= 1.20
+        weights["rest"] *= 1.15
+
+        # Slightly more likely to buy food (people stay in / comfort eat)
+        weights["buy_food"] *= 1.10
 
     # Hunger & coins-based adjustments
     hunger = villager.get("hunger", 50)
@@ -637,7 +660,7 @@ def apply_starvation_damage(v: dict, bank: dict | None = None):
     return hp_loss
 
 
-def resolve_combat(v: dict, enemy: dict, bank: dict | None = None) -> dict:
+def resolve_combat(v: dict, enemy: dict, bank: dict | None = None, weather: str | None = None) -> dict:
     """
     Simplified combat resolution.
 
@@ -670,6 +693,12 @@ def resolve_combat(v: dict, enemy: dict, bank: dict | None = None) -> dict:
         power_mult = 1.0 + 0.06 * lvl_barracks + 0.04 * lvl_walls
         char_power *= power_mult
 
+    # Weather effect (rain makes fights riskier)
+    w = (weather or "sunny").strip().lower()
+    if w == "rain":
+        # slightly reduce effective power
+        char_power *= 0.93
+
     # Optional companions (not yet surfaced in CSV/UI)
     companion = v.get("_companion")
     if companion == "war_beast":
@@ -694,6 +723,10 @@ def resolve_combat(v: dict, enemy: dict, bank: dict | None = None) -> dict:
         lvl_clinic = get_building_level(bank, "clinic")
         if lvl_clinic > 0:
             dmg_var = max(0, int(round(dmg_var * (1 - 0.12 * lvl_clinic))))
+
+    if w == "rain":
+        # rain increases damage volatility a bit
+        dmg_var = int(round(dmg_var * 1.08))
 
     result = {
         "enemy": enemy,
@@ -797,6 +830,7 @@ def apply_action(
     action: str,
     bank: dict | None = None,
     all_characters: list[dict] | None = None,
+    weather: str | None = None,
 ):
     """
     Apply the chosen action to the villager (stats, hunger, coins, EXP).
@@ -815,6 +849,13 @@ def apply_action(
         delta_hp     = rand_int(0, 2)
         delta_hunger = rand_int(5, 12)
         delta_exp    = rand_int(2, 5)
+
+        w = (weather or "sunny").strip().lower()
+        if w == "rain":
+            # training outside / movement is harder
+            delta_atk = max(1, int(round(delta_atk * 0.90)))
+            delta_def = max(1, int(round(delta_def * 0.90)))
+            delta_hunger += 1
 
         if bank is not None:
             lvl_barracks   = get_building_level(bank, "barracks")
@@ -873,6 +914,12 @@ def apply_action(
         gross        = rand_int(10, 100)
         hunger_delta = rand_int(6, 12)
         exp_delta    = rand_int(1, 4)
+
+        w = (weather or "sunny").strip().lower()
+        if w == "rain":
+            # less productivity in rain, slightly more hunger drain
+            gross = int(round(gross * 0.90))
+            hunger_delta += 2
 
         if bank is not None:
             lvl_market    = get_building_level(bank, "market")
@@ -1187,7 +1234,7 @@ def apply_action(
     # -------------------- HUNT --------------------
     elif action == "hunt":
         enemy  = create_enemy_for(v)
-        combat = resolve_combat(v, enemy, bank)
+        combat = resolve_combat(v, enemy, bank, weather=weather)
 
         won_hunt = (combat["outcome"] == "WIN") or (combat["outcome"] == "DEAD" and combat.get("victory", False))
         if won_hunt:
@@ -1569,6 +1616,8 @@ def simulate_one_day(characters, bank: dict, current_day: int = 0):
     """
 
     reset_id_from_characters(characters)
+    weather_today = load_weather()
+    # bank["weather"] = weather_today
     coming_of_age_phase(characters, current_day=current_day)
     enforce_one_player_per_owner(characters)
 
@@ -1589,9 +1638,9 @@ def simulate_one_day(characters, bank: dict, current_day: int = 0):
             v["hunger"] = 0
             continue
 
-        action = choose_action(v, bank)
+        action = choose_action(v, bank, weather=weather_today)
         v["last_action"] = action
-        apply_action(v, action, bank, characters)
+        apply_action(v, action, bank, characters, weather=weather_today)
 
         hp_loss = apply_starvation_damage(v, bank)
 

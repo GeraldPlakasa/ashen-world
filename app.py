@@ -40,6 +40,9 @@ from storage import (
     graveyard_get,
     graveyard_get_many,
     graveyard_upsert_from_villager,
+    load_world_payload,
+    save_world_payload,
+    load_weather
 )
 from villagers import (
     generate_characters,
@@ -401,9 +404,10 @@ def get_current_state():
         characters = load_from_csv()
         total_day = load_day()
         bank = load_bank()
+        weather = load_weather()
 
     year, day_in_year = compute_year_and_day(total_day)
-    return characters, bank, year, day_in_year, total_day
+    return characters, bank, year, day_in_year, total_day, weather
 
 def advance_one_day():
     """
@@ -678,7 +682,7 @@ def landing():
     - Read-only table of villagers
     - Shows pinned character for logged-in user (if any).
     """
-    characters, village_bank, year, day_in_year, total_day = get_current_state()
+    characters, village_bank, year, day_in_year, total_day, weather = get_current_state()
     pinned_spouse_name = None
     pinned_spouse_alive = None
 
@@ -870,6 +874,10 @@ def landing():
 
                 break  # found pinned char; stop
 
+    # weather_today = (village_bank.get("weather") or "sunny")
+    # weather_today = "rain"
+    # print(village_bank.get("weather"))
+
     return render_template(
         "landing.html",
         characters=characters,
@@ -895,6 +903,7 @@ def landing():
         pinned_mother=pinned_mother,
         pinned_father=pinned_father,
         pinned_children=pinned_children,
+        weather_today=weather,
     )
 
 @app.route("/register", methods=["GET", "POST"])
@@ -1031,6 +1040,12 @@ def admin():
 
                 clear_yearly_stats()
 
+                # Reset weather to default
+                payload = load_world_payload()
+                payload["weather"] = "sunny"
+                payload["next_weather_roll_day"] = 1
+                save_world_payload(payload)
+
             year, day_in_year = compute_year_and_day(1)
 
             flash(
@@ -1047,7 +1062,7 @@ def admin():
             return redirect(url_for("admin"))
 
     # GET: load current state (thread-safe)
-    characters, village_bank, year, day_in_year, _ = get_current_state()
+    characters, village_bank, year, day_in_year, _, weather = get_current_state()
 
     graveyard_index = build_graveyard_index_for(characters)
 
@@ -1107,7 +1122,7 @@ def leaderboard():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
 
-    characters, bank, year, day_in_year, total_day = get_current_state()
+    characters, bank, year, day_in_year, total_day, weather = get_current_state()
 
     history_sorted = list_yearly_history(finalized_only=True)
     current_entry = get_year_entry(year)
@@ -1145,7 +1160,7 @@ def create_character():
     username = session.get("username") or ""
 
     # Get current state (characters + world time)
-    characters, bank, year, day_in_year, _ = get_current_state()
+    characters, bank, year, day_in_year, _, weather = get_current_state()
 
     # Check if this user already has a player character
     existing_player = None
@@ -1259,7 +1274,7 @@ def family_tree():
     is_admin = bool(session.get("is_admin"))
 
     # get current world time
-    characters, bank, year, day_in_year, _ = get_current_state()
+    characters, bank, year, day_in_year, _, weather = get_current_state()
 
     # default root: user's player character
     root = None
@@ -1343,7 +1358,7 @@ def api_state():
     Now also returns village bank + building info so the admin
     auto-refresh can update KPI and buildings card.
     """
-    characters, bank, year, day_in_year, total_day = get_current_state()
+    characters, bank, year, day_in_year, total_day, weather = get_current_state()
     graveyard_index = build_graveyard_index_for(characters)
 
     building_levels = bank.get("building_levels") or {}
@@ -1390,13 +1405,14 @@ def api_state():
         "buildings": buildings_payload,
         "last_election_year": bank.get("last_election_year"),
         "last_election_message": bank.get("last_election_message", ""),
+        "weather": bank.get("weather", "sunny"),
     })
 
 @app.route("/features", methods=["GET"])
 def features():
 
     # optional: you can show current year/day at top like other pages
-    _, _, year, day_in_year, _ = get_current_state()
+    _, _, year, day_in_year, _, weather = get_current_state()
 
     return render_template(
         "features.html",

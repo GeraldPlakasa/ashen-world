@@ -446,3 +446,58 @@ body {
 .aw-collapse-toggle[aria-expanded="true"] .aw-collapse-icon {
   transform: rotate(180deg);
 }
+
+/* =========================================================
+   Weather background (Landing)
+   ========================================================= */
+
+.aw-bg,
+.aw-rain-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0; /* behind everything */
+}
+
+/* make sure your app content stays above the background */
+.aw-layout {
+  position: relative;
+  z-index: 1;
+}
+
+/* -------- SUNNY THEME -------- */
+.aw-bg.sunny {
+  /* soft sun glow + subtle sky wash */
+  background:
+    radial-gradient(900px 600px at 80% 15%, rgba(255, 236, 170, 0.55), rgba(255, 236, 170, 0.00) 60%);
+  filter: saturate(1.05);
+}
+
+/* optional subtle shimmer */
+@keyframes awSunBreath {
+  0%, 100% { filter: saturate(1.02) brightness(1.00); }
+  50%      { filter: saturate(1.08) brightness(1.03); }
+}
+.aw-bg.sunny {
+  animation: awSunBreath 6s ease-in-out infinite;
+}
+
+/* -------- RAIN THEME -------- */
+.aw-bg.rain {
+  /* darker moody overlay */
+  background:
+    radial-gradient(800px 500px at 70% 10%, rgba(200, 220, 255, 0.18), rgba(0, 0, 0, 0.0) 60%),
+    linear-gradient(180deg, rgba(10, 20, 30, 0.55), rgba(245, 245, 247, 1));
+  filter: saturate(0.95);
+}
+
+/* rain canvas only visible when raining */
+.aw-rain-canvas {
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+.aw-rain-canvas.is-raining {
+  opacity: 1;
+}

@@ -55,6 +55,19 @@ COUPLE_DECAY = 0.55           # each additional child reduces chance strongly
 FAMILY_DECAY = 0.85           # more kids under same father family -> lower chance
 
 # ---------------------------------------------------------------------------
+#  Weather system
+# ---------------------------------------------------------------------------
+
+# Weather changes every N days (re-roll on that schedule)
+WEATHER_CHANGE_DAYS = 5
+
+# Chance to roll rain on a change day
+WEATHER_RAIN_CHANCE = 0.35
+
+# Allowed values
+WEATHER_TYPES = ["sunny", "rain"]
+
+# ---------------------------------------------------------------------------
 #  Name + worldbuilding constants
 # ---------------------------------------------------------------------------
 

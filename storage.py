@@ -16,6 +16,9 @@ from config import (
     DAYS_PER_YEAR,
     INT_FIELDS,
     FIELDNAMES,
+    WEATHER_CHANGE_DAYS,
+    WEATHER_RAIN_CHANCE,
+    WEATHER_TYPES,
 )
 
 # ---------------------------------------------------------------------------
@@ -194,12 +197,112 @@ def _ensure_world_defaults(conn: sqlite3.Connection):
     cur = conn.execute("SELECT value FROM world_state WHERE key='day_payload' LIMIT 1;")
     row = cur.fetchone()
     if row is None:
-        payload = {"total_day": 1, "year": 1, "day_in_year": 0}
+        payload = {
+            "total_day": 1,
+            "year": 1,
+            "day_in_year": 0,
+            "weather": "sunny",
+            "next_weather_roll_day": 1,  # will roll on day 1
+        }
         conn.execute(
             "INSERT INTO world_state(key, value) VALUES(?, ?);",
             ("day_payload", json.dumps(payload)),
         )
 
+def load_world_payload() -> Dict[str, Any]:
+    """
+    Returns the full world payload stored in world_state.day_payload.
+    """
+    init_db()
+    with db_conn() as conn:
+        row = conn.execute(
+            "SELECT value FROM world_state WHERE key='day_payload' LIMIT 1;"
+        ).fetchone()
+        if not row:
+            return {"total_day": 1, "year": 1, "day_in_year": 0, "weather": "sunny", "next_weather_roll_day": 1}
+        try:
+            data = json.loads(row["value"])
+            if not isinstance(data, dict):
+                data = {}
+        except Exception:
+            data = {}
+        # Defaults
+        data.setdefault("total_day", 1)
+        data.setdefault("year", 1)
+        data.setdefault("day_in_year", 0)
+        data.setdefault("weather", "sunny")
+        data.setdefault("next_weather_roll_day", 1)
+        return data
+
+
+def save_world_payload(payload: Dict[str, Any]):
+    """
+    Persists the full world payload back to SQLite (world_state.day_payload).
+    """
+    init_db()
+    if not isinstance(payload, dict):
+        payload = {}
+    total_day = int(payload.get("total_day", 1) or 1)
+    if total_day < 1:
+        total_day = 1
+
+    year, day_in_year = compute_year_and_day(total_day)
+    payload["total_day"] = int(total_day)
+    payload["year"] = int(year)
+    payload["day_in_year"] = int(day_in_year)
+
+    # Make sure weather keys exist
+    payload.setdefault("weather", "sunny")
+    payload.setdefault("next_weather_roll_day", 1)
+
+    with db_conn() as conn:
+        conn.execute(
+            "UPDATE world_state SET value=? WHERE key='day_payload';",
+            (json.dumps(payload, ensure_ascii=False),),
+        )
+
+
+def load_weather() -> str:
+    """
+    Returns current weather ("sunny" / "rain").
+    """
+    payload = load_world_payload()
+    w = (payload.get("weather") or "sunny").strip().lower()
+    return w if w in WEATHER_TYPES else "sunny"
+
+
+def maybe_roll_weather(current_day: int) -> str:
+    """
+    Roll weather if we've reached the scheduled roll day.
+    Weather is persisted so it won't change randomly between requests.
+    """
+    payload = load_world_payload()
+
+    day = int(current_day or payload.get("total_day", 1) or 1)
+    if day < 1:
+        day = 1
+
+    next_roll = int(payload.get("next_weather_roll_day", 1) or 1)
+    weather = (payload.get("weather") or "sunny").strip().lower()
+    if weather not in WEATHER_TYPES:
+        weather = "sunny"
+
+    # If it's not time yet, keep current weather
+    if day < next_roll:
+        return weather
+
+    # Roll new weather
+    import random as _random
+    weather = "rain" if _random.random() < float(WEATHER_RAIN_CHANCE) else "sunny"
+
+    # Schedule next roll
+    next_roll = day + int(WEATHER_CHANGE_DAYS or 5)
+    payload["weather"] = weather
+    payload["next_weather_roll_day"] = next_roll
+    payload["total_day"] = day  # keep consistent
+
+    save_world_payload(payload)
+    return weather
 
 def _ensure_bank_defaults(conn: sqlite3.Connection):
     cur = conn.execute("SELECT value FROM bank_state WHERE key='bank_payload' LIMIT 1;")
@@ -436,14 +539,43 @@ def save_day(day: int):
     if day < 1:
         day = 1
     year, day_in_year = compute_year_and_day(day)
-    payload = {"total_day": int(day), "year": int(year), "day_in_year": int(day_in_year)}
 
-    with db_conn() as conn:
-        conn.execute(
-            "UPDATE world_state SET value=? WHERE key='day_payload';",
-            (json.dumps(payload, ensure_ascii=False),),
-        )
+    # Load existing payload
+    payload = load_world_payload()
+    
+    # Update day
+    payload["total_day"] = int(day)
+    year, day_in_year = compute_year_and_day(day)
+    payload["year"] = int(year)
+    payload["day_in_year"] = int(day_in_year)
+    
+    # Roll weather BEFORE saving (avoid stale reads)
+    weather_today = _roll_weather_if_needed(day, payload)  # New helper
+    payload["weather"] = weather_today
+    
+    save_world_payload(payload)
 
+def _roll_weather_if_needed(current_day: int, payload: dict) -> str:
+    """Internal helper to roll weather based on current payload."""
+    day = int(current_day or payload.get("total_day", 1) or 1)
+    next_roll = int(payload.get("next_weather_roll_day", 1) or 1)
+    weather = (payload.get("weather") or "sunny").strip().lower()
+    
+    if day < next_roll:
+        return weather
+    
+    # Roll new weather
+    import random as _random
+    weather = "rain" if _random.random() < float(WEATHER_RAIN_CHANCE) else "sunny"
+    
+    # Schedule next roll
+    payload["next_weather_roll_day"] = day + int(WEATHER_CHANGE_DAYS or 5)
+    return weather
+
+# Simplify maybe_roll_weather to just read
+def maybe_roll_weather(current_day: int) -> str:
+    """Read current weather (rolling happens in save_day)."""
+    return load_weather()
 
 # ---------------------------------------------------------------------------
 #  Bank (replaces bank.json)

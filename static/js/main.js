@@ -58,6 +58,146 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // -------------------------------------------------------------------------
+  //  Weather background (Landing)
+  // -------------------------------------------------------------------------
+  const bgEl = document.getElementById("aw-bg");
+  const rainCanvas = document.getElementById("aw-rain-canvas");
+  const ctx = rainCanvas ? rainCanvas.getContext("2d") : null;
+
+  let rainAnim = null;
+  let drops = [];
+  let lastTs = 0;
+
+  function resizeRain() {
+    if (!rainCanvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    rainCanvas.width = Math.floor(window.innerWidth * dpr);
+    rainCanvas.height = Math.floor(window.innerHeight * dpr);
+    rainCanvas.style.width = window.innerWidth + "px";
+    rainCanvas.style.height = window.innerHeight + "px";
+    if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function makeDrops(count) {
+    drops = [];
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    for (let i = 0; i < count; i++) {
+      drops.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        len: 10 + Math.random() * 18,
+        spd: 450 + Math.random() * 650, // px/sec
+        drift: -60 + Math.random() * 120, // wind
+        thick: 1 + Math.random() * 1.2,
+        alpha: 0.10 + Math.random() * 0.18,
+      });
+    }
+  }
+
+  function stepRain(ts) {
+    if (!ctx || !rainCanvas) return;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    const dt = Math.min(0.05, (ts - lastTs) / 1000 || 0.016);
+    lastTs = ts;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // soft mist overlay
+    ctx.fillStyle = "rgba(255,255,255,0.03)";
+    ctx.fillRect(0, 0, w, h);
+
+    // draw drops
+    for (const d of drops) {
+      d.x += d.drift * dt;
+      d.y += d.spd * dt;
+
+      if (d.y > h + 50) {
+        d.y = -50;
+        d.x = Math.random() * w;
+      }
+      if (d.x < -100) d.x = w + 100;
+      if (d.x > w + 100) d.x = -100;
+
+      ctx.beginPath();
+      ctx.lineWidth = d.thick;
+      ctx.strokeStyle = `rgba(255,255,255,${d.alpha})`;
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x + d.drift * 0.06, d.y + d.len);
+      ctx.stroke();
+    }
+
+    rainAnim = requestAnimationFrame(stepRain);
+  }
+
+  function startRain() {
+    if (!rainCanvas || !ctx) return;
+    cancelRain();
+
+    resizeRain();
+    // density based on screen area (keeps it nice across resolutions)
+    const density = Math.round((window.innerWidth * window.innerHeight) / 12000);
+    makeDrops(Math.max(120, Math.min(520, density)));
+
+    rainCanvas.classList.add("is-raining");
+    lastTs = performance.now();
+    rainAnim = requestAnimationFrame(stepRain);
+  }
+
+  function cancelRain() {
+    if (rainAnim) cancelAnimationFrame(rainAnim);
+    rainAnim = null;
+    if (rainCanvas) {
+      rainCanvas.classList.remove("is-raining");
+      if (ctx) ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    }
+  }
+
+  function setWeatherTheme(raw) {
+    const w = String(raw || "sunny").toLowerCase().trim();
+
+    if (bgEl) {
+      bgEl.classList.remove("sunny", "rain");
+      bgEl.classList.add(w === "rain" ? "rain" : "sunny");
+    }
+
+    if (w === "rain") startRain();
+    else cancelRain();
+  }
+
+  // Initial theme (from <body data-weather="...">)
+  const initialWeather = document.body?.dataset?.weather || "sunny";
+  // console.log(document.body?.dataset?.weather)
+  setWeatherTheme(initialWeather);
+
+  window.addEventListener("resize", () => {
+    if (rainCanvas && rainCanvas.classList.contains("is-raining")) {
+      resizeRain();
+      // re-seed a bit so it doesn't look sparse after resize
+      const density = Math.round((window.innerWidth * window.innerHeight) / 12000);
+      makeDrops(Math.max(120, Math.min(520, density)));
+    }
+  });
+
+  // If your page ever calls fetchState() (admin auto refresh),
+  // update the theme when API sends `weather`.
+  const _oldFetchState = fetchState;
+  if (typeof _oldFetchState === "function") {
+    fetchState = async function () {
+      await _oldFetchState();
+      try {
+        // If you stored last API response globally you can use it,
+        // but simplest: re-fetch quickly isn't ideal, so instead:
+        // update theme inside your existing fetchState below (recommended).
+      } catch {}
+    };
+  }
+
+
   rebuildIndex();
   rebuildGraveyardIndex();
 
@@ -729,6 +869,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const data = await resp.json();
+
+      if (data.weather) {
+        document.body.dataset.weather = String(data.weather).toLowerCase();
+        setWeatherTheme(data.weather);
+      }
 
       // Update year/day display
       if (typeof data.year === "number" && yearSpan) {
