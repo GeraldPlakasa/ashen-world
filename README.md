@@ -19,30 +19,51 @@ A living-village simulation built with Flask. Manage villagers, elections, build
 
 ```
 ashen-world/
-├── app.py                 # Flask entrypoint, routes, background auto-sim thread
-├── config.py              # World constants (traits, jobs, buildings, economy rules)
-├── storage.py             # SQLite persistence layer (villagers, users, bank, stats)
-├── villagers.py           # Villager generation, daily simulation, action system
-├── villagers_social.py    # Elections, relationships, marriage/children, inheritance
-├── buildings.py           # Tax policy, construction, upgrades, repairs
-├── world_utils.py         # Utility functions (pick, clamp, exp calculations)
-├── templates/             # Jinja2 templates (dashboard, admin, auth pages)
+├── app.py                    # Flask entrypoint, routes, background auto-sim thread
+├── config.py                 # World constants (traits, jobs, buildings, economy rules)
+├── world_utils.py            # Utility functions (pick, clamp, exp calculations)
+├── villagers.py              # Shim → re-exports from src/services/*
+├── villagers_social.py       # Shim → re-exports from src/services/*
+├── storage.py                # Shim → re-exports from src/repositories/*
+├── buildings.py              # Shim → re-exports from src/services/building_service
+├── src/
+│   ├── repositories/         # Data persistence layer
+│   │   ├── base.py           #   DB connection, schema init
+│   │   ├── villager_repo.py  #   Villager CRUD + graveyard
+│   │   ├── world_repo.py     #   Day/weather state
+│   │   ├── user_repo.py      #   User accounts
+│   │   ├── bank_repo.py      #   Treasury/bank state
+│   │   └── stats_repo.py     #   Yearly stats + migration
+│   ├── services/             # Business logic
+│   │   ├── villager_service.py     # Villager generation (make_row, generate_characters)
+│   │   ├── action_service.py       # Action selection + application
+│   │   ├── combat_service.py       # Enemy creation, combat resolution
+│   │   ├── simulation_service.py   # Daily loop, immigrants, player inheritance
+│   │   ├── election_service.py     # Elections, leadership scoring
+│   │   ├── family_service.py       # Birth, childhood, coming-of-age, inheritance
+│   │   ├── relationship_service.py # Relationships, marriage, corruption, assassination
+│   │   └── building_service.py     # Tax policy, construction, upgrades, repairs
+│   ├── models/               # (reserved for future data classes)
+│   └── routes/               # (reserved for future blueprint split)
+├── templates/                # Jinja2 templates (dashboard, admin, auth pages)
 ├── static/
-│   ├── css/style.css      # Dark theme, responsive layout
-│   └── js/main.js         # Sorting, filtering, auto-refresh, family tree
-├── tests/                 # Pytest test suite (181 tests)
-│   ├── conftest.py        # Shared fixtures
+│   ├── css/style.css         # Dark theme, responsive layout
+│   └── js/main.js            # Sorting, filtering, auto-refresh, family tree
+├── tests/                    # Pytest test suite (181 tests)
+│   ├── conftest.py           # Shared fixtures
 │   ├── test_world_utils.py
 │   ├── test_buildings.py
 │   ├── test_villagers_pure.py
 │   ├── test_villagers_social_pure.py
 │   ├── test_storage.py
 │   └── test_app_integration.py
-├── data/                  # Runtime database (auto-created)
-├── pytest.ini             # Pytest configuration
-├── requirements-dev.txt   # Test dependencies
-└── .env                   # Environment variables (create from template)
+├── data/                     # Runtime database (auto-created)
+├── pytest.ini                # Pytest configuration
+├── requirements-dev.txt      # Test dependencies
+└── .env                      # Environment variables (create from template)
 ```
+
+The root-level files `villagers.py`, `villagers_social.py`, `storage.py`, and `buildings.py` are thin shims that re-export from `src/`. This preserves backward compatibility: all existing imports and tests work without changes.
 
 ## Requirements
 

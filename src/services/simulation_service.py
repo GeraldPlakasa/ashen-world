@@ -1,0 +1,354 @@
+import json
+import random
+
+from config import (
+    JOBS_NO_ROYAL,
+)
+from world_utils import (
+    clamp,
+    rand_int,
+    is_child,
+)
+from buildings import (
+    get_building_level,
+)
+from src.services.villager_service import (
+    make_row,
+    reset_id_from_characters,
+)
+from src.services.action_service import (
+    choose_action,
+    apply_action,
+    append_action_history,
+)
+from src.services.combat_service import (
+    apply_starvation_damage,
+)
+from src.services.relationship_service import (
+    spouse_daily_phase,
+    maybe_corrupt_from_bank,
+    king_assassination_phase,
+)
+from src.services.family_service import (
+    child_daily_phase,
+    coming_of_age_phase,
+)
+from src.repositories.world_repo import load_weather
+
+# ---------------------------------------------------------------------------
+#  Immigrants
+# ---------------------------------------------------------------------------
+
+def maybe_add_immigrants(characters: list[dict], bank: dict) -> tuple[list[dict], int]:
+    """
+    Small chance each day that 1-2 immigrants arrive.
+    """
+    tavern_lvl = get_building_level(bank, "tavern")
+
+    base_chance = 0.01 + 0.01 * tavern_lvl
+    chance = max(0.01, min(0.25, base_chance))
+
+    if random.random() >= chance:
+        return characters, 0
+
+    add_count = rand_int(1, 2)
+
+    taken_names = {c.get("name", "") for c in characters}
+    added = []
+
+    for _ in range(add_count):
+        new_v = make_row(taken_names, jobs_pool=JOBS_NO_ROYAL)
+
+        new_v["origin"] = "npc"
+        new_v["immigrantGen"] = 1
+
+        arrival_msg = f"{new_v['name']} arrived to settle in the village."
+        new_v["last_action"] = "immigrant arrival"
+        new_v["action_log"] = arrival_msg
+
+        characters.append(new_v)
+        added.append(new_v)
+
+    return characters, len(added)
+
+
+# ---------------------------------------------------------------------------
+#  Player ownership / inheritance
+# ---------------------------------------------------------------------------
+
+def _norm_origin(v: dict) -> str:
+    return (v.get("origin", "") or "").strip().lower()
+
+def _is_player_char(v: dict) -> bool:
+    return _norm_origin(v) == "player" and bool(v.get("owner", ""))
+
+def _is_alive(v: dict) -> bool:
+    return v.get("alive", True) and int(v.get("hp", 0) or 0) > 0
+
+def _normalize_id_list(raw):
+    """
+    childrenIds might be:
+      - list[int]
+      - JSON string like "[1,2,3]"
+      - empty / None
+    """
+    if not raw:
+        return []
+    if isinstance(raw, list):
+        return [int(x) for x in raw if str(x).strip().isdigit()]
+    if isinstance(raw, str) and raw.strip():
+        s = raw.strip()
+        try:
+            parsed = json.loads(s)
+            if isinstance(parsed, list):
+                return [int(x) for x in parsed if str(x).strip().isdigit()]
+        except Exception:
+            return []
+    return []
+
+def _demote_to_npc(v: dict):
+    v["origin"] = "npc"
+    v["owner"] = ""
+
+def _promote_to_player(v: dict, owner: str):
+    v["origin"] = "player"
+    v["owner"] = owner or ""
+
+def _find_children(parent: dict, characters: list[dict], id_map: dict[int, dict]) -> list[dict]:
+    """
+    Prefer explicit childrenIds, but fallback to scanning motherId/fatherId.
+    """
+    pid = int(parent.get("id", 0) or 0)
+
+    child_ids = _normalize_id_list(parent.get("childrenIds", []))
+    kids = []
+    for cid in child_ids:
+        c = id_map.get(int(cid))
+        if c:
+            kids.append(c)
+
+    if not kids and pid > 0:
+        for c in characters:
+            if int(c.get("motherId", 0) or 0) == pid or int(c.get("fatherId", 0) or 0) == pid:
+                kids.append(c)
+
+    seen = set()
+    out = []
+    for k in kids:
+        kid = int(k.get("id", 0) or 0)
+        if kid and kid not in seen:
+            seen.add(kid)
+            out.append(k)
+    return out
+
+
+def _find_siblings(person: dict, characters: list[dict]) -> list[dict]:
+    """
+    Siblings = share motherId OR fatherId (half-siblings included).
+    """
+    pid = int(person.get("id", 0) or 0)
+    mid = int(person.get("motherId", 0) or 0)
+    fid = int(person.get("fatherId", 0) or 0)
+
+    if mid <= 0 and fid <= 0:
+        return []
+
+    sibs = []
+    for c in characters:
+        if int(c.get("id", 0) or 0) == pid:
+            continue
+        cm = int(c.get("motherId", 0) or 0)
+        cf = int(c.get("fatherId", 0) or 0)
+
+        if (mid > 0 and cm == mid) or (fid > 0 and cf == fid):
+            sibs.append(c)
+
+    seen = set()
+    out = []
+    for s in sibs:
+        sid = int(s.get("id", 0) or 0)
+        if sid and sid not in seen:
+            seen.add(sid)
+            out.append(s)
+    return out
+
+
+def _choose_heir(candidates: list[dict], owner: str | None = None) -> dict | None:
+    """
+    Pick ONE heir from alive candidates.
+    """
+    alive = []
+    for c in candidates:
+        if not c or not _is_alive(c):
+            continue
+        if owner:
+            if _is_player_char(c) and (c.get("owner", "") != owner):
+                continue
+        alive.append(c)
+
+    if not alive:
+        return None
+
+    def key(c):
+        age = int(c.get("age", 0) or 0)
+        lvl = int(c.get("level", 1) or 1)
+        rep = int(c.get("rep", 0) or 0)
+        cid = int(c.get("id", 0) or 0)
+        is_adult = 1 if age > 16 else 0
+        return (is_adult, age, lvl, rep, -cid)
+
+    return sorted(alive, key=key, reverse=True)[0]
+
+def enforce_one_player_per_owner(characters: list[dict]):
+    """
+    Ensure each owner has exactly ONE 'player' character.
+    """
+    by_owner: dict[str, list[dict]] = {}
+    for v in characters:
+        if _is_player_char(v):
+            by_owner.setdefault(v["owner"], []).append(v)
+
+    for owner, group in by_owner.items():
+        if len(group) <= 1:
+            continue
+
+        def key(v):
+            alive = 1 if _is_alive(v) else 0
+            age = int(v.get("age", 0) or 0)
+            lvl = int(v.get("level", 1) or 1)
+            rep = int(v.get("rep", 0) or 0)
+            vid = int(v.get("id", 0) or 0)
+            return (alive, lvl, age, rep, -vid)
+
+        group_sorted = sorted(group, key=key, reverse=True)
+        keep = group_sorted[0]
+
+        for v in group_sorted[1:]:
+            _demote_to_npc(v)
+            if not v.get("last_action"):
+                v["last_action"] = f"lost player status (duplicate owner {owner})"
+
+def player_inheritance_phase(characters: list[dict], current_day: int = 0):
+    """
+    If a player character dies:
+      - promote ONE alive CHILD -> player, same owner
+      - else promote ONE alive SIBLING -> player, same owner
+      - demote dead player -> npc (owner cleared)
+      - ensure owner has only one player char
+    """
+    id_map = {int(c.get("id", 0) or 0): c for c in characters}
+
+    enforce_one_player_per_owner(characters)
+
+    for parent in characters:
+        if not _is_player_char(parent):
+            continue
+        if _is_alive(parent):
+            continue
+
+        owner = parent.get("owner", "")
+        if not owner:
+            continue
+
+        has_alive_player = any(
+            (_is_player_char(v) and v.get("owner") == owner and _is_alive(v) and v is not parent)
+            for v in characters
+        )
+        if has_alive_player:
+            _demote_to_npc(parent)
+            continue
+
+        heir = None
+        heir_kind = None
+
+        children = _find_children(parent, characters, id_map)
+        heir = _choose_heir(children, owner=owner)
+        heir_kind = "child"
+
+        if not heir:
+            siblings = _find_siblings(parent, characters)
+            heir = _choose_heir(siblings, owner=owner)
+            heir_kind = "sibling"
+
+        if not heir:
+            continue
+
+        parent_name = parent.get("name", "Unknown")
+        _demote_to_npc(parent)
+        _promote_to_player(heir, owner)
+
+        for v in characters:
+            if v is heir:
+                continue
+            if _is_player_char(v) and v.get("owner") == owner:
+                _demote_to_npc(v)
+
+        note = f"inherited legacy of {parent_name} ({heir_kind})"
+        if heir.get("last_action"):
+            heir["last_action"] = f"{heir['last_action']} / {note}"
+        else:
+            heir["last_action"] = note
+
+
+# ---------------------------------------------------------------------------
+#  Day Loop
+# ---------------------------------------------------------------------------
+
+def simulate_one_day(characters, bank: dict, current_day: int = 0):
+    """
+    Simulate actions for one day for each villager in the list.
+    """
+    reset_id_from_characters(characters)
+    weather_today = load_weather()
+    coming_of_age_phase(characters, current_day=current_day)
+    enforce_one_player_per_owner(characters)
+
+    # 1) Daily individual phase
+    for v in characters:
+        if v.get("hp", 0) <= 0 or not v.get("alive", True):
+            v["hp"] = 0
+            v["alive"] = False
+            if not v.get("last_action"):
+                v["last_action"] = "dead"
+            continue
+
+        v["last_action"] = ""
+
+        if is_child(v):
+            v["job"] = "Child"
+            v["hunger"] = 0
+            continue
+
+        action = choose_action(v, bank, weather=weather_today)
+        v["last_action"] = action
+        apply_action(v, action, bank, characters, weather=weather_today)
+
+        hp_loss = apply_starvation_damage(v, bank)
+
+        if not v.get("alive", True) and int(v.get("spouseId", 0) or 0) > 0 and not v.get("spouseId_at_death"):
+            v["spouseId_at_death"] = int(v["spouseId"])
+
+        if hp_loss:
+            if v["alive"]:
+                v["last_action"] = f"{v['last_action']} / starvation -{hp_loss} HP"
+            else:
+                v["last_action"] = f"dead (starvation -{hp_loss} HP)"
+
+        maybe_corrupt_from_bank(v, bank)
+
+    # 2) World phases (immigrants, spouses)
+    characters, _added_count = maybe_add_immigrants(characters, bank)
+    child_daily_phase(characters, current_day=current_day)
+    spouse_daily_phase(characters, current_day=current_day)
+
+    # 3) King assassination phase
+    king_assassination_phase(characters, bank=bank, current_day=current_day)
+
+    # 3.5) Player inheritance
+    player_inheritance_phase(characters, current_day=current_day)
+
+    # 4) Log history LAST
+    for v in characters:
+        append_action_history(v)
+
+    return characters, bank

@@ -32,51 +32,82 @@ pytest --cov=world_utils --cov=buildings --cov=storage --cov-report=term-missing
 
 ### Core Files
 
-| File | Purpose | Key Functions |
-|------|---------|---------------|
-| `app.py` | Flask routes, session auth, background auto-sim thread | `advance_one_day()`, `get_current_state()`, `build_family_graph()` |
-| `villagers.py` | Villager generation, daily simulation, action system | `simulate_one_day()`, `choose_action()`, `make_row()`, `generate_characters()` |
-| `villagers_social.py` | Elections, relationships, marriage/children, inheritance | `hold_election()`, `leadership_score()`, `settle_marriage()`, `settle_inheritance_phase()` |
-| `storage.py` | SQLite persistence layer with WAL mode | `save_villagers()`, `load_villagers()`, `save_bank()`, `load_bank()`, `graveyard_*()` |
-| `buildings.py` | Tax policy, construction, upgrades, repairs | `update_tax_policy()`, `get_building_level()`, `upgrade_cost()`, `apply_tax_on_income()` |
-| `config.py` | World constants: time, demographics, traits, jobs, buildings | Constants only, no functions |
-| `world_utils.py` | Pure utility functions | `pick()`, `rand_int()`, `clamp()`, `pick_weighted()`, `exp_to_next_level()`, `is_child()` |
+The codebase uses a layered architecture. Root-level files (`villagers.py`, `villagers_social.py`, `storage.py`, `buildings.py`) are **backward-compatible shims** that re-export from `src/`. New code should import from `src/` directly.
+
+| Layer | File | Purpose | Key Functions |
+|-------|------|---------|---------------|
+| Entry | `app.py` | Flask routes, session auth, background auto-sim thread | `advance_one_day()`, `get_current_state()`, `build_family_graph()` |
+| Config | `config.py` | World constants: time, demographics, traits, jobs, buildings | Constants only, no functions |
+| Util | `world_utils.py` | Pure utility functions | `pick()`, `rand_int()`, `clamp()`, `pick_weighted()`, `exp_to_next_level()`, `is_child()` |
+| Service | `src/services/villager_service.py` | Villager generation, ID management | `make_row()`, `generate_characters()`, `reset_id_from_characters()` |
+| Service | `src/services/action_service.py` | Action selection and application | `choose_action()`, `apply_action()`, `handle_level_up()`, `create_shop_offer()` |
+| Service | `src/services/combat_service.py` | Enemy creation, combat resolution | `create_enemy_for()`, `resolve_combat()`, `apply_starvation_damage()` |
+| Service | `src/services/simulation_service.py` | Daily loop, immigrants, player inheritance | `simulate_one_day()`, `maybe_add_immigrants()`, `player_inheritance_phase()` |
+| Service | `src/services/election_service.py` | Elections, leadership scoring | `hold_election()`, `leadership_score()`, `get_traits_set()` |
+| Service | `src/services/family_service.py` | Birth, childhood, coming-of-age, inheritance | `birth_daily_phase()`, `child_daily_phase()`, `coming_of_age_phase()`, `settle_inheritance_phase()` |
+| Service | `src/services/relationship_service.py` | Relationships, marriage, corruption, assassination | `adjust_relationship()`, `spouse_daily_phase()`, `king_assassination_phase()` |
+| Service | `src/services/building_service.py` | Tax policy, construction, upgrades, repairs | `update_tax_policy()`, `get_building_level()`, `upgrade_cost()`, `apply_tax_on_income()` |
+| Repo | `src/repositories/base.py` | SQLite connection, schema init | `db_conn()`, `init_db()` |
+| Repo | `src/repositories/villager_repo.py` | Villager CRUD + graveyard | `save_villagers()`, `load_villagers()`, `graveyard_*()` |
+| Repo | `src/repositories/world_repo.py` | Day/weather state | `load_day()`, `save_day()`, `load_weather()` |
+| Repo | `src/repositories/user_repo.py` | User accounts | `load_users()`, `save_user()` |
+| Repo | `src/repositories/bank_repo.py` | Treasury/bank state | `load_bank()`, `save_bank()` |
+| Repo | `src/repositories/stats_repo.py` | Yearly stats + migration | `ensure_year_row()`, `finalize_year()`, `get_all_time_leaders()` |
 
 ### Project Structure
 
 ```
 ashen-world/
-├── app.py                 # Flask entrypoint (1400+ lines)
-├── config.py              # World constants
-├── storage.py             # SQLite persistence
-├── villagers.py           # Simulation logic
-├── villagers_social.py    # Social/election logic
-├── buildings.py           # Building/tax logic
-├── world_utils.py         # Pure utilities
-├── templates/             # Jinja2 templates
-│   ├── landing.html       # Main dashboard
-│   ├── admin.html         # Admin control hall
-│   ├── leaderboard.html   # Stats and champions
-│   ├── family_tree.html   # vis-network graph
-│   ├── features.html      # Feature showcase
+├── app.py                    # Flask entrypoint (1400+ lines)
+├── config.py                 # World constants
+├── world_utils.py            # Pure utilities
+├── villagers.py              # SHIM → re-exports from src/services/*
+├── villagers_social.py       # SHIM → re-exports from src/services/*
+├── storage.py                # SHIM → re-exports from src/repositories/*
+├── buildings.py              # SHIM → re-exports from src/services/building_service
+├── src/
+│   ├── repositories/         # Data persistence layer
+│   │   ├── base.py           #   DB connection, schema init
+│   │   ├── villager_repo.py  #   Villager CRUD + graveyard
+│   │   ├── world_repo.py     #   Day/weather state
+│   │   ├── user_repo.py      #   User accounts
+│   │   ├── bank_repo.py      #   Treasury/bank state
+│   │   └── stats_repo.py     #   Yearly stats + migration
+│   ├── services/             # Business logic
+│   │   ├── villager_service.py     # Generation (make_row, generate_characters)
+│   │   ├── action_service.py       # Action selection + application
+│   │   ├── combat_service.py       # Enemy creation, combat resolution
+│   │   ├── simulation_service.py   # Daily loop, immigrants, player inheritance
+│   │   ├── election_service.py     # Elections, leadership scoring
+│   │   ├── family_service.py       # Birth, childhood, coming-of-age, inheritance
+│   │   ├── relationship_service.py # Relationships, marriage, corruption, assassination
+│   │   └── building_service.py     # Tax policy, construction, upgrades, repairs
+│   ├── models/               # (reserved for future data classes)
+│   └── routes/               # (reserved for future blueprint split)
+├── templates/                # Jinja2 templates
+│   ├── landing.html          # Main dashboard
+│   ├── admin.html            # Admin control hall
+│   ├── leaderboard.html      # Stats and champions
+│   ├── family_tree.html      # vis-network graph
+│   ├── features.html         # Feature showcase
 │   ├── login.html
 │   ├── register.html
 │   └── create_character.html
 ├── static/
-│   ├── css/style.css      # Dark theme
-│   └── js/main.js         # Frontend interactions
-├── tests/                 # Pytest suite (181 tests)
-│   ├── conftest.py        # Shared fixtures
+│   ├── css/style.css         # Dark theme
+│   └── js/main.js            # Frontend interactions
+├── tests/                    # Pytest suite (181 tests)
+│   ├── conftest.py           # Shared fixtures
 │   ├── test_world_utils.py
 │   ├── test_buildings.py
 │   ├── test_villagers_pure.py
 │   ├── test_villagers_social_pure.py
 │   ├── test_storage.py
 │   └── test_app_integration.py
-├── data/                  # Runtime database
-├── pytest.ini             # Pytest configuration
-├── requirements-dev.txt   # Test dependencies
-└── .env                   # Environment variables
+├── data/                     # Runtime database
+├── pytest.ini                # Pytest configuration
+├── requirements-dev.txt      # Test dependencies
+└── .env                      # Environment variables
 ```
 
 ### Key Configuration (config.py)
@@ -176,21 +207,21 @@ FLASK_SECRET_KEY=your_secret_key_here
 ### Adding a New Building Type
 
 1. Add to `BUILDINGS` list in `config.py`
-2. Add trait-based priority in `building_priority_weights()` in `buildings.py`
-3. Add any special effects in `choose_action()` in `villagers.py`
+2. Add trait-based priority in `building_priority_weights()` in `src/services/building_service.py`
+3. Add any special effects in `choose_action()` in `src/services/action_service.py`
 
 ### Adding a New Trait
 
 1. Add to `TRAITS` list in `config.py`
-2. Add tax modifier in `update_tax_policy()` in `buildings.py`
-3. Add leadership modifier in `leadership_score()` in `villagers_social.py`
-4. Add action weight modifier in `choose_action()` in `villagers.py`
-5. Add building priority modifier in `building_priority_weights()` in `buildings.py`
+2. Add tax modifier in `update_tax_policy()` in `src/services/building_service.py`
+3. Add leadership modifier in `leadership_score()` in `src/services/election_service.py`
+4. Add action weight modifier in `choose_action()` in `src/services/action_service.py`
+5. Add building priority modifier in `building_priority_weights()` in `src/services/building_service.py`
 
 ### Adding a New Action
 
-1. Add to weights dict in `choose_action()` in `villagers.py`
-2. Add handler in `simulate_one_day()` in `villagers.py`
+1. Add to weights dict in `choose_action()` in `src/services/action_service.py`
+2. Add handler in `apply_action()` in `src/services/action_service.py`
 3. Update tests in `test_villagers_pure.py`
 
 ### Running Tests Before Committing

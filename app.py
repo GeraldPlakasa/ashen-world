@@ -20,16 +20,30 @@ from config import (
     MAX_DEAD_YEARS,
     ENV_FLASK_SECRET_KEY,
 )
-from storage import (
-    save_to_csv,
-    load_from_csv,
-    load_users,
-    save_user,
+from src.repositories.villager_repo import (
+    save_villagers as save_to_csv,
+    load_villagers as load_from_csv,
+    graveyard_get,
+    graveyard_get_many,
+    graveyard_upsert_from_villager,
+)
+from src.repositories.world_repo import (
     load_day,
     save_day,
+    compute_year_and_day,
+    load_world_payload,
+    save_world_payload,
+    load_weather,
+)
+from src.repositories.user_repo import (
+    load_users,
+    save_user,
+)
+from src.repositories.bank_repo import (
     load_bank,
     save_bank,
-    compute_year_and_day,
+)
+from src.repositories.stats_repo import (
     ensure_year_row,
     update_year_daily,
     finalize_year,
@@ -37,28 +51,22 @@ from storage import (
     get_year_entry,
     clear_yearly_stats,
     get_all_time_leaders,
-    graveyard_get,
-    graveyard_get_many,
-    graveyard_upsert_from_villager,
-    load_world_payload,
-    save_world_payload,
-    load_weather
 )
-from villagers import (
+from src.services.villager_service import (
     generate_characters,
     make_row,
     reset_id_from_characters,
-    simulate_one_day,
-    hold_election,
 )
-from buildings import (
+from src.services.simulation_service import simulate_one_day
+from src.services.election_service import hold_election
+from src.services.building_service import (
     update_tax_policy,
     maybe_construct_building,
     maybe_upgrade_building,
     decay_buildings,
     maybe_repair_buildings,
 )
-from villagers_social import settle_inheritance_phase
+from src.services.family_service import settle_inheritance_phase
 
 app = Flask(__name__)
 app.secret_key = ENV_FLASK_SECRET_KEY

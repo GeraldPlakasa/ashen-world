@@ -1,3 +1,9 @@
 data/
 __pycache__/
+*.pyc
 .env
+.coverage
+.venv/
+*.egg-info/
+dist/
+build/
