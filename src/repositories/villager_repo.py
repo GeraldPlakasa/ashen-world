@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import json
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 import config
 from src.repositories.base import db_conn, init_db
+from src.models.villager import Villager
+from src.models.graveyard import GraveyardRecord
 
 # ---------------------------------------------------------------------------
 #  Villagers (replaces characters.csv)
 # ---------------------------------------------------------------------------
 
-def save_villagers(rows: List[Dict[str, Any]]):
+def save_villagers(rows: list[Villager]) -> None:
     """
     Persist the current villager list to SQLite.
     This replaces save_to_csv().
@@ -51,7 +55,7 @@ def save_villagers(rows: List[Dict[str, Any]]):
             conn.execute(insert_sql, values)
 
 
-def load_villagers() -> List[Dict[str, Any]]:
+def load_villagers() -> list[Villager]:
     """
     Load villagers from SQLite.
     This replaces load_from_csv().
@@ -60,7 +64,7 @@ def load_villagers() -> List[Dict[str, Any]]:
 
     with db_conn() as conn:
         cur = conn.execute("SELECT * FROM villagers;")
-        out: List[Dict[str, Any]] = []
+        out: list[Villager] = []
 
         for row in cur.fetchall():
             r2 = dict(row)
@@ -112,7 +116,7 @@ load_from_csv = load_villagers
 #  Graveyard
 # ---------------------------------------------------------------------------
 
-def graveyard_upsert_from_villager(v: Dict[str, Any]):
+def graveyard_upsert_from_villager(v: Villager) -> None:
     """
     Save a lightweight identity snapshot into graveyard.
     Upsert by id (so repeated calls are safe).
@@ -176,7 +180,7 @@ def graveyard_upsert_from_villager(v: Dict[str, Any]):
         )
 
 
-def graveyard_get(vid: int) -> Dict[str, Any] | None:
+def graveyard_get(vid: int) -> GraveyardRecord | None:
     init_db()
     with db_conn() as conn:
         row = conn.execute(
@@ -194,7 +198,7 @@ def graveyard_get(vid: int) -> Dict[str, Any] | None:
         return r
 
 
-def graveyard_get_many(ids: List[int]) -> Dict[int, Dict[str, Any]]:
+def graveyard_get_many(ids: list[int]) -> dict[int, GraveyardRecord]:
     """
     Return {id: record} for quick lookup (useful for pinned view).
     """

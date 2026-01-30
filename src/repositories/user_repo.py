@@ -1,14 +1,15 @@
-from typing import List, Dict, Any
+from __future__ import annotations
 
 from werkzeug.security import generate_password_hash
 
 from src.repositories.base import db_conn, init_db
+from src.models.user import User
 
 # ---------------------------------------------------------------------------
 #  Users (replaces users.csv)
 # ---------------------------------------------------------------------------
 
-def load_users() -> List[Dict[str, Any]]:
+def load_users() -> list[User]:
     init_db()
     with db_conn() as conn:
         cur = conn.execute(
@@ -17,7 +18,7 @@ def load_users() -> List[Dict[str, Any]]:
         return [dict(r) for r in cur.fetchall()]
 
 
-def save_user(username: str, email: str, password_plain: str):
+def save_user(username: str, email: str, password_plain: str) -> None:
     """
     Insert a single user into SQLite with hashed password.
     Enforces unique username via PRIMARY KEY.

@@ -8,6 +8,15 @@ Existing imports like ``from storage import save_villagers`` keep working.
 #   monkeypatch.setattr(storage, "DB_PATH", ...)
 from config import DB_PATH  # noqa: F401
 
+# --- model types (convenience re-exports) ---
+from src.models import (  # noqa: F401
+    Villager,
+    Bank,
+    WorldPayload,
+    User,
+    GraveyardRecord,
+)
+
 # --- base helpers ---
 from src.repositories.base import (  # noqa: F401
     db_conn,

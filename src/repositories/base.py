@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import os
 import json
 import sqlite3
 from contextlib import contextmanager
+from typing import Generator
 
 import config
 
@@ -13,7 +16,7 @@ def _ensure_data_dir():
     os.makedirs(config.DATA_DIR, exist_ok=True)
 
 @contextmanager
-def db_conn():
+def db_conn() -> Generator[sqlite3.Connection, None, None]:
     """
     Context manager for SQLite connection.
     - check_same_thread=False helps if you read/write from a background thread.

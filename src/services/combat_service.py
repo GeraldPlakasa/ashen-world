@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 import random
 
@@ -13,9 +15,12 @@ from buildings import (
     get_building_level,
     apply_tax_on_income,
 )
+from src.models.villager import Villager
+from src.models.bank import Bank
+from src.models.combat import CombatResult, Enemy
 
 
-def create_enemy_for(v: dict) -> dict:
+def create_enemy_for(v: Villager) -> Enemy:
     """
     Create an enemy for a given villager.
     Enemy stats scale with villager level and random tier (common/elite/legendary).
@@ -66,7 +71,7 @@ def create_enemy_for(v: dict) -> dict:
     }
 
 
-def apply_starvation_damage(v: dict, bank: dict | None = None):
+def apply_starvation_damage(v: Villager, bank: Bank | None = None) -> int | None:
     """
     If hunger has reached 100, apply starvation damage to HP.
     Granary & Clinic reduce starvation damage.
@@ -101,7 +106,7 @@ def apply_starvation_damage(v: dict, bank: dict | None = None):
     return hp_loss
 
 
-def resolve_combat(v: dict, enemy: dict, bank: dict | None = None, weather: str | None = None) -> dict:
+def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather: str | None = None) -> CombatResult:
     """
     Simplified combat resolution.
 

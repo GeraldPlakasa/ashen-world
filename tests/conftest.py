@@ -1,18 +1,24 @@
 """
 Shared pytest fixtures for Ashen World tests.
 """
+from __future__ import annotations
+
 import os
 import sys
 import random
 import tempfile
+from typing import Generator, Callable
+
 import pytest
 
 # Add parent directory to path so we can import project modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.models import Villager, Bank
+
 
 @pytest.fixture
-def sample_villager():
+def sample_villager() -> Villager:
     """Minimal villager dict with known stats for testing."""
     return {
         "id": 1,
@@ -55,7 +61,7 @@ def sample_villager():
 
 
 @pytest.fixture
-def sample_king(sample_villager):
+def sample_king(sample_villager: Villager) -> Villager:
     """King villager for election tests."""
     king = sample_villager.copy()
     king.update({
@@ -75,7 +81,7 @@ def sample_king(sample_villager):
 
 
 @pytest.fixture
-def sample_female_villager(sample_villager):
+def sample_female_villager(sample_villager: Villager) -> Villager:
     """Female villager for marriage/relationship tests."""
     female = sample_villager.copy()
     female.update({
@@ -88,7 +94,7 @@ def sample_female_villager(sample_villager):
 
 
 @pytest.fixture
-def sample_child(sample_villager):
+def sample_child(sample_villager: Villager) -> Villager:
     """Child villager (age <= 16) for child-related tests."""
     child = sample_villager.copy()
     child.update({
@@ -104,7 +110,7 @@ def sample_child(sample_villager):
 
 
 @pytest.fixture
-def sample_bank():
+def sample_bank() -> Bank:
     """Village treasury/bank state for testing."""
     return {
         "tax_rate": 0.10,
@@ -119,7 +125,7 @@ def sample_bank():
 
 
 @pytest.fixture
-def sample_bank_with_buildings(sample_bank):
+def sample_bank_with_buildings(sample_bank: Bank) -> Bank:
     """Bank state with some buildings constructed."""
     bank = sample_bank.copy()
     bank["building_levels"] = {
@@ -136,7 +142,7 @@ def sample_bank_with_buildings(sample_bank):
 
 
 @pytest.fixture
-def test_db_path():
+def test_db_path() -> Generator[str, None, None]:
     """
     Temporary SQLite database path for testing.
     Returns the path to a temp file that is deleted after the test.
@@ -160,7 +166,7 @@ def test_db_path():
 
 
 @pytest.fixture
-def test_db_connection(test_db_path, monkeypatch):
+def test_db_connection(test_db_path: str, monkeypatch: pytest.MonkeyPatch) -> Generator[str, None, None]:
     """
     Patches storage.DB_PATH to use a temporary test database.
     Also patches config.DB_PATH since storage imports from there.
@@ -178,7 +184,7 @@ def test_db_connection(test_db_path, monkeypatch):
 
 
 @pytest.fixture
-def seeded_random():
+def seeded_random() -> Generator[Callable[[int], None], None, None]:
     """
     Fixture that seeds random for deterministic tests.
     Returns a function that can be called with a seed.
@@ -210,7 +216,7 @@ def flask_client():
 
 
 @pytest.fixture
-def multiple_villagers(sample_villager, sample_king, sample_female_villager):
+def multiple_villagers(sample_villager: Villager, sample_king: Villager, sample_female_villager: Villager) -> list[Villager]:
     """A list of multiple villagers for testing village-wide operations."""
     villagers = []
 
@@ -236,7 +242,7 @@ def multiple_villagers(sample_villager, sample_king, sample_female_villager):
 
 
 @pytest.fixture
-def dead_villager(sample_villager):
+def dead_villager(sample_villager: Villager) -> Villager:
     """A dead villager for death/graveyard tests."""
     dead = sample_villager.copy()
     dead.update({

@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import json
 
 from src.repositories.base import db_conn, init_db
+from src.models.bank import Bank
 
 # ---------------------------------------------------------------------------
 #  Bank (replaces bank.json)
 # ---------------------------------------------------------------------------
 
-def load_bank():
+def load_bank() -> Bank:
     init_db()
     with db_conn() as conn:
         cur = conn.execute("SELECT value FROM bank_state WHERE key='bank_payload' LIMIT 1;")
@@ -57,7 +60,7 @@ def load_bank():
         }
 
 
-def save_bank(bank: dict):
+def save_bank(bank: Bank) -> None:
     init_db()
 
     year_stats = bank.get("year_stats")

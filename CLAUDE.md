@@ -39,6 +39,15 @@ The codebase uses a layered architecture. Root-level files (`villagers.py`, `vil
 | Entry | `app.py` | Flask routes, session auth, background auto-sim thread | `advance_one_day()`, `get_current_state()`, `build_family_graph()` |
 | Config | `config.py` | World constants: time, demographics, traits, jobs, buildings | Constants only, no functions |
 | Util | `world_utils.py` | Pure utility functions | `pick()`, `rand_int()`, `clamp()`, `pick_weighted()`, `exp_to_next_level()`, `is_child()` |
+| Model | `src/models/villager.py` | Villager TypedDict (functional form for keyword fields) | `Villager` |
+| Model | `src/models/bank.py` | Bank/treasury TypedDict | `Bank` |
+| Model | `src/models/world.py` | World state TypedDict | `WorldPayload` |
+| Model | `src/models/user.py` | User account TypedDict | `User` |
+| Model | `src/models/combat.py` | Combat TypedDicts (functional form for `"def"` field) | `Enemy`, `CombatResult`, `ShopOffer` |
+| Model | `src/models/graveyard.py` | Graveyard record TypedDict | `GraveyardRecord` |
+| Model | `src/models/stats.py` | Yearly stats TypedDicts | `YearStats`, `Champion`, `YearlyChampions`, `AllTimeLeader` |
+| Model | `src/models/building.py` | Building definition TypedDict | `Building` |
+| Model | `src/models/factories.py` | Factory functions for default typed dicts | `create_default_villager()`, `create_default_bank()`, `create_default_world()` |
 | Service | `src/services/villager_service.py` | Villager generation, ID management | `make_row()`, `generate_characters()`, `reset_id_from_characters()` |
 | Service | `src/services/action_service.py` | Action selection and application | `choose_action()`, `apply_action()`, `handle_level_up()`, `create_shop_offer()` |
 | Service | `src/services/combat_service.py` | Enemy creation, combat resolution | `create_enemy_for()`, `resolve_combat()`, `apply_starvation_damage()` |
@@ -82,7 +91,17 @@ ashen-world/
 │   │   ├── family_service.py       # Birth, childhood, coming-of-age, inheritance
 │   │   ├── relationship_service.py # Relationships, marriage, corruption, assassination
 │   │   └── building_service.py     # Tax policy, construction, upgrades, repairs
-│   ├── models/               # (reserved for future data classes)
+│   ├── models/               # TypedDict data models
+│   │   ├── __init__.py       #   Re-exports all types
+│   │   ├── villager.py       #   Villager TypedDict
+│   │   ├── bank.py           #   Bank TypedDict
+│   │   ├── world.py          #   WorldPayload TypedDict
+│   │   ├── user.py           #   User TypedDict
+│   │   ├── combat.py         #   Enemy, CombatResult, ShopOffer
+│   │   ├── graveyard.py      #   GraveyardRecord TypedDict
+│   │   ├── stats.py          #   YearStats, Champion, AllTimeLeader
+│   │   ├── building.py       #   Building TypedDict
+│   │   └── factories.py      #   Default-value factory functions
 │   └── routes/               # (reserved for future blueprint split)
 ├── templates/                # Jinja2 templates
 │   ├── landing.html          # Main dashboard

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 
 from config import (
@@ -16,6 +18,7 @@ from src.services.relationship_service import (
     _set_spouses,
     sync_queen_to_king_spouse,
 )
+from src.models.villager import Villager
 
 # ---------------------------------------------------------------------------
 #  Global ID counter
@@ -23,14 +26,14 @@ from src.services.relationship_service import (
 
 _next_villager_id = 0
 
-def next_unique_id():
+def next_unique_id() -> int:
     """Return a unique integer ID for villagers (auto-increment)."""
     global _next_villager_id
     _next_villager_id += 1
     return _next_villager_id
 
 
-def reset_id_from_characters(characters):
+def reset_id_from_characters(characters: list[Villager]) -> None:
     """
     Optional helper so create_character doesn't touch _next_villager_id directly.
     """
@@ -45,7 +48,7 @@ def reset_id_from_characters(characters):
 #  Villager generation
 # ---------------------------------------------------------------------------
 
-def unique_full_name(taken: set):
+def unique_full_name(taken: set[str]) -> tuple[str, str]:
     """
     Generate a unique (given + family) name that is not present in `taken`.
     Returns (full_name, family_name).
@@ -75,7 +78,7 @@ def unique_full_name(taken: set):
     taken.add(full)
     return full, family
 
-def make_row(taken_names: set, jobs_pool=None, forced_gender=None, forced_job=None):
+def make_row(taken_names: set[str], jobs_pool: list[str] | None = None, forced_gender: str | None = None, forced_job: str | None = None) -> Villager:
     """
     Create a single villager row (dict).
     """
@@ -152,7 +155,7 @@ def make_row(taken_names: set, jobs_pool=None, forced_gender=None, forced_job=No
         "last_birth_day": 0,
     }
 
-def generate_characters(n: int = 50):
+def generate_characters(n: int = 50) -> list[Villager]:
     """
     Generate an initial population of `n` villagers.
     """

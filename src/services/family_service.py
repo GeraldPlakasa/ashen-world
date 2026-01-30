@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import random
 
@@ -30,12 +32,14 @@ from src.services.relationship_service import (
 from src.services.election_service import (
     get_traits_set,
 )
+from src.models.villager import Villager
+from src.models.bank import Bank
 
 # ---------------------------------------------------------------------------
 #  Inheritance
 # ---------------------------------------------------------------------------
 
-def _ensure_list_field(v: dict, key: str) -> list:
+def _ensure_list_field(v: Villager, key: str) -> list:
     x = v.get(key)
     if isinstance(x, list):
         return x
@@ -51,7 +55,7 @@ def _ensure_list_field(v: dict, key: str) -> list:
     return v[key]
 
 
-def settle_inheritance_phase(characters: list[dict], bank: dict | None, current_day: int):
+def settle_inheritance_phase(characters: list[Villager], bank: Bank | None, current_day: int) -> None:
     """
     Settle inheritance for villagers who died TODAY (death_day == current_day),
     and haven't been settled before.
@@ -143,11 +147,11 @@ def settle_inheritance_phase(characters: list[dict], bank: dict | None, current_
 #  Birth + Childhood
 # ---------------------------------------------------------------------------
 
-def _traits_list(v: dict) -> list[str]:
+def _traits_list(v: Villager) -> list[str]:
     s = (v.get("traits", "") or "").strip()
     return [t.strip() for t in s.split(",") if t.strip()]
 
-def _new_id(characters: list[dict]) -> int:
+def _new_id(characters: list[Villager]) -> int:
     mx = 0
     for c in characters:
         try:
@@ -168,7 +172,7 @@ def _inherit_one_trait(parent_traits: list[str]) -> str | None:
         return None
     return random.choice(parent_traits)
 
-def _make_child_traits(mom: dict, dad: dict) -> str:
+def _make_child_traits(mom: Villager, dad: Villager) -> str:
     mom_t = _traits_list(mom)
     dad_t = _traits_list(dad)
 
@@ -202,7 +206,7 @@ def _inherit_stat_small(mom_val: int, dad_val: int, base_lo: int, base_hi: int, 
     noise = rand_int(-1, 2)
     return max(1, base + inherited + noise)
 
-def _count_couple_children(characters: list[dict], mom_id: int, dad_id: int) -> int:
+def _count_couple_children(characters: list[Villager], mom_id: int, dad_id: int) -> int:
     n = 0
     for c in characters:
         try:
@@ -212,7 +216,7 @@ def _count_couple_children(characters: list[dict], mom_id: int, dad_id: int) -> 
             pass
     return n
 
-def _count_family_children(characters: list[dict], father_family: str) -> int:
+def _count_family_children(characters: list[Villager], father_family: str) -> int:
     if not father_family:
         return 0
     n = 0
@@ -222,7 +226,7 @@ def _count_family_children(characters: list[dict], father_family: str) -> int:
                 n += 1
     return n
 
-def _birth_probability(characters: list[dict], mom: dict, dad: dict, current_day: int) -> float:
+def _birth_probability(characters: list[Villager], mom: Villager, dad: Villager, current_day: int) -> float:
     mom_age = int(mom.get("age", 0) or 0)
     dad_age = int(dad.get("age", 0) or 0)
 
@@ -264,7 +268,7 @@ def _birth_probability(characters: list[dict], mom: dict, dad: dict, current_day
     return max(0.0, min(0.03, p))
 
 
-def _spawn_child(characters: list[dict], mom: dict, dad: dict, current_day: int) -> dict:
+def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, current_day: int) -> Villager:
     taken_names = {c.get("name", "") for c in characters}
     child_id = _new_id(characters)
 
@@ -332,7 +336,7 @@ def _spawn_child(characters: list[dict], mom: dict, dad: dict, current_day: int)
     return child
 
 
-def birth_daily_phase(characters: list[dict], current_day: int):
+def birth_daily_phase(characters: list[Villager], current_day: int) -> None:
     """
     Run after spouse logic each day.
     For each married couple, small chance to have a child.
@@ -372,7 +376,7 @@ def birth_daily_phase(characters: list[dict], current_day: int):
             child = _spawn_child(characters, mom, dad, current_day)
             characters.append(child)
 
-def child_daily_phase(characters: list[dict], current_day: int):
+def child_daily_phase(characters: list[Villager], current_day: int) -> None:
     """
     Child-only actions (0-16):
       train, rest, study, hangout, socialize
@@ -436,7 +440,7 @@ def child_daily_phase(characters: list[dict], current_day: int):
             else:
                 _append_last_action(c, "child socialized")
 
-def _assign_job_for_young_adult(p: dict) -> str:
+def _assign_job_for_young_adult(p: Villager) -> str:
     """
     When a child becomes adult (age >= 17):
     pick a job based on stats + traits (non-royal).
@@ -482,7 +486,7 @@ def _assign_job_for_young_adult(p: dict) -> str:
     return job
 
 
-def coming_of_age_phase(characters: list[dict], current_day: int | None = None):
+def coming_of_age_phase(characters: list[Villager], current_day: int | None = None) -> None:
     """
     If age >= 17 and still Child -> assign an adult job.
     """

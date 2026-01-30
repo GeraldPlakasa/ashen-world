@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import random
 
@@ -12,6 +14,8 @@ from world_utils import (
 from buildings import (
     get_building_level,
 )
+from src.models.villager import Villager
+from src.models.bank import Bank
 
 # Rough job groups for "guild" vibes
 MILITARY_JOBS = {
@@ -39,7 +43,7 @@ NATURE_JOBS = {
 #  Relationship helpers
 # ---------------------------------------------------------------------------
 
-def _family_key(v: dict) -> str:
+def _family_key(v: Villager) -> str:
     """Normalized family name. Falls back to last token of `name` if `family` is empty."""
     fam = (v.get("family") or "").strip().lower()
     if fam:
@@ -49,12 +53,12 @@ def _family_key(v: dict) -> str:
         return nm.split()[-1].strip().lower()
     return ""
 
-def _same_family(a: dict, b: dict) -> bool:
+def _same_family(a: Villager, b: Villager) -> bool:
     fa = _family_key(a)
     fb = _family_key(b)
     return bool(fa and fb and fa == fb)
 
-def _get_relations_dict(v: dict) -> dict:
+def _get_relations_dict(v: Villager) -> dict:
     """
     Ensure v['relationships'] is a dict and return it.
     """
@@ -80,7 +84,7 @@ def _get_relations_dict(v: dict) -> dict:
     return rel
 
 
-def get_relationship_score(v: dict, other_id: int) -> int:
+def get_relationship_score(v: Villager, other_id: int) -> int:
     rel = _get_relations_dict(v)
     try:
         return int(rel.get(str(other_id), 0))
@@ -88,12 +92,12 @@ def get_relationship_score(v: dict, other_id: int) -> int:
         return 0
 
 
-def set_relationship_score(v: dict, other_id: int, score: int):
+def set_relationship_score(v: Villager, other_id: int, score: int) -> None:
     rel = _get_relations_dict(v)
     rel[str(other_id)] = int(score)
 
 
-def adjust_relationship(v: dict, other: dict, delta: int):
+def adjust_relationship(v: Villager, other: Villager, delta: int) -> None:
     """
     Adjust relationship score between v -> other by delta, clamped [-100, 120].
     """
@@ -104,7 +108,7 @@ def adjust_relationship(v: dict, other: dict, delta: int):
     set_relationship_score(v, oid, clamp(cur + delta, -100, 120))
 
 
-def relationship_label(v: dict, other: dict) -> str | None:
+def relationship_label(v: Villager, other: Villager) -> str | None:
     """
     Map numeric score to labels:
       friend, bestfriend, love (only Male-Female), rival, enemy.
@@ -132,21 +136,21 @@ def relationship_label(v: dict, other: dict) -> str | None:
         return "rival"
     return None
 
-def _append_last_action(v: dict, msg: str):
+def _append_last_action(v: Villager, msg: str) -> None:
     if v.get("last_action"):
         v["last_action"] = f"{v['last_action']} / {msg}"
     else:
         v["last_action"] = msg
 
 
-def _get_by_id(characters: list[dict], vid: int) -> dict | None:
+def _get_by_id(characters: list[Villager], vid: int) -> Villager | None:
     for c in characters:
         if c.get("id") == vid:
             return c
     return None
 
 
-def _is_spouse_eligible(a: dict, b: dict) -> bool:
+def _is_spouse_eligible(a: Villager, b: Villager) -> bool:
     if not a.get("alive", True) or not b.get("alive", True):
         return False
     if a.get("id") == b.get("id"):
@@ -169,14 +173,14 @@ def _is_spouse_eligible(a: dict, b: dict) -> bool:
     return True
 
 
-def _set_spouses(a: dict, b: dict, current_day: int):
+def _set_spouses(a: Villager, b: Villager, current_day: int) -> None:
     a["spouseId"] = b["id"]
     b["spouseId"] = a["id"]
     a["spouseSinceDay"] = current_day
     b["spouseSinceDay"] = current_day
 
 
-def _clear_spouses(a: dict, b: dict, reason: str):
+def _clear_spouses(a: Villager, b: Villager, reason: str) -> None:
     a["spouseId"] = 0
     b["spouseId"] = 0
     a["spouseSinceDay"] = 0
@@ -185,7 +189,7 @@ def _clear_spouses(a: dict, b: dict, reason: str):
     _append_last_action(b, reason)
 
 
-def _is_mutual_spouse(a: dict, b: dict) -> bool:
+def _is_mutual_spouse(a: Villager, b: Villager) -> bool:
     return int(a.get("spouseId", 0) or 0) == b.get("id") and int(b.get("spouseId", 0) or 0) == a.get("id")
 
 
@@ -200,7 +204,7 @@ def _safe_int(x, default=0) -> int:
 #  Queen
 # ---------------------------------------------------------------------------
 
-def _get_current_king(characters: list[dict]) -> dict | None:
+def _get_current_king(characters: list[Villager]) -> Villager | None:
     """Return the first living King, else None."""
     for c in characters:
         if c.get("alive", True) and c.get("job") == "King":
@@ -208,7 +212,7 @@ def _get_current_king(characters: list[dict]) -> dict | None:
     return None
 
 
-def _demote_queen(q: dict):
+def _demote_queen(q: Villager) -> None:
     """
     Remove Queen title from someone (give them a normal job again).
     """
@@ -220,7 +224,7 @@ def _demote_queen(q: dict):
     q.pop("job_before_queen", None)
 
 
-def sync_queen_to_king_spouse(characters: list[dict], current_day: int | None = None):
+def sync_queen_to_king_spouse(characters: list[Villager], current_day: int | None = None) -> None:
     """
     Enforce: Queen must be the current King's spouse.
     If King has no spouse -> no Queen exists.
@@ -252,7 +256,7 @@ def sync_queen_to_king_spouse(characters: list[dict], current_day: int | None = 
         _append_last_action(spouse, f"became Queen (spouse of King {king.get('name','')})")
 
 
-def spouse_daily_phase(characters: list[dict], current_day: int):
+def spouse_daily_phase(characters: list[Villager], current_day: int) -> None:
     """
     Daily spouse logic:
     - If relationship reaches 100 and label is 'love', chance to become spouses.
@@ -377,7 +381,7 @@ def spouse_daily_phase(characters: list[dict], current_day: int):
 #  Corruption + assassination
 # ---------------------------------------------------------------------------
 
-def maybe_corrupt_from_bank(v: dict, bank: dict | None) -> int:
+def maybe_corrupt_from_bank(v: Villager, bank: Bank | None) -> int:
     """
     Small daily chance for King / Queen / Noble to skim coins
     from the village bank into their own pocket.
@@ -465,7 +469,7 @@ def _mark_dead(characters, victim, reason, current_day=None):
     victim["spouseSinceDay"] = 0
 
 
-def king_assassination_phase(characters: list[dict], bank: dict | None = None, current_day: int | None = None) -> bool:
+def king_assassination_phase(characters: list[Villager], bank: Bank | None = None, current_day: int | None = None) -> bool:
     """
     Small chance per day: if King has an enemy, the King assassinates 1 enemy.
     """

@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import random
 from config import CHILD_MAX_AGE
+from src.models.villager import Villager
 
 # ---------------------------------------------------------------------------
 #  Generic helpers
@@ -46,6 +49,6 @@ def exp_to_next_level(level: int) -> int:
     level = max(1, int(level))
     return 100 * level
 
-def is_child(v: dict) -> bool:
+def is_child(v: Villager) -> bool:
     """Child if age <= CHILD_MAX_AGE."""
     return int(v.get("age", 0) or 0) <= CHILD_MAX_AGE

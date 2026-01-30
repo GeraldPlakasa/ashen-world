@@ -43,7 +43,17 @@ ashen-world/
 │   │   ├── family_service.py       # Birth, childhood, coming-of-age, inheritance
 │   │   ├── relationship_service.py # Relationships, marriage, corruption, assassination
 │   │   └── building_service.py     # Tax policy, construction, upgrades, repairs
-│   ├── models/               # (reserved for future data classes)
+│   ├── models/               # TypedDict data models
+│   │   ├── __init__.py       #   Re-exports all types
+│   │   ├── villager.py       #   Villager TypedDict
+│   │   ├── bank.py           #   Bank TypedDict
+│   │   ├── world.py          #   WorldPayload TypedDict
+│   │   ├── user.py           #   User TypedDict
+│   │   ├── combat.py         #   Enemy, CombatResult, ShopOffer
+│   │   ├── graveyard.py      #   GraveyardRecord TypedDict
+│   │   ├── stats.py          #   YearStats, Champion, AllTimeLeader
+│   │   ├── building.py       #   Building TypedDict
+│   │   └── factories.py      #   Default-value factory functions
 │   └── routes/               # (reserved for future blueprint split)
 ├── templates/                # Jinja2 templates (dashboard, admin, auth pages)
 ├── static/

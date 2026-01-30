@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 
 from config import (
@@ -16,17 +18,18 @@ from src.services.relationship_service import (
     CRAFT_JOBS,
     NATURE_JOBS,
 )
+from src.models.villager import Villager
 
 # ---------------------------------------------------------------------------
 #  Royal / election
 # ---------------------------------------------------------------------------
 
-def get_traits_set(v: dict) -> set[str]:
+def get_traits_set(v: Villager) -> set[str]:
     """Parse v['traits'] into a set of clean trait strings."""
     traits_str = v.get("traits", "") or ""
     return {t.strip() for t in traits_str.split(",") if t.strip()}
 
-def leadership_score(c: dict, prev_king: dict | None = None) -> float:
+def leadership_score(c: Villager, prev_king: Villager | None = None) -> float:
     """
     Leadership score for a candidate:
     stats + traits + age shaping + dynasty bonus.
@@ -80,7 +83,7 @@ def leadership_score(c: dict, prev_king: dict | None = None) -> float:
     return s
 
 
-def voter_adjustment(v: dict, c: dict) -> float:
+def voter_adjustment(v: Villager, c: Villager) -> float:
     """
     How a voter tweaks a candidate's appeal (affinity/alignment).
     """
@@ -124,7 +127,7 @@ def voter_adjustment(v: dict, c: dict) -> float:
     a += random.random() * 0.5
     return a
 
-def reassign_job_by_traits(p: dict) -> str:
+def reassign_job_by_traits(p: Villager) -> str:
     """
     Trait-based job reassignment for a dethroned king.
     Returns the new job string.
@@ -203,7 +206,7 @@ def reassign_job_by_traits(p: dict) -> str:
     p["job"] = job
     return job
 
-def hold_election(characters: list[dict], current_day: int | None = None):
+def hold_election(characters: list[Villager], current_day: int | None = None) -> tuple[Villager | None, str | None]:
     """
     Yearly election:
     - every living villager votes, adults are candidates (prefer males).

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 
 from config import (
@@ -15,13 +17,16 @@ from src.services.relationship_service import (
     adjust_relationship,
     relationship_label,
 )
+from src.models.villager import Villager
+from src.models.bank import Bank
+from src.models.combat import ShopOffer
 
 # ---------------------------------------------------------------------------
 #  Action selection
 # ---------------------------------------------------------------------------
 
 
-def choose_action(villager: dict, bank: dict | None = None, weather: str | None = None) -> str:
+def choose_action(villager: Villager, bank: Bank | None = None, weather: str | None = None) -> str:
     """
     Decide the villager's action for the day based on traits, job, hunger, coins,
     weather, and building levels.
@@ -221,7 +226,7 @@ def choose_action(villager: dict, bank: dict | None = None, weather: str | None 
 #  Level up
 # ---------------------------------------------------------------------------
 
-def handle_level_up(v: dict):
+def handle_level_up(v: Villager) -> None:
     """
     Apply level-up logic in-place.
     """
@@ -247,7 +252,7 @@ def handle_level_up(v: dict):
 #  Shop offers
 # ---------------------------------------------------------------------------
 
-def create_shop_offer(v: dict) -> dict:
+def create_shop_offer(v: Villager) -> ShopOffer:
     """
     Create a gear shop offer for a villager.
     """
@@ -353,7 +358,7 @@ def create_shop_offer(v: dict) -> dict:
 #  Action history
 # ---------------------------------------------------------------------------
 
-def append_action_history(v: dict, max_len: int = 5):
+def append_action_history(v: Villager, max_len: int = 5) -> None:
     """
     Keep a rolling history of the last `max_len` actions in v['action_log'].
     """
@@ -379,12 +384,12 @@ def append_action_history(v: dict, max_len: int = 5):
 # ---------------------------------------------------------------------------
 
 def apply_action(
-    v: dict,
+    v: Villager,
     action: str,
-    bank: dict | None = None,
-    all_characters: list[dict] | None = None,
+    bank: Bank | None = None,
+    all_characters: list[Villager] | None = None,
     weather: str | None = None,
-):
+) -> None:
     """
     Apply the chosen action to the villager (stats, hunger, coins, EXP).
     """

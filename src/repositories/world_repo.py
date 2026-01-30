@@ -1,14 +1,16 @@
+from __future__ import annotations
+
 import json
-from typing import Dict, Any
 
 import config
 from src.repositories.base import db_conn, init_db
+from src.models.world import WorldPayload
 
 # ---------------------------------------------------------------------------
 #  Day / World time (replaces day.txt)
 # ---------------------------------------------------------------------------
 
-def compute_year_and_day(total_day: int):
+def compute_year_and_day(total_day: int) -> tuple[int, int]:
     if total_day < 1:
         total_day = 1
     year_index = (total_day - 1) // config.DAYS_PER_YEAR
@@ -35,7 +37,7 @@ def load_day() -> int:
             return 1
 
 
-def save_day(day: int):
+def save_day(day: int) -> None:
     init_db()
     if day < 1:
         day = 1
@@ -57,7 +59,7 @@ def save_day(day: int):
     save_world_payload(payload)
 
 
-def load_world_payload() -> Dict[str, Any]:
+def load_world_payload() -> WorldPayload:
     """
     Returns the full world payload stored in world_state.day_payload.
     """
@@ -83,7 +85,7 @@ def load_world_payload() -> Dict[str, Any]:
         return data
 
 
-def save_world_payload(payload: Dict[str, Any]):
+def save_world_payload(payload: WorldPayload) -> None:
     """
     Persists the full world payload back to SQLite (world_state.day_payload).
     """

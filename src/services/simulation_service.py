@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import random
 
@@ -34,12 +36,14 @@ from src.services.family_service import (
     coming_of_age_phase,
 )
 from src.repositories.world_repo import load_weather
+from src.models.villager import Villager
+from src.models.bank import Bank
 
 # ---------------------------------------------------------------------------
 #  Immigrants
 # ---------------------------------------------------------------------------
 
-def maybe_add_immigrants(characters: list[dict], bank: dict) -> tuple[list[dict], int]:
+def maybe_add_immigrants(characters: list[Villager], bank: Bank) -> tuple[list[Villager], int]:
     """
     Small chance each day that 1-2 immigrants arrive.
     """
@@ -76,13 +80,13 @@ def maybe_add_immigrants(characters: list[dict], bank: dict) -> tuple[list[dict]
 #  Player ownership / inheritance
 # ---------------------------------------------------------------------------
 
-def _norm_origin(v: dict) -> str:
+def _norm_origin(v: Villager) -> str:
     return (v.get("origin", "") or "").strip().lower()
 
-def _is_player_char(v: dict) -> bool:
+def _is_player_char(v: Villager) -> bool:
     return _norm_origin(v) == "player" and bool(v.get("owner", ""))
 
-def _is_alive(v: dict) -> bool:
+def _is_alive(v: Villager) -> bool:
     return v.get("alive", True) and int(v.get("hp", 0) or 0) > 0
 
 def _normalize_id_list(raw):
@@ -106,15 +110,15 @@ def _normalize_id_list(raw):
             return []
     return []
 
-def _demote_to_npc(v: dict):
+def _demote_to_npc(v: Villager) -> None:
     v["origin"] = "npc"
     v["owner"] = ""
 
-def _promote_to_player(v: dict, owner: str):
+def _promote_to_player(v: Villager, owner: str) -> None:
     v["origin"] = "player"
     v["owner"] = owner or ""
 
-def _find_children(parent: dict, characters: list[dict], id_map: dict[int, dict]) -> list[dict]:
+def _find_children(parent: Villager, characters: list[Villager], id_map: dict[int, Villager]) -> list[Villager]:
     """
     Prefer explicit childrenIds, but fallback to scanning motherId/fatherId.
     """
@@ -142,7 +146,7 @@ def _find_children(parent: dict, characters: list[dict], id_map: dict[int, dict]
     return out
 
 
-def _find_siblings(person: dict, characters: list[dict]) -> list[dict]:
+def _find_siblings(person: Villager, characters: list[Villager]) -> list[Villager]:
     """
     Siblings = share motherId OR fatherId (half-siblings included).
     """
@@ -173,7 +177,7 @@ def _find_siblings(person: dict, characters: list[dict]) -> list[dict]:
     return out
 
 
-def _choose_heir(candidates: list[dict], owner: str | None = None) -> dict | None:
+def _choose_heir(candidates: list[Villager], owner: str | None = None) -> Villager | None:
     """
     Pick ONE heir from alive candidates.
     """
@@ -199,7 +203,7 @@ def _choose_heir(candidates: list[dict], owner: str | None = None) -> dict | Non
 
     return sorted(alive, key=key, reverse=True)[0]
 
-def enforce_one_player_per_owner(characters: list[dict]):
+def enforce_one_player_per_owner(characters: list[Villager]) -> None:
     """
     Ensure each owner has exactly ONE 'player' character.
     """
@@ -228,7 +232,7 @@ def enforce_one_player_per_owner(characters: list[dict]):
             if not v.get("last_action"):
                 v["last_action"] = f"lost player status (duplicate owner {owner})"
 
-def player_inheritance_phase(characters: list[dict], current_day: int = 0):
+def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -> None:
     """
     If a player character dies:
       - promote ONE alive CHILD -> player, same owner
@@ -294,7 +298,7 @@ def player_inheritance_phase(characters: list[dict], current_day: int = 0):
 #  Day Loop
 # ---------------------------------------------------------------------------
 
-def simulate_one_day(characters, bank: dict, current_day: int = 0):
+def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank]:
     """
     Simulate actions for one day for each villager in the list.
     """

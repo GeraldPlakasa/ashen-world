@@ -1,20 +1,23 @@
+from __future__ import annotations
+
 import os
 import json
 
 import config
 from src.repositories.base import db_conn, init_db
+from src.models.stats import AllTimeLeader, YearlyChampions, YearStats
 
 # ---------------------------------------------------------------------------
 #  Yearly stats + migration
 # ---------------------------------------------------------------------------
 
-def clear_yearly_stats():
+def clear_yearly_stats() -> None:
     init_db()
     with db_conn() as conn:
         conn.execute("DELETE FROM yearly_stats;")
 
 
-def get_year_entry(year: int):
+def get_year_entry(year: int) -> YearStats | None:
     init_db()
     with db_conn() as conn:
         row = conn.execute(
@@ -24,7 +27,7 @@ def get_year_entry(year: int):
         return dict(row) if row else None
 
 
-def list_yearly_history(finalized_only: bool = True):
+def list_yearly_history(finalized_only: bool = True) -> list[YearStats]:
     init_db()
     where = "WHERE is_finalized=1" if finalized_only else ""
     with db_conn() as conn:
@@ -34,7 +37,7 @@ def list_yearly_history(finalized_only: bool = True):
         return [dict(r) for r in rows]
 
 
-def ensure_year_row(year: int, treasury_start: int | None = None):
+def ensure_year_row(year: int, treasury_start: int | None = None) -> None:
     init_db()
     with db_conn() as conn:
         # Insert row if missing
@@ -100,7 +103,7 @@ def update_year_daily(
         )
 
 
-def finalize_year(year: int, champions: dict | None = None):
+def finalize_year(year: int, champions: YearlyChampions | None = None) -> None:
     """
     Finalize a year:
     - compute avg tax rate
@@ -198,7 +201,7 @@ def finalize_year(year: int, champions: dict | None = None):
             ),
         )
 
-def get_all_time_leader(metric: str, finalized_only: bool = True):
+def get_all_time_leader(metric: str, finalized_only: bool = True) -> AllTimeLeader | None:
     """
     Return the best (highest value) champion across years for a metric.
     """
@@ -243,7 +246,7 @@ def get_all_time_leader(metric: str, finalized_only: bool = True):
         return dict(row) if row else None
 
 
-def get_all_time_leaders(finalized_only: bool = True):
+def get_all_time_leaders(finalized_only: bool = True) -> dict[str, AllTimeLeader | None]:
     """
     Convenience wrapper returning all metrics in one dict.
     """

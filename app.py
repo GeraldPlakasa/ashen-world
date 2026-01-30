@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import random
 import threading
@@ -5,6 +7,9 @@ import time
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from werkzeug.security import check_password_hash
+
+from src.models import Villager, Bank
+from src.models.stats import YearlyChampions
 
 from config import (
     ENV_ADMIN_USERNAME,
@@ -77,7 +82,7 @@ _state_lock = threading.Lock()   # guard CSV + world_time read/writes
 #  Helper
 # ---------------------------------------------------------------------------
 
-def compute_year_champions(characters: list[dict]) -> dict:
+def compute_year_champions(characters: list[Villager]) -> YearlyChampions:
     # prefer alive, fallback to all
     pool = [c for c in characters if c.get("alive", True)]
     if not pool:
@@ -125,7 +130,7 @@ def _parse_relationship_ids(raw):
         return out
     return []
 
-def build_graveyard_index_for(characters: list[dict]) -> dict:
+def build_graveyard_index_for(characters: list[Villager]) -> dict:
     """
     Collect IDs referenced by current villagers (spouse/parents/children/relationships)
     that are missing from the live list, then fetch them from graveyard in one batch.
@@ -178,7 +183,7 @@ def _parse_children_ids(raw):
             return []
     return []
 
-def build_family_graph(characters: list[dict], root_id: int, up_depth: int = 3, down_depth: int = 3, max_nodes: int = 250):
+def build_family_graph(characters: list[Villager], root_id: int, up_depth: int = 3, down_depth: int = 3, max_nodes: int = 250) -> dict:
     """
     Build a vis-network graph payload (nodes + edges) for family tree.
     Includes graveyard fallback for pruned villagers.
@@ -401,12 +406,12 @@ def build_family_graph(characters: list[dict], root_id: int, up_depth: int = 3, 
 #  Villager generation
 # ---------------------------------------------------------------------------
 
-def get_current_state():
+def get_current_state() -> tuple[list[Villager], Bank, int, int, int, str]:
     """
     Thread-safe helper: read current characters + world time.
 
     Returns:
-        (characters, year, day_in_year, total_day)
+        (characters, bank, year, day_in_year, total_day, weather)
     """
     with _state_lock:
         characters = load_from_csv()
@@ -417,7 +422,7 @@ def get_current_state():
     year, day_in_year = compute_year_and_day(total_day)
     return characters, bank, year, day_in_year, total_day, weather
 
-def advance_one_day():
+def advance_one_day() -> None:
     """
     Advance the world by one day in a thread-safe way.
 

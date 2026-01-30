@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 
 from config import (
@@ -9,13 +11,16 @@ from world_utils import (
     rand_int,
     pick_weighted,
 )
+from src.models.villager import Villager
+from src.models.bank import Bank
+from src.models.building import Building
 
 # ---------------------------------------------------------------------------
 #  Village bank: tax rate + treasury
 # ---------------------------------------------------------------------------
 
 
-def update_tax_policy(characters, bank: dict, log_it: bool = False):
+def update_tax_policy(characters: list[Villager], bank: Bank, log_it: bool = False) -> Bank:
     """
     Set bank['tax_rate'] based on the King's traits, mirroring the JS logic.
     If no King exists, fall back to base 10%.
@@ -66,7 +71,7 @@ def update_tax_policy(characters, bank: dict, log_it: bool = False):
     return bank
 
 
-def apply_tax_on_income(v: dict, gross: int, bank: dict):
+def apply_tax_on_income(v: Villager, gross: int, bank: Bank) -> dict[str, int]:
     """
     Apply tax on a villager's income and send it to the village bank.
     """
@@ -90,7 +95,7 @@ def apply_tax_on_income(v: dict, gross: int, bank: dict):
 # ---------------------------------------------------------------------------
 
 
-def get_building_level(bank: dict | None, key: str) -> int:
+def get_building_level(bank: Bank | None, key: str) -> int:
     """
     Convenience helper to read a building's level from the village bank.
     Returns 0 if bank / key is missing.
@@ -103,7 +108,7 @@ def get_building_level(bank: dict | None, key: str) -> int:
     except (TypeError, ValueError):
         return 0
 
-def _ensure_building_dicts(bank: dict):
+def _ensure_building_dicts(bank: Bank) -> tuple[dict[str, int], dict[str, int]]:
     """
     Make sure bank has mutable 'building_levels' and 'building_health' dicts.
     Returns (building_levels, building_health).
@@ -121,7 +126,7 @@ def _ensure_building_dicts(bank: dict):
     return levels, health
 
 
-def has_building(key: str, bank: dict) -> bool:
+def has_building(key: str, bank: Bank) -> bool:
     """
     Return True if this building exists and is not collapsed.
     """
@@ -133,7 +138,7 @@ def has_building(key: str, bank: dict) -> bool:
     return lvl >= 1 and h > 0
 
 
-def building_priority_weights(king: dict | None) -> dict:
+def building_priority_weights(king: Villager | None) -> dict[str, float]:
     """
     Priority weights for each building, based on the King's traits.
     """
@@ -191,11 +196,11 @@ def building_priority_weights(king: dict | None) -> dict:
     return w
 
 
-def _find_building(key: str):
+def _find_building(key: str) -> Building | None:
     return next((b for b in BUILDINGS if b["key"] == key), None)
 
 
-def choose_building_to_construct(characters: list[dict], bank: dict):
+def choose_building_to_construct(characters: list[Villager], bank: Bank) -> Building | None:
     """
     Pick ONE building to construct this day, if any.
     """
@@ -225,10 +230,10 @@ def choose_building_to_construct(characters: list[dict], bank: dict):
 
 
 def maybe_construct_building(
-    characters: list[dict],
-    bank: dict,
+    characters: list[Villager],
+    bank: Bank,
     current_day: int | None = None,
-):
+) -> tuple[Bank, str | None]:
     """
     Spend village bank coins (if possible) to construct one building
     chosen by the King's priorities.
@@ -253,7 +258,7 @@ def maybe_construct_building(
     return bank, event_text
 
 
-def upgrade_cost(key: str, bank: dict) -> int:
+def upgrade_cost(key: str, bank: Bank) -> int:
     """
     Cost to upgrade a building from its current level to the next level.
     Lv2 = 1.75x base, Lv3 = 2.5x base, etc.
@@ -269,7 +274,7 @@ def upgrade_cost(key: str, bank: dict) -> int:
     return math.ceil(base["cost"] * mult)
 
 
-def can_upgrade_building(key: str, bank: dict) -> bool:
+def can_upgrade_building(key: str, bank: Bank) -> bool:
     if not has_building(key, bank):
         return False
     if not _find_building(key):
@@ -287,7 +292,7 @@ def can_upgrade_building(key: str, bank: dict) -> bool:
     return int(bank.get("balance", 0)) >= cost
 
 
-def choose_building_to_upgrade(characters: list[dict], bank: dict):
+def choose_building_to_upgrade(characters: list[Villager], bank: Bank) -> str | None:
     """
     Among existing buildings, choose one to upgrade based on King priorities.
     """
@@ -324,9 +329,9 @@ def choose_building_to_upgrade(characters: list[dict], bank: dict):
 
 def upgrade_building(
     key: str,
-    bank: dict,
+    bank: Bank,
     current_day: int | None = None,
-):
+) -> tuple[Bank, str | None]:
     """
     Perform the actual upgrade of a building, if affordable.
     """
@@ -353,10 +358,10 @@ def upgrade_building(
 
 
 def maybe_upgrade_building(
-    characters: list[dict],
-    bank: dict,
+    characters: list[Villager],
+    bank: Bank,
     current_day: int | None = None,
-):
+) -> tuple[Bank, str | None]:
     """
     Select a building to upgrade (if any) and upgrade it.
     """
@@ -366,7 +371,7 @@ def maybe_upgrade_building(
     return upgrade_building(key, bank, current_day)
 
 
-def decay_buildings(bank: dict, current_day: int | None = None):
+def decay_buildings(bank: Bank, current_day: int | None = None) -> tuple[Bank, list[str]]:
     """
     Daily decay of building health. Buildings can collapse if health hits 0.
     """
@@ -401,7 +406,7 @@ def decay_buildings(bank: dict, current_day: int | None = None):
     return bank, events
 
 
-def repair_cost_for(key: str, bank: dict) -> int:
+def repair_cost_for(key: str, bank: Bank) -> int:
     """
     Cost to repair a building from its current health up to 100%.
     """
@@ -418,7 +423,7 @@ def repair_cost_for(key: str, bank: dict) -> int:
     return cost
 
 
-def choose_building_to_repair(characters: list[dict], bank: dict):
+def choose_building_to_repair(characters: list[Villager], bank: Bank) -> tuple[str, int] | None:
     """
     Among damaged buildings, choose one to repair, considering King priorities
     and available coins.
@@ -461,10 +466,10 @@ def choose_building_to_repair(characters: list[dict], bank: dict):
 
 
 def maybe_repair_buildings(
-    characters: list[dict],
-    bank: dict,
+    characters: list[Villager],
+    bank: Bank,
     current_day: int | None = None,
-):
+) -> tuple[Bank, str | None]:
     """
     If any important building is damaged and coins are sufficient,
     repair exactly one building (back to 100% health).
