@@ -49,6 +49,13 @@ def exp_to_next_level(level: int) -> int:
     level = max(1, int(level))
     return 100 * level
 
+def safe_int(x, default=0):
+    """Convert x to int, returning default on failure."""
+    try:
+        return int(x or 0)
+    except (TypeError, ValueError):
+        return default
+
 def is_child(v: Villager) -> bool:
     """Child if age <= CHILD_MAX_AGE."""
     return int(v.get("age", 0) or 0) <= CHILD_MAX_AGE

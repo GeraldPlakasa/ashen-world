@@ -19,9 +19,9 @@ A living-village simulation built with Flask. Manage villagers, elections, build
 
 ```
 ashen-world/
-├── app.py                    # Flask entrypoint, routes, background auto-sim thread
+├── app.py                    # Flask entrypoint, thin route handlers
 ├── config.py                 # World constants (traits, jobs, buildings, economy rules)
-├── world_utils.py            # Utility functions (pick, clamp, exp calculations)
+├── world_utils.py            # Utility functions (pick, clamp, safe_int, exp calculations)
 ├── villagers.py              # Shim → re-exports from src/services/*
 ├── villagers_social.py       # Shim → re-exports from src/services/*
 ├── storage.py                # Shim → re-exports from src/repositories/*
@@ -35,6 +35,9 @@ ashen-world/
 │   │   ├── bank_repo.py      #   Treasury/bank state
 │   │   └── stats_repo.py     #   Yearly stats + migration
 │   ├── services/             # Business logic
+│   │   ├── world_service.py        # World orchestration, state locking, day advancement
+│   │   ├── family_tree_service.py  # Family tree graph building, graveyard index
+│   │   ├── character_service.py    # Player character creation, pinned character data
 │   │   ├── villager_service.py     # Villager generation (make_row, generate_characters)
 │   │   ├── action_service.py       # Action selection + application
 │   │   ├── combat_service.py       # Enemy creation, combat resolution

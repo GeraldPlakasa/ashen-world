@@ -36,9 +36,9 @@ The codebase uses a layered architecture. Root-level files (`villagers.py`, `vil
 
 | Layer | File | Purpose | Key Functions |
 |-------|------|---------|---------------|
-| Entry | `app.py` | Flask routes, session auth, background auto-sim thread | `advance_one_day()`, `get_current_state()`, `build_family_graph()` |
+| Entry | `app.py` | Flask routes, session auth, background auto-sim thread | Thin route handlers only |
 | Config | `config.py` | World constants: time, demographics, traits, jobs, buildings | Constants only, no functions |
-| Util | `world_utils.py` | Pure utility functions | `pick()`, `rand_int()`, `clamp()`, `pick_weighted()`, `exp_to_next_level()`, `is_child()` |
+| Util | `world_utils.py` | Pure utility functions | `pick()`, `rand_int()`, `clamp()`, `pick_weighted()`, `exp_to_next_level()`, `safe_int()`, `is_child()` |
 | Model | `src/models/villager.py` | Villager TypedDict (functional form for keyword fields) | `Villager` |
 | Model | `src/models/bank.py` | Bank/treasury TypedDict | `Bank` |
 | Model | `src/models/world.py` | World state TypedDict | `WorldPayload` |
@@ -55,7 +55,10 @@ The codebase uses a layered architecture. Root-level files (`villagers.py`, `vil
 | Service | `src/services/election_service.py` | Elections, leadership scoring | `hold_election()`, `leadership_score()`, `get_traits_set()` |
 | Service | `src/services/family_service.py` | Birth, childhood, coming-of-age, inheritance | `birth_daily_phase()`, `child_daily_phase()`, `coming_of_age_phase()`, `settle_inheritance_phase()` |
 | Service | `src/services/relationship_service.py` | Relationships, marriage, corruption, assassination | `adjust_relationship()`, `spouse_daily_phase()`, `king_assassination_phase()` |
-| Service | `src/services/building_service.py` | Tax policy, construction, upgrades, repairs | `update_tax_policy()`, `get_building_level()`, `upgrade_cost()`, `apply_tax_on_income()` |
+| Service | `src/services/building_service.py` | Tax policy, construction, upgrades, repairs | `update_tax_policy()`, `get_building_level()`, `upgrade_cost()`, `build_building_summary()` |
+| Service | `src/services/world_service.py` | World orchestration: state locking, day advancement | `get_current_state()`, `advance_one_day()`, `generate_new_world()`, `compute_year_champions()` |
+| Service | `src/services/family_tree_service.py` | Family tree graph building, graveyard index | `build_family_graph()`, `build_graveyard_index_for()`, `find_person()` |
+| Service | `src/services/character_service.py` | Player character creation, pinned character data | `create_player_character()`, `get_pinned_character_data()` |
 | Repo | `src/repositories/base.py` | SQLite connection, schema init | `db_conn()`, `init_db()` |
 | Repo | `src/repositories/villager_repo.py` | Villager CRUD + graveyard | `save_villagers()`, `load_villagers()`, `graveyard_*()` |
 | Repo | `src/repositories/world_repo.py` | Day/weather state | `load_day()`, `save_day()`, `load_weather()` |
@@ -67,7 +70,7 @@ The codebase uses a layered architecture. Root-level files (`villagers.py`, `vil
 
 ```
 ashen-world/
-├── app.py                    # Flask entrypoint (1400+ lines)
+├── app.py                    # Flask entrypoint, thin route handlers (~520 lines)
 ├── config.py                 # World constants
 ├── world_utils.py            # Pure utilities
 ├── villagers.py              # SHIM → re-exports from src/services/*
@@ -83,7 +86,10 @@ ashen-world/
 │   │   ├── bank_repo.py      #   Treasury/bank state
 │   │   └── stats_repo.py     #   Yearly stats + migration
 │   ├── services/             # Business logic
-│   │   ├── villager_service.py     # Generation (make_row, generate_characters)
+│   │   ├── world_service.py        # World orchestration, state locking, day advancement
+│   │   ├── family_tree_service.py  # Family tree graph building, graveyard index
+│   │   ├── character_service.py    # Player character creation, pinned data
+│   │   ├── villager_service.py     # Villager generation (make_row, generate_characters)
 │   │   ├── action_service.py       # Action selection + application
 │   │   ├── combat_service.py       # Enemy creation, combat resolution
 │   │   ├── simulation_service.py   # Daily loop, immigrants, player inheritance
@@ -164,7 +170,7 @@ SQLite database at `data/ashen_world.sqlite3` (auto-created on first run):
 
 ### Simulation Flow
 
-Each day tick (`advance_one_day()` in app.py):
+Each day tick (`advance_one_day()` in `src/services/world_service.py`):
 
 1. Roll weather (every N days)
 2. Choose action for each villager based on traits/stats/weather
@@ -180,7 +186,7 @@ Each day tick (`advance_one_day()` in app.py):
 
 ### Threading
 
-`_state_lock = threading.Lock()` in app.py guards concurrent database access. Background thread runs `auto_simulation_loop()` when `AUTO_SIM_ENABLED=True`.
+`_state_lock = threading.Lock()` in `src/services/world_service.py` guards concurrent database access. Background thread runs `auto_simulation_loop()` when `AUTO_SIM_ENABLED=True`.
 
 ## Testing
 

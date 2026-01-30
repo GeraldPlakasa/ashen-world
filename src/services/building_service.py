@@ -494,3 +494,45 @@ def maybe_repair_buildings(
 
     event_text = f"Repaired {name} for {cost} coins (health 100%)."
     return bank, event_text
+
+
+def build_building_summary(bank: Bank, include_health: bool = False) -> list[dict]:
+    """
+    Build a sorted list of building summaries for UI display.
+
+    If include_health is True, each entry includes 'health' and 'built' fields
+    and is sorted by (not built, name). Otherwise entries include only key/name/level
+    and are sorted by (level <= 0, name).
+    """
+    raw_levels = bank.get("building_levels") or {}
+    raw_health = bank.get("building_health") or {}
+
+    result = []
+    for b in BUILDINGS:
+        key = b["key"]
+        name = b["name"]
+
+        try:
+            lvl = int(raw_levels.get(key, 0) or 0)
+        except (TypeError, ValueError):
+            lvl = 0
+
+        entry: dict = {"key": key, "name": name, "level": lvl}
+
+        if include_health:
+            try:
+                hp = int(raw_health.get(key, 0) or 0)
+            except (TypeError, ValueError):
+                hp = 0
+            hp = max(0, min(100, hp))
+            entry["health"] = hp
+            entry["built"] = lvl > 0 and hp > 0
+
+        result.append(entry)
+
+    if include_health:
+        result.sort(key=lambda x: (not x["built"], x["name"]))
+    else:
+        result.sort(key=lambda x: (x["level"] <= 0, x["name"]))
+
+    return result
