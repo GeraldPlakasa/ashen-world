@@ -4,10 +4,6 @@ import random
 from config import CHILD_MAX_AGE
 from src.models.villager import Villager
 
-# ---------------------------------------------------------------------------
-#  Generic helpers
-# ---------------------------------------------------------------------------
-
 def pick(seq):
     """Return a random element from a non-empty sequence."""
     if not seq:

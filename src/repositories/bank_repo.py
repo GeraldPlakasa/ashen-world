@@ -5,11 +5,8 @@ import json
 from src.repositories.base import db_conn, init_db
 from src.models.bank import Bank
 
-# ---------------------------------------------------------------------------
-#  Bank (replaces bank.json)
-# ---------------------------------------------------------------------------
-
 def load_bank() -> Bank:
+    """Load the village bank state from SQLite, returning defaults if no data exists."""
     init_db()
     with db_conn() as conn:
         cur = conn.execute("SELECT value FROM bank_state WHERE key='bank_payload' LIMIT 1;")
@@ -61,6 +58,7 @@ def load_bank() -> Bank:
 
 
 def save_bank(bank: Bank) -> None:
+    """Persist the village bank state to SQLite."""
     init_db()
 
     year_stats = bank.get("year_stats")

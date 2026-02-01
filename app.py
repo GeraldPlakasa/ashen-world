@@ -81,7 +81,6 @@ def landing():
 
     village_buildings = build_building_summary(village_bank)
 
-    # Pinned character data
     pinned_data = get_pinned_character_data(username, characters)
 
     pinned_character = pinned_data["character"] if pinned_data else None
@@ -126,7 +125,7 @@ def landing():
 def register():
     """
     Registration page: username + email + password.
-    Saves to users.csv, then redirect to login.
+    Saves user to database, then redirect to login.
     """
     if request.method == "POST":
         username = request.form.get("username", "").strip()
@@ -134,7 +133,6 @@ def register():
         password = request.form.get("password", "").strip()
         confirm = request.form.get("confirm_password", "").strip()
 
-        # Basic validation
         if not username or not email or not password:
             flash("All fields are required.", "info")
             return render_template("register.html")
@@ -157,7 +155,6 @@ def register():
             flash("Email is already registered.", "info")
             return render_template("register.html")
 
-        # Save user
         save_user(username, email, password)
         flash("Account created. You can now log in.", "success")
         return redirect(url_for("login"))
@@ -168,8 +165,8 @@ def register():
 def login():
     """
     Login page.
-    - Cek user dari users.csv (username/password).
-    - Fallback: admin hardcoded (optional).
+    - Check user credentials from database.
+    - Fallback: hardcoded admin credentials.
     """
     if request.method == "POST":
         username = request.form.get("username", "").strip()
@@ -181,7 +178,6 @@ def login():
             None,
         )
 
-        # 1) Coba login dari CSV
         if user and check_password_hash(user.get("password_hash", ""), password):
             session["logged_in"] = True
             session["username"] = user["username"]
@@ -189,7 +185,6 @@ def login():
             flash(f"Welcome back, {user['username']}.", "success")
             return redirect(url_for("landing"))
 
-        # 2) Fallback: hardcoded admin (opsional)
         if username == ENV_ADMIN_USERNAME and password == ENV_ADMIN_PASSWORD:
             session["logged_in"] = True
             session["username"] = username
@@ -197,7 +192,6 @@ def login():
             flash("Welcome back, steward of Ashen World.", "success")
             return redirect(url_for("admin"))
 
-        # 3) Gagal
         flash("Invalid username or password.", "info")
 
     return render_template("login.html")
@@ -218,7 +212,7 @@ def admin():
     Main admin view:
     - POST "generate" : create a new population, reset to Day 1.
     - POST "+1 Day"   : advance the world by one day and simulate actions.
-    - GET             : display current CSV-based population and world time.
+    - GET             : display current population and world time.
     """
     if not session.get("logged_in"):
         return redirect(url_for("login"))
@@ -269,6 +263,7 @@ def admin():
 
 @app.route("/leaderboard", methods=["GET"])
 def leaderboard():
+    """Leaderboard page: yearly champions and all-time leaders."""
     if not session.get("logged_in"):
         return redirect(url_for("login"))
 
@@ -389,13 +384,13 @@ def create_character():
 
 @app.route("/family-tree", methods=["GET"])
 def family_tree():
+    """Family tree visualization page for the logged-in user's character."""
     if not session.get("logged_in"):
         return redirect(url_for("login"))
 
     username = session.get("username")
     is_admin = bool(session.get("is_admin"))
 
-    # get current world time
     characters, bank, year, day_in_year, _, weather = get_current_state()
 
     # default root: user's player character
@@ -432,6 +427,7 @@ def family_tree():
 
 @app.route("/api/family-tree/<int:root_id>", methods=["GET"])
 def api_family_tree(root_id: int):
+    """Return vis-network graph data for a family tree rooted at root_id."""
     if not session.get("logged_in"):
         return jsonify({"ok": False, "message": "Unauthorized"}), 401
 
@@ -441,7 +437,6 @@ def api_family_tree(root_id: int):
     up_depth = safe_int(request.args.get("up", 3), 3)
     down_depth = safe_int(request.args.get("down", 3), 3)
 
-    # guardrails
     up_depth = max(0, min(10, up_depth))
     down_depth = max(0, min(10, down_depth))
 
@@ -499,8 +494,7 @@ def api_state():
 
 @app.route("/features", methods=["GET"])
 def features():
-
-    # optional: you can show current year/day at top like other pages
+    """Static feature showcase page."""
     _, _, year, day_in_year, _, weather = get_current_state()
 
     return render_template(

@@ -8,10 +8,6 @@ from typing import Generator
 
 import config
 
-# ---------------------------------------------------------------------------
-#  SQLite helpers
-# ---------------------------------------------------------------------------
-
 def _ensure_data_dir():
     os.makedirs(config.DATA_DIR, exist_ok=True)
 
@@ -43,7 +39,6 @@ def init_db():
     Call this once at app startup (or before first use).
     """
     with db_conn() as conn:
-        # Users
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -74,7 +69,6 @@ def init_db():
             """
         )
 
-        # World state (day)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS world_state (
@@ -84,7 +78,6 @@ def init_db():
             """
         )
 
-        # Bank state
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS bank_state (
@@ -94,7 +87,6 @@ def init_db():
             """
         )
 
-        # Yearly stats
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS yearly_stats (
@@ -155,7 +147,6 @@ def init_db():
             """
         )
 
-        # Ensure defaults exist
         _ensure_world_defaults(conn)
         _ensure_bank_defaults(conn)
         _ensure_villagers_columns(conn)

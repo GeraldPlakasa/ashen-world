@@ -121,7 +121,6 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
 
     Mutates `v` in-place (coins, rep, exp, hp, alive).
     """
-    # Base power (character)
     char_power = (
         v["atk"] * 1.15
         + v["def"]
@@ -131,7 +130,6 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
         + 20
     )
 
-    # Building-based bonuses
     if bank is not None:
         lvl_barracks = get_building_level(bank, "barracks")
         lvl_walls    = get_building_level(bank, "walls")
@@ -144,14 +142,13 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
     if w == "rain":
         char_power *= 0.93
 
-    # Optional companions (not yet surfaced in CSV/UI)
+    # Optional companions (not yet surfaced in UI)
     companion = v.get("_companion")
     if companion == "war_beast":
         char_power += 40 + v["level"] * 3
     elif companion == "clockwork_soldier":
         char_power += 55 + v["level"] * 2
 
-    # Enemy power
     enemy_power = (enemy["atk"] * 1.0 + enemy["def"] + enemy["hp"] * 0.18) * 0.9
 
     # Win probability (logistic curve)
@@ -160,7 +157,6 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
 
     win = random.random() < win_prob
 
-    # Base damage
     dmg_base = max(0, round(enemy["atk"] * 0.45 - v["def"] * 0.25))
     dmg_var = round(dmg_base * (0.8 + random.random() * 0.6))
 

@@ -7,17 +7,15 @@ import config
 from src.repositories.base import db_conn, init_db
 from src.models.stats import AllTimeLeader, YearlyChampions, YearStats
 
-# ---------------------------------------------------------------------------
-#  Yearly stats + migration
-# ---------------------------------------------------------------------------
-
 def clear_yearly_stats() -> None:
+    """Delete all rows from the yearly_stats table."""
     init_db()
     with db_conn() as conn:
         conn.execute("DELETE FROM yearly_stats;")
 
 
 def get_year_entry(year: int) -> YearStats | None:
+    """Retrieve the stats record for a specific year, or None."""
     init_db()
     with db_conn() as conn:
         row = conn.execute(
@@ -28,6 +26,7 @@ def get_year_entry(year: int) -> YearStats | None:
 
 
 def list_yearly_history(finalized_only: bool = True) -> list[YearStats]:
+    """Return yearly stats records, optionally filtered to finalized years only."""
     init_db()
     where = "WHERE is_finalized=1" if finalized_only else ""
     with db_conn() as conn:
@@ -38,6 +37,7 @@ def list_yearly_history(finalized_only: bool = True) -> list[YearStats]:
 
 
 def ensure_year_row(year: int, treasury_start: int | None = None) -> None:
+    """Ensure a yearly_stats row exists for the given year, inserting one if missing."""
     init_db()
     with db_conn() as conn:
         # Insert row if missing
@@ -71,6 +71,7 @@ def update_year_daily(
     tax_rate_today: float,
     treasury_end: int,
 ):
+    """Accumulate daily stats (deaths, immigrants, tax) into the yearly_stats row for a year."""
     init_db()
     with db_conn() as conn:
         # Ensure exists

@@ -15,11 +15,6 @@ from src.models.villager import Villager
 from src.models.bank import Bank
 from src.models.building import Building
 
-# ---------------------------------------------------------------------------
-#  Village bank: tax rate + treasury
-# ---------------------------------------------------------------------------
-
-
 def update_tax_policy(characters: list[Villager], bank: Bank, log_it: bool = False) -> Bank:
     """
     Set bank['tax_rate'] based on the King's traits, mirroring the JS logic.
@@ -53,7 +48,6 @@ def update_tax_policy(characters: list[Villager], bank: Bank, log_it: bool = Fal
         if "Loyal" in traits:
             rate -= 0.02
 
-    # Building passives that affect tax rate
     levels = bank.get("building_levels") or {}
     lvl_tax_office = int(levels.get("tax_office", 0) or 0)
     lvl_treasury   = int(levels.get("treasury", 0) or 0)
@@ -64,7 +58,6 @@ def update_tax_policy(characters: list[Villager], bank: Bank, log_it: bool = Fal
     if lvl_treasury > 0:
         rate += 0.005 * lvl_treasury
 
-    # clamp 0-35%
     rate = max(0.0, min(0.35, rate))
     bank["tax_rate"] = rate
 
@@ -89,11 +82,6 @@ def apply_tax_on_income(v: Villager, gross: int, bank: Bank) -> dict[str, int]:
 
     bank["balance"] = bank.get("balance", 0) + tax
     return {"net": net, "tax": tax}
-
-# ---------------------------------------------------------------------------
-#  Village buildings: construction, upgrades, decay & repair
-# ---------------------------------------------------------------------------
-
 
 def get_building_level(bank: Bank | None, key: str) -> int:
     """
@@ -275,6 +263,7 @@ def upgrade_cost(key: str, bank: Bank) -> int:
 
 
 def can_upgrade_building(key: str, bank: Bank) -> bool:
+    """Return True if the building exists, is below max level, and the treasury can afford it."""
     if not has_building(key, bank):
         return False
     if not _find_building(key):

@@ -20,10 +20,6 @@ from src.services.relationship_service import (
 )
 from src.models.villager import Villager
 
-# ---------------------------------------------------------------------------
-#  Royal / election
-# ---------------------------------------------------------------------------
-
 def get_traits_set(v: Villager) -> set[str]:
     """Parse v['traits'] into a set of clean trait strings."""
     traits_str = v.get("traits", "") or ""
@@ -144,7 +140,6 @@ def reassign_job_by_traits(p: Villager) -> str:
     high_hp  = p.get("hp", 0) > 180
     high_lvl = p.get("level", 1) >= 8
 
-    # Stats nudges
     if high_int:
         for j in ["Scholar", "Advisor", "Alchemist", "Priest", "Scribe", "Engineer", "Clerk"]:
             add(j, 2 if j in ("Scholar", "Advisor", "Scribe", "Engineer") else 1)
@@ -161,7 +156,6 @@ def reassign_job_by_traits(p: Villager) -> str:
         for j in ["Commander", "Captain", "Engineer"]:
             add(j, 1)
 
-    # Trait nudges
     if "Brave" in t:
         for j in ["Soldier", "Guard", "Ranger", "Archer", "Captain", "Falconer"]:
             add(j, 2 if j in ("Soldier", "Guard") else 1)
@@ -227,13 +221,11 @@ def hold_election(characters: list[Villager], current_day: int | None = None) ->
     if not candidates:
         return None, None
 
-    # TERM LIMIT
     under_limit = [c for c in candidates if (c.get("kingTerms", 0) or 0) < KING_MAX_TERMS]
     term_limited_only = len(under_limit) == 0
     if not term_limited_only:
         candidates = under_limit
 
-    # Precompute base scores
     base_score = {c["id"]: leadership_score(c, prev_king) for c in candidates}
 
     from collections import defaultdict

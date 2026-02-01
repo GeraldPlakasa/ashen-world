@@ -1,14 +1,12 @@
 import os
 from dotenv import load_dotenv
 
-# ---------------------------------------------------------------------------
-#  Paths & basic world config
-# ---------------------------------------------------------------------------
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
+# Legacy file paths — used only by migrate_legacy_files_to_sqlite() in stats_repo.
+# New data is stored in SQLite at DB_PATH.
 CSV_PATH = os.path.join(DATA_DIR, "characters.csv")
 DAY_PATH = os.path.join(DATA_DIR, "world_time.json")
 BANK_PATH = os.path.join(DATA_DIR, "bank.json")
@@ -28,7 +26,6 @@ AUTO_SIM_ENABLED = True          # set to False if you ever want to disable auto
 AUTO_SIM_SECONDS = 1.0           # real seconds per simulated day
 # AUTO_SIM_SECONDS = 960.0
 
-# Simple admin credentials
 ENV_ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
 ENV_ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
@@ -40,7 +37,6 @@ REPAIR_THRESHOLD = 60    # repair if building health < 60%
 # NOTE: ID sequencing is managed by villagers.py (preferred). Keep here only if you centralize imports.
 _next_villager_id = 0 
 
-# --- Leadership / election config ---
 ELECTION_INTERVAL_YEARS = 5      # hold election every 7 game years
 KING_MAX_TERMS = 3               # lifetime limit for one villager as King
 DYNASTY_BONUS = 1000             # extra leadership if same family as previous King
@@ -54,22 +50,12 @@ BIRTH_COOLDOWN_DAYS = 45      # prevents back-to-back births
 COUPLE_DECAY = 0.55           # each additional child reduces chance strongly
 FAMILY_DECAY = 0.85           # more kids under same father family -> lower chance
 
-# ---------------------------------------------------------------------------
-#  Weather system
-# ---------------------------------------------------------------------------
-
 # Weather changes every N days (re-roll on that schedule)
 WEATHER_CHANGE_DAYS = 5
 
-# Chance to roll rain on a change day
 WEATHER_RAIN_CHANCE = 0.35
 
-# Allowed values
 WEATHER_TYPES = ["sunny", "rain"]
-
-# ---------------------------------------------------------------------------
-#  Name + worldbuilding constants
-# ---------------------------------------------------------------------------
 
 NAME_PREFIX = [
     "Aer", "Ael", "Al", "An", "Ar", "Ash", "Aur", "Bel", "Ben", "Bryn", "Cal",
@@ -188,7 +174,7 @@ BUILDINGS = [
 JOBS_POOL = JOBS
 JOBS_NO_ROYAL = [j for j in JOBS if j not in ("King", "Queen")]
 
-# Columns that should be read as integers from CSV
+# Integer columns for SQLite schema and data mapping
 INT_FIELDS = [
     "id", "coins", "age", "int", "rep", "level", "exp",
     "atk", "def", "hp", "hunger", "gen",
@@ -198,7 +184,6 @@ INT_FIELDS = [
     "born_day","last_birth_day",
 ]
 
-# CSV field order
 FIELDNAMES = [
     "id", "name", "family", "gender", "job",
     "coins", "age", "int", "rep", "level", "exp",

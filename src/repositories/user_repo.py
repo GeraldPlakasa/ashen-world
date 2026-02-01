@@ -5,11 +5,8 @@ from werkzeug.security import generate_password_hash
 from src.repositories.base import db_conn, init_db
 from src.models.user import User
 
-# ---------------------------------------------------------------------------
-#  Users (replaces users.csv)
-# ---------------------------------------------------------------------------
-
 def load_users() -> list[User]:
+    """Load all registered users from SQLite, ordered by creation date descending."""
     init_db()
     with db_conn() as conn:
         cur = conn.execute(

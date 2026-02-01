@@ -39,10 +39,6 @@ from src.repositories.world_repo import load_weather
 from src.models.villager import Villager
 from src.models.bank import Bank
 
-# ---------------------------------------------------------------------------
-#  Immigrants
-# ---------------------------------------------------------------------------
-
 def maybe_add_immigrants(characters: list[Villager], bank: Bank) -> tuple[list[Villager], int]:
     """
     Small chance each day that 1-2 immigrants arrive.
@@ -75,10 +71,6 @@ def maybe_add_immigrants(characters: list[Villager], bank: Bank) -> tuple[list[V
 
     return characters, len(added)
 
-
-# ---------------------------------------------------------------------------
-#  Player ownership / inheritance
-# ---------------------------------------------------------------------------
 
 def _norm_origin(v: Villager) -> str:
     return (v.get("origin", "") or "").strip().lower()
@@ -293,10 +285,6 @@ def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -
         else:
             heir["last_action"] = note
 
-
-# ---------------------------------------------------------------------------
-#  Day Loop
-# ---------------------------------------------------------------------------
 
 def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank]:
     """

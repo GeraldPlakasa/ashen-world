@@ -35,10 +35,6 @@ from src.services.election_service import (
 from src.models.villager import Villager
 from src.models.bank import Bank
 
-# ---------------------------------------------------------------------------
-#  Inheritance
-# ---------------------------------------------------------------------------
-
 def _ensure_list_field(v: Villager, key: str) -> list:
     x = v.get(key)
     if isinstance(x, list):
@@ -63,7 +59,6 @@ def settle_inheritance_phase(characters: list[Villager], bank: Bank | None, curr
     id_map = {c.get("id"): c for c in characters}
 
     for deceased in characters:
-        # only dead
         if deceased.get("alive", True):
             continue
 
@@ -142,10 +137,6 @@ def settle_inheritance_phase(characters: list[Villager], bank: Bank | None, curr
             heir_names += f", +{len(heirs)-5} others"
         _append_last_action(deceased, f"estate: {estate} coins inherited by {heir_names}")
 
-
-# ---------------------------------------------------------------------------
-#  Birth + Childhood
-# ---------------------------------------------------------------------------
 
 def _traits_list(v: Villager) -> list[str]:
     s = (v.get("traits", "") or "").strip()
@@ -284,7 +275,6 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
         "family": family,
         "gender": gender,
 
-        # child state
         "age": 0,
         "job": "Child",
 
@@ -321,7 +311,6 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
         "action_log": "",
     }
 
-    # link to parents
     mom_kids = _ensure_list_field(mom, "childrenIds")
     dad_kids = _ensure_list_field(dad, "childrenIds")
     mom_kids.append(child_id)

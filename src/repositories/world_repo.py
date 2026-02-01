@@ -6,11 +6,8 @@ import config
 from src.repositories.base import db_conn, init_db
 from src.models.world import WorldPayload
 
-# ---------------------------------------------------------------------------
-#  Day / World time (replaces day.txt)
-# ---------------------------------------------------------------------------
-
 def compute_year_and_day(total_day: int) -> tuple[int, int]:
+    """Convert a total_day counter into a (year, day_in_year) tuple."""
     if total_day < 1:
         total_day = 1
     year_index = (total_day - 1) // config.DAYS_PER_YEAR
@@ -38,6 +35,7 @@ def load_day() -> int:
 
 
 def save_day(day: int) -> None:
+    """Persist the day counter to SQLite, rolling weather if needed."""
     init_db()
     if day < 1:
         day = 1

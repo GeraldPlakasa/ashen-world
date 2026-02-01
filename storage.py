@@ -8,7 +8,6 @@ Existing imports like ``from storage import save_villagers`` keep working.
 #   monkeypatch.setattr(storage, "DB_PATH", ...)
 from config import DB_PATH  # noqa: F401
 
-# --- model types (convenience re-exports) ---
 from src.models import (  # noqa: F401
     Villager,
     Bank,
@@ -17,13 +16,11 @@ from src.models import (  # noqa: F401
     GraveyardRecord,
 )
 
-# --- base helpers ---
 from src.repositories.base import (  # noqa: F401
     db_conn,
     init_db,
 )
 
-# --- villagers & graveyard ---
 from src.repositories.villager_repo import (  # noqa: F401
     save_villagers,
     load_villagers,
@@ -34,7 +31,6 @@ from src.repositories.villager_repo import (  # noqa: F401
     graveyard_get_many,
 )
 
-# --- world / day / weather ---
 from src.repositories.world_repo import (  # noqa: F401
     compute_year_and_day,
     load_day,
@@ -45,19 +41,16 @@ from src.repositories.world_repo import (  # noqa: F401
     maybe_roll_weather,
 )
 
-# --- users ---
 from src.repositories.user_repo import (  # noqa: F401
     load_users,
     save_user,
 )
 
-# --- bank ---
 from src.repositories.bank_repo import (  # noqa: F401
     load_bank,
     save_bank,
 )
 
-# --- yearly stats ---
 from src.repositories.stats_repo import (  # noqa: F401
     clear_yearly_stats,
     get_year_entry,

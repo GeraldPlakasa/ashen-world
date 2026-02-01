@@ -25,7 +25,7 @@ pytest                          # Run all 181 tests
 pytest -v                       # Verbose output
 pytest -m unit                  # Unit tests only (fast)
 pytest -m integration           # Integration tests only
-pytest --cov=world_utils --cov=buildings --cov=storage --cov-report=term-missing
+pytest --cov=src --cov=world_utils --cov=app --cov-report=term-missing
 ```
 
 ## Architecture

@@ -3,7 +3,6 @@ Backward-compatible shim: re-exports everything from src/services/relationship_s
 src/services/election_service, and src/services/family_service.
 """
 
-# --- relationship helpers ---
 from src.services.relationship_service import *  # noqa: F401,F403
 
 # Private names not exported by wildcard
@@ -23,10 +22,8 @@ from src.services.relationship_service import (  # noqa: F401
     _mark_dead,
 )
 
-# --- election ---
 from src.services.election_service import *  # noqa: F401,F403
 
-# --- family / birth / childhood / inheritance ---
 from src.services.family_service import *  # noqa: F401,F403
 
 # Private names from family_service

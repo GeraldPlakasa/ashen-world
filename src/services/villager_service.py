@@ -20,10 +20,6 @@ from src.services.relationship_service import (
 )
 from src.models.villager import Villager
 
-# ---------------------------------------------------------------------------
-#  Global ID counter
-# ---------------------------------------------------------------------------
-
 _next_villager_id = 0
 
 def next_unique_id() -> int:
@@ -43,10 +39,6 @@ def reset_id_from_characters(characters: list[Villager]) -> None:
         if _next_villager_id < max_id:
             _next_villager_id = max_id
 
-
-# ---------------------------------------------------------------------------
-#  Villager generation
-# ---------------------------------------------------------------------------
 
 def unique_full_name(taken: set[str]) -> tuple[str, str]:
     """
@@ -165,7 +157,6 @@ def generate_characters(n: int = 50) -> list[Villager]:
     global _next_villager_id
     _next_villager_id = 0
 
-    # 1 King (male)
     if n >= 1:
         king_row = make_row(
             taken_names,
@@ -175,7 +166,6 @@ def generate_characters(n: int = 50) -> list[Villager]:
         )
         characters.append(king_row)
 
-    # 1 Queen (female)
     if n >= 2:
         queen_row = make_row(
             taken_names,
@@ -185,7 +175,6 @@ def generate_characters(n: int = 50) -> list[Villager]:
         )
         characters.append(queen_row)
 
-    # After creating king_row and queen_row
     _set_spouses(king_row, queen_row, current_day=0)
 
     # Ensure Queen title matches rule (Queen = King's spouse)

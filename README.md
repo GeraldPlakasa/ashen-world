@@ -138,7 +138,7 @@ pytest
 pytest -v
 
 # Run with coverage report
-pytest --cov=world_utils --cov=buildings --cov=storage --cov-report=term-missing
+pytest --cov=src --cov=world_utils --cov=app --cov-report=term-missing
 
 # Run only unit tests (fast)
 pytest -m unit
@@ -152,13 +152,7 @@ pytest tests/test_world_utils.py -v
 
 ### Test Coverage
 
-| Module | Coverage |
-|--------|----------|
-| world_utils.py | 96% |
-| buildings.py | 78% |
-| storage.py | 57% |
-| villagers_social.py | 45% |
-| app.py | 45% |
+Run `pytest --cov=src --cov=world_utils --cov=app --cov-report=term-missing` for current coverage numbers.
 
 ## Typical Flow
 

@@ -8,25 +8,18 @@ from src.repositories.base import db_conn, init_db
 from src.models.villager import Villager
 from src.models.graveyard import GraveyardRecord
 
-# ---------------------------------------------------------------------------
-#  Villagers (replaces characters.csv)
-# ---------------------------------------------------------------------------
-
 def save_villagers(rows: list[Villager]) -> None:
     """
-    Persist the current villager list to SQLite.
-    This replaces save_to_csv().
+    Persist all villagers to SQLite.
     """
     init_db()
 
-    # Normalize and store.
     with db_conn() as conn:
         conn.execute("DELETE FROM villagers;")  # simplest "replace all" behavior
 
         if not rows:
             return
 
-        # Insert rows
         columns = list(config.FIELDNAMES)
         placeholders = ", ".join(["?"] * len(columns))
         col_list = ", ".join(columns)
@@ -46,7 +39,6 @@ def save_villagers(rows: list[Villager]) -> None:
                 rels = {}
             r2["relationships"] = json.dumps(rels, ensure_ascii=False)
 
-            # Defaults
             r2.setdefault("last_action", "")
             r2.setdefault("owner", "")
             r2.setdefault("action_log", "")
@@ -57,8 +49,7 @@ def save_villagers(rows: list[Villager]) -> None:
 
 def load_villagers() -> list[Villager]:
     """
-    Load villagers from SQLite.
-    This replaces load_from_csv().
+    Load all villagers from SQLite.
     """
     init_db()
 
@@ -69,7 +60,6 @@ def load_villagers() -> list[Villager]:
         for row in cur.fetchall():
             r2 = dict(row)
 
-            # Convert known integer fields
             for key in config.INT_FIELDS:
                 val = r2.get(key)
                 try:
@@ -77,16 +67,13 @@ def load_villagers() -> list[Villager]:
                 except Exception:
                     r2[key] = 0
 
-            # Alive flag -> bool
             r2["alive"] = str(r2.get("alive", "true")).lower() == "true"
 
-            # childrenIds -> list
             try:
                 r2["childrenIds"] = json.loads(r2.get("childrenIds") or "[]")
             except Exception:
                 r2["childrenIds"] = []
 
-            # relationships -> dict
             rel_str = r2.get("relationships") or "{}"
             try:
                 data = json.loads(rel_str)
@@ -94,7 +81,6 @@ def load_villagers() -> list[Villager]:
             except Exception:
                 r2["relationships"] = {}
 
-            # Safe defaults
             if r2.get("last_action") is None:
                 r2["last_action"] = ""
             if r2.get("owner") is None:
@@ -181,6 +167,7 @@ def graveyard_upsert_from_villager(v: Villager) -> None:
 
 
 def graveyard_get(vid: int) -> GraveyardRecord | None:
+    """Retrieve a single graveyard record by villager ID, or None."""
     init_db()
     with db_conn() as conn:
         row = conn.execute(

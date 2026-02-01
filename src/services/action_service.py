@@ -21,11 +21,6 @@ from src.models.villager import Villager
 from src.models.bank import Bank
 from src.models.combat import ShopOffer
 
-# ---------------------------------------------------------------------------
-#  Action selection
-# ---------------------------------------------------------------------------
-
-
 def choose_action(villager: Villager, bank: Bank | None = None, weather: str | None = None) -> str:
     """
     Decide the villager's action for the day based on traits, job, hunger, coins,
@@ -85,7 +80,6 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
     traits = [t.strip() for t in traits_str.split(",") if t.strip()]
     job = villager.get("job", "")
 
-    # Trait-based adjustments
     for t in traits:
         if t in ("Brave", "Reckless", "Protective"):
             weights["train"] += 0.6
@@ -126,7 +120,6 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
             weights["steal"] += 0.9
             weights["socialize"] -= 0.3
 
-    # Job-based adjustments
     if job in ["Soldier", "Commander", "Guard", "Archer", "Ranger", "Captain"]:
         weights["train"] += 1.0
         weights["hunt"] += 0.5
@@ -158,7 +151,6 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         weights["steal"] += 0.8
         weights["socialize"] += 0.3
 
-    # Weather-based adjustments
     w = (weather or "sunny").strip().lower()
     if w not in WEATHER_TYPES:
         w = "sunny"
@@ -175,7 +167,6 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
 
         weights["buy_food"] *= 1.10
 
-    # Hunger & coins-based adjustments
     hunger = villager.get("hunger", 50)
     coins = villager.get("coins", 0)
 
@@ -222,10 +213,6 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
     return random.choices(actions, probs, k=1)[0]
 
 
-# ---------------------------------------------------------------------------
-#  Level up
-# ---------------------------------------------------------------------------
-
 def handle_level_up(v: Villager) -> None:
     """
     Apply level-up logic in-place.
@@ -247,10 +234,6 @@ def handle_level_up(v: Villager) -> None:
     if leveled:
         v["hp"] = clamp(v["hp"], 1, 260)
 
-
-# ---------------------------------------------------------------------------
-#  Shop offers
-# ---------------------------------------------------------------------------
 
 def create_shop_offer(v: Villager) -> ShopOffer:
     """
@@ -354,10 +337,6 @@ def create_shop_offer(v: Villager) -> ShopOffer:
     return random.choice(pool)
 
 
-# ---------------------------------------------------------------------------
-#  Action history
-# ---------------------------------------------------------------------------
-
 def append_action_history(v: Villager, max_len: int = 5) -> None:
     """
     Keep a rolling history of the last `max_len` actions in v['action_log'].
@@ -378,10 +357,6 @@ def append_action_history(v: Villager, max_len: int = 5) -> None:
 
     v["action_log"] = "||".join(items)
 
-
-# ---------------------------------------------------------------------------
-#  Apply action
-# ---------------------------------------------------------------------------
 
 def apply_action(
     v: Villager,
@@ -814,10 +789,8 @@ def apply_action(
             v["hunger"] += hunger_delta
             v["last_action"] = f"hunt (LOSS vs {enemy['tier']} {enemy['name']})"
 
-    # Clamp hunger & HP
     v["hunger"] = clamp(v["hunger"], 0, 100)
     v["hp"] = min(v["hp"], 260)
     v["rep"] = clamp(int(v.get("rep", 0) or 0), -100, 100)
 
-    # Level-up check
     handle_level_up(v)

@@ -3,16 +3,9 @@ Backward-compatible shim: re-exports everything from src/services/villager_servi
 action_service, combat_service, and simulation_service.
 """
 
-# --- villager generation ---
 from src.services.villager_service import *  # noqa: F401,F403
-
-# --- action / shop / history ---
 from src.services.action_service import *  # noqa: F401,F403
-
-# --- combat ---
 from src.services.combat_service import *  # noqa: F401,F403
-
-# --- simulation day loop, immigrants, player inheritance ---
 from src.services.simulation_service import *  # noqa: F401,F403
 
 # Private names from simulation_service used by tests or app.py

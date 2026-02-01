@@ -39,10 +39,6 @@ NATURE_JOBS = {
     "Hunter", "Farmer", "Beekeeper",
 }
 
-# ---------------------------------------------------------------------------
-#  Relationship helpers
-# ---------------------------------------------------------------------------
-
 def _family_key(v: Villager) -> str:
     """Normalized family name. Falls back to last token of `name` if `family` is empty."""
     fam = (v.get("family") or "").strip().lower()
@@ -64,11 +60,9 @@ def _get_relations_dict(v: Villager) -> dict:
     """
     rel = v.get("relationships")
 
-    # If it's already a dict, just return it
     if isinstance(rel, dict):
         return rel
 
-    # If it's a JSON string from CSV, try to parse
     if isinstance(rel, str) and rel.strip():
         try:
             parsed = json.loads(rel)
@@ -76,9 +70,8 @@ def _get_relations_dict(v: Villager) -> dict:
                 v["relationships"] = parsed
                 return parsed
         except json.JSONDecodeError:
-            pass  # fall through to empty dict
+            pass
 
-    # Otherwise create a fresh dict
     rel = {}
     v["relationships"] = rel
     return rel
