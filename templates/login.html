@@ -10,66 +10,57 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
 </head>
 <body class="game-theme">
-  
-  <div class="d-flex align-items-center justify-content-center" style="min-height: 100vh; padding: 2rem;">
-    <div class="game-card" style="max-width: 420px; width: 100%;">
+  <div class="min-vh-100 d-flex align-items-center justify-content-center p-3">
+    <div class="game-card" style="max-width: 400px; width: 100%;">
       <div class="card-body p-4">
-        <!-- Logo -->
+        <!-- Header -->
         <div class="text-center mb-4">
-          <div style="font-size: 3rem;">⚔️</div>
-          <h1 style="color: var(--aw-text); font-size: 1.5rem; font-weight: 700;">Ashen World</h1>
-          <p style="color: var(--aw-text-muted); font-size: 0.875rem;">Enter the kingdom</p>
+          <div style="font-size: 3rem; margin-bottom: 0.5rem;">⚔️</div>
+          <h1 class="h4 mb-1" style="color: var(--aw-text);">Ashen World</h1>
+          <p style="color: var(--aw-text-muted); font-size: 0.875rem;">Enter the realm</p>
         </div>
 
         <!-- Flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} mb-3" style="font-size: 0.875rem;">
-                {{ message }}
-              </div>
-            {% endfor %}
-          {% endif %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'info' }} alert-sm mb-3" style="font-size: 0.875rem;">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
         {% endwith %}
 
         <!-- Login Form -->
         <form method="POST" action="{{ url_for('login') }}">
           <div class="mb-3">
-            <label for="username" style="color: var(--aw-text-muted); font-size: 0.8rem;" class="form-label">
-              Username
-            </label>
-            <input type="text" id="username" name="username" class="form-control"
-                   placeholder="Enter username" required autocomplete="username"
-                   style="background: var(--aw-bg-dark); border-color: var(--aw-border); color: var(--aw-text);" />
+            <label for="username" class="form-label small" style="color: var(--aw-text-muted);">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required autofocus
+                   style="background: var(--aw-bg-dark); border-color: var(--aw-border); color: var(--aw-text);"
+                   placeholder="Enter your username" />
           </div>
 
           <div class="mb-4">
-            <label for="password" style="color: var(--aw-text-muted); font-size: 0.8rem;" class="form-label">
-              Password
-            </label>
-            <input type="password" id="password" name="password" class="form-control"
-                   placeholder="Enter password" required autocomplete="current-password"
-                   style="background: var(--aw-bg-dark); border-color: var(--aw-border); color: var(--aw-text);" />
+            <label for="password" class="form-label small" style="color: var(--aw-text-muted);">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required
+                   style="background: var(--aw-bg-dark); border-color: var(--aw-border); color: var(--aw-text);"
+                   placeholder="Enter your password" />
           </div>
 
           <button type="submit" class="btn btn-primary w-100 mb-3">
-            ⏎ Login
+            ⏁ Login
           </button>
         </form>
+
+        <div class="text-center" style="color: var(--aw-text-muted); font-size: 0.875rem;">
+          New to Ashen World?
+          <a href="{{ url_for('register') }}" style="color: var(--aw-accent);">Create an account</a>
+        </div>
 
         <hr style="border-color: var(--aw-border);" />
 
         <div class="text-center">
-          <p style="color: var(--aw-text-muted); font-size: 0.8rem;" class="mb-2">
-            New to Ashen World?
-          </p>
-          <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-sm">
-            ✨ Create Account
-          </a>
-        </div>
-
-        <div class="text-center mt-3">
-          <a href="{{ url_for('landing') }}" style="color: var(--aw-text-dim); font-size: 0.8rem; text-decoration: none;">
+          <a href="{{ url_for('landing') }}" style="color: var(--aw-text-dim); font-size: 0.875rem;">
             ← Back to Kingdom
           </a>
         </div>
