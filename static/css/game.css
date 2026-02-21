@@ -1,0 +1,820 @@
+/* =========================================================
+   ASHEN WORLD - GAME UI ENHANCEMENT
+   ========================================================= */
+
+/* =========================================================
+   CSS Variables - Game Theme
+   ========================================================= */
+:root {
+  /* Primary palette */
+  --aw-bg-dark: #0f1419;
+  --aw-bg-card: #1a1f2e;
+  --aw-bg-card-hover: #242b3d;
+  --aw-border: #2d3748;
+  --aw-border-light: #3d4a5c;
+  
+  /* Text */
+  --aw-text: #e2e8f0;
+  --aw-text-muted: #8b9ab5;
+  --aw-text-dim: #5a6a85;
+  
+  /* Stats colors */
+  --aw-hp: #ef4444;
+  --aw-hp-bg: #450a0a;
+  --aw-hunger: #f59e0b;
+  --aw-hunger-bg: #451a03;
+  --aw-exp: #3b82f6;
+  --aw-exp-bg: #172554;
+  --aw-mana: #8b5cf6;
+  --aw-mana-bg: #2e1065;
+  --aw-gold: #fbbf24;
+  --aw-gold-bg: #422006;
+  
+  /* Status */
+  --aw-alive: #22c55e;
+  --aw-dead: #ef4444;
+  --aw-warning: #f59e0b;
+  
+  /* Ranks */
+  --aw-rank-gold: #ffd700;
+  --aw-rank-silver: #c0c0c0;
+  --aw-rank-bronze: #cd7f32;
+  
+  /* Accents */
+  --aw-accent: #0ea5e9;
+  --aw-accent-glow: rgba(14, 165, 233, 0.3);
+  --aw-king: #a855f7;
+  --aw-player: #22d3ee;
+}
+
+/* =========================================================
+   Dark Mode Base (Game Theme)
+   ========================================================= */
+body.game-theme {
+  background: linear-gradient(180deg, #0a0e14 0%, #131a24 100%);
+  color: var(--aw-text);
+  min-height: 100vh;
+}
+
+body.game-theme .aw-main-shell {
+  background: transparent;
+}
+
+body.game-theme .page-shell {
+  background: transparent;
+}
+
+/* =========================================================
+   Game Cards
+   ========================================================= */
+.game-card {
+  background: linear-gradient(145deg, var(--aw-bg-card) 0%, #151b28 100%);
+  border: 1px solid var(--aw-border);
+  border-radius: 12px;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.game-card:hover {
+  border-color: var(--aw-border-light);
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.game-card .card-body {
+  padding: 1rem;
+}
+
+/* =========================================================
+   Hero Card (Pinned Character)
+   ========================================================= */
+.hero-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e1b4b 100%);
+  border: 1px solid var(--aw-border);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--aw-accent), var(--aw-mana), var(--aw-accent));
+}
+
+.hero-card.is-king::before {
+  background: linear-gradient(90deg, var(--aw-king), #fbbf24, var(--aw-king));
+}
+
+.hero-card.is-dead {
+  filter: grayscale(0.6);
+  opacity: 0.85;
+}
+
+.hero-card.is-dead::before {
+  background: linear-gradient(90deg, var(--aw-dead), #7f1d1d, var(--aw-dead));
+}
+
+/* Hero Avatar */
+.hero-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--aw-bg-card) 0%, var(--aw-border) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  border: 2px solid var(--aw-border-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.hero-avatar-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  border: 2px solid var(--aw-bg-card);
+}
+
+.hero-avatar-badge.king {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.hero-avatar-badge.player {
+  background: linear-gradient(135deg, var(--aw-player), #06b6d4);
+}
+
+/* Hero Name */
+.hero-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--aw-text);
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-title {
+  font-size: 0.75rem;
+  color: var(--aw-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* =========================================================
+   Stat Bars (HP, Hunger, EXP)
+   ========================================================= */
+.stat-bar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-bar-icon {
+  width: 20px;
+  font-size: 0.875rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.stat-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--aw-bg-dark);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  position: relative;
+}
+
+.stat-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+  border-radius: 4px 4px 0 0;
+}
+
+.stat-bar-fill.hp {
+  background: linear-gradient(90deg, #dc2626, var(--aw-hp));
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.stat-bar-fill.hunger {
+  background: linear-gradient(90deg, #d97706, var(--aw-hunger));
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.stat-bar-fill.exp {
+  background: linear-gradient(90deg, #2563eb, var(--aw-exp));
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.stat-bar-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--aw-text-muted);
+  min-width: 50px;
+  text-align: right;
+}
+
+/* Large stat bar variant */
+.stat-bar.stat-bar-lg .stat-bar-track {
+  height: 12px;
+}
+
+.stat-bar.stat-bar-lg .stat-bar-icon {
+  font-size: 1rem;
+}
+
+/* =========================================================
+   Stat Pills
+   ========================================================= */
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--aw-bg-dark);
+  border: 1px solid var(--aw-border);
+}
+
+.stat-pill-icon {
+  font-size: 0.875rem;
+}
+
+.stat-pill.atk {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.stat-pill.def {
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.stat-pill.int {
+  color: #a78bfa;
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+.stat-pill.rep {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.stat-pill.coins {
+  color: var(--aw-gold);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.stat-pill.level {
+  color: var(--aw-accent);
+  border-color: rgba(14, 165, 233, 0.3);
+}
+
+/* =========================================================
+   KPI Cards (Game Style)
+   ========================================================= */
+.kpi-card {
+  background: var(--aw-bg-card);
+  border: 1px solid var(--aw-border);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--aw-border-light);
+}
+
+.kpi-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--aw-text);
+  line-height: 1.2;
+}
+
+.kpi-label {
+  font-size: 0.7rem;
+  color: var(--aw-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.kpi-card.alive .kpi-value { color: var(--aw-alive); }
+.kpi-card.dead .kpi-value { color: var(--aw-dead); }
+.kpi-card.gold .kpi-value { color: var(--aw-gold); }
+.kpi-card.accent .kpi-value { color: var(--aw-accent); }
+
+/* =========================================================
+   Building Cards (Game Style)
+   ========================================================= */
+.building-card {
+  background: var(--aw-bg-card);
+  border: 1px solid var(--aw-border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.building-card:hover {
+  border-color: var(--aw-border-light);
+}
+
+.building-card.not-built {
+  opacity: 0.5;
+  background: var(--aw-bg-dark);
+}
+
+.building-icon {
+  font-size: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.building-name {
+  font-weight: 600;
+  color: var(--aw-text);
+  font-size: 0.875rem;
+}
+
+.building-level {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.building-level.built {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--aw-alive);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.building-level.not-built {
+  background: var(--aw-bg-dark);
+  color: var(--aw-text-dim);
+  border: 1px solid var(--aw-border);
+}
+
+.building-health-bar {
+  height: 4px;
+  background: var(--aw-bg-dark);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.building-health-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.building-health-fill.healthy { background: var(--aw-alive); }
+.building-health-fill.damaged { background: var(--aw-warning); }
+.building-health-fill.critical { background: var(--aw-dead); }
+
+/* =========================================================
+   Trophy / Medal Styles (Leaderboard)
+   ========================================================= */
+.trophy-card {
+  background: var(--aw-bg-card);
+  border: 1px solid var(--aw-border);
+  border-radius: 12px;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.trophy-card.gold {
+  border-color: rgba(255, 215, 0, 0.4);
+  background: linear-gradient(135deg, var(--aw-bg-card) 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+.trophy-card.silver {
+  border-color: rgba(192, 192, 192, 0.4);
+  background: linear-gradient(135deg, var(--aw-bg-card) 0%, rgba(192, 192, 192, 0.05) 100%);
+}
+
+.trophy-card.bronze {
+  border-color: rgba(205, 127, 50, 0.4);
+  background: linear-gradient(135deg, var(--aw-bg-card) 0%, rgba(205, 127, 50, 0.05) 100%);
+}
+
+.trophy-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.trophy-icon.gold { color: var(--aw-rank-gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+.trophy-icon.silver { color: var(--aw-rank-silver); text-shadow: 0 0 10px rgba(192, 192, 192, 0.5); }
+.trophy-icon.bronze { color: var(--aw-rank-bronze); text-shadow: 0 0 10px rgba(205, 127, 50, 0.5); }
+
+.trophy-label {
+  font-size: 0.7rem;
+  color: var(--aw-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.trophy-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--aw-text);
+}
+
+.trophy-value {
+  font-size: 0.875rem;
+  color: var(--aw-text-muted);
+}
+
+/* =========================================================
+   Year Card (Leaderboard Archive)
+   ========================================================= */
+.year-card {
+  background: var(--aw-bg-card);
+  border: 1px solid var(--aw-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.year-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--aw-border-light);
+}
+
+.year-card-header {
+  background: linear-gradient(90deg, var(--aw-bg-dark), var(--aw-bg-card));
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--aw-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.year-number {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--aw-text);
+}
+
+.year-badge {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.year-badge.live {
+  background: rgba(14, 165, 233, 0.2);
+  color: var(--aw-accent);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.year-badge.archived {
+  background: var(--aw-bg-dark);
+  color: var(--aw-text-dim);
+  border: 1px solid var(--aw-border);
+}
+
+.year-card-body {
+  padding: 1rem;
+}
+
+/* =========================================================
+   Event Toast / Notification
+   ========================================================= */
+.game-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  max-width: 350px;
+}
+
+.toast-game {
+  background: var(--aw-bg-card);
+  border: 1px solid var(--aw-border);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-title {
+  font-weight: 600;
+  color: var(--aw-text);
+  margin-bottom: 2px;
+}
+
+.toast-message {
+  font-size: 0.875rem;
+  color: var(--aw-text-muted);
+}
+
+/* =========================================================
+   Weather Indicators (Game Style)
+   ========================================================= */
+.weather-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.weather-indicator.sunny {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.weather-indicator.rain {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.weather-icon {
+  font-size: 1rem;
+}
+
+/* =========================================================
+   Action Badge
+   ========================================================= */
+.action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: var(--aw-bg-dark);
+  border: 1px solid var(--aw-border);
+  color: var(--aw-text-muted);
+}
+
+.action-badge.train { color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
+.action-badge.study { color: #a78bfa; border-color: rgba(167, 139, 250, 0.3); }
+.action-badge.work { color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); }
+.action-badge.rest { color: #34d399; border-color: rgba(52, 211, 153, 0.3); }
+.action-badge.hunt { color: #fb923c; border-color: rgba(251, 146, 60, 0.3); }
+.action-badge.buy_food { color: #4ade80; border-color: rgba(74, 222, 128, 0.3); }
+.action-badge.buy_gear { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); }
+
+/* =========================================================
+   Status Badges (Game Style)
+   ========================================================= */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-badge.alive {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--aw-alive);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.dead {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--aw-dead);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.king {
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--aw-king);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.status-badge.player {
+  background: rgba(34, 211, 238, 0.15);
+  color: var(--aw-player);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+}
+
+/* =========================================================
+   Table (Game Style)
+   ========================================================= */
+body.game-theme .aw-table thead th {
+  background: var(--aw-bg-dark);
+  color: var(--aw-text-muted);
+  border-bottom: 1px solid var(--aw-border);
+}
+
+body.game-theme .aw-table tbody tr {
+  background: var(--aw-bg-card);
+  transition: background-color 0.15s ease;
+}
+
+body.game-theme .aw-table tbody tr:nth-child(even) {
+  background: rgba(15, 20, 25, 0.5);
+}
+
+body.game-theme .aw-table tbody tr:hover {
+  background: var(--aw-bg-card-hover);
+}
+
+body.game-theme .aw-table td {
+  border-bottom: 1px solid var(--aw-border);
+  color: var(--aw-text);
+}
+
+body.game-theme .aw-table tbody tr.aw-row-dead {
+  background: rgba(127, 29, 29, 0.15);
+}
+
+body.game-theme .aw-table tbody tr.aw-row-dead:hover {
+  background: rgba(127, 29, 29, 0.25);
+}
+
+body.game-theme .aw-name-dead {
+  color: var(--aw-dead);
+}
+
+/* =========================================================
+   Scrollbar (Game Theme)
+   ========================================================= */
+body.game-theme ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.game-theme ::-webkit-scrollbar-track {
+  background: var(--aw-bg-dark);
+}
+
+body.game-theme ::-webkit-scrollbar-thumb {
+  background: var(--aw-border);
+  border-radius: 4px;
+}
+
+body.game-theme ::-webkit-scrollbar-thumb:hover {
+  background: var(--aw-border-light);
+}
+
+/* =========================================================
+   Sidebar Override (Game Theme)
+   ========================================================= */
+body.game-theme .aw-sidebar {
+  background: linear-gradient(180deg, #0a0e14 0%, #131a24 100%);
+  border-right: 1px solid var(--aw-border);
+}
+
+body.game-theme .aw-sidebar-brand {
+  color: var(--aw-text);
+}
+
+body.game-theme .aw-sidebar-subtitle {
+  color: var(--aw-text-muted);
+}
+
+body.game-theme .aw-nav-link {
+  color: var(--aw-text-muted);
+}
+
+body.game-theme .aw-nav-link:hover {
+  background: var(--aw-bg-card);
+  color: var(--aw-text);
+}
+
+body.game-theme .aw-nav-link-active {
+  background: var(--aw-accent);
+  color: white;
+}
+
+body.game-theme .aw-sidebar-footer {
+  border-top-color: var(--aw-border);
+  color: var(--aw-text-dim);
+}
+
+body.game-theme .aw-sidebar-logout-link {
+  color: var(--aw-text-muted);
+}
+
+/* =========================================================
+   Animations
+   ========================================================= */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px currentColor; }
+  50% { box-shadow: 0 0 15px currentColor, 0 0 25px currentColor; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Low HP warning animation */
+.stat-bar-fill.hp.critical {
+  animation: pulse-glow 1s ease-in-out infinite;
+}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+@media (max-width: 768px) {
+  .hero-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.75rem;
+  }
+  
+  .hero-name {
+    font-size: 1rem;
+  }
+  
+  .stat-bar-value {
+    min-width: 40px;
+    font-size: 0.7rem;
+  }
+  
+  .kpi-value {
+    font-size: 1.25rem;
+  }
+}

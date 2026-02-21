@@ -7,18 +7,30 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
 
   <!-- vis-network -->
   <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/dist/vis-network.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/styles/vis-network.min.css" rel="stylesheet" />
+
+  <style>
+    /* vis-network dark theme overrides */
+    .vis-network {
+      background: var(--aw-bg-dark) !important;
+    }
+    
+    #family-tree {
+      background: linear-gradient(135deg, var(--aw-bg-card) 0%, var(--aw-bg-dark) 100%);
+    }
+  </style>
 </head>
 
-<body>
+<body class="game-theme">
   <div class="aw-layout">
     <!-- Sidebar -->
     <aside class="aw-sidebar">
       <div>
-        <div class="aw-sidebar-brand">Ashen World</div>
+        <div class="aw-sidebar-brand">⚔️ Ashen World</div>
         <div class="aw-sidebar-subtitle">Living village simulation</div>
       </div>
 
@@ -26,7 +38,7 @@
         <li>
           <a href="{{ url_for('landing') }}"
              class="aw-nav-link {% if active_page == 'dashboard' %}aw-nav-link-active{% endif %}">
-            <span class="aw-nav-link-icon">📊</span>
+            <span class="aw-nav-link-icon">🏰</span>
             <span class="aw-nav-link-label">Kingdom</span>
           </a>
         </li>
@@ -42,7 +54,7 @@
         <li>
           <a href="{{ url_for('leaderboard') }}"
              class="aw-nav-link {% if active_page == 'leaderboard' %}aw-nav-link-active{% endif %}">
-            <span class="aw-nav-link-icon">🏛️</span>
+            <span class="aw-nav-link-icon">🏆</span>
             <span class="aw-nav-link-label">Leaderboard</span>
           </a>
         </li>
@@ -51,7 +63,7 @@
           <li>
             <a href="{{ url_for('admin') }}"
                class="aw-nav-link {% if active_page == 'admin' %}aw-nav-link-active{% endif %}">
-              <span class="aw-nav-link-icon">🛠️</span>
+              <span class="aw-nav-link-icon">⚙️</span>
               <span class="aw-nav-link-label">Control Hall</span>
             </a>
           </li>
@@ -70,15 +82,13 @@
             <a href="{{ url_for('create_character') }}"
                class="aw-nav-link {% if active_page == 'create_character' %}aw-nav-link-active{% endif %}">
               <span class="aw-nav-link-icon">✨</span>
-              <span class="aw-nav-link-label">Create Character</span>
+              <span class="aw-nav-link-label">Create Hero</span>
             </a>
           </li>
         {% endif %}
       </ul>
 
       <div class="aw-sidebar-footer">
-        <div>World tick: backend auto-run</div>
-
         {% if session.get('logged_in') %}
           <a href="{{ url_for('logout') }}" class="aw-sidebar-logout-link">⎋ Logout</a>
         {% else %}
@@ -89,79 +99,121 @@
 
     <div class="aw-main-shell">
       <div class="page-shell">
-        <header class="aw-header d-flex align-items-center justify-content-between">
+        <header class="aw-header d-flex align-items-center justify-content-between mb-3">
           <div class="d-flex flex-column">
-            <span class="header-title">Family Tree</span>
-            <span class="header-subtitle">
-              Root: <strong>{{ root_name }}</strong> • Year {{ year }}, Day {{ day }}
+            <span class="header-title" style="color: var(--aw-text);">🌳 Family Tree</span>
+            <span class="header-subtitle" style="color: var(--aw-text-muted);">
+              Root: <strong style="color: var(--aw-accent);">{{ root_name }}</strong> · Year {{ year }}, Day {{ day }}
             </span>
           </div>
         </header>
 
         <main class="aw-main">
           {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-          <section class="mb-3">
-            {% for category, message in messages %}
-              <div class="alert alert-{{ 'success' if category == 'success' else 'info' }} aw-alert alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
-            {% endfor %}
-          </section>
-          {% endif %}
+            {% if messages %}
+              <section class="mb-3">
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ 'success' if category == 'success' else 'info' }} aw-alert alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                {% endfor %}
+              </section>
+            {% endif %}
           {% endwith %}
 
-          <section class="card aw-card mb-3">
+          <section class="game-card mb-3">
             <div class="card-body">
-              <div class="row g-2 align-items-center">
-                <div class="col-12 col-md-auto small text-muted">
-                  Depth:
+              <!-- Controls -->
+              <div class="row g-2 align-items-end mb-3">
+                <div class="col-6 col-md-2">
+                  <label class="form-label mb-1" style="color: var(--aw-text-muted); font-size: 0.75rem;">
+                    Ancestors (up)
+                  </label>
+                  <input id="ft-up" type="number" class="form-control form-control-sm"
+                         min="0" max="10" value="6"
+                         style="background: var(--aw-bg-dark); border-color: var(--aw-border); color: var(--aw-text);" />
                 </div>
 
                 <div class="col-6 col-md-2">
-                  <label class="form-label small mb-1">Ancestors (up)</label>
-                  <input id="ft-up" type="number" class="form-control form-control-sm" min="0" max="10" value="6" />
+                  <label class="form-label mb-1" style="color: var(--aw-text-muted); font-size: 0.75rem;">
+                    Descendants (down)
+                  </label>
+                  <input id="ft-down" type="number" class="form-control form-control-sm"
+                         min="0" max="10" value="6"
+                         style="background: var(--aw-bg-dark); border-color: var(--aw-border); color: var(--aw-text);" />
                 </div>
 
-                <div class="col-6 col-md-2">
-                  <label class="form-label small mb-1">Descendants (down)</label>
-                  <input id="ft-down" type="number" class="form-control form-control-sm" min="0" max="10" value="6" />
+                <div class="col-12 col-md-auto">
+                  <button id="ft-reload" class="btn btn-sm btn-outline-light">
+                    🔄 Reload
+                  </button>
+                  <button id="ft-fit" class="btn btn-sm btn-outline-secondary">
+                    🔍 Fit
+                  </button>
                 </div>
 
-                <div class="col-12 col-md-auto mt-2 mt-md-0">
-                  <button id="ft-reload" class="btn btn-sm btn-outline-primary">Reload</button>
-                  <button id="ft-fit" class="btn btn-sm btn-outline-secondary">Fit</button>
-                </div>
-
-                <div class="col-12 col-md text-md-end small text-muted" id="ft-status">
+                <div class="col-12 col-md text-md-end" id="ft-status" style="color: var(--aw-text-muted); font-size: 0.8rem;">
                   Ready.
                 </div>
               </div>
 
-              <hr class="my-2"/>
-
+              <!-- Tree + Details -->
               <div class="row g-3">
                 <div class="col-12 col-lg-9">
-                  <div id="family-tree" class="border rounded-3" style="height: 70vh;"></div>
+                  <div id="family-tree" class="rounded-3" style="height: 65vh; border: 1px solid var(--aw-border);"></div>
                 </div>
 
                 <div class="col-12 col-lg-3">
-                  <div class="border rounded-3 p-2 small bg-body">
-                    <div class="fw-semibold mb-1">Selected</div>
-                    <div id="ft-selected" class="text-muted">Click a node to see details.</div>
-                    <hr class="my-2"/>
-                    <div class="text-muted small">
-                      Tip: drag to pan and scroll to zoom.
+                  <!-- Selected Node -->
+                  <div class="building-card mb-3">
+                    <div style="color: var(--aw-text-muted); font-size: 0.75rem;" class="mb-1">Selected</div>
+                    <div id="ft-selected" style="color: var(--aw-text); font-size: 0.875rem;">
+                      Click a node to see details.
                     </div>
                   </div>
 
-                  <div class="border rounded-3 p-2 small bg-body mt-2">
-                    <div class="fw-semibold mb-1">Legend</div>
-                    <div class="d-flex flex-column gap-1 text-muted">
-                      <div>Root: your character</div>
-                      <div>Dead: dead villager</div>
-                      <div>Archived: pruned (graveyard)</div>
+                  <!-- Legend -->
+                  <div class="building-card">
+                    <div style="color: var(--aw-text-muted); font-size: 0.75rem;" class="mb-2">Legend</div>
+                    <div class="d-flex flex-column gap-2" style="font-size: 0.8rem;">
+                      <div class="d-flex align-items-center gap-2">
+                        <span style="width: 12px; height: 12px; border-radius: 50%; background: var(--aw-accent);"></span>
+                        <span style="color: var(--aw-text);">Root (your character)</span>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span style="width: 12px; height: 12px; border-radius: 50%; background: var(--aw-alive);"></span>
+                        <span style="color: var(--aw-text);">Alive</span>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span style="width: 12px; height: 12px; border-radius: 50%; background: var(--aw-dead);"></span>
+                        <span style="color: var(--aw-text);">Dead</span>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span style="width: 12px; height: 12px; border-radius: 50%; background: var(--aw-text-dim);"></span>
+                        <span style="color: var(--aw-text);">Archived (graveyard)</span>
+                      </div>
+                    </div>
+
+                    <hr style="border-color: var(--aw-border);" class="my-2" />
+
+                    <div style="color: var(--aw-text-muted); font-size: 0.75rem;">
+                      💡 Drag to pan, scroll to zoom
+                    </div>
+                  </div>
+
+                  <!-- Edge Legend -->
+                  <div class="building-card mt-3">
+                    <div style="color: var(--aw-text-muted); font-size: 0.75rem;" class="mb-2">Connections</div>
+                    <div class="d-flex flex-column gap-2" style="font-size: 0.8rem;">
+                      <div class="d-flex align-items-center gap-2">
+                        <span style="width: 20px; height: 2px; background: var(--aw-king);"></span>
+                        <span style="color: var(--aw-text);">Marriage</span>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span style="width: 20px; height: 2px; background: var(--aw-accent);"></span>
+                        <span style="color: var(--aw-text);">Parent → Child</span>
+                      </div>
                     </div>
                   </div>
                 </div>
