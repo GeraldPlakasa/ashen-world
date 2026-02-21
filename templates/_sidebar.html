@@ -1,0 +1,67 @@
+<!-- Sidebar Partial -->
+<aside class="aw-sidebar">
+  <div>
+    <div class="aw-sidebar-brand">⚔️ Ashen World</div>
+    <div class="aw-sidebar-subtitle">Living village simulation</div>
+  </div>
+
+  <ul class="aw-nav">
+    <li>
+      <a href="{{ url_for('landing') }}" class="aw-nav-link {% if active_page == 'dashboard' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">🏰</span>
+        <span class="aw-nav-link-label">Kingdom</span>
+      </a>
+    </li>
+    <li>
+      <a href="{{ url_for('features') }}" class="aw-nav-link {% if active_page == 'features' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">📜</span>
+        <span class="aw-nav-link-label">Features</span>
+      </a>
+    </li>
+    <li>
+      <a href="{{ url_for('leaderboard') }}" class="aw-nav-link {% if active_page == 'leaderboard' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">🏆</span>
+        <span class="aw-nav-link-label">Leaderboard</span>
+      </a>
+    </li>
+    {% if session.get('is_admin') %}
+    <li>
+      <a href="{{ url_for('admin') }}" class="aw-nav-link {% if active_page == 'admin' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">⚙️</span>
+        <span class="aw-nav-link-label">Control Hall</span>
+      </a>
+    </li>
+    {% endif %}
+    <li>
+      <a href="{{ url_for('family_tree') }}" class="aw-nav-link {% if active_page == 'family_tree' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">🌳</span>
+        <span class="aw-nav-link-label">Family Tree</span>
+      </a>
+    </li>
+    {% if session.get('logged_in') %}
+    <li>
+      <a href="{{ url_for('create_character') }}" class="aw-nav-link {% if active_page == 'create_character' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">✨</span>
+        <span class="aw-nav-link-label">Create Hero</span>
+      </a>
+    </li>
+    {% endif %}
+  </ul>
+
+  <div class="aw-sidebar-footer">
+    <!-- Theme Toggle -->
+    <div class="theme-toggle mb-2">
+      <span class="theme-toggle-icon">🌙</span>
+      <div class="theme-toggle-track">
+        <div class="theme-toggle-thumb"></div>
+      </div>
+      <span class="theme-toggle-label">Dark</span>
+    </div>
+
+    {% if session.get('logged_in') %}
+      <a href="{{ url_for('logout') }}" class="aw-sidebar-logout-link">⎋ Logout</a>
+    {% else %}
+      <a href="{{ url_for('login') }}" class="aw-sidebar-logout-link">⏁ Login</a>
+    {% endif %}
+  </div>
+</aside>

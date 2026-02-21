@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -8,67 +8,11 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 <body class="game-theme">
   <div class="aw-layout">
-    <!-- Sidebar -->
-    <aside class="aw-sidebar">
-      <div>
-        <div class="aw-sidebar-brand">⚔️ Ashen World</div>
-        <div class="aw-sidebar-subtitle">Living village simulation</div>
-      </div>
-
-      <ul class="aw-nav">
-        <li>
-          <a href="{{ url_for('landing') }}" class="aw-nav-link {% if active_page == 'dashboard' %}aw-nav-link-active{% endif %}">
-            <span class="aw-nav-link-icon">🏰</span>
-            <span class="aw-nav-link-label">Kingdom</span>
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('features') }}" class="aw-nav-link {% if active_page == 'features' %}aw-nav-link-active{% endif %}">
-            <span class="aw-nav-link-icon">📜</span>
-            <span class="aw-nav-link-label">Features</span>
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('leaderboard') }}" class="aw-nav-link {% if active_page == 'leaderboard' %}aw-nav-link-active{% endif %}">
-            <span class="aw-nav-link-icon">🏆</span>
-            <span class="aw-nav-link-label">Leaderboard</span>
-          </a>
-        </li>
-        {% if session.get('is_admin') %}
-        <li>
-          <a href="{{ url_for('admin') }}" class="aw-nav-link {% if active_page == 'admin' %}aw-nav-link-active{% endif %}">
-            <span class="aw-nav-link-icon">⚙️</span>
-            <span class="aw-nav-link-label">Control Hall</span>
-          </a>
-        </li>
-        {% endif %}
-        <li>
-          <a href="{{ url_for('family_tree') }}" class="aw-nav-link {% if active_page == 'family_tree' %}aw-nav-link-active{% endif %}">
-            <span class="aw-nav-link-icon">🌳</span>
-            <span class="aw-nav-link-label">Family Tree</span>
-          </a>
-        </li>
-        {% if session.get('logged_in') %}
-        <li>
-          <a href="{{ url_for('create_character') }}" class="aw-nav-link {% if active_page == 'create_character' %}aw-nav-link-active{% endif %}">
-            <span class="aw-nav-link-icon">✨</span>
-            <span class="aw-nav-link-label">Create Hero</span>
-          </a>
-        </li>
-        {% endif %}
-      </ul>
-
-      <div class="aw-sidebar-footer">
-        {% if session.get('logged_in') %}
-          <a href="{{ url_for('logout') }}" class="aw-sidebar-logout-link">⎋ Logout</a>
-        {% else %}
-          <a href="{{ url_for('login') }}" class="aw-sidebar-logout-link">⏁ Login</a>
-        {% endif %}
-      </div>
-    </aside>
+    {% include '_sidebar.html' %}
 
     <!-- Main -->
     <div class="aw-main-shell">
@@ -86,7 +30,6 @@
         </header>
 
         <main class="aw-main">
-          <!-- Flash messages -->
           {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             <section class="mb-3">
@@ -183,7 +126,6 @@
                 <span class="year-badge live animate-pulse-glow" style="color: var(--aw-accent);">● Live</span>
               </div>
 
-              <!-- King & Stats -->
               <div class="row g-3 mb-3">
                 <div class="col-12 col-md-4">
                   <div class="d-flex align-items-center gap-3 p-3" style="background: var(--aw-bg-dark); border-radius: 10px;">
@@ -228,7 +170,6 @@
                 </div>
               </div>
 
-              <!-- Current Champions -->
               <div style="color: var(--aw-text-muted); font-size: 0.75rem; margin-bottom: 0.5rem;">
                 THIS YEAR'S CHAMPIONS
               </div>
@@ -294,7 +235,6 @@
                       <span class="year-badge archived">Archived</span>
                     </div>
                     <div class="year-card-body">
-                      <!-- King -->
                       <div class="d-flex align-items-center gap-2 mb-3">
                         <span style="font-size: 1.25rem;">👑</span>
                         <div>
@@ -303,7 +243,6 @@
                         </div>
                       </div>
 
-                      <!-- Stats Grid -->
                       <div class="row g-2 mb-3" style="font-size: 0.8rem;">
                         <div class="col-6">
                           <div style="color: var(--aw-text-muted);">Deaths</div>
@@ -327,7 +266,6 @@
                         </div>
                       </div>
 
-                      <!-- Champions -->
                       <div style="color: var(--aw-text-muted); font-size: 0.7rem; margin-bottom: 0.25rem;">CHAMPIONS</div>
                       <div class="d-flex flex-wrap gap-1" style="font-size: 0.75rem;">
                         <span class="stat-pill atk" title="Top ATK">
