@@ -1774,3 +1774,256 @@ html[data-theme="light"] body.game-theme tr.aw-row-dead:hover,
 html[data-theme="light"] body.game-theme table tbody tr.aw-row-dead:hover {
   background-color: #fee2e2 !important;
 }
+
+/* =========================================================
+   CRITICAL FIX: Light Mode Page Headers & Titles
+   Issue: White text on white background in light mode
+   Affected: Feature Guide, Hall of Legends, Control Hall,
+             Family Tree, Welcome back messages
+   Solution: Ultra-specific selectors with explicit colors
+   ========================================================= */
+
+/* Header Title - Main page headers */
+html[data-theme="light"] body.game-theme .header-title,
+html[data-theme="light"] body.game-theme .aw-header .header-title,
+html[data-theme="light"] body.game-theme span.header-title,
+html[data-theme="light"] body.game-theme .page-shell .header-title,
+[data-theme="light"] .header-title,
+[data-theme="light"] .aw-header .header-title {
+  color: #1e293b !important;
+}
+
+/* Header Title with inline styles - override var(--aw-text) */
+html[data-theme="light"] body.game-theme .header-title[style*="color"],
+html[data-theme="light"] body.game-theme span.header-title[style],
+[data-theme="light"] .header-title[style*="var(--aw-text)"],
+[data-theme="light"] span[style*="var(--aw-text)"].header-title {
+  color: #1e293b !important;
+}
+
+/* Header Subtitle */
+html[data-theme="light"] body.game-theme .header-subtitle,
+html[data-theme="light"] body.game-theme .aw-header .header-subtitle,
+html[data-theme="light"] body.game-theme span.header-subtitle,
+[data-theme="light"] .header-subtitle,
+[data-theme="light"] .aw-header .header-subtitle {
+  color: #475569 !important;
+}
+
+/* Header Subtitle with inline styles */
+html[data-theme="light"] body.game-theme .header-subtitle[style*="color"],
+html[data-theme="light"] body.game-theme span.header-subtitle[style],
+[data-theme="light"] .header-subtitle[style*="var(--aw-text-muted)"] {
+  color: #475569 !important;
+}
+
+/* All h-tags in light mode */
+html[data-theme="light"] body.game-theme h1,
+html[data-theme="light"] body.game-theme h2,
+html[data-theme="light"] body.game-theme h3,
+html[data-theme="light"] body.game-theme h4,
+html[data-theme="light"] body.game-theme h5,
+html[data-theme="light"] body.game-theme h6,
+html[data-theme="light"] body.game-theme .h1,
+html[data-theme="light"] body.game-theme .h2,
+html[data-theme="light"] body.game-theme .h3,
+html[data-theme="light"] body.game-theme .h4,
+html[data-theme="light"] body.game-theme .h5,
+html[data-theme="light"] body.game-theme .h6,
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+  color: #1e293b !important;
+}
+
+/* Game card section headers with inline styles */
+html[data-theme="light"] body.game-theme .game-card [style*="color: var(--aw-text)"],
+html[data-theme="light"] body.game-theme .game-card div[style*="var(--aw-text)"],
+[data-theme="light"] .game-card [style*="var(--aw-text)"] {
+  color: #1e293b !important;
+}
+
+/* Game card muted text */
+html[data-theme="light"] body.game-theme .game-card [style*="color: var(--aw-text-muted)"],
+html[data-theme="light"] body.game-theme .game-card [style*="var(--aw-text-muted)"],
+[data-theme="light"] .game-card [style*="var(--aw-text-muted)"] {
+  color: #475569 !important;
+}
+
+/* Game card dim text */
+html[data-theme="light"] body.game-theme .game-card [style*="color: var(--aw-text-dim)"],
+html[data-theme="light"] body.game-theme .game-card [style*="var(--aw-text-dim)"],
+[data-theme="light"] .game-card [style*="var(--aw-text-dim)"] {
+  color: #64748b !important;
+}
+
+/* KPI card labels */
+html[data-theme="light"] body.game-theme .kpi-card .kpi-value,
+[data-theme="light"] .kpi-card .kpi-value {
+  color: #1e293b !important;
+}
+
+/* KPI card special colors - keep them */
+html[data-theme="light"] body.game-theme .kpi-card.alive .kpi-value,
+[data-theme="light"] .kpi-card.alive .kpi-value {
+  color: #16a34a !important;
+}
+
+html[data-theme="light"] body.game-theme .kpi-card.dead .kpi-value,
+[data-theme="light"] .kpi-card.dead .kpi-value {
+  color: #dc2626 !important;
+}
+
+html[data-theme="light"] body.game-theme .kpi-card.gold .kpi-value,
+[data-theme="light"] .kpi-card.gold .kpi-value {
+  color: #d97706 !important;
+}
+
+html[data-theme="light"] body.game-theme .kpi-card.accent .kpi-value,
+[data-theme="light"] .kpi-card.accent .kpi-value {
+  color: #0284c7 !important;
+}
+
+/* Building card names */
+html[data-theme="light"] body.game-theme .building-card .building-name,
+html[data-theme="light"] body.game-theme .building-name,
+[data-theme="light"] .building-card .building-name {
+  color: #1e293b !important;
+}
+
+/* Trophy card text */
+html[data-theme="light"] body.game-theme .trophy-card .trophy-name,
+html[data-theme="light"] body.game-theme .trophy-name,
+[data-theme="light"] .trophy-card .trophy-name {
+  color: #1e293b !important;
+}
+
+html[data-theme="light"] body.game-theme .trophy-card .trophy-label,
+html[data-theme="light"] body.game-theme .trophy-label,
+[data-theme="light"] .trophy-card .trophy-label {
+  color: #475569 !important;
+}
+
+html[data-theme="light"] body.game-theme .trophy-card .trophy-value,
+html[data-theme="light"] body.game-theme .trophy-value,
+[data-theme="light"] .trophy-card .trophy-value {
+  color: #64748b !important;
+}
+
+/* Year card text */
+html[data-theme="light"] body.game-theme .year-card .year-number,
+html[data-theme="light"] body.game-theme .year-number,
+[data-theme="light"] .year-card .year-number {
+  color: #1e293b !important;
+}
+
+/* Main shell and page content */
+html[data-theme="light"] body.game-theme .aw-main-shell,
+html[data-theme="light"] body.game-theme .page-shell,
+html[data-theme="light"] body.game-theme .aw-main,
+[data-theme="light"] .aw-main-shell,
+[data-theme="light"] .page-shell,
+[data-theme="light"] .aw-main {
+  color: #1e293b !important;
+}
+
+/* Light mode accordion text */
+html[data-theme="light"] body.game-theme .accordion-button,
+[data-theme="light"] .accordion-button {
+  color: #1e293b !important;
+}
+
+html[data-theme="light"] body.game-theme .accordion-button:not(.collapsed),
+[data-theme="light"] .accordion-button:not(.collapsed) {
+  color: #0284c7 !important;
+}
+
+html[data-theme="light"] body.game-theme .accordion-body,
+[data-theme="light"] .accordion-body {
+  color: #475569 !important;
+}
+
+/* Light mode list group items */
+html[data-theme="light"] body.game-theme .list-group-item,
+[data-theme="light"] .list-group-item {
+  color: #475569 !important;
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html[data-theme="light"] body.game-theme .list-group-item:hover,
+[data-theme="light"] .list-group-item:hover {
+  color: #1e293b !important;
+  background-color: #f1f5f9 !important;
+}
+
+/* Feature box text */
+html[data-theme="light"] body.game-theme .feature-box,
+[data-theme="light"] .feature-box {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+html[data-theme="light"] body.game-theme .feature-box [style*="var(--aw-text)"],
+[data-theme="light"] .feature-box [style*="var(--aw-text)"] {
+  color: #1e293b !important;
+}
+
+/* Universal light mode fix for elements using var(--aw-text) inline */
+html[data-theme="light"] body.game-theme [style*="color: var(--aw-text)"],
+html[data-theme="light"] [style*="color: var(--aw-text)"],
+[data-theme="light"] [style*="color: var(--aw-text)"] {
+  color: #1e293b !important;
+}
+
+html[data-theme="light"] body.game-theme [style*="color: var(--aw-text-muted)"],
+html[data-theme="light"] [style*="color: var(--aw-text-muted)"],
+[data-theme="light"] [style*="color: var(--aw-text-muted)"] {
+  color: #475569 !important;
+}
+
+html[data-theme="light"] body.game-theme [style*="color: var(--aw-text-dim)"],
+html[data-theme="light"] [style*="color: var(--aw-text-dim)"],
+[data-theme="light"] [style*="color: var(--aw-text-dim)"] {
+  color: #64748b !important;
+}
+
+/* Stat pills in light mode */
+html[data-theme="light"] body.game-theme .stat-pill,
+[data-theme="light"] .stat-pill {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Action badges in light mode */
+html[data-theme="light"] body.game-theme .action-badge,
+[data-theme="light"] .action-badge {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Light mode body text default */
+html[data-theme="light"] body.game-theme,
+[data-theme="light"] body.game-theme {
+  color: #1e293b !important;
+}
+
+/* Weather background adjustment for light mode */
+html[data-theme="light"] body.game-theme .aw-bg.sunny,
+html[data-theme="light"] body.game-theme[data-weather="sunny"] .aw-bg,
+[data-theme="light"] .aw-bg.sunny {
+  background:
+    radial-gradient(900px 600px at 80% 15%, rgba(251, 191, 36, 0.25), transparent 60%) !important;
+}
+
+html[data-theme="light"] body.game-theme .aw-bg.rain,
+html[data-theme="light"] body.game-theme[data-weather="rain"] .aw-bg,
+[data-theme="light"] .aw-bg.rain {
+  background:
+    radial-gradient(800px 500px at 70% 10%, rgba(96, 165, 250, 0.15), transparent 60%),
+    linear-gradient(180deg, rgba(100, 120, 150, 0.1), transparent) !important;
+}
