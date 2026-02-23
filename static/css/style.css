@@ -213,6 +213,7 @@ body {
 .aw-table-wrapper {
   max-height: 65vh;
   overflow-y: auto;
+  background-color: var(--aw-bg-card, #ffffff);
 }
 
 /* =========================================================
@@ -221,6 +222,8 @@ body {
 .aw-table {
   border-collapse: separate;
   border-spacing: 0;
+  background-color: var(--aw-bg-card, #ffffff);
+  color: var(--aw-text, #111827);
 }
 
 /* =========================================================
@@ -230,14 +233,14 @@ body {
   position: sticky;
   top: 0;
   z-index: 5;
-  background-color: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background-color: var(--aw-bg-dark, #f9fafb);
+  border-bottom: 1px solid var(--aw-border, #e5e7eb);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 10px 12px;
-  color: #6b7280;
+  color: var(--aw-text-muted, #6b7280);
   white-space: nowrap;
 }
 
@@ -260,27 +263,29 @@ body {
    Table body (rows & cells)
    ========================================================= */
 .aw-table tbody tr:nth-child(even) {
-  background-color: #f9fafb;
+  background-color: var(--aw-bg-dark, #f9fafb);
 }
 
 .aw-table tbody tr:nth-child(odd) {
-  background-color: #ffffff;
+  background-color: var(--aw-bg-card, #ffffff);
 }
 
 /* Smooth hover transition */
 .aw-table tbody tr {
   transition: background-color 0.12s ease;
+  color: var(--aw-text, #111827);
 }
 
 /* Slightly darker on hover to highlight row */
 .aw-table tbody tr:hover {
-  background-color: #e2e8f0; /* light gray-blue */
+  background-color: var(--aw-bg-card-hover, #e2e8f0);
 }
 
 .aw-table td {
   font-size: 13px;
   padding: 8px 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--aw-border, #e5e7eb);
+  color: var(--aw-text, #111827);
 }
 
 /* =========================================================
@@ -346,18 +351,18 @@ body {
    Dead villager styling
    ========================================================= */
 .aw-row-dead {
-  background-color: #fef2f2; /* soft red */
+  background-color: rgba(239, 68, 68, 0.1); /* theme-compatible soft red */
 }
 
 /* Slightly darker on hover for dead rows */
 .aw-table tbody tr.aw-row-dead:hover {
-  background-color: #fee2e2;
+  background-color: rgba(239, 68, 68, 0.15);
 }
 
 /* Name styling for dead villager */
 .aw-name-dead {
   text-decoration: line-through;
-  color: #b91c1c;
+  color: var(--aw-dead, #b91c1c);
   font-style: italic;
 }
 

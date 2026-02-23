@@ -1413,3 +1413,364 @@ body.game-theme pre {
   padding: 1rem;
   border-radius: 8px;
 }
+
+/* =========================================================
+   CRITICAL FIX: Table Background/Text (Nuclear Override)
+   Issue: style.css sets #ffffff backgrounds, Bootstrap adds more
+   Solution: Ultra-specific selectors with !important
+   ========================================================= */
+
+/* Target ALL table elements with maximum specificity */
+html body.game-theme table,
+html body.game-theme .table,
+html body.game-theme table.table,
+html body.game-theme table.aw-table,
+html body.game-theme .table.aw-table {
+  background-color: var(--aw-bg-card) !important;
+  color: var(--aw-text) !important;
+  --bs-table-bg: var(--aw-bg-card) !important;
+  --bs-table-striped-bg: var(--aw-bg-dark) !important;
+  --bs-table-hover-bg: var(--aw-bg-card-hover) !important;
+  --bs-table-color: var(--aw-text) !important;
+}
+
+/* Table header - ultra specific */
+html body.game-theme table thead,
+html body.game-theme .table thead,
+html body.game-theme table.aw-table thead,
+html body.game-theme .table-responsive table thead {
+  background-color: var(--aw-bg-dark) !important;
+}
+
+html body.game-theme table thead th,
+html body.game-theme .table thead th,
+html body.game-theme table.aw-table thead th,
+html body.game-theme .table-responsive table thead th,
+html body.game-theme table > thead > tr > th,
+html body.game-theme .table > thead > tr > th {
+  background-color: var(--aw-bg-dark) !important;
+  color: var(--aw-text-muted) !important;
+  border-color: var(--aw-border) !important;
+  border-bottom-color: var(--aw-border) !important;
+}
+
+/* Table body - ultra specific */
+html body.game-theme table tbody,
+html body.game-theme .table tbody,
+html body.game-theme table.aw-table tbody {
+  background-color: var(--aw-bg-card) !important;
+}
+
+/* All rows - override nth-child completely */
+html body.game-theme table tbody tr,
+html body.game-theme .table tbody tr,
+html body.game-theme table.aw-table tbody tr,
+html body.game-theme .table-responsive table tbody tr,
+html body.game-theme table > tbody > tr,
+html body.game-theme .table > tbody > tr {
+  background-color: var(--aw-bg-card) !important;
+  color: var(--aw-text) !important;
+}
+
+/* Even rows - must be more specific than the above */
+html body.game-theme table tbody tr:nth-child(even),
+html body.game-theme .table tbody tr:nth-child(even),
+html body.game-theme table.aw-table tbody tr:nth-child(even),
+html body.game-theme .table-responsive table tbody tr:nth-child(even),
+html body.game-theme table > tbody > tr:nth-child(even),
+html body.game-theme .table > tbody > tr:nth-child(even),
+html body.game-theme table tbody tr:nth-of-type(even),
+html body.game-theme .table tbody tr:nth-of-type(even) {
+  background-color: var(--aw-bg-dark) !important;
+}
+
+/* Odd rows - explicit */
+html body.game-theme table tbody tr:nth-child(odd),
+html body.game-theme .table tbody tr:nth-child(odd),
+html body.game-theme table.aw-table tbody tr:nth-child(odd),
+html body.game-theme .table-responsive table tbody tr:nth-child(odd),
+html body.game-theme table > tbody > tr:nth-child(odd),
+html body.game-theme .table > tbody > tr:nth-child(odd) {
+  background-color: var(--aw-bg-card) !important;
+}
+
+/* Row hover */
+html body.game-theme table tbody tr:hover,
+html body.game-theme .table tbody tr:hover,
+html body.game-theme table.aw-table tbody tr:hover,
+html body.game-theme .table-responsive table tbody tr:hover {
+  background-color: var(--aw-bg-card-hover) !important;
+}
+
+/* All cells - text color */
+html body.game-theme table td,
+html body.game-theme .table td,
+html body.game-theme table.aw-table td,
+html body.game-theme table > tbody > tr > td,
+html body.game-theme .table > tbody > tr > td,
+html body.game-theme .table-responsive table td {
+  color: var(--aw-text) !important;
+  border-color: var(--aw-border) !important;
+  background-color: inherit !important;
+}
+
+html body.game-theme table th,
+html body.game-theme .table th,
+html body.game-theme table.aw-table th {
+  color: var(--aw-text-muted) !important;
+  border-color: var(--aw-border) !important;
+}
+
+/* Dead rows - special styling */
+html body.game-theme table tbody tr.aw-row-dead,
+html body.game-theme .table tbody tr.aw-row-dead,
+html body.game-theme table.aw-table tbody tr.aw-row-dead,
+html body.game-theme tr.aw-row-dead,
+html body.game-theme table > tbody > tr.aw-row-dead {
+  background-color: rgba(127, 29, 29, 0.25) !important;
+}
+
+html body.game-theme table tbody tr.aw-row-dead:hover,
+html body.game-theme .table tbody tr.aw-row-dead:hover,
+html body.game-theme tr.aw-row-dead:hover {
+  background-color: rgba(127, 29, 29, 0.4) !important;
+}
+
+/* Table wrapper/responsive container */
+html body.game-theme .aw-table-wrapper,
+html body.game-theme .table-responsive,
+html body.game-theme div.aw-table-wrapper,
+html body.game-theme div.table-responsive {
+  background-color: var(--aw-bg-card) !important;
+}
+
+/* =========================================================
+   CRITICAL FIX: Hero Card (Pinned Character) Light Mode
+   Issue: Uses dark gradient in light mode
+   Solution: Explicit light theme overrides
+   ========================================================= */
+
+/* Light mode hero card - clean white styling */
+[data-theme="light"] .hero-card,
+html[data-theme="light"] .hero-card,
+html[data-theme="light"] body.game-theme .hero-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Light mode hero card text */
+[data-theme="light"] .hero-card .hero-name,
+html[data-theme="light"] .hero-card .hero-name {
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .hero-card .hero-title,
+html[data-theme="light"] .hero-card .hero-title {
+  color: #64748b !important;
+}
+
+/* Light mode stat bars in hero card */
+[data-theme="light"] .hero-card .stat-bar-track,
+html[data-theme="light"] .hero-card .stat-bar-track {
+  background: #e2e8f0 !important;
+}
+
+[data-theme="light"] .hero-card .stat-bar-value,
+html[data-theme="light"] .hero-card .stat-bar-value {
+  color: #475569 !important;
+}
+
+/* Light mode stat pills in hero card */
+[data-theme="light"] .hero-card .stat-pill,
+html[data-theme="light"] .hero-card .stat-pill {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Light mode hero avatar */
+[data-theme="light"] .hero-card .hero-avatar,
+html[data-theme="light"] .hero-card .hero-avatar {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Light mode dividers in hero card */
+[data-theme="light"] .hero-card hr,
+html[data-theme="light"] .hero-card hr {
+  border-color: #e2e8f0 !important;
+}
+
+/* Light mode text elements in hero card */
+[data-theme="light"] .hero-card [style*="color: var(--aw-text)"],
+html[data-theme="light"] .hero-card span,
+html[data-theme="light"] .hero-card div {
+  color: #1e293b;
+}
+
+[data-theme="light"] .hero-card [style*="color: var(--aw-text-muted)"],
+[data-theme="light"] .hero-card [style*="color: var(--aw-text-dim)"] {
+  color: #64748b !important;
+}
+
+/* Light mode action badges in hero card */
+[data-theme="light"] .hero-card .action-badge,
+html[data-theme="light"] .hero-card .action-badge {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Light mode collapse button */
+[data-theme="light"] .hero-card .btn-outline-secondary,
+html[data-theme="light"] .hero-card .btn-outline-secondary {
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .hero-card .btn-outline-secondary:hover,
+html[data-theme="light"] .hero-card .btn-outline-secondary:hover {
+  background: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+/* =========================================================
+   CRITICAL FIX: Admin Pinned Card Light Mode
+   ========================================================= */
+[data-theme="light"] #admin-pinned-card,
+html[data-theme="light"] #admin-pinned-card,
+html[data-theme="light"] body.game-theme #admin-pinned-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] #admin-pinned-card .card-body,
+html[data-theme="light"] #admin-pinned-card .card-body {
+  background: #ffffff !important;
+}
+
+[data-theme="light"] #admin-pinned-card [style*="color: var(--aw-text)"],
+[data-theme="light"] #admin-pinned-card #pinned-name,
+[data-theme="light"] #admin-pinned-card #pinned-meta-top {
+  color: #1e293b !important;
+}
+
+[data-theme="light"] #admin-pinned-card [style*="color: var(--aw-text-muted)"],
+[data-theme="light"] #admin-pinned-card [style*="color: var(--aw-text-dim)"],
+[data-theme="light"] #admin-pinned-card #pinned-subtitle,
+[data-theme="light"] #admin-pinned-card #pinned-meta-bottom {
+  color: #64748b !important;
+}
+
+/* =========================================================
+   CRITICAL FIX: Game Cards Light Mode
+   ========================================================= */
+[data-theme="light"] .game-card,
+html[data-theme="light"] .game-card,
+html[data-theme="light"] body.game-theme .game-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .game-card .card-body,
+html[data-theme="light"] .game-card .card-body {
+  background: transparent !important;
+}
+
+/* =========================================================
+   CRITICAL FIX: KPI Cards Light Mode
+   ========================================================= */
+[data-theme="light"] .kpi-card,
+html[data-theme="light"] .kpi-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .kpi-card .kpi-label,
+html[data-theme="light"] .kpi-card .kpi-label {
+  color: #64748b !important;
+}
+
+/* =========================================================
+   CRITICAL FIX: Building Cards Light Mode
+   ========================================================= */
+[data-theme="light"] .building-card,
+html[data-theme="light"] .building-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .building-card .building-name,
+html[data-theme="light"] .building-card .building-name {
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .building-card.not-built,
+html[data-theme="light"] .building-card.not-built {
+  background: #f8fafc !important;
+}
+
+/* =========================================================
+   CRITICAL FIX: Table Light Mode Specific
+   ========================================================= */
+html[data-theme="light"] body.game-theme table,
+html[data-theme="light"] body.game-theme .table,
+html[data-theme="light"] body.game-theme table.aw-table {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  --bs-table-bg: #ffffff !important;
+  --bs-table-striped-bg: #f8fafc !important;
+  --bs-table-hover-bg: #f1f5f9 !important;
+  --bs-table-color: #1e293b !important;
+}
+
+html[data-theme="light"] body.game-theme table thead th,
+html[data-theme="light"] body.game-theme .table thead th,
+html[data-theme="light"] body.game-theme table.aw-table thead th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html[data-theme="light"] body.game-theme table tbody tr,
+html[data-theme="light"] body.game-theme .table tbody tr {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+html[data-theme="light"] body.game-theme table tbody tr:nth-child(even),
+html[data-theme="light"] body.game-theme .table tbody tr:nth-child(even) {
+  background-color: #f8fafc !important;
+}
+
+html[data-theme="light"] body.game-theme table tbody tr:nth-child(odd),
+html[data-theme="light"] body.game-theme .table tbody tr:nth-child(odd) {
+  background-color: #ffffff !important;
+}
+
+html[data-theme="light"] body.game-theme table tbody tr:hover,
+html[data-theme="light"] body.game-theme .table tbody tr:hover {
+  background-color: #f1f5f9 !important;
+}
+
+html[data-theme="light"] body.game-theme table td,
+html[data-theme="light"] body.game-theme .table td {
+  color: #1e293b !important;
+  border-color: #e2e8f0 !important;
+}
+
+html[data-theme="light"] body.game-theme .aw-table-wrapper,
+html[data-theme="light"] body.game-theme .table-responsive {
+  background-color: #ffffff !important;
+}
+
+/* Light mode dead rows */
+html[data-theme="light"] body.game-theme tr.aw-row-dead,
+html[data-theme="light"] body.game-theme table tbody tr.aw-row-dead {
+  background-color: #fef2f2 !important;
+}
+
+html[data-theme="light"] body.game-theme tr.aw-row-dead:hover,
+html[data-theme="light"] body.game-theme table tbody tr.aw-row-dead:hover {
+  background-color: #fee2e2 !important;
+}
