@@ -2027,3 +2027,185 @@ html[data-theme="light"] body.game-theme[data-weather="rain"] .aw-bg,
     radial-gradient(800px 500px at 70% 10%, rgba(96, 165, 250, 0.15), transparent 60%),
     linear-gradient(180deg, rgba(100, 120, 150, 0.1), transparent) !important;
 }
+
+/* =========================================================
+   CRITICAL FIX: Dark Mode - White Background Sections
+   Issue: Some sections have white/light backgrounds in dark mode
+          causing white text on white background
+   Solution: Force dark text on sections with light backgrounds
+   ========================================================= */
+
+/* Fix: btn-outline-light in dark mode - ensure visibility */
+body.game-theme .btn-outline-light,
+html:not([data-theme="light"]) body.game-theme .btn-outline-light,
+[data-theme="dark"] body.game-theme .btn-outline-light {
+  color: #1e293b !important;
+  border-color: #475569 !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+body.game-theme .btn-outline-light:hover,
+html:not([data-theme="light"]) body.game-theme .btn-outline-light:hover,
+[data-theme="dark"] body.game-theme .btn-outline-light:hover {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #64748b !important;
+}
+
+/* Fix: +1 Day Button specifically */
+body.game-theme .aw-header .btn-outline-light,
+body.game-theme form .btn-outline-light {
+  color: #1e293b !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Fix: btn-primary visibility - ensure text is always visible */
+body.game-theme .btn-primary {
+  color: #ffffff !important;
+  background-color: var(--aw-accent) !important;
+  border-color: var(--aw-accent) !important;
+}
+
+body.game-theme .btn-primary:hover {
+  color: #ffffff !important;
+  background-color: #0284c7 !important;
+  border-color: #0284c7 !important;
+}
+
+/* Fix: Spawn Hero button - ensure it's always visible */
+body.game-theme a.btn-primary,
+body.game-theme button.btn-primary {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: #ffffff !important;
+  z-index: 10;
+}
+
+/* =========================================================
+   CRITICAL FIX: Dark Mode Headers
+   Issue: Headers in areas with white/light backgrounds
+   Solution: Detect and fix these scenarios
+   ========================================================= */
+
+/* Dark mode header text - ensure proper contrast */
+html:not([data-theme="light"]) body.game-theme .aw-header,
+[data-theme="dark"] body.game-theme .aw-header,
+body.game-theme:not([data-theme="light"]) .aw-header {
+  background-color: transparent;
+}
+
+/* Force header text to be visible regardless of background */
+html:not([data-theme="light"]) body.game-theme .header-title,
+html:not([data-theme="light"]) body.game-theme .aw-header .header-title,
+html:not([data-theme="light"]) body.game-theme span.header-title,
+[data-theme="dark"] .header-title,
+[data-theme="dark"] .aw-header .header-title,
+body.game-theme:not([data-theme="light"]) .header-title {
+  color: var(--aw-text) !important;
+}
+
+html:not([data-theme="light"]) body.game-theme .header-subtitle,
+html:not([data-theme="light"]) body.game-theme .aw-header .header-subtitle,
+[data-theme="dark"] .header-subtitle,
+body.game-theme:not([data-theme="light"]) .header-subtitle {
+  color: var(--aw-text-muted) !important;
+}
+
+/* Welcome back message - dark mode */
+html:not([data-theme="light"]) body.game-theme .page-shell .header-title,
+[data-theme="dark"] body.game-theme .page-shell .header-title {
+  color: #e2e8f0 !important;
+}
+
+/* =========================================================
+   DARK MODE: Page Shell and Main Content Area
+   Ensure proper dark backgrounds
+   ========================================================= */
+html:not([data-theme="light"]) body.game-theme .page-shell,
+html:not([data-theme="light"]) body.game-theme .aw-main-shell,
+[data-theme="dark"] body.game-theme .page-shell,
+[data-theme="dark"] body.game-theme .aw-main-shell,
+body.game-theme:not([data-theme="light"]) .page-shell,
+body.game-theme:not([data-theme="light"]) .aw-main-shell {
+  background-color: transparent !important;
+}
+
+/* Dark mode game cards - ensure dark background */
+html:not([data-theme="light"]) body.game-theme .game-card,
+[data-theme="dark"] body.game-theme .game-card,
+body.game-theme:not([data-theme="light"]) .game-card {
+  background-color: var(--aw-bg-card) !important;
+  border-color: var(--aw-border) !important;
+}
+
+/* Dark mode game card text */
+html:not([data-theme="light"]) body.game-theme .game-card [style*="color: var(--aw-text)"],
+html:not([data-theme="light"]) body.game-theme .game-card .h5,
+html:not([data-theme="light"]) body.game-theme .game-card .h6,
+[data-theme="dark"] .game-card [style*="var(--aw-text)"] {
+  color: #e2e8f0 !important;
+}
+
+/* =========================================================
+   DARK MODE: Tables and List Groups
+   Override any lingering white backgrounds
+   ========================================================= */
+html:not([data-theme="light"]) body.game-theme .list-group-item,
+[data-theme="dark"] body.game-theme .list-group-item,
+body.game-theme:not([data-theme="light"]) .list-group-item {
+  background-color: var(--aw-bg-card) !important;
+  border-color: var(--aw-border) !important;
+  color: var(--aw-text-muted) !important;
+}
+
+html:not([data-theme="light"]) body.game-theme .list-group-item:hover,
+[data-theme="dark"] body.game-theme .list-group-item:hover {
+  background-color: var(--aw-bg-card-hover) !important;
+  color: var(--aw-text) !important;
+}
+
+html:not([data-theme="light"]) body.game-theme .aw-table,
+html:not([data-theme="light"]) body.game-theme .aw-table-wrapper,
+[data-theme="dark"] body.game-theme .aw-table,
+[data-theme="dark"] body.game-theme .aw-table-wrapper {
+  background-color: var(--aw-bg-card) !important;
+}
+
+html:not([data-theme="light"]) body.game-theme .aw-table tbody tr,
+[data-theme="dark"] body.game-theme .aw-table tbody tr {
+  background-color: var(--aw-bg-card) !important;
+}
+
+html:not([data-theme="light"]) body.game-theme .aw-table tbody tr:nth-child(even),
+[data-theme="dark"] body.game-theme .aw-table tbody tr:nth-child(even) {
+  background-color: var(--aw-bg-dark) !important;
+}
+
+/* =========================================================
+   DARK MODE: Accordion (Features page)
+   ========================================================= */
+html:not([data-theme="light"]) body.game-theme .accordion-button,
+[data-theme="dark"] body.game-theme .accordion-button {
+  background-color: var(--aw-bg-card) !important;
+  color: var(--aw-text) !important;
+}
+
+html:not([data-theme="light"]) body.game-theme .accordion-button:not(.collapsed),
+[data-theme="dark"] body.game-theme .accordion-button:not(.collapsed) {
+  background-color: var(--aw-bg-card-hover) !important;
+  color: var(--aw-accent) !important;
+}
+
+html:not([data-theme="light"]) body.game-theme .accordion-body,
+[data-theme="dark"] body.game-theme .accordion-body {
+  background-color: var(--aw-bg-card) !important;
+  color: var(--aw-text-muted) !important;
+}
+
+html:not([data-theme="light"]) body.game-theme .accordion-item,
+[data-theme="dark"] body.game-theme .accordion-item {
+  background-color: var(--aw-bg-card) !important;
+  border-color: var(--aw-border) !important;
+}
