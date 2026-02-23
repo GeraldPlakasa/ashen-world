@@ -1088,3 +1088,328 @@ body.game-theme .list-group-item:hover {
     display: none;
   }
 }
+
+/* =========================================================
+   FIX: Table Readability (Dark Theme)
+   Override style.css white backgrounds
+   ========================================================= */
+body.game-theme .table,
+body.game-theme table {
+  background-color: var(--aw-bg-card) !important;
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .table thead th,
+body.game-theme .aw-table thead th,
+body.game-theme table thead th {
+  background-color: var(--aw-bg-dark) !important;
+  color: var(--aw-text-muted) !important;
+  border-color: var(--aw-border) !important;
+}
+
+body.game-theme .table tbody tr,
+body.game-theme .aw-table tbody tr,
+body.game-theme table tbody tr {
+  background-color: var(--aw-bg-card) !important;
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .table tbody tr:nth-child(even),
+body.game-theme .aw-table tbody tr:nth-child(even),
+body.game-theme table tbody tr:nth-child(even) {
+  background-color: var(--aw-bg-dark) !important;
+}
+
+body.game-theme .table tbody tr:hover,
+body.game-theme .aw-table tbody tr:hover,
+body.game-theme table tbody tr:hover {
+  background-color: var(--aw-bg-card-hover) !important;
+}
+
+body.game-theme .table td,
+body.game-theme .aw-table td,
+body.game-theme table td {
+  color: var(--aw-text) !important;
+  border-color: var(--aw-border) !important;
+}
+
+body.game-theme .table th,
+body.game-theme table th {
+  color: var(--aw-text-muted) !important;
+  border-color: var(--aw-border) !important;
+}
+
+/* Dead row styling */
+body.game-theme .aw-row-dead,
+body.game-theme tr.aw-row-dead {
+  background-color: rgba(127, 29, 29, 0.2) !important;
+}
+
+body.game-theme .aw-row-dead:hover,
+body.game-theme tr.aw-row-dead:hover {
+  background-color: rgba(127, 29, 29, 0.35) !important;
+}
+
+/* Table wrapper background */
+body.game-theme .aw-table-wrapper,
+body.game-theme .table-responsive {
+  background-color: var(--aw-bg-card) !important;
+}
+
+/* =========================================================
+   FIX: Weather System (Dark Theme Compatible)
+   ========================================================= */
+body.game-theme .aw-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Sunny weather for dark theme */
+body.game-theme .aw-bg.sunny,
+body.game-theme[data-weather="sunny"] .aw-bg {
+  background:
+    radial-gradient(900px 600px at 80% 15%, rgba(251, 191, 36, 0.15), transparent 60%),
+    radial-gradient(600px 400px at 20% 80%, rgba(251, 191, 36, 0.08), transparent 50%);
+  filter: none;
+  animation: awDarkSunBreath 8s ease-in-out infinite;
+}
+
+@keyframes awDarkSunBreath {
+  0%, 100% { opacity: 0.8; }
+  50%      { opacity: 1; }
+}
+
+/* Rain weather for dark theme */
+body.game-theme .aw-bg.rain,
+body.game-theme[data-weather="rain"] .aw-bg {
+  background:
+    radial-gradient(800px 500px at 70% 10%, rgba(96, 165, 250, 0.1), transparent 60%),
+    linear-gradient(180deg, rgba(10, 20, 40, 0.4), transparent);
+  filter: saturate(0.9);
+}
+
+body.game-theme .aw-rain-canvas {
+  opacity: 0;
+  transition: opacity 350ms ease;
+}
+
+body.game-theme .aw-rain-canvas.is-raining {
+  opacity: 0.7;
+}
+
+/* Weather indicator badges */
+body.game-theme .weather-indicator.sunny {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+body.game-theme .weather-indicator.rain {
+  background: rgba(96, 165, 250, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.4);
+}
+
+/* =========================================================
+   FIX: Page Headers & Titles
+   ========================================================= */
+body.game-theme .header-title,
+body.game-theme .aw-header .header-title,
+body.game-theme h1,
+body.game-theme h2,
+body.game-theme h3,
+body.game-theme h4,
+body.game-theme h5,
+body.game-theme h6,
+body.game-theme .h1,
+body.game-theme .h2,
+body.game-theme .h3,
+body.game-theme .h4,
+body.game-theme .h5,
+body.game-theme .h6 {
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .header-subtitle,
+body.game-theme .aw-header .header-subtitle {
+  color: var(--aw-text-muted) !important;
+}
+
+/* Section titles */
+body.game-theme .card-title,
+body.game-theme .modal-title {
+  color: var(--aw-text) !important;
+}
+
+/* =========================================================
+   FIX: Bootstrap White Background Overrides
+   ========================================================= */
+body.game-theme .bg-white {
+  background-color: var(--aw-bg-card) !important;
+}
+
+body.game-theme .bg-light {
+  background-color: var(--aw-bg-dark) !important;
+}
+
+body.game-theme .text-dark {
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .text-body {
+  color: var(--aw-text) !important;
+}
+
+/* Modal fixes */
+body.game-theme .modal-content {
+  background-color: var(--aw-bg-card) !important;
+  border-color: var(--aw-border) !important;
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .modal-header {
+  border-color: var(--aw-border) !important;
+}
+
+body.game-theme .modal-footer {
+  border-color: var(--aw-border) !important;
+}
+
+/* Dropdown fixes */
+body.game-theme .dropdown-menu {
+  background-color: var(--aw-bg-card) !important;
+  border-color: var(--aw-border) !important;
+}
+
+body.game-theme .dropdown-item {
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .dropdown-item:hover,
+body.game-theme .dropdown-item:focus {
+  background-color: var(--aw-bg-card-hover) !important;
+  color: var(--aw-text) !important;
+}
+
+/* Tooltip/Popover fixes */
+body.game-theme .tooltip-inner {
+  background-color: var(--aw-bg-dark) !important;
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .popover {
+  background-color: var(--aw-bg-card) !important;
+  border-color: var(--aw-border) !important;
+}
+
+body.game-theme .popover-header {
+  background-color: var(--aw-bg-dark) !important;
+  border-color: var(--aw-border) !important;
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .popover-body {
+  color: var(--aw-text) !important;
+}
+
+/* Nav tabs/pills fixes */
+body.game-theme .nav-tabs .nav-link {
+  color: var(--aw-text-muted) !important;
+  border-color: transparent !important;
+}
+
+body.game-theme .nav-tabs .nav-link:hover {
+  border-color: var(--aw-border) !important;
+}
+
+body.game-theme .nav-tabs .nav-link.active {
+  background-color: var(--aw-bg-card) !important;
+  border-color: var(--aw-border) var(--aw-border) transparent !important;
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .nav-pills .nav-link {
+  color: var(--aw-text-muted) !important;
+}
+
+body.game-theme .nav-pills .nav-link.active {
+  background-color: var(--aw-accent) !important;
+  color: white !important;
+}
+
+/* Pagination fixes */
+body.game-theme .page-link {
+  background-color: var(--aw-bg-card) !important;
+  border-color: var(--aw-border) !important;
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .page-link:hover {
+  background-color: var(--aw-bg-card-hover) !important;
+}
+
+body.game-theme .page-item.active .page-link {
+  background-color: var(--aw-accent) !important;
+  border-color: var(--aw-accent) !important;
+}
+
+body.game-theme .page-item.disabled .page-link {
+  background-color: var(--aw-bg-dark) !important;
+  color: var(--aw-text-dim) !important;
+}
+
+/* =========================================================
+   FIX: Ensure All Text is Readable
+   ========================================================= */
+body.game-theme,
+body.game-theme * {
+  color: inherit;
+}
+
+/* Reset to ensure no white-on-white */
+body.game-theme .aw-layout,
+body.game-theme .aw-main-shell,
+body.game-theme .page-shell,
+body.game-theme .aw-main {
+  color: var(--aw-text);
+}
+
+/* Specific label/text elements */
+body.game-theme label,
+body.game-theme .form-label {
+  color: var(--aw-text-muted) !important;
+}
+
+body.game-theme p {
+  color: var(--aw-text);
+}
+
+body.game-theme small,
+body.game-theme .small {
+  color: var(--aw-text-muted);
+}
+
+body.game-theme strong,
+body.game-theme b {
+  color: inherit;
+}
+
+/* Code/Pre elements */
+body.game-theme code {
+  background-color: var(--aw-bg-dark);
+  color: #f472b6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+body.game-theme pre {
+  background-color: var(--aw-bg-dark);
+  color: var(--aw-text);
+  border: 1px solid var(--aw-border);
+  padding: 1rem;
+  border-radius: 8px;
+}

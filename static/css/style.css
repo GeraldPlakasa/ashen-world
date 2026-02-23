@@ -467,11 +467,11 @@ body {
   z-index: 1;
 }
 
-/* -------- SUNNY THEME -------- */
+/* -------- SUNNY THEME (Light Mode) -------- */
 .aw-bg.sunny {
-  /* soft sun glow + subtle sky wash */
+  /* soft sun glow + subtle sky wash - for light theme */
   background:
-    radial-gradient(900px 600px at 80% 15%, rgba(255, 236, 170, 0.55), rgba(255, 236, 170, 0.00) 60%);
+    radial-gradient(900px 600px at 80% 15%, rgba(255, 236, 170, 0.55), transparent 60%);
   filter: saturate(1.05);
 }
 
@@ -484,12 +484,12 @@ body {
   animation: awSunBreath 6s ease-in-out infinite;
 }
 
-/* -------- RAIN THEME -------- */
+/* -------- RAIN THEME (Light Mode) -------- */
 .aw-bg.rain {
-  /* darker moody overlay */
+  /* moody overlay - for light theme */
   background:
-    radial-gradient(800px 500px at 70% 10%, rgba(200, 220, 255, 0.18), rgba(0, 0, 0, 0.0) 60%),
-    linear-gradient(180deg, rgba(10, 20, 30, 0.55), rgba(245, 245, 247, 1));
+    radial-gradient(800px 500px at 70% 10%, rgba(200, 220, 255, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(10, 20, 30, 0.35), transparent);
   filter: saturate(0.95);
 }
 
@@ -499,5 +499,21 @@ body {
   transition: opacity 250ms ease;
 }
 .aw-rain-canvas.is-raining {
+  opacity: 1;
+}
+
+/* -------- Weather with body data-weather attribute -------- */
+body[data-weather="sunny"] .aw-bg {
+  background:
+    radial-gradient(900px 600px at 80% 15%, rgba(255, 236, 170, 0.55), transparent 60%);
+}
+
+body[data-weather="rain"] .aw-bg {
+  background:
+    radial-gradient(800px 500px at 70% 10%, rgba(200, 220, 255, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(10, 20, 30, 0.35), transparent);
+}
+
+body[data-weather="rain"] .aw-rain-canvas {
   opacity: 1;
 }
