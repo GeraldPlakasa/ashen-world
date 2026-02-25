@@ -49,15 +49,6 @@
   </ul>
 
   <div class="aw-sidebar-footer">
-    <!-- Theme Toggle -->
-    <div class="theme-toggle">
-      <span class="theme-toggle-icon">◐</span>
-      <div class="theme-toggle-track">
-        <div class="theme-toggle-thumb"></div>
-      </div>
-      <span class="theme-toggle-label">Theme</span>
-    </div>
-
     {% if session.get('logged_in') %}
       <a href="{{ url_for('logout') }}" class="aw-sidebar-logout-link">← Sign Out</a>
     {% else %}

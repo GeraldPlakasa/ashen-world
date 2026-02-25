@@ -1,61 +1,12 @@
 /* =========================================================
    ASHEN WORLD - GAME UI
-   Minimalist Dark/Light Theme Support
+   Light Mode Only - Clean Design
    ========================================================= */
 
 /* =========================================================
-   CSS Variables - Dark Theme (Default)
+   CSS Variables - Light Theme
    ========================================================= */
 :root {
-  --aw-bg-body: #0f172a;
-  --aw-bg-body-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  --aw-bg-dark: #1e293b;
-  --aw-bg-card: #1e293b;
-  --aw-bg-card-hover: #334155;
-  --aw-bg-input: #0f172a;
-  --aw-border: #334155;
-  --aw-border-light: #475569;
-  
-  --aw-text: #f1f5f9;
-  --aw-text-muted: #94a3b8;
-  --aw-text-dim: #64748b;
-  
-  /* Semantic Colors */
-  --aw-hp: #ef4444;
-  --aw-hp-bg: rgba(239,68,68,0.15);
-  --aw-hunger: #f59e0b;
-  --aw-hunger-bg: rgba(245,158,11,0.15);
-  --aw-exp: #3b82f6;
-  --aw-exp-bg: rgba(59,130,246,0.15);
-  --aw-mana: #8b5cf6;
-  
-  /* Status */
-  --aw-alive: #22c55e;
-  --aw-dead: #ef4444;
-  --aw-warning: #f59e0b;
-  
-  /* Ranks */
-  --aw-rank-gold: #fbbf24;
-  --aw-rank-silver: #94a3b8;
-  --aw-rank-bronze: #b45309;
-  
-  /* Accent */
-  --aw-accent: #3b82f6;
-  --aw-accent-hover: #2563eb;
-  --aw-accent-glow: rgba(59,130,246,0.2);
-  --aw-king: #a855f7;
-  --aw-player: #06b6d4;
-  --aw-gold: #fbbf24;
-
-  /* Sidebar */
-  --aw-sidebar-bg: #0f172a;
-  --aw-sidebar-border: #1e293b;
-}
-
-/* =========================================================
-   Light Theme
-   ========================================================= */
-[data-theme="light"] {
   --aw-bg-body: #f8fafc;
   --aw-bg-body-gradient: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   --aw-bg-dark: #f1f5f9;
@@ -68,7 +19,35 @@
   --aw-text: #0f172a;
   --aw-text-muted: #64748b;
   --aw-text-dim: #94a3b8;
+  
+  /* Semantic Colors */
+  --aw-hp: #ef4444;
+  --aw-hp-bg: rgba(239,68,68,0.15);
+  --aw-hunger: #f59e0b;
+  --aw-hunger-bg: rgba(245,158,11,0.15);
+  --aw-exp: #3b82f6;
+  --aw-exp-bg: rgba(59,130,246,0.15);
+  --aw-mana: #8b5cf6;
+  
+  /* Status */
+  --aw-alive: #16a34a;
+  --aw-dead: #dc2626;
+  --aw-warning: #d97706;
+  
+  /* Ranks */
+  --aw-rank-gold: #ca8a04;
+  --aw-rank-silver: #64748b;
+  --aw-rank-bronze: #a16207;
+  
+  /* Accent - Darker blue for better contrast */
+  --aw-accent: #2563eb;
+  --aw-accent-hover: #1d4ed8;
+  --aw-accent-glow: rgba(37,99,235,0.2);
+  --aw-king: #9333ea;
+  --aw-player: #0891b2;
+  --aw-gold: #ca8a04;
 
+  /* Sidebar stays dark for contrast */
   --aw-sidebar-bg: #0f172a;
   --aw-sidebar-border: #1e293b;
 }
@@ -80,56 +59,12 @@ body.game-theme {
   background: var(--aw-bg-body-gradient);
   color: var(--aw-text);
   min-height: 100vh;
-  transition: background 0.2s ease, color 0.2s ease;
 }
 
 body.game-theme .aw-main-shell,
 body.game-theme .page-shell {
   background: transparent;
 }
-
-/* =========================================================
-   Theme Toggle - Minimal
-   ========================================================= */
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: var(--aw-bg-dark);
-  border: 1px solid var(--aw-border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: border-color 0.15s;
-  font-size: 12px;
-}
-
-.theme-toggle:hover { border-color: var(--aw-border-light); }
-
-.theme-toggle-track {
-  width: 32px;
-  height: 18px;
-  background: var(--aw-border);
-  border-radius: 9px;
-  position: relative;
-  transition: background 0.2s;
-}
-
-.theme-toggle-thumb {
-  width: 14px;
-  height: 14px;
-  background: var(--aw-text);
-  border-radius: 50%;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.2s ease;
-}
-
-[data-theme="light"] .theme-toggle-thumb { transform: translateX(14px); }
-
-.theme-toggle-icon { font-size: 14px; }
-.theme-toggle-label { color: var(--aw-text-muted); font-weight: 500; }
 
 /* =========================================================
    Bootstrap Overrides
@@ -155,7 +90,7 @@ body.game-theme .form-label { color: var(--aw-text-muted); font-size: 12px; font
 body.game-theme .form-text { color: var(--aw-text-dim) !important; font-size: 11px; }
 
 body.game-theme .form-check-input {
-  background-color: var(--aw-bg-dark);
+  background-color: var(--aw-bg-card);
   border-color: var(--aw-border);
 }
 
@@ -174,70 +109,173 @@ body.game-theme .alert {
 }
 
 body.game-theme .alert-success {
-  background: rgba(34,197,94,0.1);
-  border-color: rgba(34,197,94,0.2);
+  background: rgba(22,163,74,0.1);
+  border-color: rgba(22,163,74,0.2);
   color: var(--aw-alive);
 }
 
 body.game-theme .alert-danger {
-  background: rgba(239,68,68,0.1);
-  border-color: rgba(239,68,68,0.2);
+  background: rgba(220,38,38,0.1);
+  border-color: rgba(220,38,38,0.2);
   color: var(--aw-dead);
 }
 
 body.game-theme .alert-info {
-  background: rgba(59,130,246,0.1);
-  border-color: rgba(59,130,246,0.2);
+  background: rgba(37,99,235,0.1);
+  border-color: rgba(37,99,235,0.2);
   color: var(--aw-accent);
 }
 
-body.game-theme .btn-close { filter: invert(0.7); }
+body.game-theme .btn-close { filter: none; }
 
-/* Buttons */
+/* =========================================================
+   Buttons - High Contrast for Readability
+   ========================================================= */
 body.game-theme .btn-primary {
   background: var(--aw-accent);
   border-color: var(--aw-accent);
-  font-weight: 500;
+  color: #ffffff !important;
+  font-weight: 600;
   font-size: 13px;
   padding: 10px 20px;
   border-radius: 8px;
   transition: all 0.15s ease;
 }
 
-body.game-theme .btn-primary:hover {
+body.game-theme .btn-primary:hover,
+body.game-theme .btn-primary:focus {
   background: var(--aw-accent-hover);
   border-color: var(--aw-accent-hover);
+  color: #ffffff !important;
   transform: translateY(-1px);
 }
 
-body.game-theme .btn-outline-secondary,
-body.game-theme .btn-outline-light {
-  color: var(--aw-text-muted);
+body.game-theme .btn-primary:active {
+  background: #1e40af;
+  border-color: #1e40af;
+  color: #ffffff !important;
+  transform: translateY(0);
+}
+
+body.game-theme .btn-primary:disabled {
+  background: #94a3b8;
+  border-color: #94a3b8;
+  color: #ffffff !important;
+  opacity: 0.7;
+}
+
+body.game-theme .btn-secondary {
+  background: #64748b;
+  border-color: #64748b;
+  color: #ffffff !important;
+  font-weight: 500;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+body.game-theme .btn-secondary:hover,
+body.game-theme .btn-secondary:focus {
+  background: #475569;
+  border-color: #475569;
+  color: #ffffff !important;
+}
+
+body.game-theme .btn-outline-secondary {
+  color: #475569;
   border-color: var(--aw-border);
+  background: transparent;
   font-size: 13px;
   border-radius: 8px;
 }
 
 body.game-theme .btn-outline-secondary:hover,
-body.game-theme .btn-outline-light:hover {
-  background: var(--aw-bg-card);
-  border-color: var(--aw-border-light);
-  color: var(--aw-text);
+body.game-theme .btn-outline-secondary:focus {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+body.game-theme .btn-outline-light {
+  color: #475569;
+  border-color: var(--aw-border);
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+body.game-theme .btn-outline-light:hover,
+body.game-theme .btn-outline-light:focus {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
 }
 
 body.game-theme .btn-outline-primary {
   color: var(--aw-accent);
   border-color: var(--aw-accent);
+  background: transparent;
 }
 
-body.game-theme .btn-outline-primary:hover {
+body.game-theme .btn-outline-primary:hover,
+body.game-theme .btn-outline-primary:focus {
   background: var(--aw-accent);
-  color: #fff;
+  border-color: var(--aw-accent);
+  color: #ffffff !important;
 }
 
 body.game-theme .btn-danger {
   background: var(--aw-dead);
   border-color: var(--aw-dead);
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+body.game-theme .btn-danger:hover,
+body.game-theme .btn-danger:focus {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  color: #ffffff !important;
+}
+
+body.game-theme .btn-success {
+  background: var(--aw-alive);
+  border-color: var(--aw-alive);
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+body.game-theme .btn-success:hover,
+body.game-theme .btn-success:focus {
+  background: #15803d;
+  border-color: #15803d;
+  color: #ffffff !important;
+}
+
+body.game-theme .btn-warning {
+  background: var(--aw-warning);
+  border-color: var(--aw-warning);
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+body.game-theme .btn-warning:hover,
+body.game-theme .btn-warning:focus {
+  background: #b45309;
+  border-color: #b45309;
+  color: #ffffff !important;
+}
+
+body.game-theme .btn-info {
+  background: #0891b2;
+  border-color: #0891b2;
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+body.game-theme .btn-info:hover,
+body.game-theme .btn-info:focus {
+  background: #0e7490;
+  border-color: #0e7490;
+  color: #ffffff !important;
 }
 
 /* Cards */
@@ -246,6 +284,7 @@ body.game-theme .card {
   border-color: var(--aw-border);
   color: var(--aw-text);
   border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 /* Links */
@@ -258,14 +297,11 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
    Game Cards - Clean Design
    ========================================================= */
 .game-card {
-  background: var(--aw-bg-card);
+  background: #ffffff;
   border: 1px solid var(--aw-border);
   border-radius: 12px;
-  transition: border-color 0.15s;
-}
-
-[data-theme="light"] .game-card {
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: border-color 0.15s;
 }
 
 .game-card:hover { border-color: var(--aw-border-light); }
@@ -276,11 +312,12 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
    Hero Card - Pinned Character
    ========================================================= */
 .hero-card {
-  background: var(--aw-bg-card);
+  background: #ffffff;
   border: 1px solid var(--aw-border);
   border-radius: 12px;
   overflow: hidden;
   position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .hero-card::before {
@@ -324,6 +361,7 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
   font-size: 10px;
   border: 2px solid var(--aw-bg-card);
   background: var(--aw-accent);
+  color: #ffffff;
 }
 
 .hero-avatar-badge.king { background: var(--aw-king); }
@@ -410,23 +448,24 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
 
 .stat-pill-icon { font-size: 12px; }
 
-.stat-pill.atk { color: #f87171; border-color: rgba(248,113,113,0.2); }
-.stat-pill.def { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
-.stat-pill.int { color: #a78bfa; border-color: rgba(167,139,250,0.2); }
-.stat-pill.rep { color: #34d399; border-color: rgba(52,211,153,0.2); }
-.stat-pill.coins { color: var(--aw-gold); border-color: rgba(251,191,36,0.2); }
+.stat-pill.atk { color: #dc2626; border-color: rgba(220,38,38,0.2); }
+.stat-pill.def { color: #2563eb; border-color: rgba(37,99,235,0.2); }
+.stat-pill.int { color: #7c3aed; border-color: rgba(124,58,237,0.2); }
+.stat-pill.rep { color: #16a34a; border-color: rgba(22,163,74,0.2); }
+.stat-pill.coins { color: var(--aw-gold); border-color: rgba(202,138,4,0.2); }
 .stat-pill.level { color: var(--aw-accent); border-color: var(--aw-accent-glow); }
 
 /* =========================================================
    KPI Cards - Simplified
    ========================================================= */
 .kpi-card {
-  background: var(--aw-bg-card);
+  background: #ffffff;
   border: 1px solid var(--aw-border);
   border-radius: 10px;
   padding: 16px;
   text-align: center;
   transition: border-color 0.15s, transform 0.15s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .kpi-card:hover {
@@ -465,11 +504,12 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
    Building Cards
    ========================================================= */
 .building-card {
-  background: var(--aw-bg-card);
+  background: #ffffff;
   border: 1px solid var(--aw-border);
   border-radius: 8px;
   padding: 12px;
   transition: border-color 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
 
 .building-card:hover { border-color: var(--aw-border-light); }
@@ -491,7 +531,7 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
 }
 
 .building-level.built {
-  background: rgba(34,197,94,0.15);
+  background: rgba(22,163,74,0.15);
   color: var(--aw-alive);
 }
 
@@ -517,16 +557,17 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
    Trophy Cards
    ========================================================= */
 .trophy-card {
-  background: var(--aw-bg-card);
+  background: #ffffff;
   border: 1px solid var(--aw-border);
   border-radius: 10px;
   padding: 16px;
   text-align: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
 
-.trophy-card.gold { border-color: rgba(251,191,36,0.3); }
-.trophy-card.silver { border-color: rgba(148,163,184,0.3); }
-.trophy-card.bronze { border-color: rgba(180,83,9,0.3); }
+.trophy-card.gold { border-color: rgba(202,138,4,0.3); }
+.trophy-card.silver { border-color: rgba(100,116,139,0.3); }
+.trophy-card.bronze { border-color: rgba(161,98,7,0.3); }
 
 .trophy-icon { font-size: 24px; margin-bottom: 8px; }
 .trophy-icon.gold { color: var(--aw-rank-gold); }
@@ -556,11 +597,12 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
    Year Cards
    ========================================================= */
 .year-card {
-  background: var(--aw-bg-card);
+  background: #ffffff;
   border: 1px solid var(--aw-border);
   border-radius: 10px;
   overflow: hidden;
   transition: transform 0.15s, border-color 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
 
 .year-card:hover {
@@ -593,9 +635,9 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
 }
 
 .year-badge.live {
-  background: rgba(59,130,246,0.15);
+  background: rgba(37,99,235,0.15);
   color: var(--aw-accent);
-  border: 1px solid rgba(59,130,246,0.2);
+  border: 1px solid rgba(37,99,235,0.2);
 }
 
 .year-badge.archived {
@@ -622,22 +664,22 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
 }
 
 .status-badge.alive {
-  background: rgba(34,197,94,0.12);
+  background: rgba(22,163,74,0.12);
   color: var(--aw-alive);
 }
 
 .status-badge.dead {
-  background: rgba(239,68,68,0.12);
+  background: rgba(220,38,38,0.12);
   color: var(--aw-dead);
 }
 
 .status-badge.king {
-  background: rgba(168,85,247,0.12);
+  background: rgba(147,51,234,0.12);
   color: var(--aw-king);
 }
 
 .status-badge.player {
-  background: rgba(6,182,212,0.12);
+  background: rgba(8,145,178,0.12);
   color: var(--aw-player);
 }
 
@@ -657,13 +699,13 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
   color: var(--aw-text-muted);
 }
 
-.action-badge.train { color: #f87171; border-color: rgba(248,113,113,0.2); }
-.action-badge.study { color: #a78bfa; border-color: rgba(167,139,250,0.2); }
-.action-badge.work { color: #fbbf24; border-color: rgba(251,191,36,0.2); }
-.action-badge.rest { color: #34d399; border-color: rgba(52,211,153,0.2); }
-.action-badge.hunt { color: #fb923c; border-color: rgba(251,146,60,0.2); }
-.action-badge.buy_food { color: #4ade80; border-color: rgba(74,222,128,0.2); }
-.action-badge.buy_gear { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
+.action-badge.train { color: #dc2626; border-color: rgba(220,38,38,0.2); }
+.action-badge.study { color: #7c3aed; border-color: rgba(124,58,237,0.2); }
+.action-badge.work { color: #ca8a04; border-color: rgba(202,138,4,0.2); }
+.action-badge.rest { color: #16a34a; border-color: rgba(22,163,74,0.2); }
+.action-badge.hunt { color: #ea580c; border-color: rgba(234,88,12,0.2); }
+.action-badge.buy_food { color: #16a34a; border-color: rgba(22,163,74,0.2); }
+.action-badge.buy_gear { color: #2563eb; border-color: rgba(37,99,235,0.2); }
 
 /* =========================================================
    Weather Indicators
@@ -679,15 +721,15 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
 }
 
 .weather-indicator.sunny {
-  background: rgba(251,191,36,0.1);
-  color: #fbbf24;
-  border: 1px solid rgba(251,191,36,0.2);
+  background: rgba(202,138,4,0.1);
+  color: #a16207;
+  border: 1px solid rgba(202,138,4,0.2);
 }
 
 .weather-indicator.rain {
-  background: rgba(96,165,250,0.1);
-  color: #60a5fa;
-  border: 1px solid rgba(96,165,250,0.2);
+  background: rgba(37,99,235,0.1);
+  color: #1d4ed8;
+  border: 1px solid rgba(37,99,235,0.2);
 }
 
 .weather-icon { font-size: 12px; }
@@ -707,7 +749,7 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
    ========================================================= */
 body.game-theme .aw-table,
 body.game-theme .table {
-  background: var(--aw-bg-card) !important;
+  background: #ffffff !important;
   color: var(--aw-text) !important;
 }
 
@@ -718,20 +760,20 @@ body.game-theme .table thead th {
   border-bottom: 1px solid var(--aw-border) !important;
 }
 
-body.game-theme .aw-table tbody tr { background: var(--aw-bg-card) !important; }
-body.game-theme .aw-table tbody tr:nth-child(even) { background: var(--aw-bg-dark) !important; }
-body.game-theme .aw-table tbody tr:hover { background: var(--aw-bg-card-hover) !important; }
+body.game-theme .aw-table tbody tr { background: #ffffff !important; }
+body.game-theme .aw-table tbody tr:nth-child(even) { background: #f8fafc !important; }
+body.game-theme .aw-table tbody tr:hover { background: #f1f5f9 !important; }
 
 body.game-theme .aw-table td {
   color: var(--aw-text) !important;
   border-bottom: 1px solid var(--aw-border) !important;
 }
 
-body.game-theme .aw-row-dead { background: rgba(127,29,29,0.15) !important; }
-body.game-theme .aw-row-dead:hover { background: rgba(127,29,29,0.25) !important; }
+body.game-theme .aw-row-dead { background: rgba(220,38,38,0.05) !important; }
+body.game-theme .aw-row-dead:hover { background: rgba(220,38,38,0.1) !important; }
 body.game-theme .aw-name-dead { color: var(--aw-text-dim) !important; }
 
-body.game-theme .aw-table-wrapper { background: var(--aw-bg-card); }
+body.game-theme .aw-table-wrapper { background: #ffffff; }
 
 /* =========================================================
    Sidebar Override
@@ -760,7 +802,7 @@ body.game-theme .accordion-button:not(.collapsed) {
   color: var(--aw-accent) !important;
 }
 
-body.game-theme .accordion-button::after { filter: invert(0.6); }
+body.game-theme .accordion-button::after { filter: none; }
 
 body.game-theme .accordion-body {
   background: var(--aw-bg-dark) !important;
@@ -786,8 +828,8 @@ body.game-theme .list-group-item:hover {
    ========================================================= */
 body.game-theme ::-webkit-scrollbar { width: 6px; height: 6px; }
 body.game-theme ::-webkit-scrollbar-track { background: var(--aw-bg-dark); }
-body.game-theme ::-webkit-scrollbar-thumb { background: var(--aw-border); border-radius: 3px; }
-body.game-theme ::-webkit-scrollbar-thumb:hover { background: var(--aw-border-light); }
+body.game-theme ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+body.game-theme ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* =========================================================
    Animations - Subtle
@@ -798,28 +840,6 @@ body.game-theme ::-webkit-scrollbar-thumb:hover { background: var(--aw-border-li
 }
 
 .animate-pulse-glow { animation: pulse-subtle 2s ease-in-out infinite; }
-
-/* =========================================================
-   Light Theme Specific Fixes
-   ========================================================= */
-[data-theme="light"] .hero-card { background: #fff; }
-
-[data-theme="light"] .game-card,
-[data-theme="light"] .kpi-card,
-[data-theme="light"] .building-card,
-[data-theme="light"] .trophy-card,
-[data-theme="light"] .year-card {
-  background: #fff;
-}
-
-[data-theme="light"] .aw-table-wrapper { background: #fff; }
-
-[data-theme="light"] body.game-theme .aw-table tbody tr { background: #fff !important; }
-[data-theme="light"] body.game-theme .aw-table tbody tr:nth-child(even) { background: #f8fafc !important; }
-[data-theme="light"] body.game-theme .aw-table tbody tr:hover { background: #f1f5f9 !important; }
-
-[data-theme="light"] body.game-theme .aw-row-dead { background: rgba(239,68,68,0.05) !important; }
-[data-theme="light"] body.game-theme .aw-row-dead:hover { background: rgba(239,68,68,0.1) !important; }
 
 /* =========================================================
    Header Fixes
@@ -840,6 +860,5 @@ body.game-theme h4, body.game-theme h5, body.game-theme h6 {
   .hero-name { font-size: 16px; }
   .kpi-value { font-size: 18px; }
   .kpi-card { padding: 12px; }
-  .theme-toggle-label { display: none; }
   .game-card .card-body { padding: 16px; }
 }
