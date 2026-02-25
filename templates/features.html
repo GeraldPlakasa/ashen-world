@@ -15,21 +15,18 @@
   <div class="aw-layout">
     {% include '_sidebar.html' %}
 
-    <!-- Main content -->
     <div class="aw-main-shell">
       <div class="page-shell">
         <header class="aw-header d-flex align-items-center justify-content-between mb-3">
           <div class="d-flex flex-column">
-            <span class="header-title" style="color: var(--aw-text);">📜 Feature Guide</span>
-            <span class="header-subtitle" style="color: var(--aw-text-muted);">
-              All systems implemented in Ashen World
-              {% if year is not none and day is not none %}
-                · Year {{ year }}, Day {{ day }}
-              {% endif %}
+            <span class="header-title">Feature Guide</span>
+            <span class="header-subtitle">
+              All systems in Ashen World
+              {% if year is not none and day is not none %} · Year {{ year }}, Day {{ day }}{% endif %}
             </span>
           </div>
           {% if username %}
-          <div style="color: var(--aw-text-muted); font-size: 0.875rem;">
+          <div style="color: var(--aw-text-muted); font-size: 13px;">
             Playing as <strong style="color: var(--aw-text);">{{ username }}</strong>
           </div>
           {% endif %}
@@ -41,23 +38,23 @@
             <div class="col-12 col-lg-4">
               <section class="game-card">
                 <div class="card-body">
-                  <div style="color: var(--aw-text-muted); font-size: 0.75rem;">NAVIGATE</div>
+                  <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Navigate</div>
                   <div style="color: var(--aw-text);" class="h6 mb-3">Table of Contents</div>
 
-                  <div class="list-group list-group-flush" style="font-size: 0.875rem;">
-                    <a class="list-group-item list-group-item-action" href="#pop">👥 Village Population</a>
-                    <a class="list-group-item list-group-item-action" href="#actions">⚡ Daily Actions</a>
-                    <a class="list-group-item list-group-item-action" href="#combat">⚔️ Combat & Progression</a>
-                    <a class="list-group-item list-group-item-action" href="#relations">💬 Relationships</a>
-                    <a class="list-group-item list-group-item-action" href="#marriage">💒 Marriage & Family</a>
-                    <a class="list-group-item list-group-item-action" href="#birth">👶 Birth & Childhood</a>
-                    <a class="list-group-item list-group-item-action" href="#inherit">📜 Inheritance</a>
-                    <a class="list-group-item list-group-item-action" href="#politics">👑 Leadership & Politics</a>
-                    <a class="list-group-item list-group-item-action" href="#economy">💰 Economy & Tax</a>
-                    <a class="list-group-item list-group-item-action" href="#buildings">🏗️ Building System</a>
-                    <a class="list-group-item list-group-item-action" href="#rules">📋 Rules & Constraints</a>
-                    <a class="list-group-item list-group-item-action" href="#traits">🎭 Trait Behaviors</a>
-                    <a class="list-group-item list-group-item-action" href="#gear">🛡️ Item / Gear</a>
+                  <div class="list-group list-group-flush" style="font-size: 13px;">
+                    <a class="list-group-item list-group-item-action" href="#pop">Village Population</a>
+                    <a class="list-group-item list-group-item-action" href="#actions">Daily Actions</a>
+                    <a class="list-group-item list-group-item-action" href="#combat">Combat & Progression</a>
+                    <a class="list-group-item list-group-item-action" href="#relations">Relationships</a>
+                    <a class="list-group-item list-group-item-action" href="#marriage">Marriage & Family</a>
+                    <a class="list-group-item list-group-item-action" href="#birth">Birth & Childhood</a>
+                    <a class="list-group-item list-group-item-action" href="#inherit">Inheritance</a>
+                    <a class="list-group-item list-group-item-action" href="#politics">Leadership & Politics</a>
+                    <a class="list-group-item list-group-item-action" href="#economy">Economy & Tax</a>
+                    <a class="list-group-item list-group-item-action" href="#buildings">Building System</a>
+                    <a class="list-group-item list-group-item-action" href="#rules">Rules & Constraints</a>
+                    <a class="list-group-item list-group-item-action" href="#traits">Trait Behaviors</a>
+                    <a class="list-group-item list-group-item-action" href="#gear">Item / Gear</a>
                   </div>
                 </div>
               </section>
@@ -67,17 +64,14 @@
             <div class="col-12 col-lg-8">
               <section class="game-card">
                 <div class="card-body">
-                  <div style="color: var(--aw-text-muted); font-size: 0.75rem;">GAME SYSTEMS</div>
+                  <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Game Systems</div>
                   <div style="color: var(--aw-text);" class="h6 mb-3">Detailed Documentation</div>
 
                   <div class="accordion" id="featuresAccordion">
 
-                    <!-- 1) Population -->
                     <div class="accordion-item" id="pop">
                       <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cPop">
-                          👥 Village Population System
-                        </button>
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cPop">Village Population System</button>
                       </h2>
                       <div id="cPop" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -94,12 +88,9 @@
                       </div>
                     </div>
 
-                    <!-- 2) Daily Actions -->
                     <div class="accordion-item" id="actions">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cActions">
-                          ⚡ Daily Action System
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cActions">Daily Action System</button>
                       </h2>
                       <div id="cActions" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -133,12 +124,9 @@
                       </div>
                     </div>
 
-                    <!-- 3) Combat -->
                     <div class="accordion-item" id="combat">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cCombat">
-                          ⚔️ Combat & Progression
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cCombat">Combat & Progression</button>
                       </h2>
                       <div id="cCombat" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -153,12 +141,9 @@
                       </div>
                     </div>
 
-                    <!-- 4) Relationships -->
                     <div class="accordion-item" id="relations">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRel">
-                          💬 Relationship System
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRel">Relationship System</button>
                       </h2>
                       <div id="cRel" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -172,12 +157,9 @@
                       </div>
                     </div>
 
-                    <!-- 5) Marriage -->
                     <div class="accordion-item" id="marriage">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cMarriage">
-                          💒 Marriage & Family
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cMarriage">Marriage & Family</button>
                       </h2>
                       <div id="cMarriage" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -192,12 +174,9 @@
                       </div>
                     </div>
 
-                    <!-- 6) Birth -->
                     <div class="accordion-item" id="birth">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cBirth">
-                          👶 Birth & Childhood
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cBirth">Birth & Childhood</button>
                       </h2>
                       <div id="cBirth" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -227,12 +206,9 @@
                       </div>
                     </div>
 
-                    <!-- 7) Inheritance -->
                     <div class="accordion-item" id="inherit">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cInherit">
-                          📜 Inheritance System
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cInherit">Inheritance System</button>
                       </h2>
                       <div id="cInherit" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -245,12 +221,9 @@
                       </div>
                     </div>
 
-                    <!-- 8) Politics -->
                     <div class="accordion-item" id="politics">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cPolitics">
-                          👑 Leadership & Politics
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cPolitics">Leadership & Politics</button>
                       </h2>
                       <div id="cPolitics" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -280,12 +253,9 @@
                       </div>
                     </div>
 
-                    <!-- 9) Economy -->
                     <div class="accordion-item" id="economy">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cEco">
-                          💰 Economy & Tax
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cEco">Economy & Tax</button>
                       </h2>
                       <div id="cEco" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -299,34 +269,31 @@
                       </div>
                     </div>
 
-                    <!-- 10) Buildings -->
                     <div class="accordion-item" id="buildings">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cBuildings">
-                          🏗️ Building System
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cBuildings">Building System</button>
                       </h2>
                       <div id="cBuildings" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
                           <div class="row g-2 mb-3">
                             <div class="col-md-6">
                               <ul class="small mb-0">
-                                <li>🏪 Marketplace — work income</li>
-                                <li>📚 Library — study boost</li>
-                                <li>⚔️ Barracks — training</li>
-                                <li>🌾 Granary — hunger</li>
-                                <li>🏥 Clinic — survival</li>
-                                <li>🧱 Walls — defense</li>
+                                <li>Marketplace — work income</li>
+                                <li>Library — study boost</li>
+                                <li>Barracks — training</li>
+                                <li>Granary — hunger</li>
+                                <li>Clinic — survival</li>
+                                <li>Walls — defense</li>
                               </ul>
                             </div>
                             <div class="col-md-6">
                               <ul class="small mb-0">
-                                <li>🛕 Temple — REP gains</li>
-                                <li>🔨 Blacksmith — gear</li>
-                                <li>🏛️ Treasury — interest</li>
-                                <li>👑 Royal Court — prestige</li>
-                                <li>📊 Tax Office — tax rate</li>
-                                <li>🍺 Tavern — social</li>
+                                <li>Temple — REP gains</li>
+                                <li>Blacksmith — gear</li>
+                                <li>Treasury — interest</li>
+                                <li>Royal Court — prestige</li>
+                                <li>Tax Office — tax rate</li>
+                                <li>Tavern — social</li>
                               </ul>
                             </div>
                           </div>
@@ -342,12 +309,9 @@
                       </div>
                     </div>
 
-                    <!-- 11) Rules -->
                     <div class="accordion-item" id="rules">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRules">
-                          📋 Rules & Constraints
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRules">Rules & Constraints</button>
                       </h2>
                       <div id="cRules" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -362,12 +326,9 @@
                       </div>
                     </div>
 
-                    <!-- 12) Traits -->
                     <div class="accordion-item" id="traits">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cTraits">
-                          🎭 Trait-Based Behavior
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cTraits">Trait-Based Behavior</button>
                       </h2>
                       <div id="cTraits" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
@@ -386,12 +347,9 @@
                       </div>
                     </div>
 
-                    <!-- 13) Gear -->
                     <div class="accordion-item" id="gear">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cGear">
-                          🛡️ Item / Gear System
-                        </button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cGear">Item / Gear System</button>
                       </h2>
                       <div id="cGear" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">

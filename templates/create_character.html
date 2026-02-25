@@ -14,31 +14,27 @@
   <div class="aw-layout">
     {% include '_sidebar.html' %}
 
-    <!-- Main content -->
     <div class="aw-main-shell">
       <div class="page-shell">
         <header class="aw-header d-flex align-items-center justify-content-between mb-3">
           <div class="d-flex flex-column">
-            <span class="header-title" style="color: var(--aw-text);">✨ Create Your Hero</span>
-            <span class="header-subtitle" style="color: var(--aw-text-muted);">
-              Spawn a new villager into the kingdom
-            </span>
+            <span class="header-title">Create Your Hero</span>
+            <span class="header-subtitle">Spawn a new villager into the kingdom</span>
           </div>
 
           <div class="d-flex gap-2">
-            <span class="kpi-card" style="padding: 0.5rem 1rem;">
-              <span style="color: var(--aw-text-muted); font-size: 0.7rem;">Year</span>
-              <span class="kpi-value" style="font-size: 1rem;">{{ year }}</span>
+            <span class="kpi-card" style="padding: 8px 16px;">
+              <span style="color: var(--aw-text-muted); font-size: 10px;">Year</span>
+              <span class="kpi-value" style="font-size: 16px;">{{ year }}</span>
             </span>
-            <span class="kpi-card" style="padding: 0.5rem 1rem;">
-              <span style="color: var(--aw-text-muted); font-size: 0.7rem;">Day</span>
-              <span class="kpi-value" style="font-size: 1rem;">{{ day }}</span>
+            <span class="kpi-card" style="padding: 8px 16px;">
+              <span style="color: var(--aw-text-muted); font-size: 10px;">Day</span>
+              <span class="kpi-value" style="font-size: 16px;">{{ day }}</span>
             </span>
           </div>
         </header>
 
         <main class="aw-main">
-          <!-- Flash messages -->
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
               <section class="mb-3">
@@ -52,68 +48,49 @@
             {% endif %}
           {% endwith %}
 
-          <!-- Character Creation Form -->
           <section class="game-card">
             <div class="card-body p-4">
               <form method="POST" novalidate>
                 <!-- Name Section -->
                 <div class="row g-3 mb-4">
                   <div class="col-md-6">
-                    <label class="form-label" for="name" style="color: var(--aw-text-muted); font-size: 0.8rem;">
-                      Given Name
-                    </label>
-                    <input type="text" id="name" name="name" class="form-control" required
-                           value="{{ form_name or '' }}" placeholder="e.g., Aria" />
+                    <label class="form-label" for="name">Given Name</label>
+                    <input type="text" id="name" name="name" class="form-control" required value="{{ form_name or '' }}" placeholder="e.g., Aria" />
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label" for="family" style="color: var(--aw-text-muted); font-size: 0.8rem;">
-                      Family Name
-                    </label>
-                    <input type="text" id="family" name="family" class="form-control" required
-                           value="{{ form_family or '' }}" placeholder="e.g., Shadowmend" />
+                    <label class="form-label" for="family">Family Name</label>
+                    <input type="text" id="family" name="family" class="form-control" required value="{{ form_family or '' }}" placeholder="e.g., Shadowmend" />
                   </div>
                 </div>
 
                 <!-- Gender Selection -->
                 <div class="mb-4">
-                  <label class="form-label d-block" style="color: var(--aw-text-muted); font-size: 0.8rem;">
-                    Gender
-                  </label>
-
+                  <label class="form-label d-block">Gender</label>
                   <div class="d-flex flex-wrap gap-3">
-                    <label class="building-card d-flex align-items-center gap-2 p-3" style="cursor: pointer;">
-                      <input class="form-check-input" type="radio" name="gender" value="Male"
-                             {% if form_gender == 'Male' %}checked{% endif %} required
-                             style="width: 1.25rem; height: 1.25rem;" />
-                      <span style="font-size: 1.5rem;">👨</span>
-                      <span style="color: var(--aw-text);">Male</span>
+                    <label class="building-card d-flex align-items-center gap-3 p-3" style="cursor: pointer;">
+                      <input class="form-check-input" type="radio" name="gender" value="Male" {% if form_gender == 'Male' %}checked{% endif %} required style="width: 18px; height: 18px;" />
+                      <span style="color: var(--aw-text); font-weight: 500;">Male</span>
                     </label>
-
-                    <label class="building-card d-flex align-items-center gap-2 p-3" style="cursor: pointer;">
-                      <input class="form-check-input" type="radio" name="gender" value="Female"
-                             {% if form_gender == 'Female' %}checked{% endif %} required
-                             style="width: 1.25rem; height: 1.25rem;" />
-                      <span style="font-size: 1.5rem;">👩</span>
-                      <span style="color: var(--aw-text);">Female</span>
+                    <label class="building-card d-flex align-items-center gap-3 p-3" style="cursor: pointer;">
+                      <input class="form-check-input" type="radio" name="gender" value="Female" {% if form_gender == 'Female' %}checked{% endif %} required style="width: 18px; height: 18px;" />
+                      <span style="color: var(--aw-text); font-weight: 500;">Female</span>
                     </label>
                   </div>
                 </div>
 
                 <!-- Trait Selection -->
                 <div class="mb-4">
-                  <label class="form-label d-block" style="color: var(--aw-text-muted); font-size: 0.8rem;">
-                    Choose a Defining Trait
-                    <span style="color: var(--aw-text-dim);">(another will be randomly assigned)</span>
+                  <label class="form-label d-block">
+                    Defining Trait
+                    <span style="color: var(--aw-text-dim); font-weight: 400;">(another will be randomly assigned)</span>
                   </label>
 
                   <div class="row g-2">
                     {% for t in traits %}
                     <div class="col-6 col-md-4 col-lg-3">
                       <label class="building-card d-flex align-items-center gap-2 p-2 w-100" style="cursor: pointer; {% if chosen_trait == t %}border-color: var(--aw-accent);{% endif %}">
-                        <input class="form-check-input" type="radio" name="trait" value="{{ t }}"
-                               {% if chosen_trait == t %}checked{% endif %} required
-                               style="width: 1rem; height: 1rem; flex-shrink: 0;" />
-                        <span style="color: var(--aw-text); font-size: 0.875rem;">{{ t }}</span>
+                        <input class="form-check-input" type="radio" name="trait" value="{{ t }}" {% if chosen_trait == t %}checked{% endif %} required style="width: 14px; height: 14px; flex-shrink: 0;" />
+                        <span style="color: var(--aw-text); font-size: 13px;">{{ t }}</span>
                       </label>
                     </div>
                     {% endfor %}
@@ -122,21 +99,15 @@
 
                 <!-- Info Box -->
                 <div class="building-card mb-4 p-3">
-                  <div style="color: var(--aw-text-muted); font-size: 0.8rem;">
-                    💡 <strong style="color: var(--aw-text);">Starting Stats:</strong> Your hero will spawn with balanced base stats (HP, ATK, DEF, INT). 
-                    Traits affect how they grow and behave in the simulation.
+                  <div style="color: var(--aw-text-muted); font-size: 13px;">
+                    <strong style="color: var(--aw-text);">Starting Stats:</strong> Your hero will spawn with balanced base stats (HP, ATK, DEF, INT). Traits affect how they grow and behave in the simulation.
                   </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
-                  <a href="{{ url_for('landing') }}" style="color: var(--aw-text-dim); text-decoration: none; font-size: 0.875rem;">
-                    ← Back to Kingdom
-                  </a>
-
-                  <button type="submit" class="btn btn-primary">
-                    ✨ Spawn Hero
-                  </button>
+                  <a href="{{ url_for('landing') }}" style="color: var(--aw-text-dim); text-decoration: none; font-size: 13px;">← Back to Kingdom</a>
+                  <button type="submit" class="btn btn-primary">Create Hero</button>
                 </div>
               </form>
             </div>

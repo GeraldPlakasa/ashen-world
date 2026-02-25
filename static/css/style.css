@@ -1,461 +1,350 @@
 /* =========================================================
-   Base layout & typography
+   ASHEN WORLD - MINIMALIST REDESIGN
+   Clean, modern, functional UI
+   8px baseline grid | Refined color system | Subtle interactions
+   ========================================================= */
+
+/* =========================================================
+   Base
    ========================================================= */
 body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background-color: #f5f5f7;
+  background-color: #f8fafc;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #111827;
-}
-
-.page-shell {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px 16px 40px;
+  color: #1e293b;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* =========================================================
-   Shell layout with sidebar
+   Layout
    ========================================================= */
 .aw-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f5f5f7;
+  background-color: #f8fafc;
 }
 
-/* Sidebar */
+/* =========================================================
+   Sidebar - Clean & Minimal
+   ========================================================= */
 .aw-sidebar {
-  position: fixed;               /* NEW: pin it */
-  top: 0;                        /* NEW */
-  left: 0;                       /* NEW */
-  height: 100vh;                 /* NEW: full viewport height */
-  z-index: 1000;                 /* NEW: stay above content */
-
-  width: 240px;
-  background: linear-gradient(
-    180deg,
-    #0b79ab 0%,   /* cyan ocean surface */
-    #024366 40%,  /* deep teal */
-    #011723 100%  /* deep ocean navy */
-  );
-  color: #e5e7eb;
-  padding: 20px 16px 24px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 220px;
+  background: #0f172a;
+  color: #94a3b8;
+  padding: 24px 16px;
   display: flex;
   flex-direction: column;
-  box-shadow: 4px 0 18px rgba(15, 23, 42, 0.6);
-  border-right: 1px solid rgba(15, 23, 42, 0.8);
+  z-index: 1000;
+  border-right: 1px solid #1e293b;
 }
 
 .aw-sidebar-brand {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #f1f5f9;
+  margin-bottom: 4px;
 }
 
 .aw-sidebar-subtitle {
   font-size: 11px;
-  color: #cbd5f5;  /* light bluish */
-  margin-top: 4px;
+  color: #64748b;
+  letter-spacing: 0.01em;
 }
 
-/* Nav links */
+/* Navigation */
 .aw-nav {
   list-style: none;
-  margin: 24px 0 0;
+  margin: 32px 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .aw-nav-link {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 999px;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
   font-size: 13px;
-  color: #cbd5f5; /* light blue text on dark ocean */
+  font-weight: 500;
+  color: #94a3b8;
   text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease,
-    transform 0.08s ease;
+  transition: all 0.15s ease;
+}
+
+.aw-nav-link:hover {
+  background: rgba(255,255,255,0.05);
+  color: #e2e8f0;
+}
+
+.aw-nav-link-active {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.aw-nav-link-active:hover {
+  background: #2563eb;
+  color: #fff;
 }
 
 .aw-nav-link-icon {
-  width: 20px;
-  display: flex;
-  justify-content: center;
+  width: 18px;
+  font-size: 14px;
+  text-align: center;
+  opacity: 0.8;
 }
 
 .aw-nav-link-label {
   flex: 1;
 }
 
-.aw-nav-link:hover {
-  background-color: rgba(15, 23, 42, 0.55);
-  color: #ffffff;
-  transform: translateX(2px);
-}
-
-/* Active nav */
-.aw-nav-link-active {
-  background: #ffffff;
-  color: #011723;
-  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.35);
-}
-
-.aw-nav-link-active .aw-nav-link-icon {
-  opacity: 0.9;
-}
-
-/* Sidebar footer */
+/* Sidebar Footer */
 .aw-sidebar-footer {
   margin-top: auto;
-  font-size: 11px;
-  color: #6b7280;
-  border-top: 1px solid rgba(55, 65, 81, 0.7);
-  padding-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.aw-sidebar-logout-link {
-  font-size: 12px;
-  color: #e5e7eb;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.aw-sidebar-logout-link:hover {
-  color: #ffffff;
-  text-decoration: underline;
-}
-
-/* Content shell (right side) */
-.aw-main-shell {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  padding: 24px 16px 40px;
-  overflow-x: hidden;
-
-  margin-left: 240px;   /* NEW: same as sidebar width */
-  min-height: 100vh;    /* NEW: stretch with viewport */
-}
-
-/* Override page-shell to live inside main-shell */
-.page-shell {
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
-}
-
-/* =========================================================
-   Header
-   ========================================================= */
-.aw-header {
-  margin-bottom: 20px;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.header-subtitle {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-/* =========================================================
-   Buttons
-   ========================================================= */
-.aw-btn-primary {
-  font-size: 14px;
-  padding: 8px 18px;
-  border-radius: 999px;
-}
-
-/* =========================================================
-   Main layout
-   ========================================================= */
-.aw-main {
+  padding-top: 16px;
+  border-top: 1px solid #1e293b;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* =========================================================
-   Card
-   ========================================================= */
-.aw-card {
-  border-radius: 14px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+.aw-sidebar-logout-link {
+  font-size: 13px;
+  color: #94a3b8;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.15s;
+}
+
+.aw-sidebar-logout-link:hover {
+  color: #e2e8f0;
 }
 
 /* =========================================================
-   Flash alert
+   Main Content Area
+   ========================================================= */
+.aw-main-shell {
+  flex: 1;
+  margin-left: 220px;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 32px 24px 48px;
+}
+
+.page-shell {
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* =========================================================
+   Header - Clean Typography
+   ========================================================= */
+.aw-header {
+  margin-bottom: 24px;
+}
+
+.header-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   Main Content
+   ========================================================= */
+.aw-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* =========================================================
+   Card - Refined Design
+   ========================================================= */
+.aw-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* =========================================================
+   Buttons - Clean & Functional
+   ========================================================= */
+.aw-btn-primary {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #3b82f6;
+  border: none;
+  color: #fff;
+  transition: all 0.15s ease;
+}
+
+.aw-btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.aw-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   Alerts - Subtle & Clean
    ========================================================= */
 .aw-alert {
   font-size: 13px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: none;
 }
 
 /* =========================================================
-   Table container
+   Table Styles
    ========================================================= */
 .aw-table-wrapper {
   max-height: 65vh;
   overflow-y: auto;
-  background-color: var(--aw-bg-card, #ffffff);
+  background: #fff;
+  border-radius: 0 0 12px 12px;
 }
 
-/* =========================================================
-   Table base styles
-   ========================================================= */
 .aw-table {
+  width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background-color: var(--aw-bg-card, #ffffff);
-  color: var(--aw-text, #111827);
+  background: #fff;
+  color: #334155;
 }
 
-/* =========================================================
-   Table head (sticky header + sorting)
-   ========================================================= */
+/* Table Header */
 .aw-table thead th {
   position: sticky;
   top: 0;
   z-index: 5;
-  background-color: var(--aw-bg-dark, #f9fafb);
-  border-bottom: 1px solid var(--aw-border, #e5e7eb);
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 10px 12px;
-  color: var(--aw-text-muted, #6b7280);
+  letter-spacing: 0.04em;
+  padding: 12px 14px;
+  color: #64748b;
   white-space: nowrap;
 }
 
 .aw-table thead th.sortable {
   cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
 }
 
-/* Sort direction markers */
-.aw-table thead th.sort-asc::after {
-  content: " ▲";
-  font-size: 0.7em;
+.aw-table thead th.sortable:hover {
+  color: #3b82f6;
 }
 
-.aw-table thead th.sort-desc::after {
-  content: " ▼";
-  font-size: 0.7em;
-}
+.aw-table thead th.sort-asc::after { content: " ↑"; font-size: 10px; }
+.aw-table thead th.sort-desc::after { content: " ↓"; font-size: 10px; }
 
-/* =========================================================
-   Table body (rows & cells)
-   ========================================================= */
-.aw-table tbody tr:nth-child(even) {
-  background-color: var(--aw-bg-dark, #f9fafb);
-}
-
-.aw-table tbody tr:nth-child(odd) {
-  background-color: var(--aw-bg-card, #ffffff);
-}
-
-/* Smooth hover transition */
+/* Table Body */
 .aw-table tbody tr {
-  transition: background-color 0.12s ease;
-  color: var(--aw-text, #111827);
+  transition: background 0.1s ease;
 }
 
-/* Slightly darker on hover to highlight row */
-.aw-table tbody tr:hover {
-  background-color: var(--aw-bg-card-hover, #e2e8f0);
-}
+.aw-table tbody tr:nth-child(odd) { background: #fff; }
+.aw-table tbody tr:nth-child(even) { background: #fafbfc; }
+.aw-table tbody tr:hover { background: #f1f5f9; }
 
 .aw-table td {
   font-size: 13px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--aw-border, #e5e7eb);
-  color: var(--aw-text, #111827);
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
 }
 
-/* =========================================================
-   Clickable & selected rows (admin pinned view)
-   ========================================================= */
-.aw-row-clickable {
-  cursor: pointer;
-}
+/* Clickable rows */
+.aw-row-clickable { cursor: pointer; }
 
-/* Ocean-tinted highlight for selected row */
 .aw-row-selected {
-  box-shadow: inset 0 0 0 9999px rgba(11, 121, 171, 0.06); /* soft ocean overlay */
-  outline: 2px solid rgba(11, 121, 171, 0.85);
-  outline-offset: -1px;
+  background: rgba(59,130,246,0.08) !important;
+  box-shadow: inset 3px 0 0 #3b82f6;
 }
 
-/* =========================================================
-   Search box
-   ========================================================= */
-.aw-search-wrapper {
-  min-width: 220px;
+/* Dead villager styling */
+.aw-row-dead { background: rgba(239,68,68,0.04) !important; }
+.aw-row-dead:hover { background: rgba(239,68,68,0.08) !important; }
+.aw-name-dead {
+  text-decoration: line-through;
+  color: #94a3b8;
 }
 
-/* =========================================================
-   Traits column (truncate long text)
-   ========================================================= */
+/* Traits column */
 .aw-traits-cell {
-  max-width: 260px;
+  max-width: 200px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #64748b;
 }
 
 /* =========================================================
-   Custom scrollbar for table (optional)
+   Search Box
    ========================================================= */
-.aw-table-wrapper::-webkit-scrollbar {
-  width: 8px;
-}
-
-.aw-table-wrapper::-webkit-scrollbar-track {
-  background: #f3f4f6;
-}
-
-.aw-table-wrapper::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
-}
-
-.aw-table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
+.aw-search-wrapper { min-width: 180px; }
 
 /* =========================================================
-   Status badge
+   Status Badges - Minimal
    ========================================================= */
 .aw-status-badge {
   font-size: 11px;
-  padding-inline: 8px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 /* =========================================================
-   Dead villager styling
+   Scrollbar - Subtle
    ========================================================= */
-.aw-row-dead {
-  background-color: rgba(239, 68, 68, 0.1); /* theme-compatible soft red */
-}
-
-/* Slightly darker on hover for dead rows */
-.aw-table tbody tr.aw-row-dead:hover {
-  background-color: rgba(239, 68, 68, 0.15);
-}
-
-/* Name styling for dead villager */
-.aw-name-dead {
-  text-decoration: line-through;
-  color: var(--aw-dead, #b91c1c);
-  font-style: italic;
-}
+.aw-table-wrapper::-webkit-scrollbar { width: 6px; }
+.aw-table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; }
+.aw-table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.aw-table-wrapper::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* =========================================================
-   Auth / Login card
+   Auth Card
    ========================================================= */
 .aw-login-card {
-  max-width: 420px;
+  max-width: 400px;
   width: 100%;
 }
 
 /* =========================================================
-   Responsive tweaks
+   Weather Backgrounds - Subtle
    ========================================================= */
-@media (max-width: 768px) {
-  .aw-layout {
-    flex-direction: column;
-  }
-
-  .aw-sidebar {
-    position: static;       /* NEW: undo fixed on mobile */
-    width: 100%;
-    height: auto;           /* NEW: no 100vh on mobile */
-    flex-direction: row;
-    align-items: center;
-    padding: 10px 12px;
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.6);
-    border-right: none;     /* NEW: sidebar now top bar, no vertical border */
-  }
-
-  .aw-sidebar > div:first-child {
-    flex: 1;
-  }
-
-  .aw-nav {
-    flex-direction: row;
-    margin: 0 0 0 12px;
-    gap: 4px;
-  }
-
-  .aw-nav-link {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-
-  /* .aw-sidebar-footer {
-    display: none;
-  } */
-
-  .aw-main-shell {
-    margin-left: 0;         /* NEW: no left offset on mobile */
-  }
-
-  .page-shell {
-    padding-inline: 12px;
-  }
-
-  .aw-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .aw-btn-primary {
-    width: 100%;
-  }
-}
-
-/* =========================================================
-   Collapsible pinned character (landing)
-   ========================================================= */
-.aw-collapse-toggle {
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.aw-collapse-icon {
-  display: inline-block;
-  transition: transform 0.15s ease;
-  line-height: 1;
-}
-
-/* Rotate arrow when expanded */
-.aw-collapse-toggle[aria-expanded="true"] .aw-collapse-icon {
-  transform: rotate(180deg);
-}
-
-/* =========================================================
-   Weather background (Landing)
-   ========================================================= */
-
 .aw-bg,
 .aw-rain-canvas {
   position: fixed;
@@ -463,62 +352,97 @@ body {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 0; /* behind everything */
+  z-index: 0;
 }
 
-/* make sure your app content stays above the background */
-.aw-layout {
-  position: relative;
-  z-index: 1;
-}
+.aw-layout { position: relative; z-index: 1; }
 
-/* -------- SUNNY THEME (Light Mode) -------- */
 .aw-bg.sunny {
-  /* soft sun glow + subtle sky wash - for light theme */
-  background:
-    radial-gradient(900px 600px at 80% 15%, rgba(255, 236, 170, 0.55), transparent 60%);
-  filter: saturate(1.05);
+  background: radial-gradient(900px 600px at 85% 10%, rgba(251,191,36,0.08), transparent 60%);
 }
 
-/* optional subtle shimmer */
-@keyframes awSunBreath {
-  0%, 100% { filter: saturate(1.02) brightness(1.00); }
-  50%      { filter: saturate(1.08) brightness(1.03); }
-}
-.aw-bg.sunny {
-  animation: awSunBreath 6s ease-in-out infinite;
-}
-
-/* -------- RAIN THEME (Light Mode) -------- */
 .aw-bg.rain {
-  /* moody overlay - for light theme */
-  background:
-    radial-gradient(800px 500px at 70% 10%, rgba(200, 220, 255, 0.18), transparent 60%),
-    linear-gradient(180deg, rgba(10, 20, 30, 0.35), transparent);
-  filter: saturate(0.95);
+  background: radial-gradient(800px 500px at 70% 10%, rgba(148,163,184,0.08), transparent 60%);
 }
 
-/* rain canvas only visible when raining */
-.aw-rain-canvas {
-  opacity: 0;
-  transition: opacity 250ms ease;
-}
-.aw-rain-canvas.is-raining {
-  opacity: 1;
-}
+.aw-rain-canvas { opacity: 0; transition: opacity 300ms ease; }
+.aw-rain-canvas.is-raining { opacity: 0.4; }
 
-/* -------- Weather with body data-weather attribute -------- */
 body[data-weather="sunny"] .aw-bg {
-  background:
-    radial-gradient(900px 600px at 80% 15%, rgba(255, 236, 170, 0.55), transparent 60%);
+  background: radial-gradient(900px 600px at 85% 10%, rgba(251,191,36,0.08), transparent 60%);
 }
-
 body[data-weather="rain"] .aw-bg {
-  background:
-    radial-gradient(800px 500px at 70% 10%, rgba(200, 220, 255, 0.18), transparent 60%),
-    linear-gradient(180deg, rgba(10, 20, 30, 0.35), transparent);
+  background: radial-gradient(800px 500px at 70% 10%, rgba(148,163,184,0.08), transparent 60%);
+}
+body[data-weather="rain"] .aw-rain-canvas { opacity: 0.4; }
+
+/* =========================================================
+   Collapse Toggle
+   ========================================================= */
+.aw-collapse-toggle {
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
 }
 
-body[data-weather="rain"] .aw-rain-canvas {
-  opacity: 1;
+.aw-collapse-icon {
+  display: inline-block;
+  transition: transform 0.15s ease;
+  font-size: 10px;
+}
+
+.aw-collapse-toggle[aria-expanded="true"] .aw-collapse-icon {
+  transform: rotate(180deg);
+}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+@media (max-width: 768px) {
+  .aw-layout { flex-direction: column; }
+
+  .aw-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 16px;
+    border-right: none;
+    border-bottom: 1px solid #1e293b;
+  }
+
+  .aw-sidebar > div:first-child { flex: 1; }
+
+  .aw-nav {
+    flex-direction: row;
+    margin: 0;
+    gap: 4px;
+  }
+
+  .aw-nav-link {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .aw-nav-link-label { display: none; }
+
+  .aw-sidebar-footer { display: none; }
+
+  .aw-main-shell {
+    margin-left: 0;
+    padding: 20px 16px 32px;
+  }
+
+  .page-shell { padding-inline: 0; }
+
+  .aw-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .header-title { font-size: 18px; }
 }

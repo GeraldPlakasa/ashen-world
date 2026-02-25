@@ -15,7 +15,6 @@
   <div class="aw-layout">
     {% include '_sidebar.html' %}
 
-    <!-- Main content -->
     <div class="aw-main-shell">
       <div id="aw-bg" class="aw-bg" aria-hidden="true"></div>
       <canvas id="aw-rain-canvas" class="aw-rain-canvas" aria-hidden="true"></canvas>
@@ -24,15 +23,11 @@
         <!-- Header -->
         <header class="aw-header d-flex align-items-center justify-content-between mb-3">
           <div class="d-flex flex-column">
-            <span class="header-title" style="color: var(--aw-text);">
-              {% if username %}
-                Welcome back, {{ username }}
-              {% else %}
-                Kingdom Dashboard
-              {% endif %}
+            <span class="header-title">
+              {% if username %}Welcome back, {{ username }}{% else %}Kingdom Dashboard{% endif %}
             </span>
-            <span class="header-subtitle" style="color: var(--aw-text-muted);">
-              Year {{ year }} · Day {{ day }} · {{ total_villagers }} souls
+            <span class="header-subtitle">
+              Year {{ year }} · Day {{ day }} · {{ total_villagers }} villagers
             </span>
           </div>
         </header>
@@ -55,14 +50,11 @@
           {% if last_election_message %}
           <!-- Election Banner -->
           <section class="game-card mb-3" style="border-left: 3px solid var(--aw-king);">
-            <div class="card-body py-2 d-flex align-items-center gap-3">
-              <span style="font-size: 1.5rem;">🗳️</span>
-              <div>
-                <div class="small" style="color: var(--aw-text-muted);">Last Election</div>
-                <div style="color: var(--aw-text);">
-                  {% if last_election_year %}Year {{ last_election_year }} – {% endif %}
-                  {{ last_election_message | replace('election: ', '') }}
-                </div>
+            <div class="card-body py-3">
+              <div class="small" style="color: var(--aw-text-muted);">Latest Election</div>
+              <div style="color: var(--aw-text);">
+                {% if last_election_year %}Year {{ last_election_year }} — {% endif %}
+                {{ last_election_message | replace('election: ', '') }}
               </div>
             </div>
           </section>
@@ -73,15 +65,15 @@
           <section class="hero-card mb-3 {% if pinned_character.job == 'King' %}is-king{% endif %} {% if not pinned_character.alive %}is-dead{% endif %}">
             <div class="card-body">
               <div class="row g-3">
-                <!-- Left: Avatar + Basic Info -->
+                <!-- Left: Avatar + Info -->
                 <div class="col-12 col-lg-4">
                   <div class="d-flex gap-3">
                     <div class="hero-avatar">
-                      {% if pinned_character.gender == 'Female' %}👩{% else %}👨{% endif %}
+                      {{ 'F' if pinned_character.gender == 'Female' else 'M' }}
                       {% if pinned_character.job == 'King' %}
-                        <span class="hero-avatar-badge king">👑</span>
+                        <span class="hero-avatar-badge king">♔</span>
                       {% elif pinned_character.origin == 'player' %}
-                        <span class="hero-avatar-badge player">⭐</span>
+                        <span class="hero-avatar-badge player">★</span>
                       {% endif %}
                     </div>
                     <div>
@@ -89,12 +81,12 @@
                       <div class="hero-title">{{ pinned_character.job }} · Age {{ pinned_character.age }}</div>
                       <div class="d-flex gap-2 mt-2">
                         {% if pinned_character.alive %}
-                          <span class="status-badge alive">● Alive</span>
+                          <span class="status-badge alive">Alive</span>
                         {% else %}
-                          <span class="status-badge dead">✝ Dead</span>
+                          <span class="status-badge dead">Deceased</span>
                         {% endif %}
                         {% if pinned_character.origin == 'player' %}
-                          <span class="status-badge player">★ Player</span>
+                          <span class="status-badge player">Player</span>
                         {% endif %}
                       </div>
                     </div>
@@ -105,18 +97,17 @@
                 <div class="col-12 col-lg-4">
                   <div class="stat-bar-group">
                     {% set hp_pct = ((pinned_character.hp / 100) * 100) | int %}
-                    {% set hp_class = 'critical' if hp_pct <= 20 else '' %}
                     <div class="stat-bar stat-bar-lg">
-                      <span class="stat-bar-icon">❤️</span>
+                      <span class="stat-bar-icon">HP</span>
                       <div class="stat-bar-track">
-                        <div class="stat-bar-fill hp {{ hp_class }}" style="width: {{ hp_pct }}%;"></div>
+                        <div class="stat-bar-fill hp" style="width: {{ hp_pct }}%;"></div>
                       </div>
                       <span class="stat-bar-value">{{ pinned_character.hp }}/100</span>
                     </div>
 
                     {% set hunger_pct = ((pinned_character.hunger / 100) * 100) | int %}
                     <div class="stat-bar stat-bar-lg">
-                      <span class="stat-bar-icon">🍖</span>
+                      <span class="stat-bar-icon">FD</span>
                       <div class="stat-bar-track">
                         <div class="stat-bar-fill hunger" style="width: {{ hunger_pct }}%;"></div>
                       </div>
@@ -125,11 +116,11 @@
 
                     {% set exp_pct = ((pinned_character.exp % 100)) | int %}
                     <div class="stat-bar stat-bar-lg">
-                      <span class="stat-bar-icon">⚡</span>
+                      <span class="stat-bar-icon">XP</span>
                       <div class="stat-bar-track">
                         <div class="stat-bar-fill exp" style="width: {{ exp_pct }}%;"></div>
                       </div>
-                      <span class="stat-bar-value">Lv.{{ pinned_character.level }}</span>
+                      <span class="stat-bar-value">Lv {{ pinned_character.level }}</span>
                     </div>
                   </div>
                 </div>
@@ -137,34 +128,16 @@
                 <!-- Right: Combat Stats -->
                 <div class="col-12 col-lg-4">
                   <div class="d-flex flex-wrap gap-2">
-                    <span class="stat-pill atk">
-                      <span class="stat-pill-icon">⚔️</span>
-                      ATK {{ pinned_character.atk }}
-                    </span>
-                    <span class="stat-pill def">
-                      <span class="stat-pill-icon">🛡️</span>
-                      DEF {{ pinned_character.def }}
-                    </span>
-                    <span class="stat-pill int">
-                      <span class="stat-pill-icon">📖</span>
-                      INT {{ pinned_character.int }}
-                    </span>
-                    <span class="stat-pill rep">
-                      <span class="stat-pill-icon">⭐</span>
-                      REP {{ pinned_character.rep }}
-                    </span>
-                    <span class="stat-pill coins">
-                      <span class="stat-pill-icon">🪙</span>
-                      {{ pinned_character.coins }}
-                    </span>
+                    <span class="stat-pill atk">ATK {{ pinned_character.atk }}</span>
+                    <span class="stat-pill def">DEF {{ pinned_character.def }}</span>
+                    <span class="stat-pill int">INT {{ pinned_character.int }}</span>
+                    <span class="stat-pill rep">REP {{ pinned_character.rep }}</span>
+                    <span class="stat-pill coins">{{ pinned_character.coins }} coins</span>
                   </div>
 
                   {% if pinned_character.last_action %}
-                  <div class="mt-3" style="color: var(--aw-text-muted); font-size: 0.75rem;">
-                    Last Action: 
-                    <span class="action-badge {{ pinned_character.last_action.split()[0] | lower }}">
-                      {{ pinned_character.last_action }}
-                    </span>
+                  <div class="mt-3" style="color: var(--aw-text-muted); font-size: 12px;">
+                    Last: <span class="action-badge {{ pinned_character.last_action.split()[0] | lower }}">{{ pinned_character.last_action }}</span>
                   </div>
                   {% endif %}
                 </div>
@@ -173,18 +146,14 @@
               <!-- Collapsible Details -->
               <div class="collapse mt-3" id="heroDetails">
                 <hr style="border-color: var(--aw-border);" />
-                <div class="row g-3" style="font-size: 0.875rem;">
-                  <!-- Family -->
+                <div class="row g-3" style="font-size: 13px;">
                   <div class="col-12 col-md-6">
-                    <div style="color: var(--aw-text-muted);" class="mb-2">Family</div>
+                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Family</div>
                     <div class="d-flex flex-column gap-1">
                       <div>
                         <span style="color: var(--aw-text-dim);">Spouse:</span>
                         <span style="color: var(--aw-text);">
-                          {% if pinned_spouse_name %}
-                            {{ pinned_spouse_name }}
-                            {% if pinned_spouse_alive is none %}(archived){% elif not pinned_spouse_alive %}(dead){% endif %}
-                          {% else %}None{% endif %}
+                          {% if pinned_spouse_name %}{{ pinned_spouse_name }}{% if pinned_spouse_alive is none %} (archived){% elif not pinned_spouse_alive %} (dead){% endif %}{% else %}None{% endif %}
                         </span>
                       </div>
                       <div>
@@ -198,68 +167,41 @@
                       <div>
                         <span style="color: var(--aw-text-dim);">Children:</span>
                         <span style="color: var(--aw-text);">
-                          {% for ch in pinned_children[:4] %}{{ ch.name }}{% if not loop.last %}, {% endif %}{% endfor %}
-                          {% if pinned_children|length > 4 %}+{{ pinned_children|length - 4 }} more{% endif %}
+                          {% for ch in pinned_children[:4] %}{{ ch.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if pinned_children|length > 4 %} +{{ pinned_children|length - 4 }}{% endif %}
                         </span>
                       </div>
                       {% endif %}
                     </div>
                   </div>
 
-                  <!-- Traits -->
                   <div class="col-12 col-md-6">
-                    <div style="color: var(--aw-text-muted);" class="mb-2">Traits</div>
+                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Traits</div>
                     <div style="color: var(--aw-text);">{{ pinned_character.traits }}</div>
                   </div>
 
-                  <!-- Relationships -->
                   {% if pinned_rel_bonds or pinned_rel_conflicts %}
                   <div class="col-12 col-md-6">
-                    <div style="color: var(--aw-text-muted);" class="mb-2">Bonds</div>
+                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Bonds</div>
                     {% if pinned_rel_bonds %}
                       {% for r in pinned_rel_bonds[:3] %}
-                        <div>
-                          <span style="color: var(--aw-text);">{{ r.name }}</span>
-                          <span style="color: var(--aw-alive);">{{ r.label }} ({{ r.score }})</span>
-                        </div>
+                        <div><span style="color: var(--aw-text);">{{ r.name }}</span> <span style="color: var(--aw-alive);">{{ r.label }} ({{ r.score }})</span></div>
                       {% endfor %}
-                    {% else %}
-                      <span style="color: var(--aw-text-dim);">None</span>
-                    {% endif %}
+                    {% else %}<span style="color: var(--aw-text-dim);">None</span>{% endif %}
                   </div>
                   <div class="col-12 col-md-6">
-                    <div style="color: var(--aw-text-muted);" class="mb-2">Rivals</div>
+                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Rivals</div>
                     {% if pinned_rel_conflicts %}
                       {% for r in pinned_rel_conflicts[:3] %}
-                        <div>
-                          <span style="color: var(--aw-text);">{{ r.name }}</span>
-                          <span style="color: var(--aw-dead);">{{ r.label }} ({{ r.score }})</span>
-                        </div>
+                        <div><span style="color: var(--aw-text);">{{ r.name }}</span> <span style="color: var(--aw-dead);">{{ r.label }} ({{ r.score }})</span></div>
                       {% endfor %}
-                    {% else %}
-                      <span style="color: var(--aw-text-dim);">None</span>
-                    {% endif %}
-                  </div>
-                  {% endif %}
-
-                  <!-- Action History -->
-                  {% if pinned_actions %}
-                  <div class="col-12">
-                    <div style="color: var(--aw-text-muted);" class="mb-2">Recent Actions</div>
-                    <div class="d-flex flex-wrap gap-1">
-                      {% for act in pinned_actions %}
-                        <span class="action-badge">{{ act }}</span>
-                      {% endfor %}
-                    </div>
+                    {% else %}<span style="color: var(--aw-text-dim);">None</span>{% endif %}
                   </div>
                   {% endif %}
                 </div>
               </div>
 
-              <!-- Toggle Button -->
-              <div class="text-center mt-2">
-                <button class="btn btn-sm btn-outline-secondary"
-                        data-bs-toggle="collapse" data-bs-target="#heroDetails">
+              <div class="text-center mt-3">
+                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#heroDetails">
                   <span class="aw-collapse-icon">▾</span> Details
                 </button>
               </div>
@@ -268,32 +210,23 @@
 
           {% else %}
             {% if session.get('logged_in') %}
-            <!-- CTA: Create Character -->
             <section class="game-card mb-3" style="border: 1px dashed var(--aw-accent);">
               <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                 <div>
-                  <div style="color: var(--aw-text);" class="h5 mb-1">🎮 Create Your Hero</div>
-                  <div style="color: var(--aw-text-muted);">
-                    Spawn a unique villager that will live, fight, and maybe rule this kingdom.
-                  </div>
+                  <div style="color: var(--aw-text);" class="h5 mb-1">Create Your Hero</div>
+                  <div style="color: var(--aw-text-muted);">Spawn a villager that will live and grow in this simulation.</div>
                 </div>
-                <a href="{{ url_for('create_character') }}" class="btn btn-primary">
-                  ✨ Spawn Hero
-                </a>
+                <a href="{{ url_for('create_character') }}" class="btn btn-primary">Create Hero</a>
               </div>
             </section>
             {% else %}
             <section class="game-card mb-3" style="border: 1px dashed var(--aw-border);">
               <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                 <div>
-                  <div style="color: var(--aw-text);" class="h5 mb-1">⚔️ Join the Simulation</div>
-                  <div style="color: var(--aw-text-muted);">
-                    Create a villager that will live, work, and fight inside Ashen World.
-                  </div>
+                  <div style="color: var(--aw-text);" class="h5 mb-1">Join the Simulation</div>
+                  <div style="color: var(--aw-text-muted);">Create a villager that will live, work, and fight inside Ashen World.</div>
                 </div>
-                <a href="{{ url_for('login') }}" class="btn btn-outline-light">
-                  Login to Play
-                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-light">Sign In</a>
               </div>
             </section>
             {% endif %}
@@ -303,44 +236,38 @@
           <section class="row g-3 mb-3">
             <div class="col-6 col-md-4 col-lg-2">
               <div class="kpi-card accent">
-                <div class="kpi-icon">📅</div>
                 <div class="kpi-value"><span id="current-year">{{ year }}</span></div>
                 <div class="kpi-label">Year</div>
               </div>
             </div>
             <div class="col-6 col-md-4 col-lg-2">
               <div class="kpi-card">
-                <div class="kpi-icon">☀️</div>
                 <div class="kpi-value"><span id="current-day">{{ day }}</span></div>
                 <div class="kpi-label">Day</div>
               </div>
             </div>
             <div class="col-6 col-md-4 col-lg-2">
               <div class="kpi-card">
-                <div class="kpi-icon">👥</div>
                 <div class="kpi-value">{{ total_villagers }}</div>
                 <div class="kpi-label">Population</div>
               </div>
             </div>
             <div class="col-6 col-md-4 col-lg-2">
               <div class="kpi-card alive">
-                <div class="kpi-icon">💚</div>
                 <div class="kpi-value">{{ alive_count }}</div>
                 <div class="kpi-label">Alive</div>
               </div>
             </div>
             <div class="col-6 col-md-4 col-lg-2">
               <div class="kpi-card dead">
-                <div class="kpi-icon">💀</div>
                 <div class="kpi-value">{{ dead_count }}</div>
                 <div class="kpi-label">Dead</div>
               </div>
             </div>
             <div class="col-6 col-md-4 col-lg-2">
               <div class="kpi-card gold">
-                <div class="kpi-icon">🏛️</div>
                 <div class="kpi-value">{{ bank_balance }}</div>
-                <div class="kpi-label">Treasury ({{ (tax_rate * 100) | round(0) }}%)</div>
+                <div class="kpi-label">Treasury</div>
               </div>
             </div>
           </section>
@@ -348,11 +275,7 @@
           <!-- Buildings -->
           <section class="game-card mb-3">
             <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <div style="color: var(--aw-text);" class="h6 mb-0">🏗️ Village Infrastructure</div>
-                </div>
-              </div>
+              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Infrastructure</div>
 
               {% if village_buildings %}
               <div class="row g-2">
@@ -360,10 +283,7 @@
                 <div class="col-6 col-md-4 col-lg-3">
                   <div class="building-card {% if b.level == 0 %}not-built{% endif %}">
                     <div class="d-flex justify-content-between align-items-center">
-                      <span class="building-name">
-                        {% if b.name == 'Farm' %}🌾{% elif b.name == 'Barracks' %}⚔️{% elif b.name == 'Market' %}🏪{% elif b.name == 'Temple' %}🛕{% elif b.name == 'Library' %}📚{% elif b.name == 'Blacksmith' %}🔨{% elif b.name == 'Inn' %}🍺{% elif b.name == 'Wall' %}🧱{% else %}🏠{% endif %}
-                        {{ b.name }}
-                      </span>
+                      <span class="building-name">{{ b.name }}</span>
                       {% if b.level > 0 %}
                         <span class="building-level built">Lv {{ b.level }}</span>
                       {% else %}
@@ -372,8 +292,7 @@
                     </div>
                     {% if b.level > 0 and b.health is defined %}
                     <div class="building-health-bar">
-                      <div class="building-health-fill {% if b.health > 60 %}healthy{% elif b.health > 25 %}damaged{% else %}critical{% endif %}"
-                           style="width: {{ b.health }}%;"></div>
+                      <div class="building-health-fill {% if b.health > 60 %}healthy{% elif b.health > 25 %}damaged{% else %}critical{% endif %}" style="width: {{ b.health }}%;"></div>
                     </div>
                     {% endif %}
                   </div>
@@ -381,9 +300,7 @@
                 {% endfor %}
               </div>
               {% else %}
-              <div style="color: var(--aw-text-muted);">
-                No buildings yet. The village is still a scattered camp.
-              </div>
+              <div style="color: var(--aw-text-muted);">No buildings yet.</div>
               {% endif %}
             </div>
           </section>
@@ -392,21 +309,15 @@
           <section class="game-card">
             <div class="card-body p-0">
               <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 px-3 pt-3 pb-2" style="border-bottom: 1px solid var(--aw-border);">
-                <div style="color: var(--aw-text-muted);">
-                  👥 All Villagers
-                </div>
+                <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Villagers</div>
 
                 <div class="d-flex align-items-center gap-3">
                   <div class="form-check form-switch small mb-0">
                     <input class="form-check-input" type="checkbox" id="only-alive-toggle" checked />
-                    <label class="form-check-label" for="only-alive-toggle" style="color: var(--aw-text-muted);">
-                      Alive only
-                    </label>
+                    <label class="form-check-label" for="only-alive-toggle" style="color: var(--aw-text-muted);">Alive only</label>
                   </div>
-
                   <div class="aw-search-wrapper">
-                    <input type="search" id="table-search" class="form-control form-control-sm"
-                           placeholder="Search..." autocomplete="off" />
+                    <input type="search" id="table-search" class="form-control form-control-sm" placeholder="Search..." autocomplete="off" />
                   </div>
                 </div>
               </div>
@@ -418,7 +329,7 @@
                       <th data-key="name" class="sortable">Name</th>
                       <th data-key="gender" class="sortable">Gender</th>
                       <th data-key="job" class="sortable">Job</th>
-                      <th data-key="coins" class="sortable num text-end">🪙</th>
+                      <th data-key="coins" class="sortable num text-end">Coins</th>
                       <th data-key="age" class="sortable num text-end">Age</th>
                       <th data-key="int" class="sortable num text-end">INT</th>
                       <th data-key="rep" class="sortable num text-end">REP</th>
@@ -427,19 +338,16 @@
                       <th data-key="atk" class="sortable num text-end">ATK</th>
                       <th data-key="def" class="sortable num text-end">DEF</th>
                       <th data-key="hp" class="sortable num text-end">HP</th>
-                      <th data-key="hunger" class="sortable num text-end">🍖</th>
+                      <th data-key="hunger" class="sortable num text-end">Food</th>
                       <th data-key="traits" class="sortable">Traits</th>
                       <th data-key="last_action" class="sortable">Action</th>
                       <th data-key="status" class="sortable">Status</th>
                     </tr>
                   </thead>
-
                   <tbody>
                     {% for c in characters %}
                     <tr class="{% if not c.alive %}aw-row-dead{% endif %}">
-                      <td class="{% if not c.alive %}aw-name-dead{% endif %}">
-                        {% if c.job == 'King' %}👑 {% endif %}{{ c.name }}
-                      </td>
+                      <td class="{% if not c.alive %}aw-name-dead{% endif %}">{% if c.job == 'King' %}♔ {% endif %}{{ c.name }}</td>
                       <td>{{ c.gender }}</td>
                       <td>{{ c.job }}</td>
                       <td class="text-end">{{ c.coins }}</td>
@@ -453,18 +361,8 @@
                       <td class="text-end">{{ c.hp }}</td>
                       <td class="text-end">{{ c.hunger }}</td>
                       <td class="aw-traits-cell">{{ c.traits }}</td>
-                      <td>
-                        <span class="action-badge {{ c.last_action.split()[0] | lower if c.last_action else '' }}">
-                          {{ c.last_action or '-' }}
-                        </span>
-                      </td>
-                      <td>
-                        {% if c.alive %}
-                          <span class="status-badge alive">Alive</span>
-                        {% else %}
-                          <span class="status-badge dead">Dead</span>
-                        {% endif %}
-                      </td>
+                      <td><span class="action-badge {{ c.last_action.split()[0] | lower if c.last_action else '' }}">{{ c.last_action or '-' }}</span></td>
+                      <td>{% if c.alive %}<span class="status-badge alive">Alive</span>{% else %}<span class="status-badge dead">Dead</span>{% endif %}</td>
                     </tr>
                     {% endfor %}
                   </tbody>

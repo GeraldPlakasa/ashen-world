@@ -1,38 +1,33 @@
 /* =========================================================
-   ASHEN WORLD - GAME UI ENHANCEMENT
-   Dark/Light Theme Support
+   ASHEN WORLD - GAME UI
+   Minimalist Dark/Light Theme Support
    ========================================================= */
 
 /* =========================================================
    CSS Variables - Dark Theme (Default)
    ========================================================= */
 :root {
-  /* Dark Theme Colors */
-  --aw-bg-body: #0a0e14;
-  --aw-bg-body-gradient: linear-gradient(180deg, #0a0e14 0%, #131a24 100%);
-  --aw-bg-dark: #0f1419;
-  --aw-bg-card: #1a1f2e;
-  --aw-bg-card-hover: #242b3d;
-  --aw-bg-input: #0f1419;
-  --aw-border: #2d3748;
-  --aw-border-light: #3d4a5c;
+  --aw-bg-body: #0f172a;
+  --aw-bg-body-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  --aw-bg-dark: #1e293b;
+  --aw-bg-card: #1e293b;
+  --aw-bg-card-hover: #334155;
+  --aw-bg-input: #0f172a;
+  --aw-border: #334155;
+  --aw-border-light: #475569;
   
-  /* Text */
-  --aw-text: #e2e8f0;
-  --aw-text-muted: #8b9ab5;
-  --aw-text-dim: #5a6a85;
+  --aw-text: #f1f5f9;
+  --aw-text-muted: #94a3b8;
+  --aw-text-dim: #64748b;
   
-  /* Stats colors */
+  /* Semantic Colors */
   --aw-hp: #ef4444;
-  --aw-hp-bg: #450a0a;
+  --aw-hp-bg: rgba(239,68,68,0.15);
   --aw-hunger: #f59e0b;
-  --aw-hunger-bg: #451a03;
+  --aw-hunger-bg: rgba(245,158,11,0.15);
   --aw-exp: #3b82f6;
-  --aw-exp-bg: #172554;
+  --aw-exp-bg: rgba(59,130,246,0.15);
   --aw-mana: #8b5cf6;
-  --aw-mana-bg: #2e1065;
-  --aw-gold: #fbbf24;
-  --aw-gold-bg: #422006;
   
   /* Status */
   --aw-alive: #22c55e;
@@ -40,40 +35,42 @@
   --aw-warning: #f59e0b;
   
   /* Ranks */
-  --aw-rank-gold: #ffd700;
-  --aw-rank-silver: #c0c0c0;
-  --aw-rank-bronze: #cd7f32;
+  --aw-rank-gold: #fbbf24;
+  --aw-rank-silver: #94a3b8;
+  --aw-rank-bronze: #b45309;
   
-  /* Accents */
-  --aw-accent: #0ea5e9;
-  --aw-accent-glow: rgba(14, 165, 233, 0.3);
+  /* Accent */
+  --aw-accent: #3b82f6;
+  --aw-accent-hover: #2563eb;
+  --aw-accent-glow: rgba(59,130,246,0.2);
   --aw-king: #a855f7;
-  --aw-player: #22d3ee;
+  --aw-player: #06b6d4;
+  --aw-gold: #fbbf24;
 
   /* Sidebar */
-  --aw-sidebar-bg: linear-gradient(180deg, #0a0e14 0%, #131a24 100%);
-  --aw-sidebar-border: #2d3748;
+  --aw-sidebar-bg: #0f172a;
+  --aw-sidebar-border: #1e293b;
 }
 
 /* =========================================================
-   Light Theme Variables
+   Light Theme
    ========================================================= */
 [data-theme="light"] {
   --aw-bg-body: #f8fafc;
-  --aw-bg-body-gradient: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-  --aw-bg-dark: #e2e8f0;
+  --aw-bg-body-gradient: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  --aw-bg-dark: #f1f5f9;
   --aw-bg-card: #ffffff;
-  --aw-bg-card-hover: #f1f5f9;
+  --aw-bg-card-hover: #f8fafc;
   --aw-bg-input: #ffffff;
-  --aw-border: #cbd5e1;
-  --aw-border-light: #94a3b8;
+  --aw-border: #e2e8f0;
+  --aw-border-light: #cbd5e1;
   
-  --aw-text: #1e293b;
-  --aw-text-muted: #475569;
-  --aw-text-dim: #64748b;
+  --aw-text: #0f172a;
+  --aw-text-muted: #64748b;
+  --aw-text-dim: #94a3b8;
 
-  --aw-sidebar-bg: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  --aw-sidebar-border: #334155;
+  --aw-sidebar-bg: #0f172a;
+  --aw-sidebar-border: #1e293b;
 }
 
 /* =========================================================
@@ -83,89 +80,79 @@ body.game-theme {
   background: var(--aw-bg-body-gradient);
   color: var(--aw-text);
   min-height: 100vh;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-body.game-theme .aw-main-shell {
-  background: transparent;
-}
-
+body.game-theme .aw-main-shell,
 body.game-theme .page-shell {
   background: transparent;
 }
 
 /* =========================================================
-   Theme Toggle Switch
+   Theme Toggle - Minimal
    ========================================================= */
 .theme-toggle {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 6px 10px;
   background: var(--aw-bg-dark);
   border: 1px solid var(--aw-border);
-  border-radius: 20px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s;
+  font-size: 12px;
 }
 
-.theme-toggle:hover {
-  border-color: var(--aw-border-light);
-}
+.theme-toggle:hover { border-color: var(--aw-border-light); }
 
 .theme-toggle-track {
-  width: 36px;
-  height: 20px;
+  width: 32px;
+  height: 18px;
   background: var(--aw-border);
-  border-radius: 10px;
+  border-radius: 9px;
   position: relative;
-  transition: background 0.3s ease;
+  transition: background 0.2s;
 }
 
 .theme-toggle-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: var(--aw-text);
   border-radius: 50%;
   position: absolute;
   top: 2px;
   left: 2px;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
-[data-theme="light"] .theme-toggle-thumb {
-  transform: translateX(16px);
-}
+[data-theme="light"] .theme-toggle-thumb { transform: translateX(14px); }
 
-.theme-toggle-icon {
-  font-size: 1rem;
-}
-
-.theme-toggle-label {
-  font-size: 0.75rem;
-  color: var(--aw-text-muted);
-  font-weight: 500;
-}
+.theme-toggle-icon { font-size: 14px; }
+.theme-toggle-label { color: var(--aw-text-muted); font-weight: 500; }
 
 /* =========================================================
-   Bootstrap Overrides for Dark Theme
+   Bootstrap Overrides
    ========================================================= */
 body.game-theme .form-control,
 body.game-theme .form-select {
   background-color: var(--aw-bg-input) !important;
   border-color: var(--aw-border) !important;
   color: var(--aw-text) !important;
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 10px 12px;
 }
 
 body.game-theme .form-control:focus,
 body.game-theme .form-select:focus {
   border-color: var(--aw-accent) !important;
-  box-shadow: 0 0 0 0.2rem var(--aw-accent-glow) !important;
+  box-shadow: 0 0 0 3px var(--aw-accent-glow) !important;
 }
 
-body.game-theme .form-control::placeholder {
-  color: var(--aw-text-dim) !important;
-}
+body.game-theme .form-control::placeholder { color: var(--aw-text-dim) !important; }
+body.game-theme .form-label { color: var(--aw-text-muted); font-size: 12px; font-weight: 500; }
+body.game-theme .form-text { color: var(--aw-text-dim) !important; font-size: 11px; }
 
 body.game-theme .form-check-input {
   background-color: var(--aw-bg-dark);
@@ -177,62 +164,64 @@ body.game-theme .form-check-input:checked {
   border-color: var(--aw-accent);
 }
 
-body.game-theme .form-label {
-  color: var(--aw-text-muted);
-}
-
-body.game-theme .form-text {
-  color: var(--aw-text-dim) !important;
-}
-
 /* Alerts */
 body.game-theme .alert {
-  background-color: var(--aw-bg-card);
-  border-color: var(--aw-border);
+  background: var(--aw-bg-card);
+  border: 1px solid var(--aw-border);
   color: var(--aw-text);
+  border-radius: 8px;
+  font-size: 13px;
 }
 
 body.game-theme .alert-success {
-  background-color: rgba(34, 197, 94, 0.15);
-  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34,197,94,0.1);
+  border-color: rgba(34,197,94,0.2);
   color: var(--aw-alive);
 }
 
 body.game-theme .alert-danger {
-  background-color: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239,68,68,0.1);
+  border-color: rgba(239,68,68,0.2);
   color: var(--aw-dead);
 }
 
 body.game-theme .alert-info {
-  background-color: rgba(14, 165, 233, 0.15);
-  border-color: rgba(14, 165, 233, 0.3);
+  background: rgba(59,130,246,0.1);
+  border-color: rgba(59,130,246,0.2);
   color: var(--aw-accent);
 }
 
-body.game-theme .btn-close {
-  filter: invert(0.8);
-}
+body.game-theme .btn-close { filter: invert(0.7); }
 
 /* Buttons */
-body.game-theme .btn-outline-secondary {
+body.game-theme .btn-primary {
+  background: var(--aw-accent);
+  border-color: var(--aw-accent);
+  font-weight: 500;
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+body.game-theme .btn-primary:hover {
+  background: var(--aw-accent-hover);
+  border-color: var(--aw-accent-hover);
+  transform: translateY(-1px);
+}
+
+body.game-theme .btn-outline-secondary,
+body.game-theme .btn-outline-light {
   color: var(--aw-text-muted);
   border-color: var(--aw-border);
+  font-size: 13px;
+  border-radius: 8px;
 }
 
-body.game-theme .btn-outline-secondary:hover {
-  background-color: var(--aw-bg-card);
-  border-color: var(--aw-border-light);
-  color: var(--aw-text);
-}
-
-body.game-theme .btn-outline-light {
-  color: var(--aw-text);
-  border-color: var(--aw-border);
-}
-
+body.game-theme .btn-outline-secondary:hover,
 body.game-theme .btn-outline-light:hover {
-  background-color: var(--aw-bg-card);
+  background: var(--aw-bg-card);
+  border-color: var(--aw-border-light);
   color: var(--aw-text);
 }
 
@@ -242,146 +231,56 @@ body.game-theme .btn-outline-primary {
 }
 
 body.game-theme .btn-outline-primary:hover {
-  background-color: var(--aw-accent);
-  color: white;
+  background: var(--aw-accent);
+  color: #fff;
 }
 
-body.game-theme .btn-outline-success {
-  color: var(--aw-alive);
-  border-color: var(--aw-alive);
-}
-
-body.game-theme .btn-outline-danger {
-  color: var(--aw-dead);
+body.game-theme .btn-danger {
+  background: var(--aw-dead);
   border-color: var(--aw-dead);
 }
 
-body.game-theme .btn-primary {
-  background-color: var(--aw-accent);
-  border-color: var(--aw-accent);
-}
-
-body.game-theme .btn-primary:hover {
-  background-color: #0284c7;
-  border-color: #0284c7;
-}
-
-/* Badge overrides */
-body.game-theme .badge {
-  background-color: var(--aw-bg-dark) !important;
-  color: var(--aw-text-muted) !important;
-}
-
-body.game-theme .bg-success-subtle {
-  background-color: rgba(34, 197, 94, 0.15) !important;
-}
-
-body.game-theme .bg-danger-subtle {
-  background-color: rgba(239, 68, 68, 0.15) !important;
-}
-
-body.game-theme .text-success {
-  color: var(--aw-alive) !important;
-}
-
-body.game-theme .text-danger {
-  color: var(--aw-dead) !important;
-}
-
-body.game-theme .text-muted {
-  color: var(--aw-text-muted) !important;
-}
-
-/* Card overrides */
+/* Cards */
 body.game-theme .card {
-  background-color: var(--aw-bg-card);
+  background: var(--aw-bg-card);
   border-color: var(--aw-border);
   color: var(--aw-text);
-}
-
-body.game-theme .card-body {
-  color: var(--aw-text);
-}
-
-/* Border utilities */
-body.game-theme .border {
-  border-color: var(--aw-border) !important;
-}
-
-body.game-theme .border-bottom {
-  border-bottom-color: var(--aw-border) !important;
-}
-
-/* Background utilities */
-body.game-theme .bg-body {
-  background-color: var(--aw-bg-card) !important;
-}
-
-body.game-theme .bg-body-tertiary {
-  background-color: var(--aw-bg-dark) !important;
-}
-
-body.game-theme .bg-light {
-  background-color: var(--aw-bg-dark) !important;
+  border-radius: 12px;
 }
 
 /* Links */
-body.game-theme a {
-  color: var(--aw-accent);
-}
+body.game-theme a { color: var(--aw-accent); }
+body.game-theme a:hover { color: var(--aw-accent-hover); }
 
-body.game-theme a:hover {
-  color: #38bdf8;
-}
-
-/* HR */
-body.game-theme hr {
-  border-color: var(--aw-border);
-  opacity: 1;
-}
-
-/* Progress bar */
-body.game-theme .progress {
-  background-color: var(--aw-bg-dark);
-}
+body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
 
 /* =========================================================
-   Game Cards
+   Game Cards - Clean Design
    ========================================================= */
 .game-card {
   background: var(--aw-bg-card);
   border: 1px solid var(--aw-border);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
+  transition: border-color 0.15s;
 }
 
 [data-theme="light"] .game-card {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
-.game-card:hover {
-  border-color: var(--aw-border-light);
-}
+.game-card:hover { border-color: var(--aw-border-light); }
 
-.game-card .card-body {
-  padding: 1rem;
-}
+.game-card .card-body { padding: 20px; }
 
 /* =========================================================
-   Hero Card (Pinned Character)
+   Hero Card - Pinned Character
    ========================================================= */
 .hero-card {
   background: var(--aw-bg-card);
   border: 1px solid var(--aw-border);
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   position: relative;
-}
-
-[data-theme="dark"] .hero-card,
-body.game-theme:not([data-theme="light"]) .hero-card {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e1b4b 100%);
 }
 
 .hero-card::before {
@@ -390,35 +289,25 @@ body.game-theme:not([data-theme="light"]) .hero-card {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--aw-accent), var(--aw-mana), var(--aw-accent));
+  height: 2px;
+  background: var(--aw-accent);
 }
 
-.hero-card.is-king::before {
-  background: linear-gradient(90deg, var(--aw-king), #fbbf24, var(--aw-king));
-}
-
-.hero-card.is-dead {
-  filter: grayscale(0.6);
-  opacity: 0.85;
-}
-
-.hero-card.is-dead::before {
-  background: linear-gradient(90deg, var(--aw-dead), #7f1d1d, var(--aw-dead));
-}
+.hero-card.is-king::before { background: var(--aw-king); }
+.hero-card.is-dead { opacity: 0.7; }
+.hero-card.is-dead::before { background: var(--aw-dead); }
 
 /* Hero Avatar */
 .hero-avatar {
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   border-radius: 12px;
   background: var(--aw-bg-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
-  border: 2px solid var(--aw-border-light);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 1.75rem;
+  border: 1px solid var(--aw-border);
   position: relative;
 }
 
@@ -426,181 +315,145 @@ body.game-theme:not([data-theme="light"]) .hero-card {
   position: absolute;
   bottom: -4px;
   right: -4px;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 10px;
   border: 2px solid var(--aw-bg-card);
+  background: var(--aw-accent);
 }
 
-.hero-avatar-badge.king {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-}
+.hero-avatar-badge.king { background: var(--aw-king); }
+.hero-avatar-badge.player { background: var(--aw-player); }
 
-.hero-avatar-badge.player {
-  background: linear-gradient(135deg, var(--aw-player), #06b6d4);
-}
-
-/* Hero Name */
 .hero-name {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   color: var(--aw-text);
   margin: 0;
 }
 
 .hero-title {
-  font-size: 0.75rem;
+  font-size: 12px;
   color: var(--aw-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
 }
 
 /* =========================================================
-   Stat Bars (HP, Hunger, EXP)
+   Stat Bars - Minimal
    ========================================================= */
 .stat-bar-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .stat-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .stat-bar-icon {
-  width: 20px;
-  font-size: 0.875rem;
+  width: 16px;
+  font-size: 12px;
   text-align: center;
   flex-shrink: 0;
 }
 
 .stat-bar-track {
   flex: 1;
-  height: 8px;
+  height: 6px;
   background: var(--aw-bg-dark);
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
-  position: relative;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .stat-bar-fill {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s ease;
-  position: relative;
+  border-radius: 3px;
+  transition: width 0.3s ease;
 }
 
-.stat-bar-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-  border-radius: 4px 4px 0 0;
-}
-
-.stat-bar-fill.hp {
-  background: linear-gradient(90deg, #dc2626, var(--aw-hp));
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-}
-
-.stat-bar-fill.hunger {
-  background: linear-gradient(90deg, #d97706, var(--aw-hunger));
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
-}
-
-.stat-bar-fill.exp {
-  background: linear-gradient(90deg, #2563eb, var(--aw-exp));
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
-}
+.stat-bar-fill.hp { background: var(--aw-hp); }
+.stat-bar-fill.hunger { background: var(--aw-hunger); }
+.stat-bar-fill.exp { background: var(--aw-exp); }
 
 .stat-bar-value {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--aw-text-muted);
-  min-width: 50px;
+  min-width: 48px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Large stat bar variant */
-.stat-bar.stat-bar-lg .stat-bar-track {
-  height: 12px;
-}
-
-.stat-bar.stat-bar-lg .stat-bar-icon {
-  font-size: 1rem;
-}
+.stat-bar.stat-bar-lg .stat-bar-track { height: 8px; }
 
 /* =========================================================
-   Stat Pills
+   Stat Pills - Clean Tags
    ========================================================= */
 .stat-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
   background: var(--aw-bg-dark);
   border: 1px solid var(--aw-border);
+  color: var(--aw-text-muted);
 }
 
-.stat-pill-icon {
-  font-size: 0.875rem;
-}
+.stat-pill-icon { font-size: 12px; }
 
-.stat-pill.atk { color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
-.stat-pill.def { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); }
-.stat-pill.int { color: #a78bfa; border-color: rgba(167, 139, 250, 0.3); }
-.stat-pill.rep { color: #34d399; border-color: rgba(52, 211, 153, 0.3); }
-.stat-pill.coins { color: var(--aw-gold); border-color: rgba(251, 191, 36, 0.3); }
-.stat-pill.level { color: var(--aw-accent); border-color: rgba(14, 165, 233, 0.3); }
+.stat-pill.atk { color: #f87171; border-color: rgba(248,113,113,0.2); }
+.stat-pill.def { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
+.stat-pill.int { color: #a78bfa; border-color: rgba(167,139,250,0.2); }
+.stat-pill.rep { color: #34d399; border-color: rgba(52,211,153,0.2); }
+.stat-pill.coins { color: var(--aw-gold); border-color: rgba(251,191,36,0.2); }
+.stat-pill.level { color: var(--aw-accent); border-color: var(--aw-accent-glow); }
 
 /* =========================================================
-   KPI Cards (Game Style)
+   KPI Cards - Simplified
    ========================================================= */
 .kpi-card {
   background: var(--aw-bg-card);
   border: 1px solid var(--aw-border);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 10px;
+  padding: 16px;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s, transform 0.15s;
 }
 
 .kpi-card:hover {
-  transform: translateY(-2px);
   border-color: var(--aw-border-light);
+  transform: translateY(-2px);
 }
 
 .kpi-icon {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 18px;
+  margin-bottom: 8px;
+  opacity: 0.8;
 }
 
 .kpi-value {
-  font-size: 1.5rem;
+  font-size: 20px;
   font-weight: 700;
   color: var(--aw-text);
   line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .kpi-label {
-  font-size: 0.7rem;
+  font-size: 10px;
   color: var(--aw-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
 }
 
 .kpi-card.alive .kpi-value { color: var(--aw-alive); }
@@ -609,136 +462,105 @@ body.game-theme:not([data-theme="light"]) .hero-card {
 .kpi-card.accent .kpi-value { color: var(--aw-accent); }
 
 /* =========================================================
-   Building Cards (Game Style)
+   Building Cards
    ========================================================= */
 .building-card {
   background: var(--aw-bg-card);
   border: 1px solid var(--aw-border);
-  border-radius: 10px;
-  padding: 0.75rem;
-  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 12px;
+  transition: border-color 0.15s;
 }
 
-.building-card:hover {
-  border-color: var(--aw-border-light);
-}
+.building-card:hover { border-color: var(--aw-border-light); }
+.building-card.not-built { opacity: 0.5; background: var(--aw-bg-dark); }
 
-.building-card.not-built {
-  opacity: 0.5;
-  background: var(--aw-bg-dark);
-}
-
-.building-icon {
-  font-size: 1.25rem;
-  margin-right: 0.5rem;
-}
+.building-icon { font-size: 16px; margin-right: 8px; }
 
 .building-name {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--aw-text);
-  font-size: 0.875rem;
+  font-size: 13px;
 }
 
 .building-level {
-  font-size: 0.7rem;
+  font-size: 10px;
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: 4px;
   font-weight: 600;
 }
 
 .building-level.built {
-  background: rgba(34, 197, 94, 0.2);
+  background: rgba(34,197,94,0.15);
   color: var(--aw-alive);
-  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .building-level.not-built {
   background: var(--aw-bg-dark);
   color: var(--aw-text-dim);
-  border: 1px solid var(--aw-border);
 }
 
 .building-health-bar {
-  height: 4px;
+  height: 3px;
   background: var(--aw-bg-dark);
   border-radius: 2px;
   overflow: hidden;
-  margin-top: 0.5rem;
+  margin-top: 8px;
 }
 
-.building-health-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
-
+.building-health-fill { height: 100%; border-radius: 2px; }
 .building-health-fill.healthy { background: var(--aw-alive); }
 .building-health-fill.damaged { background: var(--aw-warning); }
 .building-health-fill.critical { background: var(--aw-dead); }
 
 /* =========================================================
-   Trophy / Medal Styles (Leaderboard)
+   Trophy Cards
    ========================================================= */
 .trophy-card {
   background: var(--aw-bg-card);
   border: 1px solid var(--aw-border);
-  border-radius: 12px;
-  padding: 1rem;
-  position: relative;
-  overflow: hidden;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
 }
 
-.trophy-card.gold {
-  border-color: rgba(255, 215, 0, 0.4);
-  background: linear-gradient(135deg, var(--aw-bg-card) 0%, rgba(255, 215, 0, 0.08) 100%);
-}
+.trophy-card.gold { border-color: rgba(251,191,36,0.3); }
+.trophy-card.silver { border-color: rgba(148,163,184,0.3); }
+.trophy-card.bronze { border-color: rgba(180,83,9,0.3); }
 
-.trophy-card.silver {
-  border-color: rgba(192, 192, 192, 0.4);
-  background: linear-gradient(135deg, var(--aw-bg-card) 0%, rgba(192, 192, 192, 0.08) 100%);
-}
-
-.trophy-card.bronze {
-  border-color: rgba(205, 127, 50, 0.4);
-  background: linear-gradient(135deg, var(--aw-bg-card) 0%, rgba(205, 127, 50, 0.08) 100%);
-}
-
-.trophy-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.trophy-icon.gold { color: var(--aw-rank-gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-.trophy-icon.silver { color: var(--aw-rank-silver); text-shadow: 0 0 10px rgba(192, 192, 192, 0.5); }
-.trophy-icon.bronze { color: var(--aw-rank-bronze); text-shadow: 0 0 10px rgba(205, 127, 50, 0.5); }
+.trophy-icon { font-size: 24px; margin-bottom: 8px; }
+.trophy-icon.gold { color: var(--aw-rank-gold); }
+.trophy-icon.silver { color: var(--aw-rank-silver); }
+.trophy-icon.bronze { color: var(--aw-rank-bronze); }
 
 .trophy-label {
-  font-size: 0.7rem;
+  font-size: 10px;
   color: var(--aw-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
 }
 
 .trophy-name {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--aw-text);
+  margin-top: 4px;
 }
 
 .trophy-value {
-  font-size: 0.875rem;
+  font-size: 12px;
   color: var(--aw-text-muted);
 }
 
 /* =========================================================
-   Year Card (Leaderboard Archive)
+   Year Cards
    ========================================================= */
 .year-card {
   background: var(--aw-bg-card);
   border: 1px solid var(--aw-border);
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: transform 0.15s, border-color 0.15s;
 }
 
 .year-card:hover {
@@ -748,7 +570,7 @@ body.game-theme:not([data-theme="light"]) .hero-card {
 
 .year-card-header {
   background: var(--aw-bg-dark);
-  padding: 0.75rem 1rem;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--aw-border);
   display: flex;
   justify-content: space-between;
@@ -756,23 +578,24 @@ body.game-theme:not([data-theme="light"]) .hero-card {
 }
 
 .year-number {
-  font-size: 1.125rem;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--aw-text);
 }
 
 .year-badge {
-  font-size: 0.65rem;
-  padding: 2px 8px;
-  border-radius: 10px;
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 4px;
   font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .year-badge.live {
-  background: rgba(14, 165, 233, 0.2);
+  background: rgba(59,130,246,0.15);
   color: var(--aw-accent);
-  border: 1px solid rgba(14, 165, 233, 0.3);
+  border: 1px solid rgba(59,130,246,0.2);
 }
 
 .year-badge.archived {
@@ -781,9 +604,66 @@ body.game-theme:not([data-theme="light"]) .hero-card {
   border: 1px solid var(--aw-border);
 }
 
-.year-card-body {
-  padding: 1rem;
+.year-card-body { padding: 16px; }
+
+/* =========================================================
+   Status Badges
+   ========================================================= */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
+
+.status-badge.alive {
+  background: rgba(34,197,94,0.12);
+  color: var(--aw-alive);
+}
+
+.status-badge.dead {
+  background: rgba(239,68,68,0.12);
+  color: var(--aw-dead);
+}
+
+.status-badge.king {
+  background: rgba(168,85,247,0.12);
+  color: var(--aw-king);
+}
+
+.status-badge.player {
+  background: rgba(6,182,212,0.12);
+  color: var(--aw-player);
+}
+
+/* =========================================================
+   Action Badges
+   ========================================================= */
+.action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  background: var(--aw-bg-dark);
+  border: 1px solid var(--aw-border);
+  color: var(--aw-text-muted);
+}
+
+.action-badge.train { color: #f87171; border-color: rgba(248,113,113,0.2); }
+.action-badge.study { color: #a78bfa; border-color: rgba(167,139,250,0.2); }
+.action-badge.work { color: #fbbf24; border-color: rgba(251,191,36,0.2); }
+.action-badge.rest { color: #34d399; border-color: rgba(52,211,153,0.2); }
+.action-badge.hunt { color: #fb923c; border-color: rgba(251,146,60,0.2); }
+.action-badge.buy_food { color: #4ade80; border-color: rgba(74,222,128,0.2); }
+.action-badge.buy_gear { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
 
 /* =========================================================
    Weather Indicators
@@ -794,199 +674,75 @@ body.game-theme:not([data-theme="light"]) .hero-card {
   gap: 6px;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .weather-indicator.sunny {
-  background: rgba(251, 191, 36, 0.15);
+  background: rgba(251,191,36,0.1);
   color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  border: 1px solid rgba(251,191,36,0.2);
 }
 
 .weather-indicator.rain {
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(96,165,250,0.1);
   color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(96,165,250,0.2);
 }
 
-.weather-icon {
-  font-size: 1rem;
-}
+.weather-icon { font-size: 12px; }
 
 /* =========================================================
-   Action Badge
+   Feature Box
    ========================================================= */
-.action-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 500;
+.feature-box {
   background: var(--aw-bg-dark);
   border: 1px solid var(--aw-border);
-  color: var(--aw-text-muted);
-}
-
-.action-badge.train { color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
-.action-badge.study { color: #a78bfa; border-color: rgba(167, 139, 250, 0.3); }
-.action-badge.work { color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); }
-.action-badge.rest { color: #34d399; border-color: rgba(52, 211, 153, 0.3); }
-.action-badge.hunt { color: #fb923c; border-color: rgba(251, 146, 60, 0.3); }
-.action-badge.buy_food { color: #4ade80; border-color: rgba(74, 222, 128, 0.3); }
-.action-badge.buy_gear { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); }
-
-/* =========================================================
-   Status Badges
-   ========================================================= */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.status-badge.alive {
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--aw-alive);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.status-badge.dead {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--aw-dead);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.status-badge.king {
-  background: rgba(168, 85, 247, 0.15);
-  color: var(--aw-king);
-  border: 1px solid rgba(168, 85, 247, 0.3);
-}
-
-.status-badge.player {
-  background: rgba(34, 211, 238, 0.15);
-  color: var(--aw-player);
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 8px;
+  padding: 12px;
 }
 
 /* =========================================================
-   Table Styles
+   Table Overrides for Game Theme
    ========================================================= */
-body.game-theme .aw-table thead th {
+body.game-theme .aw-table,
+body.game-theme .table {
+  background: var(--aw-bg-card) !important;
+  color: var(--aw-text) !important;
+}
+
+body.game-theme .aw-table thead th,
+body.game-theme .table thead th {
   background: var(--aw-bg-dark) !important;
   color: var(--aw-text-muted) !important;
   border-bottom: 1px solid var(--aw-border) !important;
 }
 
-body.game-theme .aw-table tbody tr {
-  background: var(--aw-bg-card);
-  transition: background-color 0.15s ease;
-}
-
-body.game-theme .aw-table tbody tr:nth-child(even) {
-  background: var(--aw-bg-dark);
-}
-
-body.game-theme .aw-table tbody tr:hover {
-  background: var(--aw-bg-card-hover) !important;
-}
+body.game-theme .aw-table tbody tr { background: var(--aw-bg-card) !important; }
+body.game-theme .aw-table tbody tr:nth-child(even) { background: var(--aw-bg-dark) !important; }
+body.game-theme .aw-table tbody tr:hover { background: var(--aw-bg-card-hover) !important; }
 
 body.game-theme .aw-table td {
-  border-bottom: 1px solid var(--aw-border) !important;
   color: var(--aw-text) !important;
+  border-bottom: 1px solid var(--aw-border) !important;
 }
 
-body.game-theme .aw-table tbody tr.aw-row-dead {
-  background: rgba(127, 29, 29, 0.15) !important;
-}
+body.game-theme .aw-row-dead { background: rgba(127,29,29,0.15) !important; }
+body.game-theme .aw-row-dead:hover { background: rgba(127,29,29,0.25) !important; }
+body.game-theme .aw-name-dead { color: var(--aw-text-dim) !important; }
 
-body.game-theme .aw-table tbody tr.aw-row-dead:hover {
-  background: rgba(127, 29, 29, 0.25) !important;
-}
-
-body.game-theme .aw-name-dead {
-  color: var(--aw-dead) !important;
-}
-
-/* Table wrapper */
-body.game-theme .aw-table-wrapper {
-  background: var(--aw-bg-card);
-}
+body.game-theme .aw-table-wrapper { background: var(--aw-bg-card); }
 
 /* =========================================================
-   Sidebar
+   Sidebar Override
    ========================================================= */
 body.game-theme .aw-sidebar {
   background: var(--aw-sidebar-bg);
   border-right: 1px solid var(--aw-sidebar-border);
 }
 
-body.game-theme .aw-sidebar-brand {
-  color: #e2e8f0;
-}
-
-body.game-theme .aw-sidebar-subtitle {
-  color: #8b9ab5;
-}
-
-body.game-theme .aw-nav-link {
-  color: #8b9ab5;
-}
-
-body.game-theme .aw-nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
-}
-
-body.game-theme .aw-nav-link-active {
-  background: var(--aw-accent) !important;
-  color: white !important;
-}
-
-body.game-theme .aw-sidebar-footer {
-  border-top-color: rgba(255, 255, 255, 0.1);
-  color: #5a6a85;
-}
-
-body.game-theme .aw-sidebar-logout-link {
-  color: #8b9ab5;
-}
-
-body.game-theme .aw-sidebar-logout-link:hover {
-  color: #e2e8f0;
-}
-
 /* =========================================================
-   Scrollbar
-   ========================================================= */
-body.game-theme ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-body.game-theme ::-webkit-scrollbar-track {
-  background: var(--aw-bg-dark);
-}
-
-body.game-theme ::-webkit-scrollbar-thumb {
-  background: var(--aw-border);
-  border-radius: 4px;
-}
-
-body.game-theme ::-webkit-scrollbar-thumb:hover {
-  background: var(--aw-border-light);
-}
-
-/* =========================================================
-   Accordion (Features page)
+   Accordion
    ========================================================= */
 body.game-theme .accordion-item {
   background: var(--aw-bg-card) !important;
@@ -996,6 +752,7 @@ body.game-theme .accordion-item {
 body.game-theme .accordion-button {
   background: var(--aw-bg-card) !important;
   color: var(--aw-text) !important;
+  font-weight: 500;
 }
 
 body.game-theme .accordion-button:not(.collapsed) {
@@ -1003,9 +760,7 @@ body.game-theme .accordion-button:not(.collapsed) {
   color: var(--aw-accent) !important;
 }
 
-body.game-theme .accordion-button::after {
-  filter: invert(0.7);
-}
+body.game-theme .accordion-button::after { filter: invert(0.6); }
 
 body.game-theme .accordion-body {
   background: var(--aw-bg-dark) !important;
@@ -1013,7 +768,7 @@ body.game-theme .accordion-body {
 }
 
 /* =========================================================
-   List Group (Features TOC)
+   List Group
    ========================================================= */
 body.game-theme .list-group-item {
   background: var(--aw-bg-card) !important;
@@ -1027,1185 +782,64 @@ body.game-theme .list-group-item:hover {
 }
 
 /* =========================================================
-   Feature Box
+   Scrollbar
    ========================================================= */
-.feature-box {
-  background: var(--aw-bg-card);
-  border: 1px solid var(--aw-border);
-  border-radius: 8px;
-  padding: 0.75rem;
-}
+body.game-theme ::-webkit-scrollbar { width: 6px; height: 6px; }
+body.game-theme ::-webkit-scrollbar-track { background: var(--aw-bg-dark); }
+body.game-theme ::-webkit-scrollbar-thumb { background: var(--aw-border); border-radius: 3px; }
+body.game-theme ::-webkit-scrollbar-thumb:hover { background: var(--aw-border-light); }
 
 /* =========================================================
-   Animations
+   Animations - Subtle
    ========================================================= */
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 5px currentColor; }
-  50% { box-shadow: 0 0 15px currentColor, 0 0 25px currentColor; }
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+.animate-pulse-glow { animation: pulse-subtle 2s ease-in-out infinite; }
+
+/* =========================================================
+   Light Theme Specific Fixes
+   ========================================================= */
+[data-theme="light"] .hero-card { background: #fff; }
+
+[data-theme="light"] .game-card,
+[data-theme="light"] .kpi-card,
+[data-theme="light"] .building-card,
+[data-theme="light"] .trophy-card,
+[data-theme="light"] .year-card {
+  background: #fff;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
+[data-theme="light"] .aw-table-wrapper { background: #fff; }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
+[data-theme="light"] body.game-theme .aw-table tbody tr { background: #fff !important; }
+[data-theme="light"] body.game-theme .aw-table tbody tr:nth-child(even) { background: #f8fafc !important; }
+[data-theme="light"] body.game-theme .aw-table tbody tr:hover { background: #f1f5f9 !important; }
 
-.stat-bar-fill.hp.critical {
-  animation: pulse-glow 1s ease-in-out infinite;
+[data-theme="light"] body.game-theme .aw-row-dead { background: rgba(239,68,68,0.05) !important; }
+[data-theme="light"] body.game-theme .aw-row-dead:hover { background: rgba(239,68,68,0.1) !important; }
+
+/* =========================================================
+   Header Fixes
+   ========================================================= */
+body.game-theme .header-title { color: var(--aw-text) !important; }
+body.game-theme .header-subtitle { color: var(--aw-text-muted) !important; }
+
+body.game-theme h1, body.game-theme h2, body.game-theme h3,
+body.game-theme h4, body.game-theme h5, body.game-theme h6 {
+  color: var(--aw-text);
 }
 
 /* =========================================================
    Responsive
    ========================================================= */
 @media (max-width: 768px) {
-  .hero-avatar {
-    width: 60px;
-    height: 60px;
-    font-size: 1.75rem;
-  }
-  
-  .hero-name {
-    font-size: 1rem;
-  }
-  
-  .stat-bar-value {
-    min-width: 40px;
-    font-size: 0.7rem;
-  }
-  
-  .kpi-value {
-    font-size: 1.25rem;
-  }
-
-  .theme-toggle-label {
-    display: none;
-  }
-}
-
-/* =========================================================
-   FIX: Table Readability (Dark Theme)
-   Override style.css white backgrounds
-   ========================================================= */
-body.game-theme .table,
-body.game-theme table {
-  background-color: var(--aw-bg-card) !important;
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .table thead th,
-body.game-theme .aw-table thead th,
-body.game-theme table thead th {
-  background-color: var(--aw-bg-dark) !important;
-  color: var(--aw-text-muted) !important;
-  border-color: var(--aw-border) !important;
-}
-
-body.game-theme .table tbody tr,
-body.game-theme .aw-table tbody tr,
-body.game-theme table tbody tr {
-  background-color: var(--aw-bg-card) !important;
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .table tbody tr:nth-child(even),
-body.game-theme .aw-table tbody tr:nth-child(even),
-body.game-theme table tbody tr:nth-child(even) {
-  background-color: var(--aw-bg-dark) !important;
-}
-
-body.game-theme .table tbody tr:hover,
-body.game-theme .aw-table tbody tr:hover,
-body.game-theme table tbody tr:hover {
-  background-color: var(--aw-bg-card-hover) !important;
-}
-
-body.game-theme .table td,
-body.game-theme .aw-table td,
-body.game-theme table td {
-  color: var(--aw-text) !important;
-  border-color: var(--aw-border) !important;
-}
-
-body.game-theme .table th,
-body.game-theme table th {
-  color: var(--aw-text-muted) !important;
-  border-color: var(--aw-border) !important;
-}
-
-/* Dead row styling */
-body.game-theme .aw-row-dead,
-body.game-theme tr.aw-row-dead {
-  background-color: rgba(127, 29, 29, 0.2) !important;
-}
-
-body.game-theme .aw-row-dead:hover,
-body.game-theme tr.aw-row-dead:hover {
-  background-color: rgba(127, 29, 29, 0.35) !important;
-}
-
-/* Table wrapper background */
-body.game-theme .aw-table-wrapper,
-body.game-theme .table-responsive {
-  background-color: var(--aw-bg-card) !important;
-}
-
-/* =========================================================
-   FIX: Weather System (Dark Theme Compatible)
-   ========================================================= */
-body.game-theme .aw-bg {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Sunny weather for dark theme */
-body.game-theme .aw-bg.sunny,
-body.game-theme[data-weather="sunny"] .aw-bg {
-  background:
-    radial-gradient(900px 600px at 80% 15%, rgba(251, 191, 36, 0.15), transparent 60%),
-    radial-gradient(600px 400px at 20% 80%, rgba(251, 191, 36, 0.08), transparent 50%);
-  filter: none;
-  animation: awDarkSunBreath 8s ease-in-out infinite;
-}
-
-@keyframes awDarkSunBreath {
-  0%, 100% { opacity: 0.8; }
-  50%      { opacity: 1; }
-}
-
-/* Rain weather for dark theme */
-body.game-theme .aw-bg.rain,
-body.game-theme[data-weather="rain"] .aw-bg {
-  background:
-    radial-gradient(800px 500px at 70% 10%, rgba(96, 165, 250, 0.1), transparent 60%),
-    linear-gradient(180deg, rgba(10, 20, 40, 0.4), transparent);
-  filter: saturate(0.9);
-}
-
-body.game-theme .aw-rain-canvas {
-  opacity: 0;
-  transition: opacity 350ms ease;
-}
-
-body.game-theme .aw-rain-canvas.is-raining {
-  opacity: 0.7;
-}
-
-/* Weather indicator badges */
-body.game-theme .weather-indicator.sunny {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.4);
-}
-
-body.game-theme .weather-indicator.rain {
-  background: rgba(96, 165, 250, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(96, 165, 250, 0.4);
-}
-
-/* =========================================================
-   FIX: Page Headers & Titles
-   ========================================================= */
-body.game-theme .header-title,
-body.game-theme .aw-header .header-title,
-body.game-theme h1,
-body.game-theme h2,
-body.game-theme h3,
-body.game-theme h4,
-body.game-theme h5,
-body.game-theme h6,
-body.game-theme .h1,
-body.game-theme .h2,
-body.game-theme .h3,
-body.game-theme .h4,
-body.game-theme .h5,
-body.game-theme .h6 {
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .header-subtitle,
-body.game-theme .aw-header .header-subtitle {
-  color: var(--aw-text-muted) !important;
-}
-
-/* Section titles */
-body.game-theme .card-title,
-body.game-theme .modal-title {
-  color: var(--aw-text) !important;
-}
-
-/* =========================================================
-   FIX: Bootstrap White Background Overrides
-   ========================================================= */
-body.game-theme .bg-white {
-  background-color: var(--aw-bg-card) !important;
-}
-
-body.game-theme .bg-light {
-  background-color: var(--aw-bg-dark) !important;
-}
-
-body.game-theme .text-dark {
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .text-body {
-  color: var(--aw-text) !important;
-}
-
-/* Modal fixes */
-body.game-theme .modal-content {
-  background-color: var(--aw-bg-card) !important;
-  border-color: var(--aw-border) !important;
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .modal-header {
-  border-color: var(--aw-border) !important;
-}
-
-body.game-theme .modal-footer {
-  border-color: var(--aw-border) !important;
-}
-
-/* Dropdown fixes */
-body.game-theme .dropdown-menu {
-  background-color: var(--aw-bg-card) !important;
-  border-color: var(--aw-border) !important;
-}
-
-body.game-theme .dropdown-item {
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .dropdown-item:hover,
-body.game-theme .dropdown-item:focus {
-  background-color: var(--aw-bg-card-hover) !important;
-  color: var(--aw-text) !important;
-}
-
-/* Tooltip/Popover fixes */
-body.game-theme .tooltip-inner {
-  background-color: var(--aw-bg-dark) !important;
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .popover {
-  background-color: var(--aw-bg-card) !important;
-  border-color: var(--aw-border) !important;
-}
-
-body.game-theme .popover-header {
-  background-color: var(--aw-bg-dark) !important;
-  border-color: var(--aw-border) !important;
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .popover-body {
-  color: var(--aw-text) !important;
-}
-
-/* Nav tabs/pills fixes */
-body.game-theme .nav-tabs .nav-link {
-  color: var(--aw-text-muted) !important;
-  border-color: transparent !important;
-}
-
-body.game-theme .nav-tabs .nav-link:hover {
-  border-color: var(--aw-border) !important;
-}
-
-body.game-theme .nav-tabs .nav-link.active {
-  background-color: var(--aw-bg-card) !important;
-  border-color: var(--aw-border) var(--aw-border) transparent !important;
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .nav-pills .nav-link {
-  color: var(--aw-text-muted) !important;
-}
-
-body.game-theme .nav-pills .nav-link.active {
-  background-color: var(--aw-accent) !important;
-  color: white !important;
-}
-
-/* Pagination fixes */
-body.game-theme .page-link {
-  background-color: var(--aw-bg-card) !important;
-  border-color: var(--aw-border) !important;
-  color: var(--aw-text) !important;
-}
-
-body.game-theme .page-link:hover {
-  background-color: var(--aw-bg-card-hover) !important;
-}
-
-body.game-theme .page-item.active .page-link {
-  background-color: var(--aw-accent) !important;
-  border-color: var(--aw-accent) !important;
-}
-
-body.game-theme .page-item.disabled .page-link {
-  background-color: var(--aw-bg-dark) !important;
-  color: var(--aw-text-dim) !important;
-}
-
-/* =========================================================
-   FIX: Ensure All Text is Readable
-   ========================================================= */
-body.game-theme,
-body.game-theme * {
-  color: inherit;
-}
-
-/* Reset to ensure no white-on-white */
-body.game-theme .aw-layout,
-body.game-theme .aw-main-shell,
-body.game-theme .page-shell,
-body.game-theme .aw-main {
-  color: var(--aw-text);
-}
-
-/* Specific label/text elements */
-body.game-theme label,
-body.game-theme .form-label {
-  color: var(--aw-text-muted) !important;
-}
-
-body.game-theme p {
-  color: var(--aw-text);
-}
-
-body.game-theme small,
-body.game-theme .small {
-  color: var(--aw-text-muted);
-}
-
-body.game-theme strong,
-body.game-theme b {
-  color: inherit;
-}
-
-/* Code/Pre elements */
-body.game-theme code {
-  background-color: var(--aw-bg-dark);
-  color: #f472b6;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-body.game-theme pre {
-  background-color: var(--aw-bg-dark);
-  color: var(--aw-text);
-  border: 1px solid var(--aw-border);
-  padding: 1rem;
-  border-radius: 8px;
-}
-
-/* =========================================================
-   CRITICAL FIX: Table Background/Text (Nuclear Override)
-   Issue: style.css sets #ffffff backgrounds, Bootstrap adds more
-   Solution: Ultra-specific selectors with !important
-   ========================================================= */
-
-/* Target ALL table elements with maximum specificity */
-html body.game-theme table,
-html body.game-theme .table,
-html body.game-theme table.table,
-html body.game-theme table.aw-table,
-html body.game-theme .table.aw-table {
-  background-color: var(--aw-bg-card) !important;
-  color: var(--aw-text) !important;
-  --bs-table-bg: var(--aw-bg-card) !important;
-  --bs-table-striped-bg: var(--aw-bg-dark) !important;
-  --bs-table-hover-bg: var(--aw-bg-card-hover) !important;
-  --bs-table-color: var(--aw-text) !important;
-}
-
-/* Table header - ultra specific */
-html body.game-theme table thead,
-html body.game-theme .table thead,
-html body.game-theme table.aw-table thead,
-html body.game-theme .table-responsive table thead {
-  background-color: var(--aw-bg-dark) !important;
-}
-
-html body.game-theme table thead th,
-html body.game-theme .table thead th,
-html body.game-theme table.aw-table thead th,
-html body.game-theme .table-responsive table thead th,
-html body.game-theme table > thead > tr > th,
-html body.game-theme .table > thead > tr > th {
-  background-color: var(--aw-bg-dark) !important;
-  color: var(--aw-text-muted) !important;
-  border-color: var(--aw-border) !important;
-  border-bottom-color: var(--aw-border) !important;
-}
-
-/* Table body - ultra specific */
-html body.game-theme table tbody,
-html body.game-theme .table tbody,
-html body.game-theme table.aw-table tbody {
-  background-color: var(--aw-bg-card) !important;
-}
-
-/* All rows - override nth-child completely */
-html body.game-theme table tbody tr,
-html body.game-theme .table tbody tr,
-html body.game-theme table.aw-table tbody tr,
-html body.game-theme .table-responsive table tbody tr,
-html body.game-theme table > tbody > tr,
-html body.game-theme .table > tbody > tr {
-  background-color: var(--aw-bg-card) !important;
-  color: var(--aw-text) !important;
-}
-
-/* Even rows - must be more specific than the above */
-html body.game-theme table tbody tr:nth-child(even),
-html body.game-theme .table tbody tr:nth-child(even),
-html body.game-theme table.aw-table tbody tr:nth-child(even),
-html body.game-theme .table-responsive table tbody tr:nth-child(even),
-html body.game-theme table > tbody > tr:nth-child(even),
-html body.game-theme .table > tbody > tr:nth-child(even),
-html body.game-theme table tbody tr:nth-of-type(even),
-html body.game-theme .table tbody tr:nth-of-type(even) {
-  background-color: var(--aw-bg-dark) !important;
-}
-
-/* Odd rows - explicit */
-html body.game-theme table tbody tr:nth-child(odd),
-html body.game-theme .table tbody tr:nth-child(odd),
-html body.game-theme table.aw-table tbody tr:nth-child(odd),
-html body.game-theme .table-responsive table tbody tr:nth-child(odd),
-html body.game-theme table > tbody > tr:nth-child(odd),
-html body.game-theme .table > tbody > tr:nth-child(odd) {
-  background-color: var(--aw-bg-card) !important;
-}
-
-/* Row hover */
-html body.game-theme table tbody tr:hover,
-html body.game-theme .table tbody tr:hover,
-html body.game-theme table.aw-table tbody tr:hover,
-html body.game-theme .table-responsive table tbody tr:hover {
-  background-color: var(--aw-bg-card-hover) !important;
-}
-
-/* All cells - text color */
-html body.game-theme table td,
-html body.game-theme .table td,
-html body.game-theme table.aw-table td,
-html body.game-theme table > tbody > tr > td,
-html body.game-theme .table > tbody > tr > td,
-html body.game-theme .table-responsive table td {
-  color: var(--aw-text) !important;
-  border-color: var(--aw-border) !important;
-  background-color: inherit !important;
-}
-
-html body.game-theme table th,
-html body.game-theme .table th,
-html body.game-theme table.aw-table th {
-  color: var(--aw-text-muted) !important;
-  border-color: var(--aw-border) !important;
-}
-
-/* Dead rows - special styling */
-html body.game-theme table tbody tr.aw-row-dead,
-html body.game-theme .table tbody tr.aw-row-dead,
-html body.game-theme table.aw-table tbody tr.aw-row-dead,
-html body.game-theme tr.aw-row-dead,
-html body.game-theme table > tbody > tr.aw-row-dead {
-  background-color: rgba(127, 29, 29, 0.25) !important;
-}
-
-html body.game-theme table tbody tr.aw-row-dead:hover,
-html body.game-theme .table tbody tr.aw-row-dead:hover,
-html body.game-theme tr.aw-row-dead:hover {
-  background-color: rgba(127, 29, 29, 0.4) !important;
-}
-
-/* Table wrapper/responsive container */
-html body.game-theme .aw-table-wrapper,
-html body.game-theme .table-responsive,
-html body.game-theme div.aw-table-wrapper,
-html body.game-theme div.table-responsive {
-  background-color: var(--aw-bg-card) !important;
-}
-
-/* =========================================================
-   CRITICAL FIX: Hero Card (Pinned Character) Light Mode
-   Issue: Uses dark gradient in light mode
-   Solution: Explicit light theme overrides
-   ========================================================= */
-
-/* Light mode hero card - clean white styling */
-[data-theme="light"] .hero-card,
-html[data-theme="light"] .hero-card,
-html[data-theme="light"] body.game-theme .hero-card {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-}
-
-/* Light mode hero card text */
-[data-theme="light"] .hero-card .hero-name,
-html[data-theme="light"] .hero-card .hero-name {
-  color: #1e293b !important;
-}
-
-[data-theme="light"] .hero-card .hero-title,
-html[data-theme="light"] .hero-card .hero-title {
-  color: #64748b !important;
-}
-
-/* Light mode stat bars in hero card */
-[data-theme="light"] .hero-card .stat-bar-track,
-html[data-theme="light"] .hero-card .stat-bar-track {
-  background: #e2e8f0 !important;
-}
-
-[data-theme="light"] .hero-card .stat-bar-value,
-html[data-theme="light"] .hero-card .stat-bar-value {
-  color: #475569 !important;
-}
-
-/* Light mode stat pills in hero card */
-[data-theme="light"] .hero-card .stat-pill,
-html[data-theme="light"] .hero-card .stat-pill {
-  background: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-}
-
-/* Light mode hero avatar */
-[data-theme="light"] .hero-card .hero-avatar,
-html[data-theme="light"] .hero-card .hero-avatar {
-  background: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-}
-
-/* Light mode dividers in hero card */
-[data-theme="light"] .hero-card hr,
-html[data-theme="light"] .hero-card hr {
-  border-color: #e2e8f0 !important;
-}
-
-/* Light mode text elements in hero card */
-[data-theme="light"] .hero-card [style*="color: var(--aw-text)"],
-html[data-theme="light"] .hero-card span,
-html[data-theme="light"] .hero-card div {
-  color: #1e293b;
-}
-
-[data-theme="light"] .hero-card [style*="color: var(--aw-text-muted)"],
-[data-theme="light"] .hero-card [style*="color: var(--aw-text-dim)"] {
-  color: #64748b !important;
-}
-
-/* Light mode action badges in hero card */
-[data-theme="light"] .hero-card .action-badge,
-html[data-theme="light"] .hero-card .action-badge {
-  background: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-}
-
-/* Light mode collapse button */
-[data-theme="light"] .hero-card .btn-outline-secondary,
-html[data-theme="light"] .hero-card .btn-outline-secondary {
-  color: #475569 !important;
-  border-color: #cbd5e1 !important;
-}
-
-[data-theme="light"] .hero-card .btn-outline-secondary:hover,
-html[data-theme="light"] .hero-card .btn-outline-secondary:hover {
-  background: #f1f5f9 !important;
-  color: #1e293b !important;
-}
-
-/* =========================================================
-   CRITICAL FIX: Admin Pinned Card Light Mode
-   ========================================================= */
-[data-theme="light"] #admin-pinned-card,
-html[data-theme="light"] #admin-pinned-card,
-html[data-theme="light"] body.game-theme #admin-pinned-card {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-
-[data-theme="light"] #admin-pinned-card .card-body,
-html[data-theme="light"] #admin-pinned-card .card-body {
-  background: #ffffff !important;
-}
-
-[data-theme="light"] #admin-pinned-card [style*="color: var(--aw-text)"],
-[data-theme="light"] #admin-pinned-card #pinned-name,
-[data-theme="light"] #admin-pinned-card #pinned-meta-top {
-  color: #1e293b !important;
-}
-
-[data-theme="light"] #admin-pinned-card [style*="color: var(--aw-text-muted)"],
-[data-theme="light"] #admin-pinned-card [style*="color: var(--aw-text-dim)"],
-[data-theme="light"] #admin-pinned-card #pinned-subtitle,
-[data-theme="light"] #admin-pinned-card #pinned-meta-bottom {
-  color: #64748b !important;
-}
-
-/* =========================================================
-   CRITICAL FIX: Game Cards Light Mode
-   ========================================================= */
-[data-theme="light"] .game-card,
-html[data-theme="light"] .game-card,
-html[data-theme="light"] body.game-theme .game-card {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
-}
-
-[data-theme="light"] .game-card .card-body,
-html[data-theme="light"] .game-card .card-body {
-  background: transparent !important;
-}
-
-/* =========================================================
-   CRITICAL FIX: KPI Cards Light Mode
-   ========================================================= */
-[data-theme="light"] .kpi-card,
-html[data-theme="light"] .kpi-card {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-
-[data-theme="light"] .kpi-card .kpi-label,
-html[data-theme="light"] .kpi-card .kpi-label {
-  color: #64748b !important;
-}
-
-/* =========================================================
-   CRITICAL FIX: Building Cards Light Mode
-   ========================================================= */
-[data-theme="light"] .building-card,
-html[data-theme="light"] .building-card {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-
-[data-theme="light"] .building-card .building-name,
-html[data-theme="light"] .building-card .building-name {
-  color: #1e293b !important;
-}
-
-[data-theme="light"] .building-card.not-built,
-html[data-theme="light"] .building-card.not-built {
-  background: #f8fafc !important;
-}
-
-/* =========================================================
-   CRITICAL FIX: Table Light Mode Specific
-   ========================================================= */
-html[data-theme="light"] body.game-theme table,
-html[data-theme="light"] body.game-theme .table,
-html[data-theme="light"] body.game-theme table.aw-table {
-  background-color: #ffffff !important;
-  color: #1e293b !important;
-  --bs-table-bg: #ffffff !important;
-  --bs-table-striped-bg: #f8fafc !important;
-  --bs-table-hover-bg: #f1f5f9 !important;
-  --bs-table-color: #1e293b !important;
-}
-
-html[data-theme="light"] body.game-theme table thead th,
-html[data-theme="light"] body.game-theme .table thead th,
-html[data-theme="light"] body.game-theme table.aw-table thead th {
-  background-color: #f8fafc !important;
-  color: #475569 !important;
-  border-color: #e2e8f0 !important;
-}
-
-html[data-theme="light"] body.game-theme table tbody tr,
-html[data-theme="light"] body.game-theme .table tbody tr {
-  background-color: #ffffff !important;
-  color: #1e293b !important;
-}
-
-html[data-theme="light"] body.game-theme table tbody tr:nth-child(even),
-html[data-theme="light"] body.game-theme .table tbody tr:nth-child(even) {
-  background-color: #f8fafc !important;
-}
-
-html[data-theme="light"] body.game-theme table tbody tr:nth-child(odd),
-html[data-theme="light"] body.game-theme .table tbody tr:nth-child(odd) {
-  background-color: #ffffff !important;
-}
-
-html[data-theme="light"] body.game-theme table tbody tr:hover,
-html[data-theme="light"] body.game-theme .table tbody tr:hover {
-  background-color: #f1f5f9 !important;
-}
-
-html[data-theme="light"] body.game-theme table td,
-html[data-theme="light"] body.game-theme .table td {
-  color: #1e293b !important;
-  border-color: #e2e8f0 !important;
-}
-
-html[data-theme="light"] body.game-theme .aw-table-wrapper,
-html[data-theme="light"] body.game-theme .table-responsive {
-  background-color: #ffffff !important;
-}
-
-/* Light mode dead rows */
-html[data-theme="light"] body.game-theme tr.aw-row-dead,
-html[data-theme="light"] body.game-theme table tbody tr.aw-row-dead {
-  background-color: #fef2f2 !important;
-}
-
-html[data-theme="light"] body.game-theme tr.aw-row-dead:hover,
-html[data-theme="light"] body.game-theme table tbody tr.aw-row-dead:hover {
-  background-color: #fee2e2 !important;
-}
-
-/* =========================================================
-   CRITICAL FIX: Light Mode Page Headers & Titles
-   Issue: White text on white background in light mode
-   Affected: Feature Guide, Hall of Legends, Control Hall,
-             Family Tree, Welcome back messages
-   Solution: Ultra-specific selectors with explicit colors
-   ========================================================= */
-
-/* Header Title - Main page headers */
-html[data-theme="light"] body.game-theme .header-title,
-html[data-theme="light"] body.game-theme .aw-header .header-title,
-html[data-theme="light"] body.game-theme span.header-title,
-html[data-theme="light"] body.game-theme .page-shell .header-title,
-[data-theme="light"] .header-title,
-[data-theme="light"] .aw-header .header-title {
-  color: #1e293b !important;
-}
-
-/* Header Title with inline styles - override var(--aw-text) */
-html[data-theme="light"] body.game-theme .header-title[style*="color"],
-html[data-theme="light"] body.game-theme span.header-title[style],
-[data-theme="light"] .header-title[style*="var(--aw-text)"],
-[data-theme="light"] span[style*="var(--aw-text)"].header-title {
-  color: #1e293b !important;
-}
-
-/* Header Subtitle */
-html[data-theme="light"] body.game-theme .header-subtitle,
-html[data-theme="light"] body.game-theme .aw-header .header-subtitle,
-html[data-theme="light"] body.game-theme span.header-subtitle,
-[data-theme="light"] .header-subtitle,
-[data-theme="light"] .aw-header .header-subtitle {
-  color: #475569 !important;
-}
-
-/* Header Subtitle with inline styles */
-html[data-theme="light"] body.game-theme .header-subtitle[style*="color"],
-html[data-theme="light"] body.game-theme span.header-subtitle[style],
-[data-theme="light"] .header-subtitle[style*="var(--aw-text-muted)"] {
-  color: #475569 !important;
-}
-
-/* All h-tags in light mode */
-html[data-theme="light"] body.game-theme h1,
-html[data-theme="light"] body.game-theme h2,
-html[data-theme="light"] body.game-theme h3,
-html[data-theme="light"] body.game-theme h4,
-html[data-theme="light"] body.game-theme h5,
-html[data-theme="light"] body.game-theme h6,
-html[data-theme="light"] body.game-theme .h1,
-html[data-theme="light"] body.game-theme .h2,
-html[data-theme="light"] body.game-theme .h3,
-html[data-theme="light"] body.game-theme .h4,
-html[data-theme="light"] body.game-theme .h5,
-html[data-theme="light"] body.game-theme .h6,
-[data-theme="light"] h1,
-[data-theme="light"] h2,
-[data-theme="light"] h3,
-[data-theme="light"] h4,
-[data-theme="light"] h5,
-[data-theme="light"] h6 {
-  color: #1e293b !important;
-}
-
-/* Game card section headers with inline styles */
-html[data-theme="light"] body.game-theme .game-card [style*="color: var(--aw-text)"],
-html[data-theme="light"] body.game-theme .game-card div[style*="var(--aw-text)"],
-[data-theme="light"] .game-card [style*="var(--aw-text)"] {
-  color: #1e293b !important;
-}
-
-/* Game card muted text */
-html[data-theme="light"] body.game-theme .game-card [style*="color: var(--aw-text-muted)"],
-html[data-theme="light"] body.game-theme .game-card [style*="var(--aw-text-muted)"],
-[data-theme="light"] .game-card [style*="var(--aw-text-muted)"] {
-  color: #475569 !important;
-}
-
-/* Game card dim text */
-html[data-theme="light"] body.game-theme .game-card [style*="color: var(--aw-text-dim)"],
-html[data-theme="light"] body.game-theme .game-card [style*="var(--aw-text-dim)"],
-[data-theme="light"] .game-card [style*="var(--aw-text-dim)"] {
-  color: #64748b !important;
-}
-
-/* KPI card labels */
-html[data-theme="light"] body.game-theme .kpi-card .kpi-value,
-[data-theme="light"] .kpi-card .kpi-value {
-  color: #1e293b !important;
-}
-
-/* KPI card special colors - keep them */
-html[data-theme="light"] body.game-theme .kpi-card.alive .kpi-value,
-[data-theme="light"] .kpi-card.alive .kpi-value {
-  color: #16a34a !important;
-}
-
-html[data-theme="light"] body.game-theme .kpi-card.dead .kpi-value,
-[data-theme="light"] .kpi-card.dead .kpi-value {
-  color: #dc2626 !important;
-}
-
-html[data-theme="light"] body.game-theme .kpi-card.gold .kpi-value,
-[data-theme="light"] .kpi-card.gold .kpi-value {
-  color: #d97706 !important;
-}
-
-html[data-theme="light"] body.game-theme .kpi-card.accent .kpi-value,
-[data-theme="light"] .kpi-card.accent .kpi-value {
-  color: #0284c7 !important;
-}
-
-/* Building card names */
-html[data-theme="light"] body.game-theme .building-card .building-name,
-html[data-theme="light"] body.game-theme .building-name,
-[data-theme="light"] .building-card .building-name {
-  color: #1e293b !important;
-}
-
-/* Trophy card text */
-html[data-theme="light"] body.game-theme .trophy-card .trophy-name,
-html[data-theme="light"] body.game-theme .trophy-name,
-[data-theme="light"] .trophy-card .trophy-name {
-  color: #1e293b !important;
-}
-
-html[data-theme="light"] body.game-theme .trophy-card .trophy-label,
-html[data-theme="light"] body.game-theme .trophy-label,
-[data-theme="light"] .trophy-card .trophy-label {
-  color: #475569 !important;
-}
-
-html[data-theme="light"] body.game-theme .trophy-card .trophy-value,
-html[data-theme="light"] body.game-theme .trophy-value,
-[data-theme="light"] .trophy-card .trophy-value {
-  color: #64748b !important;
-}
-
-/* Year card text */
-html[data-theme="light"] body.game-theme .year-card .year-number,
-html[data-theme="light"] body.game-theme .year-number,
-[data-theme="light"] .year-card .year-number {
-  color: #1e293b !important;
-}
-
-/* Main shell and page content */
-html[data-theme="light"] body.game-theme .aw-main-shell,
-html[data-theme="light"] body.game-theme .page-shell,
-html[data-theme="light"] body.game-theme .aw-main,
-[data-theme="light"] .aw-main-shell,
-[data-theme="light"] .page-shell,
-[data-theme="light"] .aw-main {
-  color: #1e293b !important;
-}
-
-/* Light mode accordion text */
-html[data-theme="light"] body.game-theme .accordion-button,
-[data-theme="light"] .accordion-button {
-  color: #1e293b !important;
-}
-
-html[data-theme="light"] body.game-theme .accordion-button:not(.collapsed),
-[data-theme="light"] .accordion-button:not(.collapsed) {
-  color: #0284c7 !important;
-}
-
-html[data-theme="light"] body.game-theme .accordion-body,
-[data-theme="light"] .accordion-body {
-  color: #475569 !important;
-}
-
-/* Light mode list group items */
-html[data-theme="light"] body.game-theme .list-group-item,
-[data-theme="light"] .list-group-item {
-  color: #475569 !important;
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-
-html[data-theme="light"] body.game-theme .list-group-item:hover,
-[data-theme="light"] .list-group-item:hover {
-  color: #1e293b !important;
-  background-color: #f1f5f9 !important;
-}
-
-/* Feature box text */
-html[data-theme="light"] body.game-theme .feature-box,
-[data-theme="light"] .feature-box {
-  background: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-  color: #1e293b !important;
-}
-
-html[data-theme="light"] body.game-theme .feature-box [style*="var(--aw-text)"],
-[data-theme="light"] .feature-box [style*="var(--aw-text)"] {
-  color: #1e293b !important;
-}
-
-/* Universal light mode fix for elements using var(--aw-text) inline */
-html[data-theme="light"] body.game-theme [style*="color: var(--aw-text)"],
-html[data-theme="light"] [style*="color: var(--aw-text)"],
-[data-theme="light"] [style*="color: var(--aw-text)"] {
-  color: #1e293b !important;
-}
-
-html[data-theme="light"] body.game-theme [style*="color: var(--aw-text-muted)"],
-html[data-theme="light"] [style*="color: var(--aw-text-muted)"],
-[data-theme="light"] [style*="color: var(--aw-text-muted)"] {
-  color: #475569 !important;
-}
-
-html[data-theme="light"] body.game-theme [style*="color: var(--aw-text-dim)"],
-html[data-theme="light"] [style*="color: var(--aw-text-dim)"],
-[data-theme="light"] [style*="color: var(--aw-text-dim)"] {
-  color: #64748b !important;
-}
-
-/* Stat pills in light mode */
-html[data-theme="light"] body.game-theme .stat-pill,
-[data-theme="light"] .stat-pill {
-  background: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
-}
-
-/* Action badges in light mode */
-html[data-theme="light"] body.game-theme .action-badge,
-[data-theme="light"] .action-badge {
-  background: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
-}
-
-/* Light mode body text default */
-html[data-theme="light"] body.game-theme,
-[data-theme="light"] body.game-theme {
-  color: #1e293b !important;
-}
-
-/* Weather background adjustment for light mode */
-html[data-theme="light"] body.game-theme .aw-bg.sunny,
-html[data-theme="light"] body.game-theme[data-weather="sunny"] .aw-bg,
-[data-theme="light"] .aw-bg.sunny {
-  background:
-    radial-gradient(900px 600px at 80% 15%, rgba(251, 191, 36, 0.25), transparent 60%) !important;
-}
-
-html[data-theme="light"] body.game-theme .aw-bg.rain,
-html[data-theme="light"] body.game-theme[data-weather="rain"] .aw-bg,
-[data-theme="light"] .aw-bg.rain {
-  background:
-    radial-gradient(800px 500px at 70% 10%, rgba(96, 165, 250, 0.15), transparent 60%),
-    linear-gradient(180deg, rgba(100, 120, 150, 0.1), transparent) !important;
-}
-
-/* =========================================================
-   CRITICAL FIX: Dark Mode - White Background Sections
-   Issue: Some sections have white/light backgrounds in dark mode
-          causing white text on white background
-   Solution: Force dark text on sections with light backgrounds
-   ========================================================= */
-
-/* Fix: btn-outline-light in dark mode - ensure visibility */
-body.game-theme .btn-outline-light,
-html:not([data-theme="light"]) body.game-theme .btn-outline-light,
-[data-theme="dark"] body.game-theme .btn-outline-light {
-  color: #1e293b !important;
-  border-color: #475569 !important;
-  background-color: rgba(255, 255, 255, 0.9) !important;
-}
-
-body.game-theme .btn-outline-light:hover,
-html:not([data-theme="light"]) body.game-theme .btn-outline-light:hover,
-[data-theme="dark"] body.game-theme .btn-outline-light:hover {
-  color: #0f172a !important;
-  background-color: #ffffff !important;
-  border-color: #64748b !important;
-}
-
-/* Fix: +1 Day Button specifically */
-body.game-theme .aw-header .btn-outline-light,
-body.game-theme form .btn-outline-light {
-  color: #1e293b !important;
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: #94a3b8 !important;
-}
-
-/* Fix: btn-primary visibility - ensure text is always visible */
-body.game-theme .btn-primary {
-  color: #ffffff !important;
-  background-color: var(--aw-accent) !important;
-  border-color: var(--aw-accent) !important;
-}
-
-body.game-theme .btn-primary:hover {
-  color: #ffffff !important;
-  background-color: #0284c7 !important;
-  border-color: #0284c7 !important;
-}
-
-/* Fix: Spawn Hero button - ensure it's always visible */
-body.game-theme a.btn-primary,
-body.game-theme button.btn-primary {
-  display: inline-flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  color: #ffffff !important;
-  z-index: 10;
-}
-
-/* =========================================================
-   CRITICAL FIX: Dark Mode Headers
-   Issue: Headers in areas with white/light backgrounds
-   Solution: Detect and fix these scenarios
-   ========================================================= */
-
-/* Dark mode header text - ensure proper contrast */
-html:not([data-theme="light"]) body.game-theme .aw-header,
-[data-theme="dark"] body.game-theme .aw-header,
-body.game-theme:not([data-theme="light"]) .aw-header {
-  background-color: transparent;
-}
-
-/* Force header text to be visible regardless of background */
-html:not([data-theme="light"]) body.game-theme .header-title,
-html:not([data-theme="light"]) body.game-theme .aw-header .header-title,
-html:not([data-theme="light"]) body.game-theme span.header-title,
-[data-theme="dark"] .header-title,
-[data-theme="dark"] .aw-header .header-title,
-body.game-theme:not([data-theme="light"]) .header-title {
-  color: var(--aw-text) !important;
-}
-
-html:not([data-theme="light"]) body.game-theme .header-subtitle,
-html:not([data-theme="light"]) body.game-theme .aw-header .header-subtitle,
-[data-theme="dark"] .header-subtitle,
-body.game-theme:not([data-theme="light"]) .header-subtitle {
-  color: var(--aw-text-muted) !important;
-}
-
-/* Welcome back message - dark mode */
-html:not([data-theme="light"]) body.game-theme .page-shell .header-title,
-[data-theme="dark"] body.game-theme .page-shell .header-title {
-  color: #e2e8f0 !important;
-}
-
-/* =========================================================
-   DARK MODE: Page Shell and Main Content Area
-   Ensure proper dark backgrounds
-   ========================================================= */
-html:not([data-theme="light"]) body.game-theme .page-shell,
-html:not([data-theme="light"]) body.game-theme .aw-main-shell,
-[data-theme="dark"] body.game-theme .page-shell,
-[data-theme="dark"] body.game-theme .aw-main-shell,
-body.game-theme:not([data-theme="light"]) .page-shell,
-body.game-theme:not([data-theme="light"]) .aw-main-shell {
-  background-color: transparent !important;
-}
-
-/* Dark mode game cards - ensure dark background */
-html:not([data-theme="light"]) body.game-theme .game-card,
-[data-theme="dark"] body.game-theme .game-card,
-body.game-theme:not([data-theme="light"]) .game-card {
-  background-color: var(--aw-bg-card) !important;
-  border-color: var(--aw-border) !important;
-}
-
-/* Dark mode game card text */
-html:not([data-theme="light"]) body.game-theme .game-card [style*="color: var(--aw-text)"],
-html:not([data-theme="light"]) body.game-theme .game-card .h5,
-html:not([data-theme="light"]) body.game-theme .game-card .h6,
-[data-theme="dark"] .game-card [style*="var(--aw-text)"] {
-  color: #e2e8f0 !important;
-}
-
-/* =========================================================
-   DARK MODE: Tables and List Groups
-   Override any lingering white backgrounds
-   ========================================================= */
-html:not([data-theme="light"]) body.game-theme .list-group-item,
-[data-theme="dark"] body.game-theme .list-group-item,
-body.game-theme:not([data-theme="light"]) .list-group-item {
-  background-color: var(--aw-bg-card) !important;
-  border-color: var(--aw-border) !important;
-  color: var(--aw-text-muted) !important;
-}
-
-html:not([data-theme="light"]) body.game-theme .list-group-item:hover,
-[data-theme="dark"] body.game-theme .list-group-item:hover {
-  background-color: var(--aw-bg-card-hover) !important;
-  color: var(--aw-text) !important;
-}
-
-html:not([data-theme="light"]) body.game-theme .aw-table,
-html:not([data-theme="light"]) body.game-theme .aw-table-wrapper,
-[data-theme="dark"] body.game-theme .aw-table,
-[data-theme="dark"] body.game-theme .aw-table-wrapper {
-  background-color: var(--aw-bg-card) !important;
-}
-
-html:not([data-theme="light"]) body.game-theme .aw-table tbody tr,
-[data-theme="dark"] body.game-theme .aw-table tbody tr {
-  background-color: var(--aw-bg-card) !important;
-}
-
-html:not([data-theme="light"]) body.game-theme .aw-table tbody tr:nth-child(even),
-[data-theme="dark"] body.game-theme .aw-table tbody tr:nth-child(even) {
-  background-color: var(--aw-bg-dark) !important;
-}
-
-/* =========================================================
-   DARK MODE: Accordion (Features page)
-   ========================================================= */
-html:not([data-theme="light"]) body.game-theme .accordion-button,
-[data-theme="dark"] body.game-theme .accordion-button {
-  background-color: var(--aw-bg-card) !important;
-  color: var(--aw-text) !important;
-}
-
-html:not([data-theme="light"]) body.game-theme .accordion-button:not(.collapsed),
-[data-theme="dark"] body.game-theme .accordion-button:not(.collapsed) {
-  background-color: var(--aw-bg-card-hover) !important;
-  color: var(--aw-accent) !important;
-}
-
-html:not([data-theme="light"]) body.game-theme .accordion-body,
-[data-theme="dark"] body.game-theme .accordion-body {
-  background-color: var(--aw-bg-card) !important;
-  color: var(--aw-text-muted) !important;
-}
-
-html:not([data-theme="light"]) body.game-theme .accordion-item,
-[data-theme="dark"] body.game-theme .accordion-item {
-  background-color: var(--aw-bg-card) !important;
-  border-color: var(--aw-border) !important;
+  .hero-avatar { width: 48px; height: 48px; font-size: 1.25rem; }
+  .hero-name { font-size: 16px; }
+  .kpi-value { font-size: 18px; }
+  .kpi-card { padding: 12px; }
+  .theme-toggle-label { display: none; }
+  .game-card .card-body { padding: 16px; }
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <title>Ashen World – Control Hall</title>
+  <title>Ashen World – Control</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
@@ -14,30 +14,21 @@
   <div class="aw-layout">
     {% include '_sidebar.html' %}
 
-    <!-- Main content -->
     <div class="aw-main-shell">
       <div class="page-shell">
-        <!-- Header -->
         <header class="aw-header d-flex align-items-center justify-content-between mb-3">
           <div class="d-flex flex-column">
-            <span class="header-title" style="color: var(--aw-text);">⚙️ Control Hall</span>
-            <span class="header-subtitle" style="color: var(--aw-text-muted);">
-              Manage simulation and world state
-            </span>
+            <span class="header-title">Control Hall</span>
+            <span class="header-subtitle">Manage simulation and world state</span>
           </div>
 
           <form method="POST" class="m-0 d-flex gap-2">
-            <button type="submit" name="op" value="next_day" class="btn btn-outline-light btn-sm">
-              ⏭️ +1 Day
-            </button>
-            <button type="submit" name="op" value="generate" class="btn btn-danger btn-sm">
-              🔄 Reset World
-            </button>
+            <button type="submit" name="op" value="next_day" class="btn btn-outline-light btn-sm">+1 Day</button>
+            <button type="submit" name="op" value="generate" class="btn btn-danger btn-sm">Reset</button>
           </form>
         </header>
 
         <main class="aw-main">
-          <!-- Flash messages -->
           {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             <section class="mb-3">
@@ -55,28 +46,24 @@
           <section class="row g-3 mb-3">
             <div class="col-6 col-md-3">
               <div class="kpi-card accent">
-                <div class="kpi-icon">📅</div>
                 <div class="kpi-value">Y<span id="current-year">{{ year }}</span></div>
                 <div class="kpi-label">Year</div>
               </div>
             </div>
             <div class="col-6 col-md-3">
               <div class="kpi-card">
-                <div class="kpi-icon">☀️</div>
                 <div class="kpi-value">D<span id="current-day">{{ day }}</span></div>
                 <div class="kpi-label">Day</div>
               </div>
             </div>
             <div class="col-6 col-md-3">
               <div class="kpi-card">
-                <div class="kpi-icon">👥</div>
                 <div class="kpi-value">{{ characters|length if characters else 0 }}</div>
                 <div class="kpi-label">Villagers</div>
               </div>
             </div>
             <div class="col-6 col-md-3">
               <div class="kpi-card">
-                <div class="kpi-icon">👤</div>
                 <div class="kpi-value">{{ total_users }}</div>
                 <div class="kpi-label">Users</div>
               </div>
@@ -86,27 +73,19 @@
           <!-- Auto Simulation -->
           <section class="game-card mb-3">
             <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <div style="color: var(--aw-text);" class="h6 mb-0">🤖 Auto Simulation</div>
-                <span id="auto-status" class="status-badge" style="background: var(--aw-bg-dark); color: var(--aw-text-dim); border: 1px solid var(--aw-border);">
-                  Stopped
-                </span>
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Auto Simulation</div>
+                <span id="auto-status" class="status-badge" style="background: var(--aw-bg-dark); color: var(--aw-text-dim); border: 1px solid var(--aw-border);">Stopped</span>
               </div>
 
-              <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 0.875rem;">
+              <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 13px;">
                 <div class="d-flex align-items-center gap-2">
                   <label for="auto-interval" style="color: var(--aw-text-muted);">Interval (sec):</label>
-                  <input type="number" id="auto-interval" class="form-control form-control-sm" 
-                         min="1" value="3" style="width: 70px;" />
+                  <input type="number" id="auto-interval" class="form-control form-control-sm" min="1" value="3" style="width: 70px;" />
                 </div>
-
                 <div class="d-flex gap-2">
-                  <button type="button" id="auto-start" class="btn btn-sm btn-outline-success">
-                    ▶️ Start
-                  </button>
-                  <button type="button" id="auto-stop" class="btn btn-sm btn-outline-danger" disabled>
-                    ⏹️ Stop
-                  </button>
+                  <button type="button" id="auto-start" class="btn btn-sm btn-outline-success">Start</button>
+                  <button type="button" id="auto-stop" class="btn btn-sm btn-outline-danger" disabled>Stop</button>
                 </div>
               </div>
             </div>
@@ -115,7 +94,7 @@
           <!-- Buildings -->
           <section class="game-card mb-3">
             <div class="card-body">
-              <div style="color: var(--aw-text);" class="h6 mb-3">🏗️ Buildings</div>
+              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Buildings</div>
 
               <div id="admin-buildings-wrapper">
                 {% if village_buildings %}
@@ -124,25 +103,19 @@
                   <div class="col-6 col-md-4 col-lg-3">
                     <div class="building-card {% if not b.built %}not-built{% endif %}">
                       <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="building-name">
-                          {% if b.name == 'Farm' %}🌾{% elif b.name == 'Barracks' %}⚔️{% elif b.name == 'Market' %}🏪{% elif b.name == 'Temple' %}🛕{% elif b.name == 'Library' %}📚{% elif b.name == 'Blacksmith' %}🔨{% elif b.name == 'Inn' %}🍺{% elif b.name == 'Wall' %}🧱{% else %}🏠{% endif %}
-                          {{ b.name }}
-                        </span>
+                        <span class="building-name">{{ b.name }}</span>
                         {% if b.built %}
                           <span class="building-level built">Lv {{ b.level }}</span>
                         {% else %}
                           <span class="building-level not-built">—</span>
                         {% endif %}
                       </div>
-
                       {% if b.built %}
-                      <div class="d-flex justify-content-between mb-1" style="font-size: 0.75rem; color: var(--aw-text-muted);">
-                        <span>Health</span>
-                        <span>{{ b.health }}%</span>
+                      <div class="d-flex justify-content-between mb-1" style="font-size: 11px; color: var(--aw-text-muted);">
+                        <span>Health</span><span>{{ b.health }}%</span>
                       </div>
                       <div class="building-health-bar">
-                        <div class="building-health-fill {% if b.health > 60 %}healthy{% elif b.health > 25 %}damaged{% else %}critical{% endif %}"
-                             style="width: {{ b.health }}%;"></div>
+                        <div class="building-health-fill {% if b.health > 60 %}healthy{% elif b.health > 25 %}damaged{% else %}critical{% endif %}" style="width: {{ b.health }}%;"></div>
                       </div>
                       {% endif %}
                     </div>
@@ -161,77 +134,36 @@
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
-                  <div style="color: var(--aw-text-muted); font-size: 0.75rem;">INSPECT VILLAGER</div>
+                  <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Inspect Villager</div>
                   <div id="pinned-name" style="color: var(--aw-text);" class="h5 mb-0">Select a villager</div>
-                  <div id="pinned-subtitle" style="color: var(--aw-text-dim); font-size: 0.875rem;">
-                    Click a row in the table below
-                  </div>
+                  <div id="pinned-subtitle" style="color: var(--aw-text-dim); font-size: 13px;">Click a row below</div>
                 </div>
-                <div class="text-end" style="font-size: 0.875rem;">
+                <div class="text-end" style="font-size: 13px;">
                   <div id="pinned-meta-top" style="color: var(--aw-text);"></div>
                   <div id="pinned-meta-bottom" style="color: var(--aw-text-muted);"></div>
                 </div>
               </div>
 
-              <div class="row g-3" id="pinned-stats-row" style="display: none; font-size: 0.875rem;">
-                <div class="col-6 col-md-3">
-                  <div style="color: var(--aw-text-muted);">Job</div>
-                  <div id="pinned-job" style="color: var(--aw-text);">-</div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div style="color: var(--aw-text-muted);">Gender</div>
-                  <div id="pinned-gender" style="color: var(--aw-text);">-</div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div style="color: var(--aw-text-muted);">Age</div>
-                  <div id="pinned-age" style="color: var(--aw-text);">-</div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div style="color: var(--aw-text-muted);">Level / EXP</div>
-                  <div id="pinned-level" style="color: var(--aw-text);">-</div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div style="color: var(--aw-text-muted);">HP / Hunger</div>
-                  <div id="pinned-hp" style="color: var(--aw-text);">-</div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div style="color: var(--aw-text-muted);">Spouse</div>
-                  <div id="pinned-spouse" style="color: var(--aw-text);">-</div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div style="color: var(--aw-text-muted);">Mother</div>
-                  <div id="pinned-mother" style="color: var(--aw-text);">-</div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div style="color: var(--aw-text-muted);">Father</div>
-                  <div id="pinned-father" style="color: var(--aw-text);">-</div>
-                </div>
-                <div class="col-12">
-                  <div style="color: var(--aw-text-muted);">Children</div>
-                  <div id="pinned-children" style="color: var(--aw-text);">-</div>
-                </div>
+              <div class="row g-3" id="pinned-stats-row" style="display: none; font-size: 13px;">
+                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Job</div><div id="pinned-job" style="color: var(--aw-text);">-</div></div>
+                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Gender</div><div id="pinned-gender" style="color: var(--aw-text);">-</div></div>
+                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Age</div><div id="pinned-age" style="color: var(--aw-text);">-</div></div>
+                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Level / EXP</div><div id="pinned-level" style="color: var(--aw-text);">-</div></div>
+                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">HP / Hunger</div><div id="pinned-hp" style="color: var(--aw-text);">-</div></div>
+                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Spouse</div><div id="pinned-spouse" style="color: var(--aw-text);">-</div></div>
+                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Mother</div><div id="pinned-mother" style="color: var(--aw-text);">-</div></div>
+                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Father</div><div id="pinned-father" style="color: var(--aw-text);">-</div></div>
+                <div class="col-12"><div style="color: var(--aw-text-muted);">Children</div><div id="pinned-children" style="color: var(--aw-text);">-</div></div>
               </div>
 
-              <div class="row g-3 mt-1" id="pinned-extra-row" style="display: none; font-size: 0.875rem;">
-                <div class="col-12 col-md-6">
-                  <div style="color: var(--aw-text-muted);">Traits</div>
-                  <div id="pinned-traits" style="color: var(--aw-text);">-</div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div style="color: var(--aw-text-muted);">Last action</div>
-                  <div id="pinned-last-action" style="color: var(--aw-text);">-</div>
-                </div>
+              <div class="row g-3 mt-1" id="pinned-extra-row" style="display: none; font-size: 13px;">
+                <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Traits</div><div id="pinned-traits" style="color: var(--aw-text);">-</div></div>
+                <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Last action</div><div id="pinned-last-action" style="color: var(--aw-text);">-</div></div>
               </div>
 
-              <div class="row g-3 mt-2" id="pinned-rel-row" style="display: none; font-size: 0.875rem;">
-                <div class="col-12 col-md-6">
-                  <div style="color: var(--aw-text-muted);">Bonds</div>
-                  <ul class="mb-0" id="pinned-bonds" style="color: var(--aw-text);"></ul>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div style="color: var(--aw-text-muted);">Rivals</div>
-                  <ul class="mb-0" id="pinned-conflicts" style="color: var(--aw-text);"></ul>
-                </div>
+              <div class="row g-3 mt-2" id="pinned-rel-row" style="display: none; font-size: 13px;">
+                <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Bonds</div><ul class="mb-0" id="pinned-bonds" style="color: var(--aw-text);"></ul></div>
+                <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Rivals</div><ul class="mb-0" id="pinned-conflicts" style="color: var(--aw-text);"></ul></div>
               </div>
             </div>
           </section>
@@ -240,15 +172,13 @@
           <section class="game-card">
             <div class="card-body p-0">
               <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 px-3 pt-3 pb-2" style="border-bottom: 1px solid var(--aw-border);">
-                <div style="color: var(--aw-text-muted);">👥 Villagers Data</div>
-
+                <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Villagers Data</div>
                 <div class="d-flex align-items-center gap-3">
                   <div class="form-check form-switch small mb-0">
                     <input class="form-check-input" type="checkbox" id="only-alive-toggle" checked />
                     <label class="form-check-label" for="only-alive-toggle" style="color: var(--aw-text-muted);">Alive only</label>
                   </div>
-                  <input type="search" id="table-search" class="form-control form-control-sm"
-                         placeholder="Search..." autocomplete="off" style="width: 150px;" />
+                  <input type="search" id="table-search" class="form-control form-control-sm" placeholder="Search..." autocomplete="off" style="width: 150px;" />
                 </div>
               </div>
 
@@ -259,7 +189,7 @@
                       <th data-key="name" class="sortable">Name</th>
                       <th data-key="gender" class="sortable">Gender</th>
                       <th data-key="job" class="sortable">Job</th>
-                      <th data-key="coins" class="sortable num text-end">🪙</th>
+                      <th data-key="coins" class="sortable num text-end">Coins</th>
                       <th data-key="age" class="sortable num text-end">Age</th>
                       <th data-key="int" class="sortable num text-end">INT</th>
                       <th data-key="rep" class="sortable num text-end">REP</th>
@@ -268,7 +198,7 @@
                       <th data-key="atk" class="sortable num text-end">ATK</th>
                       <th data-key="def" class="sortable num text-end">DEF</th>
                       <th data-key="hp" class="sortable num text-end">HP</th>
-                      <th data-key="hunger" class="sortable num text-end">🍖</th>
+                      <th data-key="hunger" class="sortable num text-end">Food</th>
                       <th data-key="traits" class="sortable">Traits</th>
                       <th data-key="last_action" class="sortable">Action</th>
                       <th data-key="origin" class="sortable">Origin</th>
@@ -278,9 +208,7 @@
                   <tbody>
                     {% for c in characters %}
                     <tr class="aw-row-clickable {% if not c.alive %}aw-row-dead{% endif %}" data-char-id="{{ c.id }}">
-                      <td class="{% if not c.alive %}aw-name-dead{% endif %}">
-                        {% if c.job == 'King' %}👑 {% endif %}{{ c.name }}
-                      </td>
+                      <td class="{% if not c.alive %}aw-name-dead{% endif %}">{% if c.job == 'King' %}♔ {% endif %}{{ c.name }}</td>
                       <td>{{ c.gender }}</td>
                       <td>{{ c.job }}</td>
                       <td class="text-end">{{ c.coins }}</td>
@@ -294,25 +222,9 @@
                       <td class="text-end">{{ c.hp }}</td>
                       <td class="text-end">{{ c.hunger }}</td>
                       <td class="aw-traits-cell">{{ c.traits }}</td>
-                      <td>
-                        <span class="action-badge {{ c.last_action.split()[0] | lower if c.last_action else '' }}">
-                          {{ c.last_action or '-' }}
-                        </span>
-                      </td>
-                      <td>
-                        {% if c.origin == 'player' %}
-                          <span class="status-badge player">Player</span>
-                        {% else %}
-                          <span style="color: var(--aw-text-dim);">NPC</span>
-                        {% endif %}
-                      </td>
-                      <td>
-                        {% if c.alive %}
-                          <span class="status-badge alive">Alive</span>
-                        {% else %}
-                          <span class="status-badge dead">Dead</span>
-                        {% endif %}
-                      </td>
+                      <td><span class="action-badge {{ c.last_action.split()[0] | lower if c.last_action else '' }}">{{ c.last_action or '-' }}</span></td>
+                      <td>{% if c.origin == 'player' %}<span class="status-badge player">Player</span>{% else %}<span style="color: var(--aw-text-dim);">NPC</span>{% endif %}</td>
+                      <td>{% if c.alive %}<span class="status-badge alive">Alive</span>{% else %}<span class="status-badge dead">Dead</span>{% endif %}</td>
                     </tr>
                     {% endfor %}
                   </tbody>
