@@ -108,7 +108,7 @@
               </div>
 
               <div class="row g-3 mb-3">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-6 col-lg-4">
                   <div class="d-flex align-items-center gap-3 p-3" style="background: var(--aw-bg-dark); border-radius: 10px;">
                     <span style="font-size: 1.5rem;">♔</span>
                     <div>
@@ -118,28 +118,36 @@
                   </div>
                 </div>
 
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3 col-lg-2">
                   <div class="kpi-card dead">
-                    <div class="kpi-value">{{ current_entry.deaths or 0 }}</div>
+                    <div class="kpi-value">{{ current_entry.total_deaths or 0 }}</div>
                     <div class="kpi-label">Deaths</div>
                   </div>
                 </div>
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3 col-lg-2">
                   <div class="kpi-card alive">
-                    <div class="kpi-value">{{ current_entry.immigrants or 0 }}</div>
+                    <div class="kpi-value">{{ current_entry.total_immigrants or 0 }}</div>
                     <div class="kpi-label">Immigrants</div>
                   </div>
                 </div>
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3 col-lg-2">
                   <div class="kpi-card gold">
                     <div class="kpi-value">{{ current_entry.treasury_end or 0 }}</div>
                     <div class="kpi-label">Treasury</div>
                   </div>
                 </div>
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3 col-lg-2">
                   <div class="kpi-card">
                     <div class="kpi-value">{{ current_entry.days_counted or 0 }}</div>
                     <div class="kpi-label">Days</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                  <div class="kpi-card" style="border-color: var(--aw-warning);">
+                    <div class="kpi-value" style="color: var(--aw-warning);">{{ current_entry.total_corruption or 0 }}</div>
+                    <div class="kpi-label">Corruption</div>
                   </div>
                 </div>
               </div>
@@ -231,6 +239,10 @@
                         <div class="col-6">
                           <div style="color: var(--aw-text-muted);">Treasury</div>
                           <div style="color: var(--aw-gold);">{{ y.treasury_start or 0 }} → {{ y.treasury_end or 0 }}</div>
+                        </div>
+                        <div class="col-6">
+                          <div style="color: var(--aw-text-muted);">Corruption</div>
+                          <div style="color: var(--aw-warning);">{{ y.total_corruption or 0 }} coins</div>
                         </div>
                       </div>
 

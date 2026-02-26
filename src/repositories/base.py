@@ -104,6 +104,9 @@ def init_db():
                 avg_tax_rate REAL,
                 is_finalized INTEGER DEFAULT 0,
 
+                -- Corruption tracking
+                total_corruption INTEGER DEFAULT 0,
+
                 -- Champions (snapshot at year end)
                 most_atk_id INTEGER,
                 most_atk_name TEXT DEFAULT '',
@@ -210,6 +213,8 @@ def _ensure_yearly_columns(conn: sqlite3.Connection):
     existing = {r["name"] for r in conn.execute("PRAGMA table_info(yearly_stats);").fetchall()}
 
     desired = {
+        "total_corruption": "total_corruption INTEGER DEFAULT 0",
+
         "most_atk_id": "most_atk_id INTEGER",
         "most_atk_name": "most_atk_name TEXT DEFAULT ''",
         "most_atk_value": "most_atk_value INTEGER DEFAULT 0",

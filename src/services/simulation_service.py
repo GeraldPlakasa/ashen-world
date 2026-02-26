@@ -286,14 +286,19 @@ def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -
             heir["last_action"] = note
 
 
-def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank]:
+def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank, int]:
     """
     Simulate actions for one day for each villager in the list.
+    
+    Returns:
+        (characters, bank, corruption_total)
     """
     reset_id_from_characters(characters)
     weather_today = load_weather()
     coming_of_age_phase(characters, current_day=current_day)
     enforce_one_player_per_owner(characters)
+
+    corruption_total = 0
 
     # 1) Daily individual phase
     for v in characters:
@@ -326,7 +331,8 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
             else:
                 v["last_action"] = f"dead (starvation -{hp_loss} HP)"
 
-        maybe_corrupt_from_bank(v, bank)
+        stolen = maybe_corrupt_from_bank(v, bank)
+        corruption_total += stolen
 
     # 2) World phases (immigrants, spouses)
     characters, _added_count = maybe_add_immigrants(characters, bank)
@@ -343,4 +349,4 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     for v in characters:
         append_action_history(v)
 
-    return characters, bank
+    return characters, bank, corruption_total

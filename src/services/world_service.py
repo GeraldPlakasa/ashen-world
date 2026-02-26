@@ -181,7 +181,7 @@ def advance_one_day() -> tuple:
         bank = update_tax_policy(characters, bank, log_it=False)
 
         # --- Daily simulation (combat, income, deaths, etc.) ---
-        characters, bank = simulate_one_day(characters, bank, current_day=new_total_day)
+        characters, bank, corruption_today = simulate_one_day(characters, bank, current_day=new_total_day)
 
         for v in characters:
             if not v.get("alive", True) or v.get("hp", 0) <= 0:
@@ -295,6 +295,7 @@ def advance_one_day() -> tuple:
             immigrants_today=immigrants_today,
             tax_rate_today=float(bank.get("tax_rate", 0.10) or 0.10),
             treasury_end=int(bank.get("balance", 0) or 0),
+            corruption_today=corruption_today,
         )
 
         # Persist updated state

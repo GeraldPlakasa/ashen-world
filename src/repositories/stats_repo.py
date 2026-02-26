@@ -70,8 +70,9 @@ def update_year_daily(
     immigrants_today: int,
     tax_rate_today: float,
     treasury_end: int,
+    corruption_today: int = 0,
 ):
-    """Accumulate daily stats (deaths, immigrants, tax) into the yearly_stats row for a year."""
+    """Accumulate daily stats (deaths, immigrants, tax, corruption) into the yearly_stats row for a year."""
     init_db()
     with db_conn() as conn:
         # Ensure exists
@@ -89,6 +90,7 @@ def update_year_daily(
                 tax_rate_sum = COALESCE(tax_rate_sum, 0) + ?,
                 days_counted = COALESCE(days_counted, 0) + 1,
                 treasury_end = ?,
+                total_corruption = COALESCE(total_corruption, 0) + ?,
                 updated_at = datetime('now')
             WHERE year = ?;
             """,
@@ -99,6 +101,7 @@ def update_year_daily(
                 int(immigrants_today),
                 float(tax_rate_today),
                 int(treasury_end),
+                int(corruption_today),
                 int(year),
             ),
         )

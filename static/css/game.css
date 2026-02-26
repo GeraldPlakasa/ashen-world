@@ -47,15 +47,16 @@
   --aw-player: #0891b2;
   --aw-gold: #ca8a04;
 
-  /* Sidebar - Ocean Blue Theme */
-  --aw-sidebar-bg: #0077b6;
+  /* Sidebar - Ocean Surface to Deep Theme */
+  --aw-sidebar-bg: #48cae4;
+  --aw-sidebar-bg-mid: #0077b6;
   --aw-sidebar-bg-dark: #023e8a;
-  --aw-sidebar-border: #005f8a;
+  --aw-sidebar-border: #023e8a;
   --aw-sidebar-text: #ffffff;
-  --aw-sidebar-text-muted: rgba(255,255,255,0.7);
-  --aw-sidebar-hover: rgba(255,255,255,0.1);
-  --aw-sidebar-active: #00b4d8;
-  --aw-sidebar-active-text: #ffffff;
+  --aw-sidebar-text-muted: rgba(255,255,255,0.85);
+  --aw-sidebar-hover: rgba(255,255,255,0.15);
+  --aw-sidebar-active: #90e0ef;
+  --aw-sidebar-active-text: #03045e;
 }
 
 /* =========================================================
@@ -564,6 +565,11 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
 /* =========================================================
    Building Cards
    ========================================================= */
+/* Prevent layout shift when buildings load dynamically */
+#admin-buildings-wrapper {
+  min-height: 200px;
+}
+
 .building-card {
   background: #ffffff;
   border: 1px solid var(--aw-border);
@@ -837,10 +843,10 @@ body.game-theme .aw-name-dead { color: var(--aw-text-dim) !important; }
 body.game-theme .aw-table-wrapper { background: #ffffff; }
 
 /* =========================================================
-   Sidebar Override - Ocean Blue Theme
+   Sidebar Override - Ocean Surface to Deep Theme
    ========================================================= */
 body.game-theme .aw-sidebar {
-  background: linear-gradient(180deg, var(--aw-sidebar-bg) 0%, var(--aw-sidebar-bg-dark) 100%);
+  background: linear-gradient(180deg, var(--aw-sidebar-bg) 0%, var(--aw-sidebar-bg-mid) 40%, var(--aw-sidebar-bg-dark) 100%);
   border-right: 1px solid var(--aw-sidebar-border);
 }
 
@@ -864,10 +870,11 @@ body.game-theme .aw-nav-link:hover {
 body.game-theme .aw-nav-link-active {
   background: var(--aw-sidebar-active);
   color: var(--aw-sidebar-active-text);
+  font-weight: 600;
 }
 
 body.game-theme .aw-nav-link-active:hover {
-  background: #0096c7;
+  background: #caf0f8;
   color: var(--aw-sidebar-active-text);
 }
 
