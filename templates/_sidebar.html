@@ -13,12 +13,6 @@
       </a>
     </li>
     <li>
-      <a href="{{ url_for('features') }}" class="aw-nav-link {% if active_page == 'features' %}aw-nav-link-active{% endif %}">
-        <span class="aw-nav-link-icon">≡</span>
-        <span class="aw-nav-link-label">Features</span>
-      </a>
-    </li>
-    <li>
       <a href="{{ url_for('leaderboard') }}" class="aw-nav-link {% if active_page == 'leaderboard' %}aw-nav-link-active{% endif %}">
         <span class="aw-nav-link-icon">★</span>
         <span class="aw-nav-link-label">Legends</span>
@@ -46,6 +40,12 @@
       </a>
     </li>
     {% endif %}
+    <li>
+      <a href="{{ url_for('features') }}" class="aw-nav-link {% if active_page == 'features' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">≡</span>
+        <span class="aw-nav-link-label">Features</span>
+      </a>
+    </li>
   </ul>
 
   <div class="aw-sidebar-footer">

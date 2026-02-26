@@ -284,6 +284,61 @@ body.game-theme .btn-info:focus {
   color: #ffffff !important;
 }
 
+/* Outline Success/Danger - Fixed width to prevent layout shift */
+body.game-theme .btn-outline-success {
+  color: var(--aw-alive);
+  border-color: var(--aw-alive);
+  background: transparent;
+  font-weight: 500;
+}
+
+body.game-theme .btn-outline-success:hover,
+body.game-theme .btn-outline-success:focus {
+  background: var(--aw-alive);
+  border-color: var(--aw-alive);
+  color: #ffffff !important;
+}
+
+body.game-theme .btn-outline-success:active {
+  background: #15803d;
+  border-color: #15803d;
+  color: #ffffff !important;
+}
+
+body.game-theme .btn-outline-success:disabled {
+  color: var(--aw-text-dim);
+  border-color: var(--aw-border);
+  background: transparent;
+  opacity: 0.6;
+}
+
+body.game-theme .btn-outline-danger {
+  color: var(--aw-dead);
+  border-color: var(--aw-dead);
+  background: transparent;
+  font-weight: 500;
+}
+
+body.game-theme .btn-outline-danger:hover,
+body.game-theme .btn-outline-danger:focus {
+  background: var(--aw-dead);
+  border-color: var(--aw-dead);
+  color: #ffffff !important;
+}
+
+body.game-theme .btn-outline-danger:active {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  color: #ffffff !important;
+}
+
+body.game-theme .btn-outline-danger:disabled {
+  color: var(--aw-text-dim);
+  border-color: var(--aw-border);
+  background: transparent;
+  opacity: 0.6;
+}
+
 /* Cards */
 body.game-theme .card {
   background: var(--aw-bg-card);
