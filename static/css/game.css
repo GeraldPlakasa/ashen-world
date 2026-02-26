@@ -47,16 +47,16 @@
   --aw-player: #0891b2;
   --aw-gold: #ca8a04;
 
-  /* Sidebar - Ocean Surface to Deep Theme */
-  --aw-sidebar-bg: #48cae4;
-  --aw-sidebar-bg-mid: #0077b6;
-  --aw-sidebar-bg-dark: #023e8a;
-  --aw-sidebar-border: #023e8a;
+  /* Sidebar - Deep Ocean Theme (Darker) */
+  --aw-sidebar-bg: #0096c7;
+  --aw-sidebar-bg-mid: #023e8a;
+  --aw-sidebar-bg-dark: #03045e;
+  --aw-sidebar-border: #03045e;
   --aw-sidebar-text: #ffffff;
   --aw-sidebar-text-muted: rgba(255,255,255,0.85);
-  --aw-sidebar-hover: rgba(255,255,255,0.15);
-  --aw-sidebar-active: #90e0ef;
-  --aw-sidebar-active-text: #03045e;
+  --aw-sidebar-hover: rgba(0, 180, 216, 0.2);
+  --aw-sidebar-active: rgba(0, 180, 216, 0.25);
+  --aw-sidebar-active-text: #48cae4;
 }
 
 /* =========================================================
@@ -871,11 +871,12 @@ body.game-theme .aw-nav-link-active {
   background: var(--aw-sidebar-active);
   color: var(--aw-sidebar-active-text);
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,180,216,0.2);
 }
 
 body.game-theme .aw-nav-link-active:hover {
-  background: #caf0f8;
-  color: var(--aw-sidebar-active-text);
+  background: rgba(0, 180, 216, 0.35);
+  color: #90e0ef;
 }
 
 body.game-theme .aw-sidebar-footer {

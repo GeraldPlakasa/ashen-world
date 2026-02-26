@@ -36,13 +36,13 @@ body {
   left: 0;
   height: 100vh;
   width: 220px;
-  background: linear-gradient(180deg, #48cae4 0%, #0077b6 40%, #023e8a 100%);
+  background: linear-gradient(180deg, #0096c7 0%, #023e8a 40%, #03045e 100%);
   color: rgba(255,255,255,0.95);
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  border-right: 1px solid #023e8a;
+  border-right: 1px solid #03045e;
 }
 
 .aw-sidebar-brand {
@@ -88,15 +88,15 @@ body {
 }
 
 .aw-nav-link-active {
-  background: #90e0ef;
-  color: #03045e;
-  box-shadow: 0 2px 8px rgba(144,224,239,0.4);
+  background: rgba(0, 180, 216, 0.25);
+  color: #48cae4;
+  box-shadow: 0 2px 8px rgba(0,180,216,0.2);
   font-weight: 600;
 }
 
 .aw-nav-link-active:hover {
-  background: #caf0f8;
-  color: #03045e;
+  background: rgba(0, 180, 216, 0.35);
+  color: #90e0ef;
 }
 
 .aw-nav-link-icon {
@@ -414,7 +414,7 @@ body[data-weather="rain"] .aw-rain-canvas { opacity: 0.4; }
     padding: 12px 16px;
     border-right: none;
     border-bottom: 1px solid rgba(255,255,255,0.15);
-    background: linear-gradient(90deg, #48cae4 0%, #0077b6 50%, #023e8a 100%);
+    background: linear-gradient(90deg, #0096c7 0%, #023e8a 50%, #03045e 100%);
   }
 
   .aw-sidebar > div:first-child { flex: 1; }
