@@ -36,7 +36,7 @@ body {
   left: 0;
   height: 100vh;
   width: 220px;
-  background: linear-gradient(180deg, #0096c7 0%, #023e8a 40%, #03045e 100%);
+  background: linear-gradient(180deg, #0077b6 0%, #03045e 40%, #001233 100%);
   color: rgba(255,255,255,0.95);
   padding: 24px 16px;
   display: flex;
@@ -414,7 +414,7 @@ body[data-weather="rain"] .aw-rain-canvas { opacity: 0.4; }
     padding: 12px 16px;
     border-right: none;
     border-bottom: 1px solid rgba(255,255,255,0.15);
-    background: linear-gradient(90deg, #0096c7 0%, #023e8a 50%, #03045e 100%);
+    background: linear-gradient(90deg, #0077b6 0%, #03045e 50%, #001233 100%);
   }
 
   .aw-sidebar > div:first-child { flex: 1; }
