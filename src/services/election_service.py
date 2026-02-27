@@ -303,23 +303,23 @@ def hold_election(characters: list[Villager], current_day: int | None = None) ->
         msg = (
             f"election: all candidates reached the {KING_MAX_TERMS}-term limit. "
             f"Emergency vote, {winner['name']} chosen with {win_votes} votes "
-            f"({vote_percentage:.0f}% dari {total_alive} villagers)."
+            f"({vote_percentage:.0f}% of {total_alive} villagers)."
         )
     elif prev_king and prev_king is not winner:
         msg = (
             f"election: {winner['name']} is the new King with {win_votes} votes "
-            f"({vote_percentage:.0f}% dari {total_alive} villagers). "
+            f"({vote_percentage:.0f}% of {total_alive} villagers). "
             f"Former King {prev_king['name']} steps down."
         )
     elif not prev_king:
         msg = (
             f"election: {winner['name']} is elected King with {win_votes} votes "
-            f"({vote_percentage:.0f}% dari {total_alive} villagers)."
+            f"({vote_percentage:.0f}% of {total_alive} villagers)."
         )
     else:
         msg = (
             f"election: {winner['name']} remains King with {win_votes} votes "
-            f"({vote_percentage:.0f}% dari {total_alive} villagers)."
+            f"({vote_percentage:.0f}% of {total_alive} villagers)."
         )
 
     # Apply roles
