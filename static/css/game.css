@@ -970,3 +970,143 @@ body.game-theme h4, body.game-theme h5, body.game-theme h6 {
   .kpi-card { padding: 12px; }
   .game-card .card-body { padding: 16px; }
 }
+
+/* =========================================================
+   Notification Cards - Election & Events
+   ========================================================= */
+
+/* Election Notification */
+.notification-election {
+  border-left: 4px solid var(--aw-king) !important;
+  background: linear-gradient(90deg, rgba(147,51,234,0.05) 0%, #ffffff 100%);
+}
+
+/* Event Notification */
+.notification-event {
+  border-left: 4px solid var(--aw-accent) !important;
+}
+
+/* Notification Icon */
+.notification-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.notification-icon.election-icon {
+  background: rgba(147,51,234,0.12);
+}
+
+.notification-icon.event-icon {
+  background: rgba(0,119,182,0.12);
+}
+
+/* Notification Badge */
+.notification-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.notification-badge.election {
+  background: rgba(147,51,234,0.15);
+  color: var(--aw-king);
+  border: 1px solid rgba(147,51,234,0.25);
+}
+
+.notification-badge.event-positive {
+  background: rgba(22,163,74,0.15);
+  color: var(--aw-alive);
+  border: 1px solid rgba(22,163,74,0.25);
+}
+
+.notification-badge.event-negative {
+  background: rgba(220,38,38,0.15);
+  color: var(--aw-dead);
+  border: 1px solid rgba(220,38,38,0.25);
+}
+
+.notification-badge.event-neutral {
+  background: rgba(0,119,182,0.15);
+  color: var(--aw-accent);
+  border: 1px solid rgba(0,119,182,0.25);
+}
+
+/* Notification Year */
+.notification-year {
+  font-size: 11px;
+  color: var(--aw-text-muted);
+  font-weight: 500;
+}
+
+/* Notification Content */
+.notification-content {
+  font-size: 14px;
+  color: var(--aw-text);
+  line-height: 1.5;
+}
+
+/* Winner Highlight */
+.notification-winner {
+  font-weight: 700;
+  color: var(--aw-king);
+  background: rgba(147,51,234,0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Vote Count Highlight */
+.notification-votes {
+  font-weight: 600;
+  color: var(--aw-accent);
+}
+
+/* Emergency Badge */
+.notification-emergency {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(220,38,38,0.15);
+  color: var(--aw-dead);
+  margin-right: 6px;
+}
+
+/* Event Type Specific Styling */
+.notification-event[data-event="positive"] {
+  background: linear-gradient(90deg, rgba(22,163,74,0.05) 0%, #ffffff 100%);
+}
+
+.notification-event[data-event="negative"] {
+  background: linear-gradient(90deg, rgba(220,38,38,0.05) 0%, #ffffff 100%);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .notification-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  
+  .notification-content {
+    font-size: 13px;
+  }
+  
+  .notification-winner {
+    display: block;
+    margin-bottom: 4px;
+  }
+}

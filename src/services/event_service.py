@@ -8,6 +8,12 @@ Event Types:
 - INVASION: Random attacks, casualties
 - GOOD_HARVEST: Bonus food/coins
 - BLESSING: Health boost for villagers
+
+Event Timing:
+- Events occur ONCE per year on a RANDOM day
+- At the start of each year, a random day (1 to DAYS_PER_YEAR) is selected
+- When that day arrives, the event triggers
+- This creates anticipation and strategic building of mitigations
 """
 from __future__ import annotations
 
@@ -15,16 +21,13 @@ import random
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from config import DAYS_PER_YEAR
 from world_utils import clamp, rand_int
 from buildings import get_building_level
 
 if TYPE_CHECKING:
     from src.models.villager import Villager
     from src.models.bank import Bank
-
-# Event configuration
-EVENT_CHANCE_PER_DAY = 0.12  # 12% chance of an event each day
-EVENT_COOLDOWN_DAYS = 45     # Minimum days between events
 
 # Event type weights (higher = more likely)
 EVENT_WEIGHTS = {
@@ -39,7 +42,6 @@ EVENT_WEIGHTS = {
 # In-memory event history (will be reset on server restart)
 # For persistent storage, this should be moved to database
 _event_history: list[dict] = []
-_last_event_day: int = -999
 
 
 def get_event_history() -> list[dict]:
@@ -48,24 +50,25 @@ def get_event_history() -> list[dict]:
 
 
 def clear_event_history() -> None:
-    """Clear event history."""
-    global _event_history, _last_event_day
+    """Clear event history and reset yearly tracking."""
+    global _event_history
     _event_history = []
-    _last_event_day = -999
 
 
 def _record_event(event_type: str, day: int, details: str, affected_count: int = 0) -> dict:
     """Record an event in history."""
-    global _last_event_day
+    # Calculate year from total day
+    year = ((day - 1) // DAYS_PER_YEAR) + 1
+    
     event = {
         "type": event_type,
         "day": day,
+        "year": year,
         "details": details,
         "affected_count": affected_count,
         "timestamp": datetime.utcnow().isoformat(),
     }
     _event_history.append(event)
-    _last_event_day = day
     
     # Keep only last 100 events
     if len(_event_history) > 100:
@@ -397,6 +400,16 @@ def _apply_blessing(characters: list[Villager], bank: Bank | None, current_day: 
     return msg, affected
 
 
+def _get_current_year(current_day: int) -> int:
+    """Calculate the current year from total day (1-indexed)."""
+    return ((current_day - 1) // DAYS_PER_YEAR) + 1
+
+
+def _get_day_in_year(current_day: int) -> int:
+    """Calculate the day within the current year (0-indexed, 0 to DAYS_PER_YEAR-1)."""
+    return (current_day - 1) % DAYS_PER_YEAR
+
+
 def maybe_trigger_event(
     characters: list[Villager],
     bank: Bank | None,
@@ -405,19 +418,45 @@ def maybe_trigger_event(
     """
     Check if a random event should occur and apply it.
     
+    Event Timing Logic (Yearly-based):
+    - Each year has ONE event on a RANDOM day
+    - Bank stores: last_event_year, event_day_for_year
+    - At year start (day 0 of year), pick a random day for the event
+    - When current day matches event_day_for_year, trigger the event
+    
     Returns:
         (message, event_record) if event occurred
         (None, None) if no event
     """
-    global _last_event_day
-    
-    # Check cooldown
-    if current_day - _last_event_day < EVENT_COOLDOWN_DAYS:
+    if bank is None:
         return None, None
     
-    # Random chance check
-    if random.random() > EVENT_CHANCE_PER_DAY:
+    current_year = _get_current_year(current_day)
+    day_in_year = _get_day_in_year(current_day)
+    
+    # Get tracking info from bank
+    last_event_year = bank.get("last_event_year_tracking") or 0
+    event_day_for_year = bank.get("event_day_for_year")
+    
+    # Check if we're in a new year that needs event scheduling
+    if last_event_year < current_year:
+        # New year! Pick a random day for this year's event (1 to DAYS_PER_YEAR-1)
+        # We use 1 to DAYS_PER_YEAR-1 to avoid day 0 (year transition day)
+        event_day_for_year = random.randint(1, DAYS_PER_YEAR - 1)
+        bank["event_day_for_year"] = event_day_for_year
+        bank["last_event_year_tracking"] = current_year
+        bank["event_triggered_this_year"] = False
+    
+    # Check if event already triggered this year
+    if bank.get("event_triggered_this_year", False):
         return None, None
+    
+    # Check if today is the event day
+    if day_in_year != event_day_for_year:
+        return None, None
+    
+    # Today is the event day! Trigger the event
+    bank["event_triggered_this_year"] = True
     
     # Pick and apply event
     event_type = _pick_event_type()

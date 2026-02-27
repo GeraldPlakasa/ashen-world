@@ -330,7 +330,7 @@ def generate_new_world(count: int = 50) -> tuple[int, int]:
         # total_day = 1 -> Year 1, Day 0
         save_day(1)
 
-        # Reset village bank
+        # Reset village bank (including new event tracking fields)
         save_bank({
             "tax_rate": 0.10,
             "balance": 0,
@@ -340,6 +340,10 @@ def generate_new_world(count: int = 50) -> tuple[int, int]:
             "last_election_message": "",
             "last_event_message": "",
             "last_event_day": None,
+            # New yearly event tracking
+            "last_event_year_tracking": 0,
+            "event_day_for_year": None,
+            "event_triggered_this_year": False,
         })
 
         clear_yearly_stats()

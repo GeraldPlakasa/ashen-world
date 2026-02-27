@@ -177,13 +177,16 @@ Key settings in `config.py`:
 
 ## Events System
 
-Random world events can occur during daily simulation, adding dynamic challenges and rewards to the village.
+Random world events occur during daily simulation, adding dynamic challenges and rewards to the village.
 
 ### Event Timing
 
-- **Trigger chance**: 12% per simulated day
-- **Cooldown**: Minimum 45 days between events
-- Events are checked at the end of each daily simulation cycle
+- **Frequency**: Once per year on a random day
+- **Scheduling**: At the start of each year, a random day (1 to 89) is selected for the event
+- **Trigger**: When that specific day arrives, the event automatically triggers
+- **Strategy**: Build mitigating structures (Clinic, Granary, Walls, etc.) before events occur
+
+This yearly timing creates anticipation and rewards strategic building construction. Event notifications display the Year for easier tracking.
 
 ### Event Types
 

@@ -42,6 +42,8 @@
                   <div style="color: var(--aw-text);" class="h6 mb-3">Table of Contents</div>
 
                   <div class="list-group list-group-flush" style="font-size: 13px;">
+                    <a class="list-group-item list-group-item-action" href="#events">🎲 World Events</a>
+                    <a class="list-group-item list-group-item-action" href="#weather">🌤️ Weather System</a>
                     <a class="list-group-item list-group-item-action" href="#pop">Village Population</a>
                     <a class="list-group-item list-group-item-action" href="#actions">Daily Actions</a>
                     <a class="list-group-item list-group-item-action" href="#combat">Combat & Progression</a>
@@ -49,7 +51,7 @@
                     <a class="list-group-item list-group-item-action" href="#marriage">Marriage & Family</a>
                     <a class="list-group-item list-group-item-action" href="#birth">Birth & Childhood</a>
                     <a class="list-group-item list-group-item-action" href="#inherit">Inheritance</a>
-                    <a class="list-group-item list-group-item-action" href="#politics">Leadership & Politics</a>
+                    <a class="list-group-item list-group-item-action" href="#politics">Leadership & Elections</a>
                     <a class="list-group-item list-group-item-action" href="#economy">Economy & Tax</a>
                     <a class="list-group-item list-group-item-action" href="#buildings">Building System</a>
                     <a class="list-group-item list-group-item-action" href="#rules">Rules & Constraints</a>
@@ -68,6 +70,125 @@
                   <div style="color: var(--aw-text);" class="h6 mb-3">Detailed Documentation</div>
 
                   <div class="accordion" id="featuresAccordion">
+
+                    <!-- EVENTS SYSTEM -->
+                    <div class="accordion-item" id="events">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cEvents">🎲 World Events System</button>
+                      </h2>
+                      <div id="cEvents" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <p class="mb-3">Random world events add dynamic challenges and rewards to the village. Events occur <strong>once per year</strong> on a random day.</p>
+                          
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">☠️ Plague</div>
+                                <ul class="small mb-0">
+                                  <li>-15-40 HP for 40-55% of villagers</li>
+                                  <li>Can cause deaths</li>
+                                  <li><strong>Mitigation:</strong> Clinic (-20% severity per level)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🌾 Famine</div>
+                                <ul class="small mb-0">
+                                  <li>+15-30 hunger for 60-80% of villagers</li>
+                                  <li>Treasury loses 5-15%</li>
+                                  <li><strong>Mitigation:</strong> Granary (-20% severity per level)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🎉 Festival</div>
+                                <ul class="small mb-0">
+                                  <li>+2-8 REP, HP restore, hunger reduction</li>
+                                  <li>Treasury gains 50-150 coins</li>
+                                  <li><strong>Boost:</strong> Temple, Tavern (+15% per level)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">⚔️ Invasion</div>
+                                <ul class="small mb-0">
+                                  <li>Combat damage (20-50 HP), possible deaths</li>
+                                  <li>Treasury loses 10-25%</li>
+                                  <li><strong>Mitigation:</strong> Barracks (-15%), Walls (-20% per level)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🌻 Good Harvest</div>
+                                <ul class="small mb-0">
+                                  <li>Reduces hunger for all villagers</li>
+                                  <li>Bonus coins for nature workers</li>
+                                  <li><strong>Boost:</strong> Granary, Market (+20% per level)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">✨ Blessing</div>
+                                <ul class="small mb-0">
+                                  <li>+25-50 HP heal for all</li>
+                                  <li>30% chance of +1-3 ATK/DEF/INT</li>
+                                  <li><strong>Boost:</strong> Temple (+25% per level)</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="feature-box">
+                            <div style="color: var(--aw-text);" class="small mb-1">Event Timing</div>
+                            <ul class="small mb-0">
+                              <li><strong>Frequency:</strong> Once per year, on a random day</li>
+                              <li><strong>Event Type:</strong> Weighted random (positive events more common)</li>
+                              <li>Event notifications show Year for easier tracking</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- WEATHER SYSTEM -->
+                    <div class="accordion-item" id="weather">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cWeather">🌤️ Weather System</button>
+                      </h2>
+                      <div id="cWeather" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <p class="mb-3">Weather changes every 5 days and affects villager actions.</p>
+                          
+                          <div class="row g-2">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">☀️ Sunny Weather</div>
+                                <ul class="small mb-0">
+                                  <li>Normal work efficiency</li>
+                                  <li>Standard hunting conditions</li>
+                                  <li>Base socializing bonuses</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🌧️ Rainy Weather</div>
+                                <ul class="small mb-0">
+                                  <li>35% chance each weather roll</li>
+                                  <li>Affects outdoor activities</li>
+                                  <li>Visual rain effect on dashboard</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                     <div class="accordion-item" id="pop">
                       <h2 class="accordion-header">
@@ -163,13 +284,40 @@
                       </h2>
                       <div id="cMarriage" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
-                          <ul class="mb-0">
-                            <li>Love threshold triggers marriage</li>
-                            <li>Spouse system with mutual tracking</li>
-                            <li>Breakup mechanics</li>
-                            <li>Same-family marriage prohibited</li>
-                            <li>Widowing when spouse dies</li>
-                          </ul>
+                          <div class="row g-2">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Marriage Requirements</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Love threshold:</strong> 70+ relationship score</li>
+                                  <li><strong>Age:</strong> Both partners must be 18+</li>
+                                  <li><strong>Family:</strong> Different families only</li>
+                                  <li><strong>Status:</strong> Both must be unmarried</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Spouse System</div>
+                                <ul class="small mb-0">
+                                  <li>Mutual spouse tracking (spouseId)</li>
+                                  <li>King's spouse becomes Queen automatically</li>
+                                  <li>Widowing on spouse death</li>
+                                  <li>Remarriage allowed after widowing</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-12">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Breakup & Divorce</div>
+                                <ul class="small mb-0">
+                                  <li>Relationship decay can trigger breakup</li>
+                                  <li>Negative relationship scores lead to divorce</li>
+                                  <li>Children remain linked to both parents</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -223,28 +371,52 @@
 
                     <div class="accordion-item" id="politics">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cPolitics">Leadership & Politics</button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cPolitics">Leadership & Elections</button>
                       </h2>
                       <div id="cPolitics" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
                           <div class="row g-2">
-                            <div class="col-12">
+                            <div class="col-md-6">
                               <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">King System</div>
+                                <div style="color: var(--aw-text);" class="small mb-1">👑 King System</div>
                                 <ul class="small mb-0">
-                                  <li>Elections every 5 years</li>
-                                  <li>Emergency elections on death</li>
-                                  <li>Term limits: 3 max</li>
-                                  <li>Dynasty bonus</li>
+                                  <li><strong>Scheduled:</strong> Elections every 5 years</li>
+                                  <li><strong>Emergency:</strong> Immediate election if King dies</li>
+                                  <li><strong>Term limits:</strong> 3 terms lifetime max</li>
+                                  <li><strong>Dynasty bonus:</strong> Same family gets advantage</li>
                                 </ul>
                               </div>
                             </div>
-                            <div class="col-12">
+                            <div class="col-md-6">
                               <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Assassination</div>
+                                <div style="color: var(--aw-text);" class="small mb-1">🗳️ Election Mechanics</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Voters:</strong> All villagers age 16+</li>
+                                  <li><strong>Candidates:</strong> Adults 18+, prefer males</li>
+                                  <li><strong>Results:</strong> Vote count + percentage shown</li>
+                                  <li><strong>Tie-breaker:</strong> Leadership → REP → INT → Level</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">📊 Leadership Score</div>
+                                <ul class="small mb-0">
+                                  <li>INT × 1.2 + REP × 0.9 + Level × 2.0</li>
+                                  <li>Trait bonuses: Wise (+14), Generous (+8)</li>
+                                  <li>Trait penalties: Greedy (-10), Deceitful (-12)</li>
+                                  <li>Age preference: 22-55 years optimal</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🗡️ Assassination</div>
                                 <ul class="small mb-0">
                                   <li>Daily chance to assassinate enemies</li>
-                                  <li>Influenced by traits + buildings</li>
+                                  <li>Influenced by traits (Deceitful, Brave)</li>
+                                  <li>Walls building reduces success rate</li>
+                                  <li>Royal Court increases detection</li>
                                 </ul>
                               </div>
                             </div>
@@ -277,32 +449,53 @@
                         <div class="accordion-body">
                           <div class="row g-2 mb-3">
                             <div class="col-md-6">
-                              <ul class="small mb-0">
-                                <li>Marketplace — work income</li>
-                                <li>Library — study boost</li>
-                                <li>Barracks — training</li>
-                                <li>Granary — hunger</li>
-                                <li>Clinic — survival</li>
-                                <li>Walls — defense</li>
-                              </ul>
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Economic Buildings</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Marketplace</strong> — work income, harvest boost</li>
+                                  <li><strong>Treasury</strong> — passive interest (0.3%/level/day)</li>
+                                  <li><strong>Tax Office</strong> — adjusts tax rate</li>
+                                  <li><strong>Blacksmith</strong> — gear quality</li>
+                                </ul>
+                              </div>
                             </div>
                             <div class="col-md-6">
-                              <ul class="small mb-0">
-                                <li>Temple — REP gains</li>
-                                <li>Blacksmith — gear</li>
-                                <li>Treasury — interest</li>
-                                <li>Royal Court — prestige</li>
-                                <li>Tax Office — tax rate</li>
-                                <li>Tavern — social</li>
-                              </ul>
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Military Buildings</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Barracks</strong> — training, invasion -15%/level</li>
+                                  <li><strong>Walls</strong> — defense, invasion -20%/level</li>
+                                  <li><strong>Royal Court</strong> — prestige, assassination detection</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Survival Buildings</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Clinic</strong> — survival, plague -20%/level</li>
+                                  <li><strong>Granary</strong> — hunger, famine -20%/level</li>
+                                  <li><strong>Library</strong> — study boost</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Social Buildings</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Temple</strong> — REP gains, blessing +25%/level</li>
+                                  <li><strong>Tavern</strong> — social, festival +15%/level</li>
+                                </ul>
+                              </div>
                             </div>
                           </div>
                           <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">Mechanics</div>
+                            <div style="color: var(--aw-text);" class="small mb-1">🔧 Mechanics</div>
                             <ul class="small mb-0">
-                              <li>3 levels per building</li>
-                              <li>Health system (0–100%) with decay</li>
-                              <li>Auto-repair below 60%</li>
+                              <li><strong>3 levels</strong> per building (upgrade costs increase)</li>
+                              <li><strong>Health system:</strong> 0–100%, decays over time</li>
+                              <li><strong>Auto-repair:</strong> Triggers below 60% health</li>
+                              <li><strong>Event mitigations:</strong> Buildings reduce negative event impacts</li>
                             </ul>
                           </div>
                         </div>
