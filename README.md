@@ -9,6 +9,7 @@ A living-village simulation built with Flask. Manage villagers, elections, build
 - Player-made characters (one per user) with custom trait + random trait
 - Simulation loop: daily actions, hunger, relationships, marriage/children, leadership elections, corruption, assassination, inheritance
 - Economy and buildings: tax policy tied to king traits, treasury balance, construct/upgrade/repair, health decay
+- Random world events: plague, famine, invasion, festival, harvest, blessing (12% daily chance)
 - Weather system affecting villager actions (sunny/rain)
 - Family tree visualization with vis-network
 - Leaderboard with yearly champions and all-time records
@@ -45,7 +46,8 @@ ashen-world/
 │   │   ├── election_service.py     # Elections, leadership scoring
 │   │   ├── family_service.py       # Birth, childhood, coming-of-age, inheritance
 │   │   ├── relationship_service.py # Relationships, marriage, corruption, assassination
-│   │   └── building_service.py     # Tax policy, construction, upgrades, repairs
+│   │   ├── building_service.py     # Tax policy, construction, upgrades, repairs
+│   │   └── event_service.py        # Random world events (plague, famine, festival, etc.)
 │   ├── models/               # TypedDict data models
 │   │   ├── __init__.py       #   Re-exports all types
 │   │   ├── villager.py       #   Villager TypedDict
@@ -172,6 +174,45 @@ Key settings in `config.py`:
 | `ELECTION_INTERVAL_YEARS` | 5 | Years between scheduled elections |
 | `MAX_BUILDING_LEVEL` | 3 | Maximum building upgrade level |
 | `KING_MAX_TERMS` | 3 | Lifetime term limit for King |
+
+## Events System
+
+Random world events can occur during daily simulation, adding dynamic challenges and rewards to the village.
+
+### Event Timing
+
+- **Trigger chance**: 12% per simulated day
+- **Cooldown**: Minimum 3 days between events
+- Events are checked at the end of each daily simulation cycle
+
+### Event Types
+
+| Event | Weight | Chance | Effect | Mitigating Building |
+|-------|--------|--------|--------|---------------------|
+| 🌻 **Good Harvest** | 25 | 27.8% | Reduces hunger for all villagers, bonus coins for nature workers (Farmer, Shepherd, etc.), treasury gains 100-300 coins | Granary, Market |
+| 🎉 **Festival** | 20 | 22.2% | +2-8 REP for all, HP restore, hunger reduction, treasury gains 50-150 coins | Temple, Tavern |
+| ✨ **Blessing** | 15 | 16.7% | +25-50 HP heal for all, 30% chance of +1-3 to ATK/DEF/INT | Temple |
+| ⚔️ **Invasion** | 12 | 13.3% | Combat damage (20-50 HP), possible deaths, treasury loses 10-25% | Barracks, Walls |
+| 🌾 **Famine** | 10 | 11.1% | +15-30 hunger for 60-80% of villagers, treasury loses 5-15% | Granary |
+| ☠️ **Plague** | 8 | 8.9% | -15-40 HP for 40-55% of villagers, possible deaths | Clinic |
+
+### Building Mitigation
+
+Buildings reduce negative event impacts or boost positive ones:
+
+| Building | Effect on Events |
+|----------|------------------|
+| **Clinic** | Reduces plague severity by 20% per level |
+| **Granary** | Reduces famine severity by 20% per level; boosts harvest gains by 20% per level |
+| **Market** | Boosts harvest gains by 20% per level |
+| **Temple** | Boosts blessing effects by 25% per level; boosts festival effects by 15% per level |
+| **Tavern** | Boosts festival effects by 15% per level |
+| **Barracks** | Reduces invasion damage by 15% per level |
+| **Walls** | Reduces invasion damage by 20% per level |
+
+### Event Banner
+
+When an event occurs, a banner displays on the dashboard showing the latest event message and the day it happened. The banner persists until a new event occurs.
 
 ## Data & Persistence
 

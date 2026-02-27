@@ -52,6 +52,8 @@ def load_bank() -> Bank:
             "building_health": health,
             "last_election_year": data.get("last_election_year"),
             "last_election_message": data.get("last_election_message", ""),
+            "last_event_message": data.get("last_event_message", ""),
+            "last_event_day": data.get("last_event_day"),
             "year_stats": year_stats,
             "yearly_history": yearly_history,
         }
@@ -76,6 +78,8 @@ def save_bank(bank: Bank) -> None:
         "building_health": bank.get("building_health") if isinstance(bank.get("building_health"), dict) else {},
         "last_election_year": bank.get("last_election_year"),
         "last_election_message": bank.get("last_election_message", ""),
+        "last_event_message": bank.get("last_event_message", ""),
+        "last_event_day": bank.get("last_event_day"),
         "year_stats": year_stats,
         "yearly_history": yearly_history,
     }

@@ -45,6 +45,7 @@ from src.services.building_service import (
     maybe_repair_buildings,
 )
 from src.services.family_service import settle_inheritance_phase
+from src.services.event_service import clear_event_history
 
 _state_lock = threading.Lock()
 
@@ -337,9 +338,14 @@ def generate_new_world(count: int = 50) -> tuple[int, int]:
             "building_health": {},
             "last_election_year": None,
             "last_election_message": "",
+            "last_event_message": "",
+            "last_event_day": None,
         })
 
         clear_yearly_stats()
+
+        # Reset in-memory event history
+        clear_event_history()
 
         # Reset weather to default
         payload = load_world_payload()
