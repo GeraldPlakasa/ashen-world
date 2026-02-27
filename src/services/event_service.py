@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 # Event configuration
 EVENT_CHANCE_PER_DAY = 0.12  # 12% chance of an event each day
-EVENT_COOLDOWN_DAYS = 3      # Minimum days between events
+EVENT_COOLDOWN_DAYS = 45     # Minimum days between events
 
 # Event type weights (higher = more likely)
 EVENT_WEIGHTS = {

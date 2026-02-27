@@ -495,7 +495,7 @@ def api_state():
         "last_election_message": bank.get("last_election_message", ""),
         "last_event_message": bank.get("last_event_message", ""),
         "last_event_day": bank.get("last_event_day"),
-        "weather": bank.get("weather", "sunny"),
+        "weather": weather,
     })
 
 @app.route("/features", methods=["GET"])

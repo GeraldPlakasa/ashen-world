@@ -182,7 +182,7 @@ Random world events can occur during daily simulation, adding dynamic challenges
 ### Event Timing
 
 - **Trigger chance**: 12% per simulated day
-- **Cooldown**: Minimum 3 days between events
+- **Cooldown**: Minimum 45 days between events
 - Events are checked at the end of each daily simulation cycle
 
 ### Event Types
