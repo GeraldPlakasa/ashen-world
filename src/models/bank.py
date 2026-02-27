@@ -12,5 +12,7 @@ class Bank(TypedDict, total=False):
     building_health: dict[str, int]
     last_election_year: int | None
     last_election_message: str
+    last_event_message: str
+    last_event_day: int | None
     year_stats: dict
     yearly_history: list

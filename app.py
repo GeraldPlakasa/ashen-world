@@ -78,6 +78,8 @@ def landing():
     tax_rate = village_bank.get("tax_rate", 0.10)
     last_election_year = village_bank.get("last_election_year")
     last_election_message = village_bank.get("last_election_message", "")
+    last_event_message = village_bank.get("last_event_message", "")
+    last_event_day = village_bank.get("last_event_day")
 
     village_buildings = build_building_summary(village_bank)
 
@@ -113,6 +115,8 @@ def landing():
         pinned_rel_conflicts=pinned_rel_conflicts,
         last_election_year=last_election_year,
         last_election_message=last_election_message,
+        last_event_message=last_event_message,
+        last_event_day=last_event_day,
         pinned_spouse_name=pinned_spouse_name,
         pinned_spouse_alive=pinned_spouse_alive,
         pinned_mother=pinned_mother,
@@ -489,6 +493,8 @@ def api_state():
         "buildings": buildings_payload,
         "last_election_year": bank.get("last_election_year"),
         "last_election_message": bank.get("last_election_message", ""),
+        "last_event_message": bank.get("last_event_message", ""),
+        "last_event_day": bank.get("last_event_day"),
         "weather": bank.get("weather", "sunny"),
     })
 

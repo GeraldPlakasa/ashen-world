@@ -60,6 +60,19 @@
           </section>
           {% endif %}
 
+          {% if last_event_message %}
+          <!-- Latest Event Banner -->
+          <section class="game-card mb-3" style="border-left: 3px solid var(--aw-accent);">
+            <div class="card-body py-3">
+              <div class="small" style="color: var(--aw-text-muted);">Latest Event</div>
+              <div style="color: var(--aw-text);">
+                {% if last_event_day %}Day {{ last_event_day }} — {% endif %}
+                {{ last_event_message }}
+              </div>
+            </div>
+          </section>
+          {% endif %}
+
           {% if pinned_character %}
           <!-- Hero Card (Pinned Character) -->
           <section class="hero-card mb-3 {% if pinned_character.job == 'King' %}is-king{% endif %} {% if not pinned_character.alive %}is-dead{% endif %}">
