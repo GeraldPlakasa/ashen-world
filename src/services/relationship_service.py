@@ -275,7 +275,7 @@ def spouse_daily_phase(characters: list[Villager], current_day: int) -> None:
             v["spouseId"] = 0
             v["spouseSinceDay"] = 0
 
-    # --------- Breakup phase (very small) ----------
+    # --------- Breakup phase (very rare) ----------
     for a in characters:
         if not a.get("alive", True):
             continue
@@ -295,18 +295,18 @@ def spouse_daily_phase(characters: list[Villager], current_day: int) -> None:
         score_ba = get_relationship_score(b, _safe_int(a.get("id")))
         score = min(score_ab, score_ba)
 
-        # Base: extremely small because this runs every day
-        p = 0.00002  # 0.002% per day (~0.73% per year)
+        # Base: extremely rare - divorce chance reduced significantly
+        p = 0.000005  # 0.0005% per day (~0.18% per year) - was 0.002%
 
-        # Only increase a bit if relationship is truly bad
-        if score < 70: p += 0.00003
-        if score < 50: p += 0.00006
-        if score < 30: p += 0.00012
-        if score < 10: p += 0.00025
-        if score < 0:  p += 0.00040
+        # Only increase slightly if relationship is truly bad
+        if score < 70: p += 0.000008
+        if score < 50: p += 0.000015
+        if score < 30: p += 0.000030
+        if score < 10: p += 0.000060
+        if score < 0:  p += 0.000100
 
-        # Cap: still small even at worst
-        p = min(0.001, max(0.0, p))
+        # Cap: still very small even at worst
+        p = min(0.0003, max(0.0, p))  # max ~0.03% per day
 
         if random.random() < p:
             _clear_spouses(a, b, "broke up")
@@ -345,7 +345,8 @@ def spouse_daily_phase(characters: list[Villager], current_day: int) -> None:
             s2 = get_relationship_score(b, a["id"])
             s = min(s1, s2)
 
-            if s < 100:
+            # Lowered requirement from 100 to 85 to make marriage easier
+            if s < 85:
                 continue
 
             if s > best_score:
@@ -355,8 +356,9 @@ def spouse_daily_phase(characters: list[Villager], current_day: int) -> None:
         if best_b is None:
             continue
 
-        p_marry = 0.04
-        p_marry = min(0.10, p_marry + max(0, best_score - 100) * 0.002)
+        # Marriage chance increased: 15% base (was 4%), max 35% (was 10%)
+        p_marry = 0.15
+        p_marry = min(0.35, p_marry + max(0, best_score - 100) * 0.005)
 
         if random.random() < p_marry:
             _set_spouses(a, best_b, current_day)

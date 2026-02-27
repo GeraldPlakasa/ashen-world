@@ -294,21 +294,33 @@ def hold_election(characters: list[Villager], current_day: int | None = None) ->
         return None, None
 
     win_votes = top_votes
+    
+    # Calculate percentage from total alive villagers
+    total_alive = len(alive)
+    vote_percentage = (win_votes / total_alive * 100) if total_alive > 0 else 0
 
     if term_limited_only:
         msg = (
             f"election: all candidates reached the {KING_MAX_TERMS}-term limit. "
-            f"Emergency vote, {winner['name']} chosen with {win_votes} votes."
+            f"Emergency vote, {winner['name']} chosen with {win_votes} votes "
+            f"({vote_percentage:.0f}% dari {total_alive} villagers)."
         )
     elif prev_king and prev_king is not winner:
         msg = (
-            f"election: {winner['name']} is the new King with {win_votes} votes. "
+            f"election: {winner['name']} is the new King with {win_votes} votes "
+            f"({vote_percentage:.0f}% dari {total_alive} villagers). "
             f"Former King {prev_king['name']} steps down."
         )
     elif not prev_king:
-        msg = f"election: {winner['name']} is elected King with {win_votes} votes."
+        msg = (
+            f"election: {winner['name']} is elected King with {win_votes} votes "
+            f"({vote_percentage:.0f}% dari {total_alive} villagers)."
+        )
     else:
-        msg = f"election: {winner['name']} remains King with {win_votes} votes."
+        msg = (
+            f"election: {winner['name']} remains King with {win_votes} votes "
+            f"({vote_percentage:.0f}% dari {total_alive} villagers)."
+        )
 
     # Apply roles
     if prev_king and prev_king is not winner:

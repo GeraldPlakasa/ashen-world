@@ -31,6 +31,9 @@ from src.services.relationship_service import (
     maybe_corrupt_from_bank,
     king_assassination_phase,
 )
+from src.services.event_service import (
+    maybe_trigger_event,
+)
 from src.services.family_service import (
     child_daily_phase,
     coming_of_age_phase,
@@ -286,12 +289,12 @@ def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -
             heir["last_action"] = note
 
 
-def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank, int]:
+def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank, int, str | None]:
     """
     Simulate actions for one day for each villager in the list.
     
     Returns:
-        (characters, bank, corruption_total)
+        (characters, bank, corruption_total, event_message)
     """
     reset_id_from_characters(characters)
     weather_today = load_weather()
@@ -345,8 +348,11 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     # 3.5) Player inheritance
     player_inheritance_phase(characters, current_day=current_day)
 
-    # 4) Log history LAST
+    # 4) Random world events (plague, famine, festival, etc.)
+    event_message, _event_record = maybe_trigger_event(characters, bank, current_day)
+
+    # 5) Log history LAST
     for v in characters:
         append_action_history(v)
 
-    return characters, bank, corruption_total
+    return characters, bank, corruption_total, event_message

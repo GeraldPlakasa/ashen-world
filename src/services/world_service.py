@@ -181,7 +181,12 @@ def advance_one_day() -> tuple:
         bank = update_tax_policy(characters, bank, log_it=False)
 
         # --- Daily simulation (combat, income, deaths, etc.) ---
-        characters, bank, corruption_today = simulate_one_day(characters, bank, current_day=new_total_day)
+        characters, bank, corruption_today, event_message = simulate_one_day(characters, bank, current_day=new_total_day)
+        
+        # Store event message if one occurred
+        if event_message:
+            bank["last_event_message"] = event_message
+            bank["last_event_day"] = new_total_day
 
         for v in characters:
             if not v.get("alive", True) or v.get("hp", 0) <= 0:
