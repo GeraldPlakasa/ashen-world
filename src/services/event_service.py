@@ -206,11 +206,10 @@ def _apply_festival(characters: list[Villager], bank: Bank | None, current_day: 
         rep_boost = int(rand_int(2, 8) * bonus_mod)
         v["rep"] = clamp(rep + rep_boost, -100, 100)
         
-        # Small HP restore
+        # Small HP restore (no cap)
         hp = int(v.get("hp", 100) or 100)
-        max_hp = int(v.get("max_hp", 200) or 200)
         hp_restore = int(rand_int(5, 15) * bonus_mod)
-        v["hp"] = min(hp + hp_restore, max_hp)
+        v["hp"] = hp + hp_restore
         
         # Reduce hunger
         hunger = int(v.get("hunger", 0) or 0)
@@ -372,11 +371,10 @@ def _apply_blessing(characters: list[Villager], bank: Bank | None, current_day: 
         affected += 1
         
         hp = int(v.get("hp", 100) or 100)
-        max_hp = int(v.get("max_hp", 200) or 200)
         
-        # Heal 25-50 HP
+        # Heal 25-50 HP (no cap)
         heal = int(rand_int(25, 50) * bonus_mod)
-        v["hp"] = min(hp + heal, max_hp)
+        v["hp"] = hp + heal
         
         # Small stat boost
         if random.random() < 0.3:

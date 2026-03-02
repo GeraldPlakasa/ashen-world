@@ -221,9 +221,9 @@ def _birth_probability(characters: list[Villager], mom: Villager, dad: Villager,
     mom_age = int(mom.get("age", 0) or 0)
     dad_age = int(dad.get("age", 0) or 0)
 
-    if mom_age < 18 or mom_age > 42:
+    if mom_age < 18 or mom_age > 50:
         return 0.0
-    if dad_age < 18 or dad_age > 65:
+    if dad_age < 18 or dad_age > 75:
         return 0.0
 
     # cooldown check

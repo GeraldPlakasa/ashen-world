@@ -206,8 +206,8 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
         v["rep"]   += rep_gain
         v["exp"]   += exp_gain
 
-        # Scratch damage even on win
-        scratch = max(0, round(dmg_var * 0.25))
+        # Scratch damage even on win (reduced from 0.25 to 0.10)
+        scratch = max(0, round(dmg_var * 0.10))
         v["hp"] = max(0, v["hp"] - scratch)
 
         died_after_win = (v["hp"] <= 0)

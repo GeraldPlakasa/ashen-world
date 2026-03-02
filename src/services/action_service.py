@@ -231,8 +231,7 @@ def handle_level_up(v: Villager) -> None:
         v["hp"] += rand_int(3, 6)
         leveled = True
 
-    if leveled:
-        v["hp"] = clamp(v["hp"], 1, 260)
+    # HP gains from leveling - no upper cap
 
 
 def create_shop_offer(v: Villager) -> ShopOffer:
@@ -518,10 +517,10 @@ def apply_action(
             else:
                 other = random.choice(candidates)
 
-                if random.random() < 0.8:
+                if random.random() < 0.85:
                     delta = rand_int(5, 15)
                 else:
-                    delta = -rand_int(2, 4)
+                    delta = -rand_int(1, 2)
 
                 adjust_relationship(v, other, delta)
                 adjust_relationship(other, v, delta)
@@ -583,10 +582,10 @@ def apply_action(
                         )
 
                 for other in group:
-                    if random.random() < 0.9:
+                    if random.random() < 0.92:
                         delta = rand_int(3, 10)
                     else:
-                        delta = -rand_int(1, 3)
+                        delta = -rand_int(1, 2)
 
                     adjust_relationship(v, other, delta)
                     adjust_relationship(other, v, delta)
@@ -790,7 +789,7 @@ def apply_action(
             v["last_action"] = f"hunt (LOSS vs {enemy['tier']} {enemy['name']})"
 
     v["hunger"] = clamp(v["hunger"], 0, 100)
-    v["hp"] = min(v["hp"], 260)
+    # HP has no upper cap - can grow unlimited
     v["rep"] = clamp(int(v.get("rep", 0) or 0), -100, 100)
 
     handle_level_up(v)
