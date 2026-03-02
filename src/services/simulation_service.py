@@ -38,9 +38,101 @@ from src.services.family_service import (
     child_daily_phase,
     coming_of_age_phase,
 )
+from src.services.achievement_service import (
+    achievement_check_phase,
+    trigger_iron_will_check,
+)
 from src.repositories.world_repo import load_weather
 from src.models.villager import Villager
 from src.models.bank import Bank
+
+
+# ===========================================================================
+#  Elder Decay Phase (age 70+)
+# ===========================================================================
+
+def elder_decay_phase(characters: list[Villager], current_day: int = 0) -> int:
+    """
+    Apply daily decay for elderly villagers (70+).
+    
+    - Age 70-79: Small HP decay (1-3), minor stat decay chance
+    - Age 80-89: Moderate HP decay (2-5), stat decay, death chance
+    - Age 90-99: Heavy HP decay (3-8), stat decay, higher death chance
+    - Age 100+: Severe decay, high death chance
+    
+    Returns number of natural deaths from old age.
+    """
+    natural_deaths = 0
+    
+    for v in characters:
+        if not v.get("alive", True):
+            continue
+        
+        age = int(v.get("age", 0) or 0)
+        if age < 70:
+            continue
+        
+        hp = int(v.get("hp", 100) or 100)
+        atk = int(v.get("atk", 10) or 10)
+        def_stat = int(v.get("def", 10) or 10)
+        int_stat = int(v.get("int", 10) or 10)
+        
+        hp_decay = 0
+        stat_decay_chance = 0.0
+        death_chance = 0.0
+        
+        if 70 <= age < 80:
+            # Early elder: gentle decay
+            hp_decay = rand_int(1, 3)
+            stat_decay_chance = 0.05  # 5% chance per day
+            death_chance = 0.001  # 0.1% per day (~3.3% per year)
+        elif 80 <= age < 90:
+            # Old: moderate decay
+            hp_decay = rand_int(2, 5)
+            stat_decay_chance = 0.10  # 10% chance
+            death_chance = 0.005  # 0.5% per day (~16% per year)
+        elif 90 <= age < 100:
+            # Very old: heavy decay
+            hp_decay = rand_int(3, 8)
+            stat_decay_chance = 0.20  # 20% chance
+            death_chance = 0.015  # 1.5% per day (~40% per year)
+        else:  # 100+
+            # Ancient: severe decay
+            hp_decay = rand_int(5, 12)
+            stat_decay_chance = 0.35  # 35% chance
+            death_chance = 0.03  # 3% per day (~60% per year)
+        
+        # Apply HP decay
+        v["hp"] = max(0, hp - hp_decay)
+        
+        # Stat decay (random which stat decreases)
+        if random.random() < stat_decay_chance:
+            stat_to_decay = random.choice(["atk", "def", "int"])
+            decay_amount = rand_int(1, 2)
+            if stat_to_decay == "atk":
+                v["atk"] = max(1, atk - decay_amount)
+            elif stat_to_decay == "def":
+                v["def"] = max(1, def_stat - decay_amount)
+            else:
+                v["int"] = max(1, int_stat - decay_amount)
+        
+        # Check for natural death
+        if v["hp"] <= 0 or random.random() < death_chance:
+            v["hp"] = 0
+            v["alive"] = False
+            v["death_day"] = current_day
+            v["last_action"] = f"passed away peacefully at age {age}"
+            natural_deaths += 1
+        else:
+            # Update last_action to note aging effects
+            if hp_decay > 3:
+                current_action = v.get("last_action", "")
+                if current_action:
+                    v["last_action"] = f"{current_action} / aging -{hp_decay} HP"
+                else:
+                    v["last_action"] = f"feeling age... -{hp_decay} HP"
+    
+    return natural_deaths
 
 def maybe_add_immigrants(characters: list[Villager], bank: Bank) -> tuple[list[Villager], int]:
     """
@@ -348,10 +440,16 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     # 3.5) Player inheritance
     player_inheritance_phase(characters, current_day=current_day)
 
-    # 4) Random world events (plague, famine, festival, etc.)
+    # 4) Elder decay phase (70+ age penalties)
+    elder_decay_phase(characters, current_day=current_day)
+
+    # 5) Random world events (plague, famine, festival, etc.)
     event_message, _event_record = maybe_trigger_event(characters, bank, current_day)
 
-    # 5) Log history LAST
+    # 6) Achievement check phase
+    achievement_check_phase(characters, current_day=current_day)
+
+    # 7) Log history LAST
     for v in characters:
         append_action_history(v)
 

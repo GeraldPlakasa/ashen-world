@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 from config import DAYS_PER_YEAR
 from world_utils import clamp, rand_int
 from buildings import get_building_level
+from src.services.achievement_service import trigger_survivor_achievement
 
 if TYPE_CHECKING:
     from src.models.villager import Villager
@@ -124,6 +125,8 @@ def _apply_plague(characters: list[Villager], bank: Bank | None, current_day: in
             v["last_action"] = "died from plague"
             deaths += 1
         else:
+            # Survivor achievement for surviving plague
+            trigger_survivor_achievement(v)
             if v.get("last_action"):
                 v["last_action"] = f"{v['last_action']} / suffered plague (-{damage} HP)"
             else:

@@ -18,6 +18,7 @@ from src.services.relationship_service import (
     CRAFT_JOBS,
     NATURE_JOBS,
 )
+from src.services.achievement_service import add_king_voted_for
 from src.models.villager import Villager
 
 def get_traits_set(v: Villager) -> set[str]:
@@ -230,6 +231,7 @@ def hold_election(characters: list[Villager], current_day: int | None = None) ->
 
     from collections import defaultdict
     votes = defaultdict(int)
+    voter_choices = {}  # Track who each voter voted for
     voters = [v for v in alive if v.get("age", 0) >= 16]
 
     for v in voters:
@@ -242,6 +244,7 @@ def hold_election(characters: list[Villager], current_day: int | None = None) ->
                 best = c
         if best is not None:
             votes[best["id"]] += 1
+            voter_choices[v["id"]] = best["id"]  # Track this voter's choice
 
     if not votes:
         return None, None
@@ -329,6 +332,12 @@ def hold_election(characters: list[Villager], current_day: int | None = None) ->
 
     winner["job"] = "King"
     winner["kingTerms"] = int(winner.get("kingTerms", 0) or 0) + 1
+
+    # Track kingmaker achievement: record who voted for the winning king
+    winner_id = winner["id"]
+    for v in voters:
+        if voter_choices.get(v["id"]) == winner_id:
+            add_king_voted_for(v, winner_id)
 
     # Keep a hint on the winner as well
     winner["last_action"] = msg

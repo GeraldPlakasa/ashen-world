@@ -194,6 +194,7 @@ FIELDNAMES = [
     "motherId", "fatherId", "childrenIds","kingTerms",
     "death_day", "huntWins", "huntWinsYear",
     "born_day","last_birth_day",
+    "achievements", "kingsVotedFor",
 ]
 
 USERS_FIELDNAMES = ["username", "email", "password_hash"]

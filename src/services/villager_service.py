@@ -145,6 +145,8 @@ def make_row(taken_names: set[str], jobs_pool: list[str] | None = None, forced_g
         "huntWinsYear": 0,
         "born_day": 0,
         "last_birth_day": 0,
+        "achievements": "[]",
+        "kingsVotedFor": "[]",
     }
 
 def generate_characters(n: int = 50) -> list[Villager]:
