@@ -96,106 +96,109 @@
           </section>
 
           {% if current_entry %}
-          <!-- Live Year -->
-          <section class="game-card mb-3" style="border-left: 3px solid var(--aw-accent);">
+          <!-- Live Year - Redesigned -->
+          <section class="game-card mb-3 current-reign-card">
             <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Current Reign</div>
-                  <div style="color: var(--aw-text);" class="h5 mb-0">Year {{ current_entry.year }}</div>
+              <!-- Header -->
+              <div class="d-flex justify-content-between align-items-start mb-4">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="reign-year-badge">{{ current_entry.year }}</div>
+                  <div>
+                    <div style="color: var(--aw-text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;">Current Reign</div>
+                    <div style="color: var(--aw-text); font-size: 18px; font-weight: 600;">Year {{ current_entry.year }}</div>
+                  </div>
                 </div>
-                <span class="year-badge live animate-pulse-glow" style="color: var(--aw-accent);">● Live</span>
+                <span class="year-badge live animate-pulse-glow">● Live</span>
               </div>
 
-              <div class="row g-3 mb-3">
-                <div class="col-12 col-md-6 col-lg-4">
-                  <div class="d-flex align-items-center gap-3 p-3" style="background: var(--aw-bg-dark); border-radius: 10px;">
-                    <span style="font-size: 1.5rem;">♔</span>
-                    <div>
-                      <div style="color: var(--aw-text-muted); font-size: 11px;">Reigning Monarch</div>
-                      <div style="color: var(--aw-king); font-weight: 600;">{{ current_entry.king_name or "No King" }}</div>
+              <div class="row g-4">
+                <!-- Left Column: King + Stats -->
+                <div class="col-12 col-lg-5">
+                  <!-- Monarch Card -->
+                  <div class="monarch-card mb-3">
+                    <div class="monarch-icon">♔</div>
+                    <div class="monarch-info">
+                      <div class="monarch-label">Reigning Monarch</div>
+                      <div class="monarch-name">{{ current_entry.king_name or "No King" }}</div>
                       {% if current_entry.king_trait %}
-                      <div style="color: var(--aw-text-muted); font-size: 11px; margin-top: 2px;">{{ current_entry.king_trait }}</div>
+                      <div class="monarch-trait">{{ current_entry.king_trait }}</div>
                       {% endif %}
                     </div>
                   </div>
+
+                  <!-- Stats Grid -->
+                  <div class="reign-stats-grid">
+                    <div class="reign-stat">
+                      <div class="reign-stat-value" style="color: var(--aw-text);">{{ current_entry.days_counted or 0 }}</div>
+                      <div class="reign-stat-label">Days</div>
+                    </div>
+                    <div class="reign-stat">
+                      <div class="reign-stat-value" style="color: var(--aw-alive);">{{ current_entry.total_births or 0 }}</div>
+                      <div class="reign-stat-label">Births</div>
+                    </div>
+                    <div class="reign-stat">
+                      <div class="reign-stat-value" style="color: var(--aw-dead);">{{ current_entry.total_deaths or 0 }}</div>
+                      <div class="reign-stat-label">Deaths</div>
+                    </div>
+                    <div class="reign-stat">
+                      <div class="reign-stat-value" style="color: var(--aw-accent);">{{ current_entry.total_immigrants or 0 }}</div>
+                      <div class="reign-stat-label">Immigrants</div>
+                    </div>
+                    <div class="reign-stat">
+                      <div class="reign-stat-value" style="color: var(--aw-gold);">{{ current_entry.treasury_end or 0 }}</div>
+                      <div class="reign-stat-label">Treasury</div>
+                    </div>
+                    <div class="reign-stat">
+                      <div class="reign-stat-value" style="color: var(--aw-warning);">{{ current_entry.total_corruption or 0 }}</div>
+                      <div class="reign-stat-label">Corruption</div>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="col-6 col-md-3 col-lg-2">
-                  <div class="kpi-card dead">
-                    <div class="kpi-value">{{ current_entry.total_deaths or 0 }}</div>
-                    <div class="kpi-label">Deaths</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                  <div class="kpi-card alive">
-                    <div class="kpi-value">{{ current_entry.total_immigrants or 0 }}</div>
-                    <div class="kpi-label">Immigrants</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                  <div class="kpi-card gold">
-                    <div class="kpi-value">{{ current_entry.treasury_end or 0 }}</div>
-                    <div class="kpi-label">Treasury</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                  <div class="kpi-card">
-                    <div class="kpi-value">{{ current_entry.days_counted or 0 }}</div>
-                    <div class="kpi-label">Days</div>
-                  </div>
-                </div>
-              </div>
-              <div class="row g-3 mb-3">
-                <div class="col-6 col-md-3">
-                  <div class="kpi-card" style="border-color: var(--aw-alive);">
-                    <div class="kpi-value" style="color: var(--aw-alive);">{{ current_entry.total_births or 0 }}</div>
-                    <div class="kpi-label">Births</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div class="kpi-card" style="border-color: var(--aw-warning);">
-                    <div class="kpi-value" style="color: var(--aw-warning);">{{ current_entry.total_corruption or 0 }}</div>
-                    <div class="kpi-label">Corruption</div>
-                  </div>
-                </div>
-              </div>
-
-              <div style="color: var(--aw-text-muted); font-size: 11px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">This Year's Champions</div>
-              <div class="row g-2">
-                <div class="col-6 col-md-3">
-                  <div class="d-flex align-items-center gap-2 p-2" style="background: var(--aw-bg-dark); border-radius: 8px;">
-                    <span>⚔</span>
-                    <div style="font-size: 13px;">
-                      <div style="color: var(--aw-text);">{{ current_champions.most_atk.name or "—" }}</div>
-                      <div style="color: var(--aw-text-muted);">ATK {{ current_champions.most_atk.value or 0 }}</div>
+                <!-- Right Column: Champions -->
+                <div class="col-12 col-lg-7">
+                  <div style="color: var(--aw-text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">This Year's Champions</div>
+                  
+                  <div class="row g-2">
+                    <div class="col-6">
+                      <div class="champion-card">
+                        <div class="champion-icon" style="background: rgba(239,68,68,0.1); color: #ef4444;">⚔</div>
+                        <div class="champion-info">
+                          <div class="champion-title">Greatest Warrior</div>
+                          <div class="champion-name">{{ current_champions.most_atk.name or "—" }}</div>
+                          <div class="champion-value">ATK {{ current_champions.most_atk.value or 0 }}</div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div class="d-flex align-items-center gap-2 p-2" style="background: var(--aw-bg-dark); border-radius: 8px;">
-                    <span>✎</span>
-                    <div style="font-size: 13px;">
-                      <div style="color: var(--aw-text);">{{ current_champions.most_int.name or "—" }}</div>
-                      <div style="color: var(--aw-text-muted);">INT {{ current_champions.most_int.value or 0 }}</div>
+                    <div class="col-6">
+                      <div class="champion-card">
+                        <div class="champion-icon" style="background: rgba(59,130,246,0.1); color: #3b82f6;">✎</div>
+                        <div class="champion-info">
+                          <div class="champion-title">Greatest Scholar</div>
+                          <div class="champion-name">{{ current_champions.most_int.name or "—" }}</div>
+                          <div class="champion-value">INT {{ current_champions.most_int.value or 0 }}</div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div class="d-flex align-items-center gap-2 p-2" style="background: var(--aw-bg-dark); border-radius: 8px;">
-                    <span>◆</span>
-                    <div style="font-size: 13px;">
-                      <div style="color: var(--aw-text);">{{ current_champions.richest.name or "—" }}</div>
-                      <div style="color: var(--aw-text-muted);">{{ current_champions.richest.value or 0 }} coins</div>
+                    <div class="col-6">
+                      <div class="champion-card">
+                        <div class="champion-icon" style="background: rgba(234,179,8,0.1); color: #eab308;">◆</div>
+                        <div class="champion-info">
+                          <div class="champion-title">Wealthiest</div>
+                          <div class="champion-name">{{ current_champions.richest.name or "—" }}</div>
+                          <div class="champion-value">{{ current_champions.richest.value or 0 }} coins</div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div class="d-flex align-items-center gap-2 p-2" style="background: var(--aw-bg-dark); border-radius: 8px;">
-                    <span>◎</span>
-                    <div style="font-size: 13px;">
-                      <div style="color: var(--aw-text);">{{ current_champions.top_hunter.name or "—" }}</div>
-                      <div style="color: var(--aw-text-muted);">{{ current_champions.top_hunter.value or 0 }} kills</div>
+                    <div class="col-6">
+                      <div class="champion-card">
+                        <div class="champion-icon" style="background: rgba(168,85,247,0.1); color: #a855f7;">◎</div>
+                        <div class="champion-info">
+                          <div class="champion-title">Greatest Hunter</div>
+                          <div class="champion-name">{{ current_champions.top_hunter.name or "—" }}</div>
+                          <div class="champion-value">{{ current_champions.top_hunter.value or 0 }} kills</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

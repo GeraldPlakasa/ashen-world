@@ -42,21 +42,24 @@
                   <div style="color: var(--aw-text);" class="h6 mb-3">Table of Contents</div>
 
                   <div class="list-group list-group-flush" style="font-size: 13px;">
+                    <a class="list-group-item list-group-item-action" href="#updates">🆕 Latest Updates</a>
                     <a class="list-group-item list-group-item-action" href="#events">🎲 World Events</a>
                     <a class="list-group-item list-group-item-action" href="#weather">🌤️ Weather System</a>
-                    <a class="list-group-item list-group-item-action" href="#pop">Village Population</a>
-                    <a class="list-group-item list-group-item-action" href="#actions">Daily Actions</a>
-                    <a class="list-group-item list-group-item-action" href="#combat">Combat & Progression</a>
-                    <a class="list-group-item list-group-item-action" href="#relations">Relationships</a>
-                    <a class="list-group-item list-group-item-action" href="#marriage">Marriage & Family</a>
-                    <a class="list-group-item list-group-item-action" href="#birth">Birth & Childhood</a>
-                    <a class="list-group-item list-group-item-action" href="#inherit">Inheritance</a>
-                    <a class="list-group-item list-group-item-action" href="#politics">Leadership & Elections</a>
-                    <a class="list-group-item list-group-item-action" href="#economy">Economy & Tax</a>
-                    <a class="list-group-item list-group-item-action" href="#buildings">Building System</a>
-                    <a class="list-group-item list-group-item-action" href="#rules">Rules & Constraints</a>
-                    <a class="list-group-item list-group-item-action" href="#traits">Trait Behaviors</a>
-                    <a class="list-group-item list-group-item-action" href="#gear">Item / Gear</a>
+                    <a class="list-group-item list-group-item-action" href="#pop">👥 Village Population</a>
+                    <a class="list-group-item list-group-item-action" href="#actions">⚡ Daily Actions</a>
+                    <a class="list-group-item list-group-item-action" href="#combat">⚔️ Combat & Progression</a>
+                    <a class="list-group-item list-group-item-action" href="#relations">💬 Relationships</a>
+                    <a class="list-group-item list-group-item-action" href="#marriage">💍 Marriage & Family</a>
+                    <a class="list-group-item list-group-item-action" href="#birth">👶 Birth & Childhood</a>
+                    <a class="list-group-item list-group-item-action" href="#inherit">📜 Inheritance</a>
+                    <a class="list-group-item list-group-item-action" href="#politics">👑 Leadership & Elections</a>
+                    <a class="list-group-item list-group-item-action" href="#economy">💰 Economy & Tax</a>
+                    <a class="list-group-item list-group-item-action" href="#buildings">🏗️ Building System</a>
+                    <a class="list-group-item list-group-item-action" href="#leaderboard">🏆 Leaderboard</a>
+                    <a class="list-group-item list-group-item-action" href="#familytree">🌳 Family Tree</a>
+                    <a class="list-group-item list-group-item-action" href="#rules">📋 Rules & Constraints</a>
+                    <a class="list-group-item list-group-item-action" href="#traits">🎭 Trait Behaviors</a>
+                    <a class="list-group-item list-group-item-action" href="#gear">🗡️ Item / Gear</a>
                   </div>
                 </div>
               </section>
@@ -71,12 +74,67 @@
 
                   <div class="accordion" id="featuresAccordion">
 
+                    <!-- LATEST UPDATES -->
+                    <div class="accordion-item" id="updates">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cUpdates">🆕 Latest Updates</button>
+                      </h2>
+                      <div id="cUpdates" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <p class="mb-3">Recent additions to Ashen World:</p>
+                          
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🌤️ Weather Badge</div>
+                                <ul class="small mb-0">
+                                  <li>Weather indicator now visible in header</li>
+                                  <li>Shows ☀️ Sunny or 🌧️ Rainy</li>
+                                  <li>Auto-updates when weather changes</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">👶 Birth Tracking</div>
+                                <ul class="small mb-0">
+                                  <li>Birth count now tracked per year</li>
+                                  <li>Displayed in Leaderboard stats</li>
+                                  <li>Historical births in archived years</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">👑 King Trait Display</div>
+                                <ul class="small mb-0">
+                                  <li>King's traits shown in Leaderboard</li>
+                                  <li>Visible in both current and past reigns</li>
+                                  <li>Helps understand tax policy decisions</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">📰 Combined Notifications</div>
+                                <ul class="small mb-0">
+                                  <li>Election & Event banners merged</li>
+                                  <li>Unified "Recent News" card</li>
+                                  <li>Cleaner dashboard layout</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <!-- EVENTS SYSTEM -->
                     <div class="accordion-item" id="events">
                       <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cEvents">🎲 World Events System</button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cEvents">🎲 World Events System</button>
                       </h2>
-                      <div id="cEvents" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
+                      <div id="cEvents" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
                           <p class="mb-3">Random world events add dynamic challenges and rewards to the village. Events occur <strong>once per year</strong> on a random day.</p>
                           
@@ -162,29 +220,41 @@
                       </h2>
                       <div id="cWeather" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
-                          <p class="mb-3">Weather changes every 5 days and affects villager actions.</p>
+                          <p class="mb-3">Dynamic weather system that affects gameplay and visuals.</p>
                           
-                          <div class="row g-2">
+                          <div class="row g-2 mb-3">
                             <div class="col-md-6">
                               <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">☀️ Sunny Weather</div>
+                                <div style="color: var(--aw-text);" class="small mb-1">☀️ Sunny Weather (65%)</div>
                                 <ul class="small mb-0">
                                   <li>Normal work efficiency</li>
                                   <li>Standard hunting conditions</li>
                                   <li>Base socializing bonuses</li>
+                                  <li>Warm golden background glow</li>
                                 </ul>
                               </div>
                             </div>
                             <div class="col-md-6">
                               <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🌧️ Rainy Weather</div>
+                                <div style="color: var(--aw-text);" class="small mb-1">🌧️ Rainy Weather (35%)</div>
                                 <ul class="small mb-0">
-                                  <li>35% chance each weather roll</li>
-                                  <li>Affects outdoor activities</li>
-                                  <li>Visual rain effect on dashboard</li>
+                                  <li>Reduced outdoor activity efficiency</li>
+                                  <li>Hunting becomes harder</li>
+                                  <li>Animated rain particles on screen</li>
+                                  <li>Cool blue background glow</li>
                                 </ul>
                               </div>
                             </div>
+                          </div>
+
+                          <div class="feature-box">
+                            <div style="color: var(--aw-text);" class="small mb-1">⚙️ Weather Mechanics</div>
+                            <ul class="small mb-0">
+                              <li><strong>Roll frequency:</strong> Every 5 in-game days</li>
+                              <li><strong>Header badge:</strong> Current weather shown in dashboard header</li>
+                              <li><strong>Visual effects:</strong> Background gradient + rain animation</li>
+                              <li><strong>API sync:</strong> Weather updates in real-time via auto-refresh</li>
+                            </ul>
                           </div>
                         </div>
                       </div>
@@ -192,19 +262,59 @@
 
                     <div class="accordion-item" id="pop">
                       <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cPop">Village Population System</button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cPop">👥 Village Population System</button>
                       </h2>
-                      <div id="cPop" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
+                      <div id="cPop" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
-                          <ul class="mb-0">
-                            <li>Auto-generation of <strong>50 initial villagers</strong> with randomized stats</li>
-                            <li>Gender-based system (Male/Female)</li>
-                            <li>Age progression: <strong>1 year = 90 in-game days</strong></li>
-                            <li>Job assignment from <strong>50+ occupations</strong></li>
-                            <li>Trait system (~20 traits affecting behavior)</li>
-                            <li>Family name inheritance system</li>
-                            <li>Immigration system (new villagers can join)</li>
-                          </ul>
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🎲 Generation</div>
+                                <ul class="small mb-0">
+                                  <li><strong>50 initial villagers</strong> with randomized stats</li>
+                                  <li>Gender-based system (Male/Female)</li>
+                                  <li>Random age distribution (18-50)</li>
+                                  <li>Family name assignment</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">📊 Stats & Attributes</div>
+                                <ul class="small mb-0">
+                                  <li><strong>HP:</strong> Health (0 = death)</li>
+                                  <li><strong>ATK/DEF:</strong> Combat stats</li>
+                                  <li><strong>INT:</strong> Intelligence</li>
+                                  <li><strong>REP:</strong> Reputation</li>
+                                  <li><strong>Hunger:</strong> Food level (100 = starving)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">⏰ Time System</div>
+                                <ul class="small mb-0">
+                                  <li><strong>1 year = 90 in-game days</strong></li>
+                                  <li>Villagers age +1 at year boundary</li>
+                                  <li>Natural death at old age (70+)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🚪 Immigration</div>
+                                <ul class="small mb-0">
+                                  <li>New villagers can join daily</li>
+                                  <li>Triggered when population low</li>
+                                  <li>Random stats and traits</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="feature-box">
+                            <div style="color: var(--aw-text);" class="small mb-1">💼 Jobs (50+ Occupations)</div>
+                            <p class="small mb-1">Farmer, Blacksmith, Merchant, Scholar, Soldier, Hunter, Healer, Priest, Noble, Knight, Guard, Baker, Tailor, Mason, Carpenter, Miner, Shepherd, Fisherman, Brewer, Innkeeper, Scribe, Alchemist, Bard, Thief, Assassin, and many more...</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -247,33 +357,99 @@
 
                     <div class="accordion-item" id="combat">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cCombat">Combat & Progression</button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cCombat">⚔️ Combat & Progression</button>
                       </h2>
                       <div id="cCombat" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
-                          <ul class="mb-0">
-                            <li>Hunt system with procedural enemies (common, elite, legendary)</li>
-                            <li>Enemy scaling based on villager level</li>
-                            <li>Combat resolution with win/loss/death outcomes</li>
-                            <li>Experience and leveling system</li>
-                            <li>Starvation damage mechanics</li>
-                          </ul>
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🎯 Hunt System</div>
+                                <ul class="small mb-0">
+                                  <li>Procedural enemy generation</li>
+                                  <li><strong>Common:</strong> Basic creatures</li>
+                                  <li><strong>Elite:</strong> Stronger foes (2x stats)</li>
+                                  <li><strong>Legendary:</strong> Rare bosses (3x stats)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">⚡ Combat Resolution</div>
+                                <ul class="small mb-0">
+                                  <li>ATK vs enemy DEF calculation</li>
+                                  <li>Win: XP + coins + hunt kills</li>
+                                  <li>Loss: HP damage</li>
+                                  <li>Death: HP reaches 0</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">📈 Leveling</div>
+                                <ul class="small mb-0">
+                                  <li>XP from combat, training, work</li>
+                                  <li>Level up grants stat bonuses</li>
+                                  <li>Higher level = stronger enemies</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">💀 Starvation</div>
+                                <ul class="small mb-0">
+                                  <li>Hunger 100+ = HP damage/day</li>
+                                  <li>Buy food to reduce hunger</li>
+                                  <li>Children immune to hunger</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div class="accordion-item" id="relations">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRel">Relationship System</button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRel">💬 Relationship System</button>
                       </h2>
                       <div id="cRel" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
-                          <ul class="mb-0">
-                            <li>Dynamic scores (<strong>-100 to +120</strong>)</li>
-                            <li>Labels: friend, bestfriend, love, rival, enemy</li>
-                            <li>Relationship-based actions</li>
-                            <li>Decay/growth over time</li>
-                          </ul>
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">📊 Relationship Scores</div>
+                                <ul class="small mb-0">
+                                  <li>Range: <strong>-100 to +120</strong></li>
+                                  <li>Grows through socialize/hangout</li>
+                                  <li>Decays if not maintained</li>
+                                  <li>Traits affect relationship gains</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🏷️ Relationship Labels</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Enemy:</strong> -100 to -50</li>
+                                  <li><strong>Rival:</strong> -50 to -10</li>
+                                  <li><strong>Friend:</strong> +30 to +60</li>
+                                  <li><strong>Best Friend:</strong> +60 to +85</li>
+                                  <li><strong>Love:</strong> +85 to +120</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-12">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">💥 Relationship Effects</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Love:</strong> Enables marriage proposal</li>
+                                  <li><strong>Enemy:</strong> May trigger assassination attempts</li>
+                                  <li><strong>Family:</strong> Base relationship bonus for relatives</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -427,16 +603,56 @@
 
                     <div class="accordion-item" id="economy">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cEco">Economy & Tax</button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cEco">💰 Economy & Tax</button>
                       </h2>
                       <div id="cEco" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
-                          <ul class="mb-0">
-                            <li>Village treasury system</li>
-                            <li>Dynamic tax rates (0–35%)</li>
-                            <li>Tax on work and hunt income</li>
-                            <li>Corruption mechanics</li>
-                          </ul>
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🏦 Treasury System</div>
+                                <ul class="small mb-0">
+                                  <li>Village-wide treasury balance</li>
+                                  <li>Funds building construction</li>
+                                  <li>Treasury building adds daily interest</li>
+                                  <li>Events can add/remove treasury funds</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">📈 Tax System</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Rate:</strong> 0–35% (set by King's traits)</li>
+                                  <li><strong>Applied to:</strong> Work income, hunt loot</li>
+                                  <li><strong>Generous King:</strong> Lower tax (5-10%)</li>
+                                  <li><strong>Greedy King:</strong> Higher tax (25-35%)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">💸 Corruption</div>
+                                <ul class="small mb-0">
+                                  <li>King/Queen/Nobles can skim treasury</li>
+                                  <li>Daily chance based on traits</li>
+                                  <li><strong>Greedy:</strong> Higher corruption chance</li>
+                                  <li>Tracked yearly in Leaderboard</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">💵 Income Sources</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Work:</strong> Base coins by job</li>
+                                  <li><strong>Hunt:</strong> Loot from defeated enemies</li>
+                                  <li><strong>Steal:</strong> Risk action for coins</li>
+                                  <li><strong>Inheritance:</strong> From deceased relatives</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -497,6 +713,111 @@
                               <li><strong>Auto-repair:</strong> Triggers below 60% health</li>
                               <li><strong>Event mitigations:</strong> Buildings reduce negative event impacts</li>
                             </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- LEADERBOARD -->
+                    <div class="accordion-item" id="leaderboard">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cLeaderboard">🏆 Leaderboard / Hall of Legends</button>
+                      </h2>
+                      <div id="cLeaderboard" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <p class="mb-3">Track champions and historical records across all years.</p>
+                          
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🏅 All-Time Champions</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Greatest Warrior:</strong> Highest ATK ever</li>
+                                  <li><strong>Greatest Scholar:</strong> Highest INT ever</li>
+                                  <li><strong>Wealthiest:</strong> Most coins ever</li>
+                                  <li><strong>Greatest Hunter:</strong> Most kills in a year</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">📊 Current Reign Stats</div>
+                                <ul class="small mb-0">
+                                  <li>King name + traits</li>
+                                  <li>Days elapsed, births, deaths</li>
+                                  <li>Immigration count</li>
+                                  <li>Treasury balance, corruption</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🏆 Yearly Champions</div>
+                                <ul class="small mb-0">
+                                  <li>Top ATK/INT/Coins/Kills per year</li>
+                                  <li>Updated in real-time during current year</li>
+                                  <li>Finalized at year end</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">📜 Past Reigns Archive</div>
+                                <ul class="small mb-0">
+                                  <li>Complete records of previous years</li>
+                                  <li>King name + trait for each year</li>
+                                  <li>Birth/death/immigration/tax stats</li>
+                                  <li>Treasury change and corruption totals</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- FAMILY TREE -->
+                    <div class="accordion-item" id="familytree">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cFamilyTree">🌳 Family Tree</button>
+                      </h2>
+                      <div id="cFamilyTree" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <p class="mb-3">Interactive visualization of all family relationships in the village.</p>
+                          
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🔍 Visualization</div>
+                                <ul class="small mb-0">
+                                  <li>Powered by vis-network library</li>
+                                  <li>Interactive drag and zoom</li>
+                                  <li>Color-coded by status (alive/dead)</li>
+                                  <li>Gender indicators (M/F)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">👨‍👩‍👧 Relationships</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Parent→Child:</strong> Birth connections</li>
+                                  <li><strong>Spouse↔Spouse:</strong> Marriage links</li>
+                                  <li>Multi-generational dynasties</li>
+                                  <li>Orphan detection</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-12">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">⚰️ Graveyard Integration</div>
+                                <ul class="small mb-0">
+                                  <li>Dead villagers remain in tree (faded)</li>
+                                  <li>Archived villagers (25+ years dead) preserved in graveyard index</li>
+                                  <li>Historical lineages maintained across generations</li>
+                                </ul>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

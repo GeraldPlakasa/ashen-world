@@ -716,6 +716,157 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
 .year-card-body { padding: 16px; }
 
 /* =========================================================
+   Current Reign Card - Redesigned
+   ========================================================= */
+.current-reign-card {
+  border-left: 4px solid var(--aw-accent) !important;
+  background: linear-gradient(135deg, var(--aw-bg-card) 0%, rgba(0,180,216,0.03) 100%);
+}
+
+.reign-year-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--aw-accent), #0077b6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0,180,216,0.3);
+}
+
+.monarch-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--aw-bg-dark);
+  border-radius: 12px;
+  border: 1px solid var(--aw-border);
+}
+
+.monarch-icon {
+  font-size: 2rem;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(147,51,234,0.15), rgba(147,51,234,0.05));
+  border-radius: 12px;
+  border: 1px solid rgba(147,51,234,0.2);
+}
+
+.monarch-info { flex: 1; }
+
+.monarch-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--aw-text-muted);
+  margin-bottom: 4px;
+}
+
+.monarch-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--aw-king);
+}
+
+.monarch-trait {
+  font-size: 11px;
+  color: var(--aw-text-muted);
+  margin-top: 2px;
+}
+
+.reign-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.reign-stat {
+  background: var(--aw-bg-dark);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid var(--aw-border);
+}
+
+.reign-stat-value {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.reign-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--aw-text-muted);
+  margin-top: 4px;
+}
+
+.champion-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--aw-bg-dark);
+  border-radius: 10px;
+  border: 1px solid var(--aw-border);
+  height: 100%;
+}
+
+.champion-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.champion-info { flex: 1; min-width: 0; }
+
+.champion-title {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--aw-text-muted);
+}
+
+.champion-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--aw-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.champion-value {
+  font-size: 11px;
+  color: var(--aw-text-muted);
+}
+
+/* Mobile: 2 columns for stats */
+@media (max-width: 576px) {
+  .reign-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .reign-year-badge {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+/* =========================================================
    Status Badges
    ========================================================= */
 .status-badge {
