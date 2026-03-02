@@ -873,6 +873,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.weather) {
         document.body.dataset.weather = String(data.weather).toLowerCase();
         setWeatherTheme(data.weather);
+        
+        // Update weather badge
+        const weatherBadge = document.getElementById("weather-badge");
+        if (weatherBadge) {
+          const isRain = data.weather.toLowerCase() === "rain";
+          weatherBadge.className = "weather-indicator " + (isRain ? "rain" : "sunny");
+          const iconEl = weatherBadge.querySelector(".weather-icon");
+          const textEl = weatherBadge.querySelector(".weather-text");
+          if (iconEl) iconEl.textContent = isRain ? "🌧️" : "☀️";
+          if (textEl) textEl.textContent = isRain ? "Rainy" : "Sunny";
+        }
       }
 
       // Update year/day display

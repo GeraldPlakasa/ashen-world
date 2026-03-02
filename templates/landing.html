@@ -30,6 +30,10 @@
               Year {{ year }} · Day {{ day }} · {{ total_villagers }} villagers
             </span>
           </div>
+          <div class="weather-indicator {{ (weather_today or 'sunny') | lower }}" id="weather-badge">
+            <span class="weather-icon">{% if weather_today == 'rain' %}🌧️{% else %}☀️{% endif %}</span>
+            <span class="weather-text">{% if weather_today == 'rain' %}Rainy{% else %}Sunny{% endif %}</span>
+          </div>
         </header>
 
         <main class="aw-main">

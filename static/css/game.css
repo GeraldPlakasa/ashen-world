@@ -781,25 +781,36 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: default;
 }
 
 .weather-indicator.sunny {
-  background: rgba(202,138,4,0.1);
-  color: #a16207;
-  border: 1px solid rgba(202,138,4,0.2);
+  background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.1));
+  color: #d97706;
+  border: 1px solid rgba(251,191,36,0.3);
+  box-shadow: 0 2px 8px rgba(251,191,36,0.15);
 }
 
 .weather-indicator.rain {
-  background: rgba(37,99,235,0.1);
-  color: #1d4ed8;
-  border: 1px solid rgba(37,99,235,0.2);
+  background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(37,99,235,0.1));
+  color: #2563eb;
+  border: 1px solid rgba(59,130,246,0.3);
+  box-shadow: 0 2px 8px rgba(59,130,246,0.15);
 }
 
-.weather-icon { font-size: 12px; }
+.weather-icon { 
+  font-size: 14px; 
+  line-height: 1;
+}
+
+.weather-text {
+  letter-spacing: 0.02em;
+}
 
 /* =========================================================
    Feature Box
@@ -889,6 +900,19 @@ body.game-theme .aw-sidebar-logout-link {
 
 body.game-theme .aw-sidebar-logout-link:hover {
   color: var(--aw-sidebar-text);
+}
+
+/* Weather Indicator - Dark Theme */
+body.game-theme .weather-indicator.sunny {
+  background: linear-gradient(135deg, rgba(251,191,36,0.2), rgba(245,158,11,0.12));
+  color: #fbbf24;
+  border-color: rgba(251,191,36,0.35);
+}
+
+body.game-theme .weather-indicator.rain {
+  background: linear-gradient(135deg, rgba(96,165,250,0.2), rgba(59,130,246,0.12));
+  color: #60a5fa;
+  border-color: rgba(96,165,250,0.35);
 }
 
 /* =========================================================
