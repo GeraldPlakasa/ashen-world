@@ -289,12 +289,12 @@ def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -
             heir["last_action"] = note
 
 
-def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank, int, str | None]:
+def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank, int, str | None, int]:
     """
     Simulate actions for one day for each villager in the list.
     
     Returns:
-        (characters, bank, corruption_total, event_message)
+        (characters, bank, corruption_total, event_message, births_count)
     """
     reset_id_from_characters(characters)
     weather_today = load_weather()
@@ -340,7 +340,7 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     # 2) World phases (immigrants, spouses)
     characters, _added_count = maybe_add_immigrants(characters, bank)
     child_daily_phase(characters, current_day=current_day)
-    spouse_daily_phase(characters, current_day=current_day)
+    births_count = spouse_daily_phase(characters, current_day=current_day)
 
     # 3) King assassination phase
     king_assassination_phase(characters, bank=bank, current_day=current_day)
@@ -355,4 +355,4 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     for v in characters:
         append_action_history(v)
 
-    return characters, bank, corruption_total, event_message
+    return characters, bank, corruption_total, event_message, births_count

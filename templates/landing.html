@@ -47,84 +47,87 @@
             {% endif %}
           {% endwith %}
 
-          {% if last_election_message %}
-          <!-- Election Banner - Redesigned -->
-          <section class="game-card mb-3 notification-election">
+          {% if last_election_message or last_event_message %}
+          <!-- Combined Notification Banner -->
+          <section class="game-card mb-3 notification-combined">
             <div class="card-body py-3">
-              <div class="d-flex align-items-start gap-3">
-                <div class="notification-icon election-icon">👑</div>
-                <div class="flex-grow-1">
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="notification-badge election">ELECTION</span>
-                    {% if last_election_year %}<span class="notification-year">Year {{ last_election_year }}</span>{% endif %}
-                  </div>
-                  <div class="notification-content">
-                    {% set msg = last_election_message | replace('election: ', '') | replace('[Emergency] election: ', '') %}
-                    {% if '[Emergency]' in last_election_message %}
-                      <span class="notification-emergency">⚠️ EMERGENCY</span>
-                    {% endif %}
-                    {% if ' is the new King with ' in msg %}
-                      {% set parts = msg.split(' is the new King with ') %}
-                      <span class="notification-winner">{{ parts[0] }}</span> is the new King with 
-                      {% set vote_info = parts[1] %}
-                      <span class="notification-votes">{{ vote_info }}</span>
-                    {% elif ' is elected King with ' in msg %}
-                      {% set parts = msg.split(' is elected King with ') %}
-                      <span class="notification-winner">{{ parts[0] }}</span> is elected King with 
-                      <span class="notification-votes">{{ parts[1] }}</span>
-                    {% elif ' remains King with ' in msg %}
-                      {% set parts = msg.split(' remains King with ') %}
-                      <span class="notification-winner">{{ parts[0] }}</span> remains King with 
-                      <span class="notification-votes">{{ parts[1] }}</span>
-                    {% else %}
-                      {{ msg }}
-                    {% endif %}
+              <div style="color: var(--aw-text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">Recent News</div>
+              
+              <div class="d-flex flex-column gap-3">
+                {% if last_election_message %}
+                <!-- Election -->
+                <div class="d-flex align-items-start gap-3 notification-item notification-election-item">
+                  <div class="notification-icon election-icon">👑</div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      <span class="notification-badge election">ELECTION</span>
+                      {% if last_election_year %}<span class="notification-year">Year {{ last_election_year }}</span>{% endif %}
+                    </div>
+                    <div class="notification-content">
+                      {% set msg = last_election_message | replace('election: ', '') | replace('[Emergency] election: ', '') %}
+                      {% if '[Emergency]' in last_election_message %}
+                        <span class="notification-emergency">⚠️ EMERGENCY</span>
+                      {% endif %}
+                      {% if ' is the new King with ' in msg %}
+                        {% set parts = msg.split(' is the new King with ') %}
+                        <span class="notification-winner">{{ parts[0] }}</span> is the new King with 
+                        {% set vote_info = parts[1] %}
+                        <span class="notification-votes">{{ vote_info }}</span>
+                      {% elif ' is elected King with ' in msg %}
+                        {% set parts = msg.split(' is elected King with ') %}
+                        <span class="notification-winner">{{ parts[0] }}</span> is elected King with 
+                        <span class="notification-votes">{{ parts[1] }}</span>
+                      {% elif ' remains King with ' in msg %}
+                        {% set parts = msg.split(' remains King with ') %}
+                        <span class="notification-winner">{{ parts[0] }}</span> remains King with 
+                        <span class="notification-votes">{{ parts[1] }}</span>
+                      {% else %}
+                        {{ msg }}
+                      {% endif %}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </section>
-          {% endif %}
+                {% endif %}
 
-          {% if last_event_message %}
-          <!-- Latest Event Banner - Redesigned with Year -->
-          {% set event_year = ((last_event_day - 1) // 90) + 1 if last_event_day else none %}
-          <section class="game-card mb-3 notification-event">
-            <div class="card-body py-3">
-              <div class="d-flex align-items-start gap-3">
-                <div class="notification-icon event-icon">
-                  {% if '☠️' in last_event_message or 'PLAGUE' in last_event_message %}☠️
-                  {% elif '🌾' in last_event_message or 'FAMINE' in last_event_message %}🌾
-                  {% elif '🎉' in last_event_message or 'FESTIVAL' in last_event_message %}🎉
-                  {% elif '⚔️' in last_event_message or 'INVASION' in last_event_message %}⚔️
-                  {% elif '🌻' in last_event_message or 'HARVEST' in last_event_message %}🌻
-                  {% elif '✨' in last_event_message or 'BLESSING' in last_event_message %}✨
-                  {% else %}🎲{% endif %}
-                </div>
-                <div class="flex-grow-1">
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    {% if 'PLAGUE' in last_event_message %}
-                      <span class="notification-badge event-negative">PLAGUE</span>
-                    {% elif 'FAMINE' in last_event_message %}
-                      <span class="notification-badge event-negative">FAMINE</span>
-                    {% elif 'INVASION' in last_event_message %}
-                      <span class="notification-badge event-negative">INVASION</span>
-                    {% elif 'FESTIVAL' in last_event_message %}
-                      <span class="notification-badge event-positive">FESTIVAL</span>
-                    {% elif 'HARVEST' in last_event_message %}
-                      <span class="notification-badge event-positive">GOOD HARVEST</span>
-                    {% elif 'BLESSING' in last_event_message %}
-                      <span class="notification-badge event-positive">BLESSING</span>
-                    {% else %}
-                      <span class="notification-badge event-neutral">EVENT</span>
-                    {% endif %}
-                    {% if event_year %}<span class="notification-year">Year {{ event_year }}</span>{% endif %}
+                {% if last_event_message %}
+                <!-- Event -->
+                {% set event_year = ((last_event_day - 1) // 90) + 1 if last_event_day else none %}
+                <div class="d-flex align-items-start gap-3 notification-item notification-event-item">
+                  <div class="notification-icon event-icon">
+                    {% if '☠️' in last_event_message or 'PLAGUE' in last_event_message %}☠️
+                    {% elif '🌾' in last_event_message or 'FAMINE' in last_event_message %}🌾
+                    {% elif '🎉' in last_event_message or 'FESTIVAL' in last_event_message %}🎉
+                    {% elif '⚔️' in last_event_message or 'INVASION' in last_event_message %}⚔️
+                    {% elif '🌻' in last_event_message or 'HARVEST' in last_event_message %}🌻
+                    {% elif '✨' in last_event_message or 'BLESSING' in last_event_message %}✨
+                    {% else %}🎲{% endif %}
                   </div>
-                  <div class="notification-content">
-                    {% set clean_msg = last_event_message | replace('☠️ ', '') | replace('🌾 ', '') | replace('🎉 ', '') | replace('⚔️ ', '') | replace('🌻 ', '') | replace('✨ ', '') %}
-                    {{ clean_msg }}
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      {% if 'PLAGUE' in last_event_message %}
+                        <span class="notification-badge event-negative">PLAGUE</span>
+                      {% elif 'FAMINE' in last_event_message %}
+                        <span class="notification-badge event-negative">FAMINE</span>
+                      {% elif 'INVASION' in last_event_message %}
+                        <span class="notification-badge event-negative">INVASION</span>
+                      {% elif 'FESTIVAL' in last_event_message %}
+                        <span class="notification-badge event-positive">FESTIVAL</span>
+                      {% elif 'HARVEST' in last_event_message %}
+                        <span class="notification-badge event-positive">GOOD HARVEST</span>
+                      {% elif 'BLESSING' in last_event_message %}
+                        <span class="notification-badge event-positive">BLESSING</span>
+                      {% else %}
+                        <span class="notification-badge event-neutral">EVENT</span>
+                      {% endif %}
+                      {% if event_year %}<span class="notification-year">Year {{ event_year }}</span>{% endif %}
+                    </div>
+                    <div class="notification-content">
+                      {% set clean_msg = last_event_message | replace('☠️ ', '') | replace('🌾 ', '') | replace('🎉 ', '') | replace('⚔️ ', '') | replace('🌻 ', '') | replace('✨ ', '') %}
+                      {{ clean_msg }}
+                    </div>
                   </div>
                 </div>
+                {% endif %}
               </div>
             </div>
           </section>

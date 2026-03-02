@@ -325,11 +325,15 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
     return child
 
 
-def birth_daily_phase(characters: list[Villager], current_day: int) -> None:
+def birth_daily_phase(characters: list[Villager], current_day: int) -> int:
     """
     Run after spouse logic each day.
     For each married couple, small chance to have a child.
+    
+    Returns:
+        Number of births that occurred.
     """
+    births_count = 0
     for a in characters:
         if not a.get("alive", True):
             continue
@@ -364,6 +368,9 @@ def birth_daily_phase(characters: list[Villager], current_day: int) -> None:
         if random.random() < p:
             child = _spawn_child(characters, mom, dad, current_day)
             characters.append(child)
+            births_count += 1
+    
+    return births_count
 
 def child_daily_phase(characters: list[Villager], current_day: int) -> None:
     """

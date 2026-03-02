@@ -1093,6 +1093,25 @@ body.game-theme h4, body.game-theme h5, body.game-theme h6 {
   background: linear-gradient(90deg, rgba(220,38,38,0.05) 0%, #ffffff 100%);
 }
 
+/* Combined Notification Card */
+.notification-combined {
+  border-left: 4px solid var(--aw-accent) !important;
+}
+
+.notification-item {
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--aw-bg-dark);
+}
+
+.notification-election-item {
+  border-left: 3px solid var(--aw-king);
+}
+
+.notification-event-item {
+  border-left: 3px solid var(--aw-accent);
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .notification-icon {

@@ -249,13 +249,16 @@ def sync_queen_to_king_spouse(characters: list[Villager], current_day: int | Non
         _append_last_action(spouse, f"became Queen (spouse of King {king.get('name','')})")
 
 
-def spouse_daily_phase(characters: list[Villager], current_day: int) -> None:
+def spouse_daily_phase(characters: list[Villager], current_day: int) -> int:
     """
     Daily spouse logic:
     - If relationship reaches 100 and label is 'love', chance to become spouses.
     - Each villager can have only 1 spouse (mutual spouseId).
     - Small chance to break up (more likely if love score is low).
     - Singles with strong love target can propose.
+    
+    Returns:
+        Number of births that occurred during this phase.
     """
 
     # --------- Fix broken spouse links (safety) ----------
@@ -367,9 +370,11 @@ def spouse_daily_phase(characters: list[Villager], current_day: int) -> None:
 
     # Late import to avoid circular dependency
     from src.services.family_service import birth_daily_phase
-    birth_daily_phase(characters, current_day=current_day)
+    births_count = birth_daily_phase(characters, current_day=current_day)
 
     sync_queen_to_king_spouse(characters, current_day=current_day)
+    
+    return births_count
 
 
 # ---------------------------------------------------------------------------

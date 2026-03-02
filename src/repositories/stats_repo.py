@@ -71,8 +71,10 @@ def update_year_daily(
     tax_rate_today: float,
     treasury_end: int,
     corruption_today: int = 0,
+    births_today: int = 0,
+    king_trait: str | None = None,
 ):
-    """Accumulate daily stats (deaths, immigrants, tax, corruption) into the yearly_stats row for a year."""
+    """Accumulate daily stats (deaths, immigrants, tax, corruption, births) into the yearly_stats row for a year."""
     init_db()
     with db_conn() as conn:
         # Ensure exists
@@ -85,8 +87,10 @@ def update_year_daily(
             SET
                 king_id = COALESCE(?, king_id),
                 king_name = COALESCE(?, king_name),
+                king_trait = COALESCE(?, king_trait, ''),
                 total_deaths = COALESCE(total_deaths, 0) + ?,
                 total_immigrants = COALESCE(total_immigrants, 0) + ?,
+                total_births = COALESCE(total_births, 0) + ?,
                 tax_rate_sum = COALESCE(tax_rate_sum, 0) + ?,
                 days_counted = COALESCE(days_counted, 0) + 1,
                 treasury_end = ?,
@@ -97,8 +101,10 @@ def update_year_daily(
             (
                 int(king_id) if king_id else None,
                 king_name if king_name else None,
+                king_trait if king_trait else None,
                 int(deaths_today),
                 int(immigrants_today),
+                int(births_today),
                 float(tax_rate_today),
                 int(treasury_end),
                 int(corruption_today),

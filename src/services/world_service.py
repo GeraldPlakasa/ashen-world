@@ -182,7 +182,7 @@ def advance_one_day() -> tuple:
         bank = update_tax_policy(characters, bank, log_it=False)
 
         # --- Daily simulation (combat, income, deaths, etc.) ---
-        characters, bank, corruption_today, event_message = simulate_one_day(characters, bank, current_day=new_total_day)
+        characters, bank, corruption_today, event_message, births_today = simulate_one_day(characters, bank, current_day=new_total_day)
         
         # Store event message if one occurred
         if event_message:
@@ -292,6 +292,7 @@ def advance_one_day() -> tuple:
         final_king = next((v for v in characters if v.get("job") == "King" and v.get("alive", True)), None)
         king_id = int(final_king.get("id", 0) or 0) if final_king else None
         king_name = final_king.get("name") if final_king else None
+        king_trait = final_king.get("traits", "") if final_king else None
 
         update_year_daily(
             year=yr_now,
@@ -302,6 +303,8 @@ def advance_one_day() -> tuple:
             tax_rate_today=float(bank.get("tax_rate", 0.10) or 0.10),
             treasury_end=int(bank.get("balance", 0) or 0),
             corruption_today=corruption_today,
+            births_today=births_today,
+            king_trait=king_trait,
         )
 
         # Persist updated state

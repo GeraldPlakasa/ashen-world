@@ -114,6 +114,9 @@
                     <div>
                       <div style="color: var(--aw-text-muted); font-size: 11px;">Reigning Monarch</div>
                       <div style="color: var(--aw-king); font-weight: 600;">{{ current_entry.king_name or "No King" }}</div>
+                      {% if current_entry.king_trait %}
+                      <div style="color: var(--aw-text-muted); font-size: 11px; margin-top: 2px;">{{ current_entry.king_trait }}</div>
+                      {% endif %}
                     </div>
                   </div>
                 </div>
@@ -144,6 +147,12 @@
                 </div>
               </div>
               <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                  <div class="kpi-card" style="border-color: var(--aw-alive);">
+                    <div class="kpi-value" style="color: var(--aw-alive);">{{ current_entry.total_births or 0 }}</div>
+                    <div class="kpi-label">Births</div>
+                  </div>
+                </div>
                 <div class="col-6 col-md-3">
                   <div class="kpi-card" style="border-color: var(--aw-warning);">
                     <div class="kpi-value" style="color: var(--aw-warning);">{{ current_entry.total_corruption or 0 }}</div>
@@ -220,6 +229,9 @@
                         <div>
                           <div style="color: var(--aw-text-muted); font-size: 10px;">Monarch</div>
                           <div style="color: var(--aw-king); font-weight: 600;">{{ y.king_name or "No King" }}</div>
+                          {% if y.king_trait %}
+                          <div style="color: var(--aw-text-muted); font-size: 10px;">{{ y.king_trait }}</div>
+                          {% endif %}
                         </div>
                       </div>
 
@@ -229,8 +241,12 @@
                           <div style="color: var(--aw-dead);">{{ y.total_deaths or 0 }}</div>
                         </div>
                         <div class="col-6">
+                          <div style="color: var(--aw-text-muted);">Births</div>
+                          <div style="color: var(--aw-alive);">{{ y.total_births or 0 }}</div>
+                        </div>
+                        <div class="col-6">
                           <div style="color: var(--aw-text-muted);">Immigration</div>
-                          <div style="color: var(--aw-alive);">{{ y.total_immigrants or 0 }}</div>
+                          <div style="color: var(--aw-text);">{{ y.total_immigrants or 0 }}</div>
                         </div>
                         <div class="col-6">
                           <div style="color: var(--aw-text-muted);">Avg Tax</div>

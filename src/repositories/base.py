@@ -106,6 +106,12 @@ def init_db():
 
                 -- Corruption tracking
                 total_corruption INTEGER DEFAULT 0,
+                
+                -- Birth tracking
+                total_births INTEGER DEFAULT 0,
+                
+                -- King trait
+                king_trait TEXT DEFAULT '',
 
                 -- Champions (snapshot at year end)
                 most_atk_id INTEGER,
@@ -214,6 +220,8 @@ def _ensure_yearly_columns(conn: sqlite3.Connection):
 
     desired = {
         "total_corruption": "total_corruption INTEGER DEFAULT 0",
+        "total_births": "total_births INTEGER DEFAULT 0",
+        "king_trait": "king_trait TEXT DEFAULT ''",
 
         "most_atk_id": "most_atk_id INTEGER",
         "most_atk_name": "most_atk_name TEXT DEFAULT ''",
