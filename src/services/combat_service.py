@@ -87,7 +87,8 @@ def apply_starvation_damage(v: Villager, bank: Bank | None = None) -> int | None
     if v.get("hunger", 0) < 100:
         return None
 
-    hp_loss = rand_int(5, 18)
+    # Starvation damage (increased for unlimited HP balance)
+    hp_loss = rand_int(8, 25)
 
     if bank is not None:
         lvl_granary = get_building_level(bank, "granary")
@@ -137,6 +138,19 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
         power_mult = 1.0 + 0.06 * lvl_barracks + 0.04 * lvl_walls
         char_power *= power_mult
 
+    # Trait bonuses for combat
+    traits_str = v.get("traits", "") or ""
+    traits = [t.strip() for t in traits_str.split(",") if t.strip()]
+    for t in traits:
+        if t == "Hunter":
+            char_power *= 1.15  # +15% combat power
+        if t == "Fearless":
+            char_power *= 1.10  # +10% combat power
+        if t == "Resilient":
+            char_power *= 1.05  # +5% combat power
+        if t == "Brave":
+            char_power *= 1.08  # +8% combat power
+
     # Weather effect (rain makes fights riskier)
     w = (weather or "sunny").strip().lower()
     if w == "rain":
@@ -167,6 +181,13 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
 
     if w == "rain":
         dmg_var = int(round(dmg_var * 1.08))
+
+    # Trait-based damage reduction
+    for t in traits:
+        if t == "Resilient":
+            dmg_var = max(0, int(round(dmg_var * 0.85)))  # -15% damage taken
+        if t == "Immortal":
+            dmg_var = max(0, int(round(dmg_var * 0.80)))  # -20% damage taken
 
     result = {
         "enemy": enemy,
@@ -206,8 +227,8 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
         v["rep"]   += rep_gain
         v["exp"]   += exp_gain
 
-        # Scratch damage even on win (reduced from 0.25 to 0.10)
-        scratch = max(0, round(dmg_var * 0.10))
+        # Scratch damage even on win (balanced for unlimited HP)
+        scratch = max(1, round(dmg_var * 0.20))
         v["hp"] = max(0, v["hp"] - scratch)
 
         died_after_win = (v["hp"] <= 0)
@@ -227,8 +248,8 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
         )
         return result
 
-    # LOSS / DEAD path
-    heavy = max(1, round(dmg_var * (1.1 + random.random() * 0.6)))
+    # LOSS / DEAD path (increased for unlimited HP balance)
+    heavy = max(2, round(dmg_var * (1.4 + random.random() * 0.8)))
     v["hp"] = max(0, v["hp"] - heavy)
 
     death_prob = 0.07

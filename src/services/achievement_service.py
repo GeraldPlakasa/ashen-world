@@ -58,18 +58,6 @@ ACHIEVEMENTS = {
         "icon": "💰",
         "reward": {"type": "stat", "stat": "coins", "value": 500},
     },
-    "scholar": {
-        "name": "Scholar",
-        "description": "Reach 150 INT",
-        "icon": "📚",
-        "reward": {"type": "trait", "trait": "Genius"},
-    },
-    "warrior": {
-        "name": "Warrior",
-        "description": "Reach 200 ATK",
-        "icon": "🗡️",
-        "reward": {"type": "trait", "trait": "Fearless"},
-    },
     "survivor": {
         "name": "Survivor",
         "description": "Survive a plague event",
@@ -81,12 +69,6 @@ ACHIEVEMENTS = {
         "description": "Become King at age 60+",
         "icon": "👑",
         "reward": {"type": "both", "stat": "rep", "value": 20, "trait": "Wise"},
-    },
-    "devoted_spouse": {
-        "name": "Devoted Spouse",
-        "description": "Stay married for 20+ years",
-        "icon": "💍",
-        "reward": {"type": "stat", "stat": "hp", "value": 25},
     },
     "iron_will": {
         "name": "Iron Will",
@@ -272,22 +254,6 @@ def check_wealthy(v: Villager) -> bool:
     return coins >= 5000
 
 
-def check_scholar(v: Villager) -> bool:
-    """Check if villager has 150+ INT."""
-    if has_achievement(v, "scholar"):
-        return False
-    int_stat = int(v.get("int", 0) or 0)
-    return int_stat >= 150
-
-
-def check_warrior(v: Villager) -> bool:
-    """Check if villager has 200+ ATK."""
-    if has_achievement(v, "warrior"):
-        return False
-    atk = int(v.get("atk", 0) or 0)
-    return atk >= 200
-
-
 def check_elder_statesman(v: Villager) -> bool:
     """Check if villager became King at age 60+."""
     if has_achievement(v, "elder_statesman"):
@@ -295,18 +261,6 @@ def check_elder_statesman(v: Villager) -> bool:
     job = v.get("job", "")
     age = int(v.get("age", 0) or 0)
     return job == "King" and age >= 60
-
-
-def check_devoted_spouse(v: Villager, current_day: int) -> bool:
-    """Check if villager has been married for 20+ years (1800 days)."""
-    if has_achievement(v, "devoted_spouse"):
-        return False
-    spouse_id = int(v.get("spouseId", 0) or 0)
-    spouse_since = int(v.get("spouseSinceDay", 0) or 0)
-    if spouse_id <= 0 or spouse_since <= 0:
-        return False
-    days_married = current_day - spouse_since
-    return days_married >= 1800  # 20 years * 90 days
 
 
 # ===========================================================================
@@ -340,17 +294,8 @@ def achievement_check_phase(characters: list[Villager], current_day: int = 0) ->
         if check_wealthy(v):
             award_achievement(v, "wealthy")
         
-        if check_scholar(v):
-            award_achievement(v, "scholar")
-        
-        if check_warrior(v):
-            award_achievement(v, "warrior")
-        
         if check_elder_statesman(v):
             award_achievement(v, "elder_statesman")
-        
-        if check_devoted_spouse(v, current_day):
-            award_achievement(v, "devoted_spouse")
 
 
 # ===========================================================================

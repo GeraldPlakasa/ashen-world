@@ -119,6 +119,29 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         if t == "Deceitful":
             weights["steal"] += 0.9
             weights["socialize"] -= 0.3
+        
+        # Achievement traits
+        if t == "Patriarch":
+            weights["socialize"] += 0.5
+            weights["hangout"] += 0.6
+            weights["work"] += 0.3
+        if t == "Immortal":
+            weights["rest"] += 0.4
+            weights["hunt"] += 0.3
+        if t == "Hunter":
+            weights["hunt"] += 1.0
+            weights["train"] += 0.4
+        if t == "Resilient":
+            weights["train"] += 0.5
+            weights["hunt"] += 0.3
+            weights["rest"] -= 0.2
+        if t == "Genius":
+            weights["study"] += 1.0
+            weights["work"] += 0.4
+        if t == "Fearless":
+            weights["hunt"] += 0.8
+            weights["train"] += 0.6
+            weights["steal"] += 0.3
 
     if job in ["Soldier", "Commander", "Guard", "Archer", "Ranger", "Captain"]:
         weights["train"] += 1.0

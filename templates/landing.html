@@ -256,6 +256,45 @@
                     <div style="color: var(--aw-text);">{{ pinned_character.traits }}</div>
                   </div>
 
+                  <!-- Achievements -->
+                  <div class="col-12">
+                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">🏆 Achievements</div>
+                    <div class="d-flex flex-wrap gap-2">
+                      {% set achievements_raw = pinned_character.achievements or '[]' %}
+                      {% set achievements = achievements_raw | tojson | safe if achievements_raw is string else achievements_raw %}
+                      {% if 'first_blood' in achievements_raw %}
+                        <span class="achievement-badge" title="First Blood: Win your first combat">⚔️ First Blood</span>
+                      {% endif %}
+                      {% if 'dynasty_founder' in achievements_raw %}
+                        <span class="achievement-badge" title="Dynasty Founder: Have 5+ children">👨‍👩‍👧‍👦 Dynasty Founder</span>
+                      {% endif %}
+                      {% if 'kingmaker' in achievements_raw %}
+                        <span class="achievement-badge" title="Kingmaker: Vote for 3 different winning kings">🗳️ Kingmaker</span>
+                      {% endif %}
+                      {% if 'centurion' in achievements_raw %}
+                        <span class="achievement-badge" title="Centurion: Reach age 100">🎂 Centurion</span>
+                      {% endif %}
+                      {% if 'legendary_hunter' in achievements_raw %}
+                        <span class="achievement-badge" title="Legendary Hunter: Win 50 hunts">🏹 Legendary Hunter</span>
+                      {% endif %}
+                      {% if 'wealthy' in achievements_raw %}
+                        <span class="achievement-badge" title="Wealthy: Accumulate 5000 coins">💰 Wealthy</span>
+                      {% endif %}
+                      {% if 'survivor' in achievements_raw %}
+                        <span class="achievement-badge" title="Survivor: Survive a plague">🛡️ Survivor</span>
+                      {% endif %}
+                      {% if 'elder_statesman' in achievements_raw %}
+                        <span class="achievement-badge" title="Elder Statesman: Become King at age 60+">👑 Elder Statesman</span>
+                      {% endif %}
+                      {% if 'iron_will' in achievements_raw %}
+                        <span class="achievement-badge" title="Iron Will: Survive with HP<10 five times">💪 Iron Will</span>
+                      {% endif %}
+                      {% if achievements_raw == '[]' or not achievements_raw %}
+                        <span style="color: var(--aw-text-dim); font-size: 12px;">No achievements yet</span>
+                      {% endif %}
+                    </div>
+                  </div>
+
                   {% if pinned_rel_bonds or pinned_rel_conflicts %}
                   <div class="col-12 col-md-6">
                     <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Bonds</div>
