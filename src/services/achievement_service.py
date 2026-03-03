@@ -22,12 +22,6 @@ from world_utils import clamp
 #            or: {"type": "both", "stat": "hp", "value": 20, "trait": "Blessed"}
 
 ACHIEVEMENTS = {
-    "first_blood": {
-        "name": "First Blood",
-        "description": "Win your first combat",
-        "icon": "⚔️",
-        "reward": {"type": "stat", "stat": "atk", "value": 5},
-    },
     "dynasty_founder": {
         "name": "Dynasty Founder", 
         "description": "Have 5 or more children",
@@ -54,9 +48,9 @@ ACHIEVEMENTS = {
     },
     "wealthy": {
         "name": "Wealthy",
-        "description": "Accumulate 5000 coins",
+        "description": "Accumulate 10000 coins",
         "icon": "💰",
-        "reward": {"type": "stat", "stat": "coins", "value": 500},
+        "reward": {"type": "stat", "stat": "coins", "value": 1000},
     },
     "survivor": {
         "name": "Survivor",
@@ -201,14 +195,6 @@ def award_achievement(v: Villager, achievement_id: str) -> bool:
 #  Achievement Check Functions
 # ===========================================================================
 
-def check_first_blood(v: Villager) -> bool:
-    """Check if villager qualifies for First Blood (first combat win)."""
-    if has_achievement(v, "first_blood"):
-        return False
-    hunt_wins = int(v.get("huntWins", 0) or 0)
-    return hunt_wins >= 1
-
-
 def check_dynasty_founder(v: Villager) -> bool:
     """Check if villager has 5+ children."""
     if has_achievement(v, "dynasty_founder"):
@@ -247,11 +233,11 @@ def check_legendary_hunter(v: Villager) -> bool:
 
 
 def check_wealthy(v: Villager) -> bool:
-    """Check if villager has 5000+ coins."""
+    """Check if villager has 10000+ coins."""
     if has_achievement(v, "wealthy"):
         return False
     coins = int(v.get("coins", 0) or 0)
-    return coins >= 5000
+    return coins >= 10000
 
 
 def check_elder_statesman(v: Villager) -> bool:
@@ -276,9 +262,6 @@ def achievement_check_phase(characters: list[Villager], current_day: int = 0) ->
             continue
         
         # Check each achievement
-        if check_first_blood(v):
-            award_achievement(v, "first_blood")
-        
         if check_dynasty_founder(v):
             award_achievement(v, "dynasty_founder")
         
