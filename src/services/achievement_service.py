@@ -48,9 +48,9 @@ ACHIEVEMENTS = {
     },
     "legendary_hunter": {
         "name": "Legendary Hunter",
-        "description": "Win 50 hunts total",
+        "description": "Win 500 hunts total",
         "icon": "🏹",
-        "reward": {"type": "both", "stat": "atk", "value": 15, "trait": "Hunter"},
+        "reward": {"type": "both", "stat": "atk", "value": 25, "trait": "Hunter"},
     },
     "wealthy": {
         "name": "Wealthy",
@@ -239,11 +239,11 @@ def check_centurion(v: Villager) -> bool:
 
 
 def check_legendary_hunter(v: Villager) -> bool:
-    """Check if villager has 50+ total hunt wins."""
+    """Check if villager has 500+ total hunt wins."""
     if has_achievement(v, "legendary_hunter"):
         return False
     hunt_wins = int(v.get("huntWins", 0) or 0)
-    return hunt_wins >= 50
+    return hunt_wins >= 500
 
 
 def check_wealthy(v: Villager) -> bool:

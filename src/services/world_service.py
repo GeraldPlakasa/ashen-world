@@ -71,7 +71,7 @@ def compute_year_champions(characters: list[Villager]) -> YearlyChampions:
         "most_atk": top_by("atk"),
         "most_int": top_by("int"),
         "richest":  top_by("coins"),
-        "top_hunter": top_by("huntWinsYear"),
+        "top_hunter": top_by("huntWins"),  # Total kills (lifetime), not yearly
     }
 
 

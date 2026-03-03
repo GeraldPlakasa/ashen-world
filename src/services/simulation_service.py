@@ -82,25 +82,25 @@ def elder_decay_phase(characters: list[Villager], current_day: int = 0) -> int:
         death_chance = 0.0
         
         if 70 <= age < 80:
-            # Early elder: gentle decay
-            hp_decay = rand_int(1, 3)
-            stat_decay_chance = 0.05  # 5% chance per day
-            death_chance = 0.001  # 0.1% per day (~3.3% per year)
+            # Early elder: very gentle decay
+            hp_decay = rand_int(0, 1)
+            stat_decay_chance = 0.02  # 2% chance per day
+            death_chance = 0.0005  # 0.05% per day (~1.8% per year)
         elif 80 <= age < 90:
-            # Old: moderate decay
-            hp_decay = rand_int(2, 5)
-            stat_decay_chance = 0.10  # 10% chance
-            death_chance = 0.005  # 0.5% per day (~16% per year)
+            # Old: mild decay
+            hp_decay = rand_int(1, 2)
+            stat_decay_chance = 0.05  # 5% chance
+            death_chance = 0.002  # 0.2% per day (~7% per year)
         elif 90 <= age < 100:
-            # Very old: heavy decay
-            hp_decay = rand_int(3, 8)
-            stat_decay_chance = 0.20  # 20% chance
-            death_chance = 0.015  # 1.5% per day (~40% per year)
+            # Very old: moderate decay
+            hp_decay = rand_int(1, 3)
+            stat_decay_chance = 0.10  # 10% chance
+            death_chance = 0.005  # 0.5% per day (~17% per year)
         else:  # 100+
-            # Ancient: severe decay
-            hp_decay = rand_int(5, 12)
-            stat_decay_chance = 0.35  # 35% chance
-            death_chance = 0.03  # 3% per day (~60% per year)
+            # Ancient: noticeable decay but survivable
+            hp_decay = rand_int(2, 5)
+            stat_decay_chance = 0.15  # 15% chance
+            death_chance = 0.01  # 1% per day (~30% per year)
         
         # Apply HP decay
         v["hp"] = max(0, hp - hp_decay)
