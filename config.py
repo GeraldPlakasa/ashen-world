@@ -37,9 +37,11 @@ REPAIR_THRESHOLD = 60    # repair if building health < 60%
 # NOTE: ID sequencing is managed by villagers.py (preferred). Keep here only if you centralize imports.
 _next_villager_id = 0 
 
-ELECTION_INTERVAL_YEARS = 5      # hold election every 7 game years
+ELECTION_INTERVAL_YEARS = 5      # hold election every 5 game years
 KING_MAX_TERMS = 3               # lifetime limit for one villager as King
 DYNASTY_BONUS = 1000             # extra leadership if same family as previous King
+
+QUEST_INTERVAL_YEARS = 2         # King issues quests every 2 years
 
 MAX_DEAD_YEARS = 25
 

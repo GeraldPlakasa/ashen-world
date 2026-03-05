@@ -42,6 +42,7 @@ from src.services.achievement_service import (
     achievement_check_phase,
     trigger_iron_will_check,
 )
+from src.services.quest_service import maybe_trigger_quest
 from src.repositories.world_repo import load_weather
 from src.models.villager import Villager
 from src.models.bank import Bank
@@ -381,12 +382,12 @@ def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -
             heir["last_action"] = note
 
 
-def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank, int, str | None, int]:
+def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank, int, str | None, int, str | None]:
     """
     Simulate actions for one day for each villager in the list.
     
     Returns:
-        (characters, bank, corruption_total, event_message, births_count)
+        (characters, bank, corruption_total, event_message, births_count, quest_message)
     """
     reset_id_from_characters(characters)
     weather_today = load_weather()
@@ -446,11 +447,14 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     # 5) Random world events (plague, famine, festival, etc.)
     event_message, _event_record = maybe_trigger_event(characters, bank, current_day)
 
-    # 6) Achievement check phase
+    # 6) Quest system (every 2 years)
+    quest_message, _quest_record = maybe_trigger_quest(characters, bank, current_day)
+
+    # 7) Achievement check phase
     achievement_check_phase(characters, current_day=current_day)
 
-    # 7) Log history LAST
+    # 8) Log history LAST
     for v in characters:
         append_action_history(v)
 
-    return characters, bank, corruption_total, event_message, births_count
+    return characters, bank, corruption_total, event_message, births_count, quest_message

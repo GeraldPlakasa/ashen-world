@@ -80,6 +80,9 @@ def landing():
     last_election_message = village_bank.get("last_election_message", "")
     last_event_message = village_bank.get("last_event_message", "")
     last_event_day = village_bank.get("last_event_day")
+    last_quest_message = village_bank.get("last_quest_message", "")
+    last_quest_day = village_bank.get("last_quest_day")
+    last_quest_success = village_bank.get("last_quest_success")
 
     village_buildings = build_building_summary(village_bank)
 
@@ -117,6 +120,9 @@ def landing():
         last_election_message=last_election_message,
         last_event_message=last_event_message,
         last_event_day=last_event_day,
+        last_quest_message=last_quest_message,
+        last_quest_day=last_quest_day,
+        last_quest_success=last_quest_success,
         pinned_spouse_name=pinned_spouse_name,
         pinned_spouse_alive=pinned_spouse_alive,
         pinned_mother=pinned_mother,
@@ -495,6 +501,9 @@ def api_state():
         "last_election_message": bank.get("last_election_message", ""),
         "last_event_message": bank.get("last_event_message", ""),
         "last_event_day": bank.get("last_event_day"),
+        "last_quest_message": bank.get("last_quest_message", ""),
+        "last_quest_day": bank.get("last_quest_day"),
+        "last_quest_success": bank.get("last_quest_success"),
         "weather": weather,
     })
 

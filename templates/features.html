@@ -81,6 +81,7 @@
 
                   <div class="list-group list-group-flush" id="tocList" style="font-size: 13px;">
                     <a class="list-group-item list-group-item-action toc-link" href="#achievements" data-target="cAchievements">Achievements</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#quests" data-target="cQuests">Quest System</a>
                     <a class="list-group-item list-group-item-action toc-link" href="#aging" data-target="cAging">Aging System</a>
                     <a class="list-group-item list-group-item-action toc-link" href="#events" data-target="cEvents">World Events</a>
                     <a class="list-group-item list-group-item-action toc-link" href="#weather" data-target="cWeather">Weather System</a>
@@ -195,6 +196,99 @@
                                 </ul>
                               </div>
                             </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- QUEST SYSTEM -->
+                    <div class="accordion-item" id="quests">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cQuests">Quest System</button>
+                      </h2>
+                      <div id="cQuests" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <p class="mb-3">Every 2 years, the King issues a quest. Villagers volunteer based on their traits, stats, and economic conditions. Parties of 2-5 villagers embark on missions with rewards and risks.</p>
+                          
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Combat Quest</div>
+                                <ul class="small mb-0">
+                                  <li>Hunt dangerous creatures or bandits</li>
+                                  <li>Stat focus: ATK</li>
+                                  <li>Rewards: 150-400 gold</li>
+                                  <li>Barracks building boosts success</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Diplomacy Quest</div>
+                                <ul class="small mb-0">
+                                  <li>Negotiate with neighboring villages</li>
+                                  <li>Stat focus: INT</li>
+                                  <li>Rewards: 100-300 gold</li>
+                                  <li>Royal Court building boosts success</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Exploration Quest</div>
+                                <ul class="small mb-0">
+                                  <li>Scout ruins, forests, or mountains</li>
+                                  <li>Stat focus: DEF</li>
+                                  <li>Rewards: 120-350 gold</li>
+                                  <li>Library building boosts success</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Trade Quest</div>
+                                <ul class="small mb-0">
+                                  <li>Acquire goods or establish trade routes</li>
+                                  <li>Stat focus: REP</li>
+                                  <li>Rewards: 200-500 gold</li>
+                                  <li>Market building boosts success</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Party Formation</div>
+                                <ul class="small mb-0">
+                                  <li>2-5 villagers per party</li>
+                                  <li>Volunteers scored by relevant stats + traits</li>
+                                  <li>Poor villagers more likely to volunteer</li>
+                                  <li>King/Queen never participate</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">King's Influence</div>
+                                <ul class="small mb-0">
+                                  <li>Brave King: More combat/exploration quests</li>
+                                  <li>Wise King: More diplomacy/trade quests</li>
+                                  <li>Greedy King: More trade quests</li>
+                                  <li>Hot-headed King: More combat quests</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="feature-box">
+                            <div style="color: var(--aw-text);" class="small mb-1">Outcomes</div>
+                            <ul class="small mb-0">
+                              <li><strong>Success:</strong> Gold distributed to party, XP gained, small chance of stat boost</li>
+                              <li><strong>Failure:</strong> HP damage (15-60), possible deaths, treasury loses 50-150 gold</li>
+                              <li><strong>Timing:</strong> Every 2 years on a random day (Year 2, 4, 6...)</li>
+                            </ul>
                           </div>
                         </div>
                       </div>

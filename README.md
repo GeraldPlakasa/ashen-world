@@ -7,59 +7,6 @@ A living-village simulation game built with Flask. Watch villagers live, work, m
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Tests](https://img.shields.io/badge/Tests-181%20passed-brightgreen.svg)
 
-## ✨ Features
-
-### 🏘️ Village Simulation
-- **50+ villagers** with unique names, traits, jobs, and stats
-- Dynamic population through births, deaths, and immigration
-- Family trees spanning multiple generations
-- Gender-based naming and relationships
-
-### ⚔️ Combat & Progression
-- Hunt system with procedural enemies (Common, Elite, Legendary)
-- Level-based progression with ATK/DEF/HP scaling
-- 30+ gear items across 3 tiers
-- XP from combat, training, and work
-
-### 👑 Politics & Elections
-- Democratic elections every 5 years
-- Leadership scoring based on traits and stats
-- King term limits (3 lifetime max)
-- Dynasty bonuses for ruling families
-- Assassination mechanics
-
-### 💰 Economy
-- Village treasury funding buildings
-- Tax system influenced by King's traits
-- Corruption mechanics for royalty/nobles
-- Multiple income sources (work, hunt, steal, inheritance)
-
-### 🏗️ Buildings (12 Types)
-- Economic: Marketplace, Treasury, Tax Office, Blacksmith
-- Military: Barracks, Walls, Royal Court
-- Survival: Clinic, Granary, Library
-- Social: Temple, Tavern
-
-### 🎲 World Events
-- Yearly random events: Plague, Famine, Festival, Invasion, Harvest, Blessing
-- Building mitigations reduce negative impacts
-- Event notifications in dashboard
-
-### 🌤️ Weather System
-- Dynamic sunny/rainy weather
-- Affects villager action choices
-- Visual effects (rain animation, background glow)
-
-### 🏆 Achievements
-- 8 unique achievements with stat rewards
-- Special traits unlocked (Patriarch, Hunter, Immortal, Resilient)
-- Tracked per villager
-
-### 📊 Leaderboard
-- All-time champions (ATK, INT, Coins, Kills)
-- Yearly statistics and archives
-- Past reign records
-
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -123,6 +70,7 @@ ashen-world/
 │   ├── services/             # Business logic
 │   │   ├── simulation_service.py   # Daily loop
 │   │   ├── election_service.py     # Elections
+│   │   ├── quest_service.py        # Quest system
 │   │   ├── family_service.py       # Birth, childhood
 │   │   ├── relationship_service.py # Marriage, social
 │   │   ├── building_service.py     # Tax, construction
@@ -149,6 +97,7 @@ Key settings in `config.py`:
 | `DAYS_PER_YEAR` | 90 | In-game days per year |
 | `AUTO_SIM_SECONDS` | 1.0 | Real seconds per simulated day |
 | `ELECTION_INTERVAL_YEARS` | 5 | Years between elections |
+| `QUEST_INTERVAL_YEARS` | 2 | Years between quests |
 | `MAX_BUILDING_LEVEL` | 3 | Maximum building upgrade level |
 | `KING_MAX_TERMS` | 3 | Lifetime term limit for King |
 
@@ -166,12 +115,6 @@ pytest -v
 
 # Run with coverage
 pytest --cov=src --cov=world_utils --cov=app --cov-report=term-missing
-
-# Run only unit tests
-pytest -m unit
-
-# Run only integration tests
-pytest -m integration
 ```
 
 ## 🔌 API Endpoints
@@ -187,27 +130,6 @@ pytest -m integration
 - **Frontend:** Bootstrap 5, Jinja2, JavaScript
 - **Visualization:** vis-network (family trees)
 - **Testing:** pytest
-
-## 📝 Development
-
-### Adding a New Trait
-
-1. Add to `TRAITS` in `config.py`
-2. Add tax modifier in `building_service.py`
-3. Add leadership modifier in `election_service.py`
-4. Add action weights in `action_service.py`
-
-### Adding a New Building
-
-1. Add to `BUILDINGS` in `config.py`
-2. Add priority weights in `building_service.py`
-3. Add effects in `action_service.py` and `event_service.py`
-
-### Adding a New Achievement
-
-1. Define in `ACHIEVEMENTS` dict in `achievement_service.py`
-2. Add check function (`check_*`)
-3. Call check in `achievement_check_phase()`
 
 ## 📜 License
 

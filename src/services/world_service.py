@@ -182,12 +182,14 @@ def advance_one_day() -> tuple:
         bank = update_tax_policy(characters, bank, log_it=False)
 
         # --- Daily simulation (combat, income, deaths, etc.) ---
-        characters, bank, corruption_today, event_message, births_today = simulate_one_day(characters, bank, current_day=new_total_day)
+        characters, bank, corruption_today, event_message, births_today, quest_message = simulate_one_day(characters, bank, current_day=new_total_day)
         
         # Store event message if one occurred
         if event_message:
             bank["last_event_message"] = event_message
             bank["last_event_day"] = new_total_day
+        
+        # Quest message is stored inside quest_service, no need to store again
 
         for v in characters:
             if not v.get("alive", True) or v.get("hp", 0) <= 0:
@@ -343,10 +345,18 @@ def generate_new_world(count: int = 50) -> tuple[int, int]:
             "last_election_message": "",
             "last_event_message": "",
             "last_event_day": None,
-            # New yearly event tracking
+            # Yearly event tracking
             "last_event_year_tracking": 0,
             "event_day_for_year": None,
             "event_triggered_this_year": False,
+            # Quest tracking
+            "last_quest_year": 0,
+            "quest_day_for_year": None,
+            "quest_triggered_this_year": False,
+            "last_quest_message": "",
+            "last_quest_day": None,
+            "last_quest_type": None,
+            "last_quest_success": None,
         })
 
         clear_yearly_stats()
