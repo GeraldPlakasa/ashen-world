@@ -302,7 +302,11 @@ def _select_party(characters: list[Villager], quest_type: str, party_size: int =
 
 def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank) -> tuple[bool, float, dict]:
     """
-    Calculate if quest succeeds based strictly on party stats.
+    Calculate if quest succeeds based STRICTLY on party stats.
+    
+    Success is primarily determined by stat ratio vs threshold.
+    Randomness is minimal - strong parties almost always succeed,
+    weak parties almost always fail.
     
     Returns:
         (success, margin, stats_info)
@@ -311,84 +315,138 @@ def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank)
     stat_focus = qt_data["stat_focus"]
     threshold = qt_data["stat_threshold"]
     
-    # Calculate party stats
-    total_stat = 0
+    # Calculate party stats - primary stat + secondary stats contribute
+    total_primary = 0
+    total_secondary = 0
     total_level = 0
     total_hp = 0
     
     for v in party:
+        # Primary stat (full weight)
         if stat_focus == "atk":
-            total_stat += int(v.get("atk", 10) or 10)
+            total_primary += int(v.get("atk", 10) or 10)
         elif stat_focus == "int":
-            total_stat += int(v.get("int", 10) or 10)
+            total_primary += int(v.get("int", 10) or 10)
         elif stat_focus == "def":
-            total_stat += int(v.get("def", 10) or 10)
+            total_primary += int(v.get("def", 10) or 10)
         else:  # rep
-            total_stat += int(v.get("rep", 0) or 0) + 10
+            total_primary += int(v.get("rep", 0) or 0) + 10
+        
+        # Secondary stats (25% weight each)
+        atk = int(v.get("atk", 10) or 10)
+        deff = int(v.get("def", 10) or 10)
+        intel = int(v.get("int", 10) or 10)
+        rep = int(v.get("rep", 0) or 0)
+        
+        # Average of non-primary stats
+        if stat_focus == "atk":
+            total_secondary += (deff + intel + rep) * 0.08
+        elif stat_focus == "int":
+            total_secondary += (atk + deff + rep) * 0.08
+        elif stat_focus == "def":
+            total_secondary += (atk + intel + rep) * 0.08
+        else:
+            total_secondary += (atk + deff + intel) * 0.08
         
         total_level += int(v.get("level", 1) or 1)
         total_hp += int(v.get("hp", 100) or 100)
     
     party_size = len(party)
-    avg_stat = total_stat / party_size
+    avg_primary = total_primary / party_size
+    avg_secondary = total_secondary / party_size
     avg_level = total_level / party_size
     avg_hp = total_hp / party_size
     
-    # Building bonuses (add to average stat)
+    # Building bonuses
     building_bonus = 0
     if quest_type == "COMBAT":
         barracks_lvl = get_building_level(bank, "barracks")
-        building_bonus = barracks_lvl * 3
+        building_bonus = barracks_lvl * 2.5
     elif quest_type == "DIPLOMACY":
         court_lvl = get_building_level(bank, "royal_court")
-        building_bonus = court_lvl * 3
+        building_bonus = court_lvl * 2.5
     elif quest_type == "TRADE":
         market_lvl = get_building_level(bank, "market")
-        building_bonus = market_lvl * 3
+        building_bonus = market_lvl * 2.5
     elif quest_type == "EXPLORATION":
         library_lvl = get_building_level(bank, "library")
-        building_bonus = library_lvl * 2
+        building_bonus = library_lvl * 2.0
     
-    effective_stat = avg_stat + building_bonus + (avg_level * 0.5)
+    # Level bonus (experienced adventurers perform better)
+    level_bonus = avg_level * 0.8
     
-    # Calculate success based on stat vs threshold
-    # If effective_stat >= threshold * 1.5 -> guaranteed success
-    # If effective_stat >= threshold -> 70-95% success
-    # If effective_stat >= threshold * 0.7 -> 40-70% success
-    # Below that -> 10-40% success
+    # Party size bonus (larger coordinated parties have advantage)
+    size_bonus = (party_size - 2) * 1.5 if party_size > 2 else 0
     
+    effective_stat = avg_primary + avg_secondary + building_bonus + level_bonus + size_bonus
+    
+    # Calculate success - STRICT stat-based with minimal randomness
+    # ratio determines outcome with only small variance window
     ratio = effective_stat / threshold
     
-    if ratio >= 1.5:
+    # Determine base success and variance window
+    if ratio >= 1.8:
+        # Overwhelming power: guaranteed success
+        success_chance = 1.0
+        variance = 0.0
+    elif ratio >= 1.4:
+        # Strong party: very high success, tiny variance
         success_chance = 0.95
-    elif ratio >= 1.2:
-        success_chance = 0.80 + (ratio - 1.2) * 0.5  # 80-95%
+        variance = 0.05
+    elif ratio >= 1.15:
+        # Good party: high success
+        success_chance = 0.85
+        variance = 0.10
     elif ratio >= 1.0:
-        success_chance = 0.65 + (ratio - 1.0) * 0.75  # 65-80%
-    elif ratio >= 0.8:
-        success_chance = 0.40 + (ratio - 0.8) * 1.25  # 40-65%
-    elif ratio >= 0.6:
-        success_chance = 0.20 + (ratio - 0.6) * 1.0   # 20-40%
+        # Adequate party: moderate-high success
+        success_chance = 0.70
+        variance = 0.15
+    elif ratio >= 0.85:
+        # Slightly weak: coin flip
+        success_chance = 0.50
+        variance = 0.15
+    elif ratio >= 0.7:
+        # Weak party: low success
+        success_chance = 0.30
+        variance = 0.10
+    elif ratio >= 0.5:
+        # Very weak: very low success
+        success_chance = 0.15
+        variance = 0.10
     else:
-        success_chance = max(0.05, ratio * 0.33)      # 5-20%
+        # Severely underpowered: almost guaranteed failure
+        success_chance = 0.05
+        variance = 0.05
     
-    # HP factor - low HP party has penalty
-    if avg_hp < 50:
+    # HP factor - low HP party has significant penalty
+    if avg_hp < 40:
+        success_chance *= 0.6
+        variance *= 0.5
+    elif avg_hp < 60:
         success_chance *= 0.8
     
-    # Apply small randomness
+    # Apply variance (small random adjustment within window)
+    adjustment = random.uniform(-variance, variance)
+    final_chance = clamp(success_chance + adjustment, 0.0, 1.0)
+    
+    # Determine outcome
     roll = random.random()
-    success = roll < success_chance
-    margin = abs(success_chance - roll)
+    success = roll < final_chance
+    margin = abs(final_chance - roll)
     
     stats_info = {
-        "avg_stat": round(avg_stat, 1),
+        "avg_stat": round(avg_primary, 1),
+        "avg_secondary": round(avg_secondary, 1),
         "avg_level": round(avg_level, 1),
-        "building_bonus": building_bonus,
+        "avg_hp": round(avg_hp, 1),
+        "building_bonus": round(building_bonus, 1),
+        "level_bonus": round(level_bonus, 1),
+        "size_bonus": round(size_bonus, 1),
         "effective_stat": round(effective_stat, 1),
         "threshold": threshold,
         "ratio": round(ratio, 2),
-        "success_chance": round(success_chance * 100, 1),
+        "base_chance": round(success_chance * 100, 1),
+        "final_chance": round(final_chance * 100, 1),
     }
     
     return success, margin, stats_info

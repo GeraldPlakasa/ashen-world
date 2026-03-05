@@ -36,9 +36,13 @@ def create_player_character(
     with _state_lock:
         characters = load_villagers()
 
-        # Check if user already has a player character
+        # Check if user already has a LIVING player character
+        # Allow creating new hero if previous one died or achieved greatness
         existing = next(
-            (c for c in characters if c.get("origin") == "player" and c.get("owner") == username),
+            (c for c in characters 
+             if c.get("origin") == "player" 
+             and c.get("owner") == username
+             and c.get("alive", True)),  # Only block if existing hero is alive
             None,
         )
         if existing:
