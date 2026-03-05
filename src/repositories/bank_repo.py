@@ -19,6 +19,19 @@ def load_bank() -> Bank:
                 "building_health": {},
                 "last_election_year": None,
                 "last_election_message": "",
+                "last_event_message": "",
+                "last_event_day": None,
+                "last_event_year_tracking": 0,
+                "event_day_for_year": None,
+                "event_triggered_this_year": False,
+                # Quest tracking
+                "last_quest_year": 0,
+                "quest_day_for_year": None,
+                "quest_triggered_this_year": False,
+                "last_quest_message": "",
+                "last_quest_day": None,
+                "last_quest_type": None,
+                "last_quest_success": None,
                 "year_stats": {},
                 "yearly_history": [],
             }
@@ -50,10 +63,24 @@ def load_bank() -> Bank:
             "balance": bal,
             "building_levels": levels,
             "building_health": health,
+            # Election tracking
             "last_election_year": data.get("last_election_year"),
             "last_election_message": data.get("last_election_message", ""),
+            # Event tracking
             "last_event_message": data.get("last_event_message", ""),
             "last_event_day": data.get("last_event_day"),
+            "last_event_year_tracking": data.get("last_event_year_tracking", 0),
+            "event_day_for_year": data.get("event_day_for_year"),
+            "event_triggered_this_year": data.get("event_triggered_this_year", False),
+            # Quest tracking
+            "last_quest_year": data.get("last_quest_year", 0),
+            "quest_day_for_year": data.get("quest_day_for_year"),
+            "quest_triggered_this_year": data.get("quest_triggered_this_year", False),
+            "last_quest_message": data.get("last_quest_message", ""),
+            "last_quest_day": data.get("last_quest_day"),
+            "last_quest_type": data.get("last_quest_type"),
+            "last_quest_success": data.get("last_quest_success"),
+            # Stats
             "year_stats": year_stats,
             "yearly_history": yearly_history,
         }
@@ -76,10 +103,24 @@ def save_bank(bank: Bank) -> None:
         "balance": int(bank.get("balance", 0)),
         "building_levels": bank.get("building_levels") if isinstance(bank.get("building_levels"), dict) else {},
         "building_health": bank.get("building_health") if isinstance(bank.get("building_health"), dict) else {},
+        # Election tracking
         "last_election_year": bank.get("last_election_year"),
         "last_election_message": bank.get("last_election_message", ""),
+        # Event tracking
         "last_event_message": bank.get("last_event_message", ""),
         "last_event_day": bank.get("last_event_day"),
+        "last_event_year_tracking": bank.get("last_event_year_tracking", 0),
+        "event_day_for_year": bank.get("event_day_for_year"),
+        "event_triggered_this_year": bank.get("event_triggered_this_year", False),
+        # Quest tracking
+        "last_quest_year": bank.get("last_quest_year", 0),
+        "quest_day_for_year": bank.get("quest_day_for_year"),
+        "quest_triggered_this_year": bank.get("quest_triggered_this_year", False),
+        "last_quest_message": bank.get("last_quest_message", ""),
+        "last_quest_day": bank.get("last_quest_day"),
+        "last_quest_type": bank.get("last_quest_type"),
+        "last_quest_success": bank.get("last_quest_success"),
+        # Stats
         "year_stats": year_stats,
         "yearly_history": yearly_history,
     }

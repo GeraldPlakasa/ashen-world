@@ -30,7 +30,7 @@ import random
 import json
 from typing import TYPE_CHECKING
 
-from config import DAYS_PER_YEAR
+from config import DAYS_PER_YEAR, QUEST_INTERVAL_YEARS
 from world_utils import clamp, rand_int
 from buildings import get_building_level
 
@@ -38,9 +38,6 @@ if TYPE_CHECKING:
     from src.models.villager import Villager
     from src.models.bank import Bank
 
-
-# Quest interval in years
-QUEST_INTERVAL_YEARS = 2
 
 # Quest type definitions with base difficulty and rewards
 QUEST_TYPES = {
