@@ -15,9 +15,9 @@ Quest Timing:
 
 Rewards:
 - Gold distributed to surviving party members
-- Gear chance for top performers
-- Achievement progress
-- Special traits for exceptional success
+- Gear for top performers
+- Achievement progress (Questmaster)
+- XP and stat boosts
 
 Risks:
 - HP damage to party members
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from src.models.bank import Bank
 
 
-# Quest type definitions with base difficulty and rewards
+# Quest type definitions with stat requirements and rewards
 QUEST_TYPES = {
     "COMBAT": {
         "name": "Hunt the Beast",
@@ -49,9 +49,10 @@ QUEST_TYPES = {
             "Eliminate the {beast} pack threatening travelers",
         ],
         "beasts": ["Dire Wolf", "Cave Troll", "Wyvern", "Bandit Chief", "Orc Warband", "Giant Spider"],
-        "base_difficulty": 60,
-        "gold_reward": (150, 400),
         "stat_focus": "atk",
+        "stat_threshold": 25,  # Average ATK needed per party member
+        "gold_reward": (150, 400),
+        "gear_chance": 0.40,
     },
     "DIPLOMACY": {
         "name": "Diplomatic Mission",
@@ -61,9 +62,10 @@ QUEST_TYPES = {
             "Resolve the border dispute with {village}",
         ],
         "villages": ["Riverdale", "Ironhold", "Sunhaven", "Mistwood", "Thornbury", "Goldcrest"],
-        "base_difficulty": 50,
-        "gold_reward": (100, 300),
         "stat_focus": "int",
+        "stat_threshold": 20,
+        "gold_reward": (100, 300),
+        "gear_chance": 0.25,
     },
     "EXPLORATION": {
         "name": "Explore Unknown Lands",
@@ -73,9 +75,10 @@ QUEST_TYPES = {
             "Scout the mysterious {location}",
         ],
         "locations": ["Ruins", "Forest", "Mountains", "Caverns", "Marshlands", "Desert Oasis"],
-        "base_difficulty": 55,
-        "gold_reward": (120, 350),
         "stat_focus": "def",
+        "stat_threshold": 22,
+        "gold_reward": (120, 350),
+        "gear_chance": 0.35,
     },
     "TRADE": {
         "name": "Trade Expedition",
@@ -85,11 +88,36 @@ QUEST_TYPES = {
             "Acquire rare {goods} for the kingdom",
         ],
         "goods": ["Spices", "Silk", "Iron Ore", "Gemstones", "Exotic Animals", "Ancient Artifacts"],
-        "base_difficulty": 45,
-        "gold_reward": (200, 500),
         "stat_focus": "rep",
+        "stat_threshold": 15,
+        "gold_reward": (200, 500),
+        "gear_chance": 0.30,
     },
 }
+
+# Gear rewards for quest success (similar to shop items)
+QUEST_GEAR_T1 = [
+    {"type": "Battle Trophy", "bonuses": [{"key": "atk", "amt": (3, 7)}]},
+    {"type": "Explorer's Cloak", "bonuses": [{"key": "def", "amt": (3, 7)}]},
+    {"type": "Diplomat's Ring", "bonuses": [{"key": "int", "amt": (2, 5)}, {"key": "rep", "amt": (1, 3)}]},
+    {"type": "Merchant's Pouch", "bonuses": [{"key": "rep", "amt": (3, 6)}]},
+    {"type": "Adventurer's Boots", "bonuses": [{"key": "hp", "amt": (10, 20)}]},
+]
+
+QUEST_GEAR_T2 = [
+    {"type": "Slayer's Blade", "bonuses": [{"key": "atk", "amt": (8, 14)}]},
+    {"type": "Guardian's Shield", "bonuses": [{"key": "def", "amt": (8, 14)}]},
+    {"type": "Sage's Medallion", "bonuses": [{"key": "int", "amt": (6, 10)}, {"key": "rep", "amt": (2, 5)}]},
+    {"type": "Hero's Mantle", "bonuses": [{"key": "hp", "amt": (20, 35)}, {"key": "rep", "amt": (3, 6)}]},
+    {"type": "Veteran's Armor", "bonuses": [{"key": "def", "amt": (6, 10)}, {"key": "hp", "amt": (12, 22)}]},
+]
+
+QUEST_GEAR_T3 = [
+    {"type": "Dragonslayer's Edge", "bonuses": [{"key": "atk", "amt": (14, 22)}, {"key": "hp", "amt": (15, 25)}]},
+    {"type": "Champion's Plate", "bonuses": [{"key": "def", "amt": (12, 20)}, {"key": "hp", "amt": (25, 40)}]},
+    {"type": "Crown of the Wise", "bonuses": [{"key": "int", "amt": (10, 16)}, {"key": "rep", "amt": (6, 10)}]},
+    {"type": "Legend's Relic", "bonuses": [{"key": "atk", "amt": (8, 14)}, {"key": "def", "amt": (8, 14)}, {"key": "rep", "amt": (4, 8)}]},
+]
 
 # Trait influences on quest type preference (for King)
 KING_TRAIT_QUEST_WEIGHTS = {
@@ -118,6 +146,7 @@ VOLUNTEER_TRAIT_WEIGHTS = {
     "Hot-headed": {"COMBAT": 2.0},
     "Protective": {"COMBAT": 1.5},
     "Hunter": {"COMBAT": 2.5, "EXPLORATION": 1.5},
+    "Veteran": {"COMBAT": 2.0, "EXPLORATION": 1.8, "DIPLOMACY": 1.5, "TRADE": 1.5},
 }
 
 
@@ -271,48 +300,158 @@ def _select_party(characters: list[Villager], quest_type: str, party_size: int =
     return [c[0] for c in selected]
 
 
-def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank) -> tuple[bool, float]:
-    """Calculate if quest succeeds and success margin."""
-    qt_data = QUEST_TYPES[quest_type]
-    base_difficulty = qt_data["base_difficulty"]
-    stat_focus = qt_data["stat_focus"]
+def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank) -> tuple[bool, float, dict]:
+    """
+    Calculate if quest succeeds based strictly on party stats.
     
-    # Sum party stats
-    party_power = 0
+    Returns:
+        (success, margin, stats_info)
+    """
+    qt_data = QUEST_TYPES[quest_type]
+    stat_focus = qt_data["stat_focus"]
+    threshold = qt_data["stat_threshold"]
+    
+    # Calculate party stats
+    total_stat = 0
+    total_level = 0
+    total_hp = 0
+    
     for v in party:
         if stat_focus == "atk":
-            party_power += int(v.get("atk", 10) or 10)
+            total_stat += int(v.get("atk", 10) or 10)
         elif stat_focus == "int":
-            party_power += int(v.get("int", 10) or 10)
+            total_stat += int(v.get("int", 10) or 10)
         elif stat_focus == "def":
-            party_power += int(v.get("def", 10) or 10)
-        else:
-            party_power += int(v.get("rep", 0) or 0) + 20
+            total_stat += int(v.get("def", 10) or 10)
+        else:  # rep
+            total_stat += int(v.get("rep", 0) or 0) + 10
         
-        party_power += int(v.get("level", 1) or 1) * 2
+        total_level += int(v.get("level", 1) or 1)
+        total_hp += int(v.get("hp", 100) or 100)
     
-    # Building bonuses
+    party_size = len(party)
+    avg_stat = total_stat / party_size
+    avg_level = total_level / party_size
+    avg_hp = total_hp / party_size
+    
+    # Building bonuses (add to average stat)
+    building_bonus = 0
     if quest_type == "COMBAT":
         barracks_lvl = get_building_level(bank, "barracks")
-        party_power += barracks_lvl * 15
+        building_bonus = barracks_lvl * 3
     elif quest_type == "DIPLOMACY":
         court_lvl = get_building_level(bank, "royal_court")
-        party_power += court_lvl * 15
+        building_bonus = court_lvl * 3
     elif quest_type == "TRADE":
         market_lvl = get_building_level(bank, "market")
-        party_power += market_lvl * 15
+        building_bonus = market_lvl * 3
     elif quest_type == "EXPLORATION":
         library_lvl = get_building_level(bank, "library")
-        party_power += library_lvl * 10
+        building_bonus = library_lvl * 2
     
-    # Calculate success chance
-    success_chance = min(0.95, max(0.15, (party_power - base_difficulty) / 100 + 0.5))
+    effective_stat = avg_stat + building_bonus + (avg_level * 0.5)
     
+    # Calculate success based on stat vs threshold
+    # If effective_stat >= threshold * 1.5 -> guaranteed success
+    # If effective_stat >= threshold -> 70-95% success
+    # If effective_stat >= threshold * 0.7 -> 40-70% success
+    # Below that -> 10-40% success
+    
+    ratio = effective_stat / threshold
+    
+    if ratio >= 1.5:
+        success_chance = 0.95
+    elif ratio >= 1.2:
+        success_chance = 0.80 + (ratio - 1.2) * 0.5  # 80-95%
+    elif ratio >= 1.0:
+        success_chance = 0.65 + (ratio - 1.0) * 0.75  # 65-80%
+    elif ratio >= 0.8:
+        success_chance = 0.40 + (ratio - 0.8) * 1.25  # 40-65%
+    elif ratio >= 0.6:
+        success_chance = 0.20 + (ratio - 0.6) * 1.0   # 20-40%
+    else:
+        success_chance = max(0.05, ratio * 0.33)      # 5-20%
+    
+    # HP factor - low HP party has penalty
+    if avg_hp < 50:
+        success_chance *= 0.8
+    
+    # Apply small randomness
     roll = random.random()
     success = roll < success_chance
-    margin = success_chance - roll if success else roll - success_chance
+    margin = abs(success_chance - roll)
     
-    return success, margin
+    stats_info = {
+        "avg_stat": round(avg_stat, 1),
+        "avg_level": round(avg_level, 1),
+        "building_bonus": building_bonus,
+        "effective_stat": round(effective_stat, 1),
+        "threshold": threshold,
+        "ratio": round(ratio, 2),
+        "success_chance": round(success_chance * 100, 1),
+    }
+    
+    return success, margin, stats_info
+
+
+def _generate_gear_reward(quest_type: str, party_size: int) -> dict | None:
+    """Generate a gear reward based on quest type and party size."""
+    qt_data = QUEST_TYPES[quest_type]
+    gear_chance = qt_data["gear_chance"]
+    
+    # Larger parties have slightly better gear chance
+    gear_chance += (party_size - 2) * 0.05
+    
+    if random.random() > gear_chance:
+        return None
+    
+    # Select tier based on random chance
+    tier_roll = random.random()
+    if tier_roll < 0.10:  # 10% chance T3
+        pool = QUEST_GEAR_T3
+        tier = 3
+    elif tier_roll < 0.40:  # 30% chance T2
+        pool = QUEST_GEAR_T2
+        tier = 2
+    else:  # 60% chance T1
+        pool = QUEST_GEAR_T1
+        tier = 1
+    
+    gear_template = random.choice(pool)
+    
+    # Generate actual bonus values
+    bonuses = []
+    for b in gear_template["bonuses"]:
+        amt = rand_int(b["amt"][0], b["amt"][1])
+        bonuses.append({"key": b["key"], "amt": amt})
+    
+    return {
+        "type": gear_template["type"],
+        "tier": tier,
+        "bonuses": bonuses,
+    }
+
+
+def _apply_gear_to_villager(v: Villager, gear: dict) -> str:
+    """Apply gear bonuses to villager and return description."""
+    bonus_strs = []
+    for b in gear["bonuses"]:
+        key = b["key"]
+        amt = b["amt"]
+        if key == "rep":
+            v[key] = clamp(int(v.get(key, 0) or 0) + amt, -100, 100)
+        else:
+            v[key] = int(v.get(key, 0) or 0) + amt
+        bonus_strs.append(f"+{amt} {key.upper()}")
+    
+    return f"{gear['type']} ({', '.join(bonus_strs)})"
+
+
+def _increment_quest_wins(v: Villager) -> int:
+    """Increment quest win count and return new total."""
+    current = int(v.get("questWins", 0) or 0)
+    v["questWins"] = current + 1
+    return current + 1
 
 
 def _apply_quest_results(
@@ -322,12 +461,12 @@ def _apply_quest_results(
     margin: float,
     bank: Bank,
     current_day: int
-) -> tuple[int, int, list[str]]:
+) -> tuple[int, int, list[str], list[dict]]:
     """
     Apply quest results to party members.
     
     Returns:
-        (gold_distributed, deaths, injured_names)
+        (gold_distributed, deaths, injured_names, gear_rewards)
     """
     qt_data = QUEST_TYPES[quest_type]
     gold_min, gold_max = qt_data["gold_reward"]
@@ -335,20 +474,38 @@ def _apply_quest_results(
     deaths = 0
     injured = []
     gold_distributed = 0
+    gear_rewards = []
     
     if success:
-        # Success: distribute gold, minor injuries
+        # Success: distribute gold, gear, minor injuries
         total_gold = rand_int(gold_min, gold_max)
         
         # Margin bonus
         if margin > 0.3:
             total_gold = int(total_gold * 1.5)
+        elif margin > 0.15:
+            total_gold = int(total_gold * 1.2)
         
         gold_per_member = total_gold // len(party)
         gold_distributed = total_gold
         
-        for v in party:
+        # Generate gear for the party
+        gear = _generate_gear_reward(quest_type, len(party))
+        
+        # Best performer gets gear (highest relevant stat)
+        stat_focus = qt_data["stat_focus"]
+        if stat_focus == "rep":
+            stat_focus_key = "rep"
+        else:
+            stat_focus_key = stat_focus
+        
+        party_sorted = sorted(party, key=lambda v: int(v.get(stat_focus_key, 0) or 0), reverse=True)
+        
+        for i, v in enumerate(party):
             v["coins"] = int(v.get("coins", 0) or 0) + gold_per_member
+            
+            # Increment quest wins
+            quest_wins = _increment_quest_wins(v)
             
             # Small chance of minor injury
             if random.random() < 0.15:
@@ -357,26 +514,38 @@ def _apply_quest_results(
                 injured.append(v.get("name", "Unknown"))
             
             # XP reward
-            v["exp"] = int(v.get("exp", 0) or 0) + rand_int(15, 30)
+            v["exp"] = int(v.get("exp", 0) or 0) + rand_int(20, 40)
             
-            # Update action log
-            v["last_action"] = f"Quest success: +{gold_per_member} gold"
+            # Best performer gets gear
+            if gear and v == party_sorted[0]:
+                gear_desc = _apply_gear_to_villager(v, gear)
+                gear_rewards.append({
+                    "recipient": v.get("name", "Unknown"),
+                    "gear": gear["type"],
+                    "tier": gear["tier"],
+                    "bonuses": gear["bonuses"],
+                })
+                v["last_action"] = f"Quest success: +{gold_per_member}g, {gear_desc}"
+            else:
+                v["last_action"] = f"Quest success: +{gold_per_member} gold"
             
-            # Small stat boost chance
-            if random.random() < 0.2:
-                stat = qt_data["stat_focus"]
-                if stat in ("atk", "def", "int"):
+            # Small stat boost chance for others
+            if random.random() < 0.15 and v != party_sorted[0]:
+                stat = stat_focus_key if stat_focus_key in ("atk", "def", "int") else "rep"
+                if stat == "rep":
+                    v["rep"] = clamp(int(v.get("rep", 0) or 0) + rand_int(1, 3), -100, 100)
+                else:
                     v[stat] = int(v.get(stat, 10) or 10) + rand_int(1, 2)
-                elif stat == "rep":
-                    v["rep"] = clamp(int(v.get("rep", 0) or 0) + rand_int(2, 5), -100, 100)
     else:
         # Failure: significant injuries, possible deaths
         for v in party:
             # Damage based on margin of failure
             if margin > 0.3:
-                damage = rand_int(30, 60)
+                damage = rand_int(35, 65)
+            elif margin > 0.15:
+                damage = rand_int(25, 45)
             else:
-                damage = rand_int(15, 35)
+                damage = rand_int(15, 30)
             
             v["hp"] = max(0, int(v.get("hp", 100) or 100) - damage)
             
@@ -396,7 +565,7 @@ def _apply_quest_results(
         loss = rand_int(50, 150)
         bank["balance"] = max(0, int(bank.get("balance", 0) or 0) - loss)
     
-    return gold_distributed, deaths, injured
+    return gold_distributed, deaths, injured, gear_rewards
 
 
 def maybe_trigger_quest(
@@ -455,35 +624,14 @@ def maybe_trigger_quest(
         bank["quest_triggered_this_year"] = True
         return None, None
     
-    success, margin = _calculate_quest_success(party, quest_type, bank)
-    gold, deaths, injured = _apply_quest_results(party, quest_type, success, margin, bank, current_day)
+    success, margin, stats_info = _calculate_quest_success(party, quest_type, bank)
+    gold, deaths, injured, gear_rewards = _apply_quest_results(party, quest_type, success, margin, bank, current_day)
     
     # Mark as triggered
     bank["quest_triggered_this_year"] = True
     
-    # Build message
+    # Build party details
     party_names = [v.get("name", "Unknown") for v in party]
-    
-    if success:
-        if deaths == 0:
-            result_text = f"Success! Party earned {gold} gold."
-        else:
-            result_text = f"Pyrrhic victory. {deaths} died, {gold} gold earned."
-    else:
-        if deaths == 0:
-            result_text = f"Failed. Party returned injured."
-        else:
-            result_text = f"Failed. {deaths} died in the attempt."
-    
-    message = f"QUEST: {quest_name} - {quest_desc}. Party: {', '.join(party_names[:3])}{'...' if len(party_names) > 3 else ''}. {result_text}"
-    
-    # Store quest info
-    bank["last_quest_message"] = message
-    bank["last_quest_day"] = current_day
-    bank["last_quest_type"] = quest_type
-    bank["last_quest_success"] = success
-    
-    # Build detailed record
     party_details = []
     for v in party:
         party_details.append({
@@ -492,7 +640,30 @@ def maybe_trigger_quest(
             "job": v.get("job", "Unknown"),
             "level": v.get("level", 1),
             "alive": v.get("alive", True),
+            "quest_wins": v.get("questWins", 0),
         })
+    
+    # Build result text
+    if success:
+        if deaths == 0 and gear_rewards:
+            result_text = f"Success! {gold}g earned. {gear_rewards[0]['recipient']} received {gear_rewards[0]['gear']}."
+        elif deaths == 0:
+            result_text = f"Success! {gold}g earned."
+        else:
+            result_text = f"Pyrrhic victory. {deaths} died, {gold}g earned."
+    else:
+        if deaths == 0:
+            result_text = f"Failed. Party returned injured."
+        else:
+            result_text = f"Failed. {deaths} died."
+    
+    message = f"QUEST: {quest_name} · {result_text}"
+    
+    # Store quest info
+    bank["last_quest_message"] = message
+    bank["last_quest_day"] = current_day
+    bank["last_quest_type"] = quest_type
+    bank["last_quest_success"] = success
     
     record = {
         "type": quest_type,
@@ -508,7 +679,9 @@ def maybe_trigger_quest(
         "gold": gold,
         "deaths": deaths,
         "injured": injured,
+        "gear_rewards": gear_rewards,
         "king_name": king.get("name", "Unknown"),
+        "stats_info": stats_info,
     }
     
     # Add to quest history
@@ -533,3 +706,4 @@ def clear_quest_state(bank: Bank) -> None:
     bank["last_quest_day"] = None
     bank["last_quest_type"] = None
     bank["last_quest_success"] = None
+    bank["quest_history"] = []

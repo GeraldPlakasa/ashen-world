@@ -363,6 +363,9 @@ def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -
             heir_kind = "sibling"
 
         if not heir:
+            # No heir found - demote dead player so user can create new character
+            _demote_to_npc(parent)
+            parent["last_action"] = f"lineage ended (no heirs)"
             continue
 
         parent_name = parent.get("name", "Unknown")

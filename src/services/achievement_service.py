@@ -70,6 +70,12 @@ ACHIEVEMENTS = {
         "icon": "💪",
         "reward": {"type": "both", "stat": "def", "value": 15, "trait": "Resilient"},
     },
+    "questmaster": {
+        "name": "Questmaster",
+        "description": "Complete 5 successful quests",
+        "icon": "⚔️",
+        "reward": {"type": "both", "stat": "atk", "value": 10, "trait": "Veteran"},
+    },
 }
 
 
@@ -249,6 +255,14 @@ def check_elder_statesman(v: Villager) -> bool:
     return job == "King" and age >= 60
 
 
+def check_questmaster(v: Villager) -> bool:
+    """Check if villager has completed 5+ successful quests."""
+    if has_achievement(v, "questmaster"):
+        return False
+    quest_wins = int(v.get("questWins", 0) or 0)
+    return quest_wins >= 5
+
+
 # ===========================================================================
 #  Daily Achievement Check Phase
 # ===========================================================================
@@ -279,6 +293,9 @@ def achievement_check_phase(characters: list[Villager], current_day: int = 0) ->
         
         if check_elder_statesman(v):
             award_achievement(v, "elder_statesman")
+        
+        if check_questmaster(v):
+            award_achievement(v, "questmaster")
 
 
 # ===========================================================================

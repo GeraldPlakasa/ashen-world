@@ -230,15 +230,37 @@
                   </div>
                 </div>
                 
-                <div style="font-size: 11px; color: var(--aw-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Party Members</div>
+                {% if quest.gear_rewards %}
+                <div style="font-size: 11px; color: var(--aw-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; margin-top: 12px;">Gear Rewards</div>
+                <div class="party-list">
+                  {% for gear in quest.gear_rewards %}
+                  <span class="party-member" style="background: linear-gradient(135deg, rgba(202,138,4,0.15), rgba(202,138,4,0.05));">
+                    <strong>{{ gear.recipient }}</strong>: {{ gear.gear }}
+                    <span class="party-member-level">
+                      {% for b in gear.bonuses %}+{{ b.amt }} {{ b.key | upper }}{% if not loop.last %}, {% endif %}{% endfor %}
+                    </span>
+                  </span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+
+                <div style="font-size: 11px; color: var(--aw-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; margin-top: 12px;">Party Members</div>
                 <div class="party-list">
                   {% for member in quest.party_details %}
                   <span class="party-member {{ 'dead' if not member.alive else '' }}">
                     {{ member.name }}
-                    <span class="party-member-level">Lv{{ member.level }} {{ member.job }}</span>
+                    <span class="party-member-level">Lv{{ member.level }} {{ member.job }}{% if member.quest_wins %} · {{ member.quest_wins }} wins{% endif %}</span>
                   </span>
                   {% endfor %}
                 </div>
+
+                {% if quest.stats_info %}
+                <div style="font-size: 10px; color: var(--aw-text-dim); margin-top: 12px;">
+                  Party avg: {{ quest.stats_info.avg_stat }} {{ quest.type | lower | replace('combat', 'ATK') | replace('diplomacy', 'INT') | replace('exploration', 'DEF') | replace('trade', 'REP') }} · 
+                  Threshold: {{ quest.stats_info.threshold }} · 
+                  Success chance: {{ quest.stats_info.success_chance }}%
+                </div>
+                {% endif %}
               </div>
               {% endfor %}
             {% else %}

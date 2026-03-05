@@ -142,6 +142,10 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
             weights["hunt"] += 0.8
             weights["train"] += 0.6
             weights["steal"] += 0.3
+        if t == "Veteran":
+            weights["hunt"] += 0.6
+            weights["train"] += 0.4
+            weights["buy_gear"] += 0.2
 
     if job in ["Soldier", "Commander", "Guard", "Archer", "Ranger", "Captain"]:
         weights["train"] += 1.0
