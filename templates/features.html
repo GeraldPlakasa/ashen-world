@@ -9,6 +9,39 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    .feature-search-wrapper {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    .feature-search {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      background: var(--aw-card-bg);
+      color: var(--aw-text);
+      font-size: 14px;
+    }
+    .feature-search:focus {
+      outline: none;
+      border-color: var(--aw-accent);
+      box-shadow: 0 0 0 2px rgba(var(--aw-accent-rgb), 0.2);
+    }
+    .feature-search::placeholder {
+      color: var(--aw-text-muted);
+    }
+    .toc-link {
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .toc-link.highlight {
+      background-color: var(--aw-accent) !important;
+      color: #fff !important;
+    }
+    .toc-link.hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 
 <body class="game-theme">
@@ -41,27 +74,31 @@
                   <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Navigate</div>
                   <div style="color: var(--aw-text);" class="h6 mb-3">Table of Contents</div>
 
-                  <div class="list-group list-group-flush" style="font-size: 13px;">
-                    <a class="list-group-item list-group-item-action" href="#updates">Latest Updates</a>
-                    <a class="list-group-item list-group-item-action" href="#achievements">Achievements</a>
-                    <a class="list-group-item list-group-item-action" href="#aging">Aging System</a>
-                    <a class="list-group-item list-group-item-action" href="#events">World Events</a>
-                    <a class="list-group-item list-group-item-action" href="#weather">Weather System</a>
-                    <a class="list-group-item list-group-item-action" href="#pop">Village Population</a>
-                    <a class="list-group-item list-group-item-action" href="#actions">Daily Actions</a>
-                    <a class="list-group-item list-group-item-action" href="#combat">Combat & Progression</a>
-                    <a class="list-group-item list-group-item-action" href="#relations">Relationships</a>
-                    <a class="list-group-item list-group-item-action" href="#marriage">Marriage & Family</a>
-                    <a class="list-group-item list-group-item-action" href="#birth">Birth & Childhood</a>
-                    <a class="list-group-item list-group-item-action" href="#inherit">Inheritance</a>
-                    <a class="list-group-item list-group-item-action" href="#politics">Leadership & Elections</a>
-                    <a class="list-group-item list-group-item-action" href="#economy">Economy & Tax</a>
-                    <a class="list-group-item list-group-item-action" href="#buildings">Building System</a>
-                    <a class="list-group-item list-group-item-action" href="#leaderboard">Leaderboard</a>
-                    <a class="list-group-item list-group-item-action" href="#familytree">Family Tree</a>
-                    <a class="list-group-item list-group-item-action" href="#rules">Rules & Constraints</a>
-                    <a class="list-group-item list-group-item-action" href="#traits">Trait Behaviors</a>
-                    <a class="list-group-item list-group-item-action" href="#gear">Item / Gear</a>
+                  <!-- Search Box -->
+                  <div class="feature-search-wrapper">
+                    <input type="text" class="feature-search" id="featureSearch" placeholder="🔍 Search features..." autocomplete="off" />
+                  </div>
+
+                  <div class="list-group list-group-flush" id="tocList" style="font-size: 13px;">
+                    <a class="list-group-item list-group-item-action toc-link" href="#achievements" data-target="cAchievements">Achievements</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#aging" data-target="cAging">Aging System</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#events" data-target="cEvents">World Events</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#weather" data-target="cWeather">Weather System</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#pop" data-target="cPop">Village Population</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#actions" data-target="cActions">Daily Actions</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#combat" data-target="cCombat">Combat & Progression</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#relations" data-target="cRel">Relationships</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#marriage" data-target="cMarriage">Marriage & Family</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#birth" data-target="cBirth">Birth & Childhood</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#inherit" data-target="cInherit">Inheritance</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#politics" data-target="cPolitics">Leadership & Elections</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#economy" data-target="cEco">Economy & Tax</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#buildings" data-target="cBuildings">Building System</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#leaderboard" data-target="cLeaderboard">Leaderboard</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#familytree" data-target="cFamilyTree">Family Tree</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#rules" data-target="cRules">Rules & Constraints</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#traits" data-target="cTraits">Trait Behaviors</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#gear" data-target="cGear">Item / Gear</a>
                   </div>
                 </div>
               </section>
@@ -76,67 +113,12 @@
 
                   <div class="accordion" id="featuresAccordion">
 
-                    <!-- LATEST UPDATES -->
-                    <div class="accordion-item" id="updates">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cUpdates">Latest Updates</button>
-                      </h2>
-                      <div id="cUpdates" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Recent additions to Ashen World:</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🌤️ Weather Badge</div>
-                                <ul class="small mb-0">
-                                  <li>Weather indicator now visible in header</li>
-                                  <li>Shows ☀️ Sunny or 🌧️ Rainy</li>
-                                  <li>Auto-updates when weather changes</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">👶 Birth Tracking</div>
-                                <ul class="small mb-0">
-                                  <li>Birth count now tracked per year</li>
-                                  <li>Displayed in Leaderboard stats</li>
-                                  <li>Historical births in archived years</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">👑 King Trait Display</div>
-                                <ul class="small mb-0">
-                                  <li>King's traits shown in Leaderboard</li>
-                                  <li>Visible in both current and past reigns</li>
-                                  <li>Helps understand tax policy decisions</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">📰 Combined Notifications</div>
-                                <ul class="small mb-0">
-                                  <li>Election & Event banners merged</li>
-                                  <li>Unified "Recent News" card</li>
-                                  <li>Cleaner dashboard layout</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     <!-- ACHIEVEMENT SYSTEM -->
                     <div class="accordion-item" id="achievements">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cAchievements">Achievement System</button>
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cAchievements">Achievement System</button>
                       </h2>
-                      <div id="cAchievements" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                      <div id="cAchievements" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
                           <p class="mb-3">Earn achievements by reaching milestones. Each achievement grants stat bonuses or unlocks special traits!</p>
                           
@@ -994,23 +976,298 @@
                       </div>
                     </div>
 
+                    <!-- TRAIT BEHAVIORS - EXPANDED -->
                     <div class="accordion-item" id="traits">
                       <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cTraits">Trait-Based Behavior</button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cTraits">Trait Behaviors</button>
                       </h2>
                       <div id="cTraits" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
-                          <ul class="mb-0">
-                            <li><strong>Brave</strong> → more train/hunt</li>
-                            <li><strong>Cautious</strong> → more study</li>
-                            <li><strong>Greedy</strong> → more work/steal</li>
-                            <li><strong>Generous</strong> → more socialize</li>
-                            <li><strong>Wise</strong> → more study</li>
-                            <li><strong>Hot-headed</strong> → more combat</li>
-                            <li><strong>Diligent</strong> → more work/train</li>
-                            <li><strong>Lazy</strong> → more rest</li>
-                            <li>…and more</li>
-                          </ul>
+                          <p class="mb-3">Each villager has 1-2 traits that influence their daily actions, leadership potential, and social interactions. Traits are assigned at birth (inherited or random) or earned through achievements.</p>
+
+                          <div class="row g-2 mb-3">
+                            <!-- COMBAT / PHYSICAL TRAITS -->
+                            <div class="col-12">
+                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">⚔️ Combat & Physical</div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🦁 Brave</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +60% train, +60% hunt, +30% buy gear</li>
+                                  <li><strong>Leadership:</strong> +6 score</li>
+                                  <li><strong>Combat:</strong> More likely to engage enemies</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🔥 Hot-headed</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +40% train, +40% hunt, +30% steal</li>
+                                  <li><strong>Leadership:</strong> -8 score (impulsive)</li>
+                                  <li><strong>Social:</strong> May damage relationships</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">⚡ Reckless</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +60% train, +60% hunt, +30% buy gear</li>
+                                  <li><strong>Leadership:</strong> -6 score (careless)</li>
+                                  <li><strong>Risk:</strong> Takes dangerous actions often</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🛡️ Protective</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +60% train, +60% hunt, +30% buy gear</li>
+                                  <li><strong>Social:</strong> Defends family and friends</li>
+                                  <li><strong>Combat:</strong> Prioritizes defense</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <!-- INTELLECTUAL TRAITS -->
+                            <div class="col-12 mt-3">
+                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">📚 Intellectual</div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🧠 Wise</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +80% study, +40% socialize</li>
+                                  <li><strong>Leadership:</strong> +14 score (highest bonus)</li>
+                                  <li><strong>Elections:</strong> Highly valued by voters</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">💡 Clever</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +80% study, +40% socialize, +30% hangout</li>
+                                  <li><strong>Work:</strong> More efficient at intellectual jobs</li>
+                                  <li><strong>Combat:</strong> Better tactical decisions</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🔍 Curious</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +80% study, +40% socialize, +30% hangout</li>
+                                  <li><strong>Learning:</strong> Faster skill acquisition</li>
+                                  <li><strong>Social:</strong> Engages with many villagers</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🐢 Cautious</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +40% study, +20% rest, -30% hunt, -20% steal</li>
+                                  <li><strong>Leadership:</strong> +2 score</li>
+                                  <li><strong>Risk:</strong> Avoids dangerous situations</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <!-- SOCIAL TRAITS -->
+                            <div class="col-12 mt-3">
+                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">💬 Social & Personality</div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">💝 Generous</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +40% buy food, +40% socialize, +50% hangout, -20% steal</li>
+                                  <li><strong>Leadership:</strong> +8 score</li>
+                                  <li><strong>Tax Policy:</strong> Lower taxes (5-10%) as King</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">💚 Empathic</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +40% buy food, +40% socialize, +50% hangout, -20% steal</li>
+                                  <li><strong>Leadership:</strong> +6 score</li>
+                                  <li><strong>Relationships:</strong> Builds bonds faster</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🤝 Loyal</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Leadership:</strong> +8 score</li>
+                                  <li><strong>Relationships:</strong> Stronger family bonds</li>
+                                  <li><strong>Elections:</strong> Votes for same candidate repeatedly</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">⏳ Patient</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Leadership:</strong> +5 score</li>
+                                  <li><strong>Work:</strong> Better at long-term tasks</li>
+                                  <li><strong>Combat:</strong> Waits for right moment</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <!-- WORK / AMBITION TRAITS -->
+                            <div class="col-12 mt-3">
+                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">💼 Work & Ambition</div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">⚒️ Diligent</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +60% work, +40% train, +30% buy gear, +20% socialize</li>
+                                  <li><strong>Leadership:</strong> +6 score</li>
+                                  <li><strong>Income:</strong> Earns more coins</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🚀 Ambitious</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +60% work, +40% train, +30% buy gear, +20% socialize</li>
+                                  <li><strong>Leadership:</strong> +3 score</li>
+                                  <li><strong>Growth:</strong> Faster level progression</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">😴 Lazy</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +100% rest, -40% train, -40% work</li>
+                                  <li><strong>Leadership:</strong> -10 score</li>
+                                  <li><strong>Income:</strong> Earns less coins</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🧒 Naive</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Leadership:</strong> Lower score</li>
+                                  <li><strong>Social:</strong> Easily influenced</li>
+                                  <li><strong>Risk:</strong> May be deceived</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <!-- NEGATIVE / RISKY TRAITS -->
+                            <div class="col-12 mt-3">
+                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">⚠️ Risky & Negative</div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">💰 Greedy</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +80% work, +50% steal</li>
+                                  <li><strong>Leadership:</strong> -10 score</li>
+                                  <li><strong>Tax Policy:</strong> Higher taxes (25-35%) as King</li>
+                                  <li><strong>Corruption:</strong> Higher chance to skim treasury</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🎭 Deceitful</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Actions:</strong> +90% steal, -30% socialize</li>
+                                  <li><strong>Leadership:</strong> -12 score (worst penalty)</li>
+                                  <li><strong>Assassination:</strong> Higher success rate</li>
+                                  <li><strong>Trust:</strong> Harder to build relationships</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">😐 Stoic</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Emotions:</strong> Less affected by events</li>
+                                  <li><strong>Relationships:</strong> Slower to form bonds</li>
+                                  <li><strong>Combat:</strong> Remains calm under pressure</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">📏 Strict</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Leadership:</strong> Enforces rules firmly</li>
+                                  <li><strong>Social:</strong> May alienate others</li>
+                                  <li><strong>Work:</strong> High standards</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <!-- ACHIEVEMENT TRAITS -->
+                            <div class="col-12 mt-3">
+                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">🏆 Achievement Traits (Earned)</div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">👴 Patriarch</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Source:</strong> Dynasty Founder achievement</li>
+                                  <li><strong>Actions:</strong> +50% socialize, +60% hangout, +30% work</li>
+                                  <li><strong>Family:</strong> Respected by descendants</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🏹 Hunter</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Source:</strong> Legendary Hunter achievement</li>
+                                  <li><strong>Actions:</strong> +100% hunt, +40% train</li>
+                                  <li><strong>Combat:</strong> Expert at tracking enemies</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">✨ Immortal</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Source:</strong> Centurion achievement (age 100)</li>
+                                  <li><strong>Actions:</strong> +40% rest, +30% hunt</li>
+                                  <li><strong>Survival:</strong> Reduced aging effects</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">💪 Resilient</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Source:</strong> Iron Will achievement</li>
+                                  <li><strong>Actions:</strong> +50% train, +30% hunt, -20% rest</li>
+                                  <li><strong>Survival:</strong> Recovers from low HP</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="feature-box">
+                            <div style="color: var(--aw-text);" class="small mb-1">📊 Trait Inheritance</div>
+                            <ul class="small mb-0">
+                              <li><strong>Children:</strong> 60% chance to inherit one parent's trait</li>
+                              <li><strong>Random:</strong> 40% chance for a completely random trait</li>
+                              <li><strong>Achievement:</strong> Special traits earned through gameplay milestones</li>
+                              <li><strong>Mutation:</strong> Rare chance for opposing trait (e.g., Lazy parent → Diligent child)</li>
+                            </ul>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1021,14 +1278,50 @@
                       </h2>
                       <div id="cGear" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
-                          <ul class="mb-0">
-                            <li><strong>30+ item types</strong> across 3 tiers</li>
-                            <li>Tier 1 (common): Weapon, Armor, Tome</li>
-                            <li>Tier 2 (rare): Vitality Belt, Mageweave</li>
-                            <li>Tier 3 (legendary): Dragonbone, Voidsteel</li>
-                            <li>Permanent stat bonuses</li>
-                            <li>Level-based tier weighting</li>
-                          </ul>
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🟢 Tier 1 (Common)</div>
+                                <ul class="small mb-0">
+                                  <li>Iron Sword (+2-4 ATK)</li>
+                                  <li>Leather Armor (+2-4 DEF)</li>
+                                  <li>Basic Tome (+2-4 INT)</li>
+                                  <li>Simple Ring (+5-10 HP)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-4">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🔵 Tier 2 (Rare)</div>
+                                <ul class="small mb-0">
+                                  <li>Steel Blade (+5-8 ATK)</li>
+                                  <li>Chainmail (+5-8 DEF)</li>
+                                  <li>Mageweave Robe (+5-8 INT)</li>
+                                  <li>Vitality Belt (+15-25 HP)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-4">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">🟣 Tier 3 (Legendary)</div>
+                                <ul class="small mb-0">
+                                  <li>Dragonbone Blade (+10-15 ATK)</li>
+                                  <li>Voidsteel Plate (+10-15 DEF)</li>
+                                  <li>Archmage Codex (+10-15 INT)</li>
+                                  <li>Heart of the Mountain (+30-50 HP)</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="feature-box">
+                            <div style="color: var(--aw-text);" class="small mb-1">⚙️ Mechanics</div>
+                            <ul class="small mb-0">
+                              <li><strong>30+ item types</strong> across 3 tiers</li>
+                              <li><strong>Permanent bonuses:</strong> Stats added immediately</li>
+                              <li><strong>Tier weighting:</strong> Higher level = better tier chance</li>
+                              <li><strong>Blacksmith bonus:</strong> Building level improves gear quality</li>
+                            </ul>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1044,5 +1337,62 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Search functionality -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('featureSearch');
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const accordion = document.getElementById('featuresAccordion');
+      
+      searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        
+        if (query === '') {
+          // Reset: show all links, remove highlights
+          tocLinks.forEach(link => {
+            link.classList.remove('hidden', 'highlight');
+          });
+          return;
+        }
+        
+        let firstMatch = null;
+        
+        tocLinks.forEach(link => {
+          const text = link.textContent.toLowerCase();
+          const targetId = link.getAttribute('data-target');
+          const accordionBody = document.getElementById(targetId);
+          const bodyText = accordionBody ? accordionBody.textContent.toLowerCase() : '';
+          
+          if (text.includes(query) || bodyText.includes(query)) {
+            link.classList.remove('hidden');
+            link.classList.add('highlight');
+            if (!firstMatch) {
+              firstMatch = { link, targetId };
+            }
+          } else {
+            link.classList.add('hidden');
+            link.classList.remove('highlight');
+          }
+        });
+        
+        // Auto-open first match
+        if (firstMatch) {
+          const collapseEl = document.getElementById(firstMatch.targetId);
+          if (collapseEl && !collapseEl.classList.contains('show')) {
+            const bsCollapse = new bootstrap.Collapse(collapseEl, { toggle: true });
+          }
+        }
+      });
+      
+      // Clear highlights when clicking a link
+      tocLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          searchInput.value = '';
+          tocLinks.forEach(l => l.classList.remove('hidden', 'highlight'));
+        });
+      });
+    });
+  </script>
 </body>
 </html>
