@@ -507,6 +507,25 @@ def api_state():
         "weather": weather,
     })
 
+@app.route("/quests", methods=["GET"])
+def quest_history():
+    """Quest history page showing all completed quests."""
+    _, bank, year, day_in_year, _, _ = get_current_state()
+    
+    quest_history_data = bank.get("quest_history", [])
+    if not isinstance(quest_history_data, list):
+        quest_history_data = []
+    
+    return render_template(
+        "quest_history.html",
+        active_page="quests",
+        username=session.get("username"),
+        year=year,
+        day=day_in_year,
+        quest_history=quest_history_data,
+    )
+
+
 @app.route("/features", methods=["GET"])
 def features():
     """Static feature showcase page."""

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Ashen World • Quest History</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    .quest-card {
+      background: var(--aw-bg-card);
+      border: 1px solid var(--aw-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: box-shadow 0.15s;
+    }
+    .quest-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .quest-card.success {
+      border-left: 4px solid var(--aw-alive);
+    }
+    .quest-card.failed {
+      border-left: 4px solid var(--aw-dead);
+    }
+    .quest-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .quest-type-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .quest-type-badge.combat { background: #fee2e2; color: #991b1b; }
+    .quest-type-badge.diplomacy { background: #dbeafe; color: #1e40af; }
+    .quest-type-badge.exploration { background: #dcfce7; color: #166534; }
+    .quest-type-badge.trade { background: #fef3c7; color: #92400e; }
+    .quest-result-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .quest-result-badge.success { background: var(--aw-alive); color: #fff; }
+    .quest-result-badge.failed { background: var(--aw-dead); color: #fff; }
+    .quest-meta {
+      font-size: 12px;
+      color: var(--aw-text-muted);
+    }
+    .quest-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--aw-text);
+      margin-bottom: 4px;
+    }
+    .quest-desc {
+      font-size: 13px;
+      color: var(--aw-text-muted);
+      margin-bottom: 12px;
+    }
+    .quest-stats {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .quest-stat {
+      display: flex;
+      flex-direction: column;
+    }
+    .quest-stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--aw-text-muted);
+    }
+    .quest-stat-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--aw-text);
+    }
+    .quest-stat-value.gold { color: var(--aw-gold); }
+    .quest-stat-value.deaths { color: var(--aw-dead); }
+    .quest-stat-value.injured { color: var(--aw-warning); }
+    .party-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .party-member {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--aw-bg-dark);
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .party-member.dead {
+      opacity: 0.6;
+      text-decoration: line-through;
+    }
+    .party-member-level {
+      font-size: 10px;
+      color: var(--aw-text-muted);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--aw-text-muted);
+    }
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+
+<body class="game-theme">
+  <div class="aw-layout">
+    {% include '_sidebar.html' %}
+
+    <div class="aw-main-shell">
+      <div class="page-shell">
+        <header class="aw-header d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex flex-column">
+            <span class="header-title">Quest History</span>
+            <span class="header-subtitle">
+              All completed quests
+              {% if year is not none and day is not none %} · Year {{ year }}, Day {{ day }}{% endif %}
+            </span>
+          </div>
+          {% if username %}
+          <div style="color: var(--aw-text-muted); font-size: 13px;">
+            Playing as <strong style="color: var(--aw-text);">{{ username }}</strong>
+          </div>
+          {% endif %}
+        </header>
+
+        <main class="aw-main">
+          <!-- Stats Summary -->
+          {% if quest_history %}
+          <section class="game-card mb-3">
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-6 col-md-3">
+                  <div class="quest-stat">
+                    <span class="quest-stat-label">Total Quests</span>
+                    <span class="quest-stat-value">{{ quest_history | length }}</span>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="quest-stat">
+                    <span class="quest-stat-label">Successful</span>
+                    <span class="quest-stat-value" style="color: var(--aw-alive);">{{ quest_history | selectattr('success') | list | length }}</span>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="quest-stat">
+                    <span class="quest-stat-label">Failed</span>
+                    <span class="quest-stat-value" style="color: var(--aw-dead);">{{ quest_history | rejectattr('success') | list | length }}</span>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="quest-stat">
+                    <span class="quest-stat-label">Total Gold Earned</span>
+                    <span class="quest-stat-value gold">{{ quest_history | sum(attribute='gold') }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          {% endif %}
+
+          <!-- Quest List -->
+          <section>
+            {% if quest_history %}
+              {% for quest in quest_history | reverse %}
+              <div class="quest-card {{ 'success' if quest.success else 'failed' }}">
+                <div class="quest-header">
+                  <span class="quest-type-badge {{ quest.type | lower }}">{{ quest.type }}</span>
+                  <span class="quest-result-badge {{ 'success' if quest.success else 'failed' }}">
+                    {{ 'Success' if quest.success else 'Failed' }}
+                  </span>
+                  <span class="quest-meta ms-auto">Year {{ quest.year }}, Day {{ quest.day_in_year }}</span>
+                </div>
+                
+                <div class="quest-title">{{ quest.name }}</div>
+                <div class="quest-desc">{{ quest.description }}</div>
+                
+                <div class="quest-stats">
+                  {% if quest.success %}
+                  <div class="quest-stat">
+                    <span class="quest-stat-label">Gold Earned</span>
+                    <span class="quest-stat-value gold">+{{ quest.gold }}</span>
+                  </div>
+                  {% endif %}
+                  <div class="quest-stat">
+                    <span class="quest-stat-label">Party Size</span>
+                    <span class="quest-stat-value">{{ quest.party_size }}</span>
+                  </div>
+                  {% if quest.deaths > 0 %}
+                  <div class="quest-stat">
+                    <span class="quest-stat-label">Deaths</span>
+                    <span class="quest-stat-value deaths">{{ quest.deaths }}</span>
+                  </div>
+                  {% endif %}
+                  {% if quest.injured %}
+                  <div class="quest-stat">
+                    <span class="quest-stat-label">Injured</span>
+                    <span class="quest-stat-value injured">{{ quest.injured | length }}</span>
+                  </div>
+                  {% endif %}
+                  <div class="quest-stat">
+                    <span class="quest-stat-label">Issued By</span>
+                    <span class="quest-stat-value">{{ quest.king_name }}</span>
+                  </div>
+                </div>
+                
+                <div style="font-size: 11px; color: var(--aw-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Party Members</div>
+                <div class="party-list">
+                  {% for member in quest.party_details %}
+                  <span class="party-member {{ 'dead' if not member.alive else '' }}">
+                    {{ member.name }}
+                    <span class="party-member-level">Lv{{ member.level }} {{ member.job }}</span>
+                  </span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-state">
+                <div class="empty-state-icon">📜</div>
+                <div style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No Quests Yet</div>
+                <div style="font-size: 13px;">Quests occur every 2 years starting from Year 2.<br>The King will issue quests based on their traits.</div>
+              </div>
+            {% endif %}
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

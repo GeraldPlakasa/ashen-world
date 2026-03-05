@@ -111,14 +111,21 @@
                 {% set quest_year = ((last_quest_day - 1) // 90) + 1 if last_quest_day else none %}
                 <div class="d-flex align-items-center gap-2 notification-item" style="padding: 8px 0;">
                   {% if last_quest_success %}
-                    <span class="notification-badge quest-success" style="min-width: 70px; background: var(--aw-success); color: #fff;">QUEST</span>
+                    <span class="notification-badge" style="min-width: 70px; background: var(--aw-alive); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">QUEST</span>
                   {% else %}
-                    <span class="notification-badge quest-failed" style="min-width: 70px; background: var(--aw-danger); color: #fff;">QUEST</span>
+                    <span class="notification-badge" style="min-width: 70px; background: var(--aw-dead); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">QUEST</span>
                   {% endif %}
                   {% if quest_year %}<span class="notification-year" style="min-width: 50px;">Y{{ quest_year }}</span>{% endif %}
                   <span class="notification-content" style="flex: 1;">
-                    {% set clean_quest = last_quest_message | replace('QUEST: ', '') %}
-                    {{ clean_quest[:100] }}{% if clean_quest|length > 100 %}...{% endif %}
+                    {% if last_quest_type %}
+                      <strong>{{ last_quest_type | capitalize }}</strong> · 
+                    {% endif %}
+                    {% if last_quest_success %}
+                      Success
+                    {% else %}
+                      Failed
+                    {% endif %}
+                    <a href="{{ url_for('quest_history') }}" style="margin-left: 8px; font-size: 11px; color: var(--aw-accent);">View History →</a>
                   </span>
                 </div>
                 {% endif %}

@@ -483,18 +483,43 @@ def maybe_trigger_quest(
     bank["last_quest_type"] = quest_type
     bank["last_quest_success"] = success
     
+    # Build detailed record
+    party_details = []
+    for v in party:
+        party_details.append({
+            "id": v.get("id"),
+            "name": v.get("name", "Unknown"),
+            "job": v.get("job", "Unknown"),
+            "level": v.get("level", 1),
+            "alive": v.get("alive", True),
+        })
+    
     record = {
         "type": quest_type,
         "name": quest_name,
         "description": quest_desc,
         "day": current_day,
         "year": year,
+        "day_in_year": day_in_year,
         "party": party_names,
+        "party_details": party_details,
+        "party_size": len(party),
         "success": success,
         "gold": gold,
         "deaths": deaths,
         "injured": injured,
+        "king_name": king.get("name", "Unknown"),
     }
+    
+    # Add to quest history
+    quest_history = bank.get("quest_history", [])
+    if not isinstance(quest_history, list):
+        quest_history = []
+    quest_history.append(record)
+    # Keep last 50 quests
+    if len(quest_history) > 50:
+        quest_history = quest_history[-50:]
+    bank["quest_history"] = quest_history
     
     return message, record
 
