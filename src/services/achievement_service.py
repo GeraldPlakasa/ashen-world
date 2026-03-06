@@ -30,7 +30,7 @@ ACHIEVEMENTS = {
     },
     "kingmaker": {
         "name": "Kingmaker",
-        "description": "Vote for 3 different kings",
+        "description": "Vote for 5 different kings",
         "icon": "🗳️",
         "reward": {"type": "stat", "stat": "int", "value": 10},
     },
@@ -215,11 +215,11 @@ def check_dynasty_founder(v: Villager) -> bool:
 
 
 def check_kingmaker(v: Villager) -> bool:
-    """Check if villager has voted for 3+ different kings."""
+    """Check if villager has voted for 5+ different kings."""
     if has_achievement(v, "kingmaker"):
         return False
     kings = get_kings_voted_for(v)
-    return len(kings) >= 3
+    return len(kings) >= 5
 
 
 def check_centurion(v: Villager) -> bool:

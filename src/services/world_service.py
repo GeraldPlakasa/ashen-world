@@ -357,6 +357,8 @@ def generate_new_world(count: int = 50) -> tuple[int, int]:
             "last_quest_day": None,
             "last_quest_type": None,
             "last_quest_success": None,
+            "last_quest_name": "",
+            "last_quest_desc": "",
         })
 
         clear_yearly_stats()

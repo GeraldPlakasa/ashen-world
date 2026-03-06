@@ -19,6 +19,12 @@
         <span class="aw-nav-link-label">Legends</span>
       </a>
     </li>
+    <li>
+      <a href="{{ url_for('quest_history') }}" class="aw-nav-link {% if active_page == 'quests' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">⚔</span>
+        <span class="aw-nav-link-label">Quests</span>
+      </a>
+    </li>
     {% if session.get('is_admin') %}
     <li>
       <a href="{{ url_for('admin') }}" class="aw-nav-link {% if active_page == 'admin' %}aw-nav-link-active{% endif %}">
@@ -31,12 +37,6 @@
       <a href="{{ url_for('family_tree') }}" class="aw-nav-link {% if active_page == 'family_tree' %}aw-nav-link-active{% endif %}">
         <span class="aw-nav-link-icon">◎</span>
         <span class="aw-nav-link-label">Lineage</span>
-      </a>
-    </li>
-    <li>
-      <a href="{{ url_for('quest_history') }}" class="aw-nav-link {% if active_page == 'quests' %}aw-nav-link-active{% endif %}">
-        <span class="aw-nav-link-icon">⚔</span>
-        <span class="aw-nav-link-label">Quests</span>
       </a>
     </li>
     {% if session.get('logged_in') %}

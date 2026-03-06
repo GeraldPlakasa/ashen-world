@@ -83,6 +83,9 @@ def landing():
     last_quest_message = village_bank.get("last_quest_message", "")
     last_quest_day = village_bank.get("last_quest_day")
     last_quest_success = village_bank.get("last_quest_success")
+    last_quest_type = village_bank.get("last_quest_type", "")
+    last_quest_name = village_bank.get("last_quest_name", "")
+    last_quest_desc = village_bank.get("last_quest_desc", "")
 
     village_buildings = build_building_summary(village_bank)
 
@@ -123,6 +126,9 @@ def landing():
         last_quest_message=last_quest_message,
         last_quest_day=last_quest_day,
         last_quest_success=last_quest_success,
+        last_quest_type=last_quest_type,
+        last_quest_name=last_quest_name,
+        last_quest_desc=last_quest_desc,
         pinned_spouse_name=pinned_spouse_name,
         pinned_spouse_alive=pinned_spouse_alive,
         pinned_mother=pinned_mother,

@@ -117,15 +117,19 @@
                   {% endif %}
                   {% if quest_year %}<span class="notification-year" style="min-width: 50px;">Y{{ quest_year }}</span>{% endif %}
                   <span class="notification-content" style="flex: 1;">
-                    {% if last_quest_type %}
+                    {% if last_quest_name %}
+                      <strong>{{ last_quest_name }}</strong>
+                      {% if last_quest_desc %}<span style="color: var(--aw-text-muted); font-size: 12px;"> · {{ last_quest_desc[:60] }}{% if last_quest_desc|length > 60 %}...{% endif %}</span>{% endif %}
+                      · 
+                    {% elif last_quest_type %}
                       <strong>{{ last_quest_type | capitalize }}</strong> · 
                     {% endif %}
                     {% if last_quest_success %}
-                      Success
+                      <span style="color: var(--aw-alive);">Success</span>
                     {% else %}
-                      Failed
+                      <span style="color: var(--aw-dead);">Failed</span>
                     {% endif %}
-                    <a href="{{ url_for('quest_history') }}" style="margin-left: 8px; font-size: 11px; color: var(--aw-accent);">View History →</a>
+                    <a href="{{ url_for('quest_history') }}" style="margin-left: 8px; font-size: 11px; color: var(--aw-accent);">Details →</a>
                   </span>
                 </div>
                 {% endif %}

@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 
 
 # Quest type definitions with stat requirements and rewards
+# Thresholds are HIGH - quests are meant to be challenging!
 QUEST_TYPES = {
     "COMBAT": {
         "name": "Hunt the Beast",
@@ -50,7 +51,7 @@ QUEST_TYPES = {
         ],
         "beasts": ["Dire Wolf", "Cave Troll", "Wyvern", "Bandit Chief", "Orc Warband", "Giant Spider"],
         "stat_focus": "atk",
-        "stat_threshold": 25,  # Average ATK needed per party member
+        "stat_threshold": 35,  # Average ATK needed per party member (was 25)
         "gold_reward": (150, 400),
         "gear_chance": 0.40,
     },
@@ -63,7 +64,7 @@ QUEST_TYPES = {
         ],
         "villages": ["Riverdale", "Ironhold", "Sunhaven", "Mistwood", "Thornbury", "Goldcrest"],
         "stat_focus": "int",
-        "stat_threshold": 20,
+        "stat_threshold": 30,  # Was 20
         "gold_reward": (100, 300),
         "gear_chance": 0.25,
     },
@@ -76,7 +77,7 @@ QUEST_TYPES = {
         ],
         "locations": ["Ruins", "Forest", "Mountains", "Caverns", "Marshlands", "Desert Oasis"],
         "stat_focus": "def",
-        "stat_threshold": 22,
+        "stat_threshold": 32,  # Was 22
         "gold_reward": (120, 350),
         "gear_chance": 0.35,
     },
@@ -89,7 +90,7 @@ QUEST_TYPES = {
         ],
         "goods": ["Spices", "Silk", "Iron Ore", "Gemstones", "Exotic Animals", "Ancient Artifacts"],
         "stat_focus": "rep",
-        "stat_threshold": 15,
+        "stat_threshold": 25,  # Was 15
         "gold_reward": (200, 500),
         "gear_chance": 0.30,
     },
@@ -717,11 +718,13 @@ def maybe_trigger_quest(
     
     message = f"QUEST: {quest_name} · {result_text}"
     
-    # Store quest info
+    # Store quest info for notification display
     bank["last_quest_message"] = message
     bank["last_quest_day"] = current_day
     bank["last_quest_type"] = quest_type
     bank["last_quest_success"] = success
+    bank["last_quest_name"] = quest_name
+    bank["last_quest_desc"] = quest_desc
     
     record = {
         "type": quest_type,
@@ -764,4 +767,6 @@ def clear_quest_state(bank: Bank) -> None:
     bank["last_quest_day"] = None
     bank["last_quest_type"] = None
     bank["last_quest_success"] = None
+    bank["last_quest_name"] = ""
+    bank["last_quest_desc"] = ""
     bank["quest_history"] = []

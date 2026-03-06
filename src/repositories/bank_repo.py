@@ -81,6 +81,8 @@ def load_bank() -> Bank:
             "last_quest_day": data.get("last_quest_day"),
             "last_quest_type": data.get("last_quest_type"),
             "last_quest_success": data.get("last_quest_success"),
+            "last_quest_name": data.get("last_quest_name", ""),
+            "last_quest_desc": data.get("last_quest_desc", ""),
             "quest_history": data.get("quest_history", []) if isinstance(data.get("quest_history"), list) else [],
             # Stats
             "year_stats": year_stats,
@@ -122,6 +124,8 @@ def save_bank(bank: Bank) -> None:
         "last_quest_day": bank.get("last_quest_day"),
         "last_quest_type": bank.get("last_quest_type"),
         "last_quest_success": bank.get("last_quest_success"),
+        "last_quest_name": bank.get("last_quest_name", ""),
+        "last_quest_desc": bank.get("last_quest_desc", ""),
         "quest_history": bank.get("quest_history", []) if isinstance(bank.get("quest_history"), list) else [],
         # Stats
         "year_stats": year_stats,

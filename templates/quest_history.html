@@ -185,11 +185,13 @@
           </section>
           {% endif %}
 
-          <!-- Quest List -->
+          <!-- Quest List - 2 Column Layout -->
           <section>
             {% if quest_history %}
+              <div class="row g-3">
               {% for quest in quest_history | reverse %}
-              <div class="quest-card {{ 'success' if quest.success else 'failed' }}">
+              <div class="col-12 col-lg-6">
+              <div class="quest-card {{ 'success' if quest.success else 'failed' }}" style="height: 100%;">
                 <div class="quest-header">
                   <span class="quest-type-badge {{ quest.type | lower }}">{{ quest.type }}</span>
                   <span class="quest-result-badge {{ 'success' if quest.success else 'failed' }}">
@@ -258,11 +260,13 @@
                 <div style="font-size: 10px; color: var(--aw-text-dim); margin-top: 12px;">
                   Party avg: {{ quest.stats_info.avg_stat }} {{ quest.type | lower | replace('combat', 'ATK') | replace('diplomacy', 'INT') | replace('exploration', 'DEF') | replace('trade', 'REP') }} · 
                   Threshold: {{ quest.stats_info.threshold }} · 
-                  Success chance: {{ quest.stats_info.success_chance }}%
+                  Success chance: {{ quest.stats_info.final_chance }}%
                 </div>
                 {% endif %}
               </div>
+              </div>
               {% endfor %}
+              </div>
             {% else %}
               <div class="empty-state">
                 <div class="empty-state-icon">📜</div>

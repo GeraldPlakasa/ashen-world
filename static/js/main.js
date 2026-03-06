@@ -986,13 +986,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (pinnedCollapseEl && pinnedToggleEl && window.bootstrap?.Collapse) {
     const KEY = "aw_pinned_char_open";
-    const saved = localStorage.getItem(KEY); // "1" (open) or "0" (closed)
+    const saved = localStorage.getItem(KEY); // "1" (open) or "0" (closed) or null (first visit)
 
     const bs = new bootstrap.Collapse(pinnedCollapseEl, { toggle: false });
 
-    // Default open in HTML, but override if user previously closed
-    if (saved === "1") bs.show();
-    else bs.hide();
+    // Default to OPEN on first visit (saved is null), only hide if explicitly closed
+    if (saved === "0") bs.hide();
+    else bs.show();
 
     pinnedCollapseEl.addEventListener("shown.bs.collapse", () => {
       localStorage.setItem(KEY, "1");
