@@ -68,7 +68,7 @@ class TestSkillLookup:
     @pytest.mark.unit
     def test_get_skill_info_existing(self):
         """Should return info for existing skill."""
-        info = get_skill_info("Swordsmanship")
+        info = get_skill_info("Bladesong")
         assert info is not None
         assert info["category"] == "COMBAT"
 
@@ -83,7 +83,7 @@ class TestSkillLookup:
         """Should return skills in category."""
         combat = get_skills_by_category("COMBAT")
         assert len(combat) > 0
-        assert "Swordsmanship" in combat
+        assert "Bladesong" in combat
 
     @pytest.mark.unit
     def test_get_skills_by_rarity(self):
@@ -109,8 +109,8 @@ class TestSkillParsing:
     @pytest.mark.unit
     def test_parse_skills_string(self):
         """Should parse comma-separated skills."""
-        result = parse_skills("Swordsmanship, Archery")
-        assert result == ["Swordsmanship", "Archery"]
+        result = parse_skills("Bladesong, Hawkeye")
+        assert result == ["Bladesong", "Hawkeye"]
 
     @pytest.mark.unit
     def test_parse_skills_empty(self):
@@ -121,14 +121,14 @@ class TestSkillParsing:
     @pytest.mark.unit
     def test_parse_skills_single(self):
         """Should parse single skill."""
-        result = parse_skills("Swordsmanship")
-        assert result == ["Swordsmanship"]
+        result = parse_skills("Bladesong")
+        assert result == ["Bladesong"]
 
     @pytest.mark.unit
     def test_skills_to_string(self):
         """Should convert list to comma-separated string."""
-        result = skills_to_string(["Swordsmanship", "Archery"])
-        assert result == "Swordsmanship, Archery"
+        result = skills_to_string(["Bladesong", "Hawkeye"])
+        assert result == "Bladesong, Hawkeye"
 
     @pytest.mark.unit
     def test_skills_to_string_empty(self):
@@ -143,18 +143,18 @@ class TestSkillBonuses:
     def test_apply_skill_bonuses(self):
         """Should apply stat bonuses from skills."""
         villager = {
-            "skills": "Swordsmanship",
+            "skills": "Bladesong",
             "atk": 10,
             "def": 10,
         }
         apply_skill_bonuses(villager)
-        assert villager["atk"] == 15  # +5 from Swordsmanship
+        assert villager["atk"] == 15  # +5 from Bladesong
 
     @pytest.mark.unit
     def test_apply_multiple_skill_bonuses(self):
         """Should apply bonuses from multiple skills."""
         villager = {
-            "skills": "Swordsmanship, Archery",
+            "skills": "Bladesong, Hawkeye",
             "atk": 10,
             "def": 10,
         }
@@ -180,14 +180,14 @@ class TestJobFromSkills:
     def test_get_job_from_skills(self):
         """Should suggest job based on skill affinity."""
         jobs = ["Farmer", "Soldier", "Merchant"]
-        result = get_job_from_skills(["Swordsmanship"], jobs)
+        result = get_job_from_skills(["Bladesong"], jobs)
         assert result == "Soldier"
 
     @pytest.mark.unit
     def test_get_job_no_matching(self):
         """Should return None if no matching jobs."""
         jobs = ["Farmer", "Merchant"]  # No combat jobs
-        result = get_job_from_skills(["Swordsmanship"], jobs)
+        result = get_job_from_skills(["Bladesong"], jobs)
         assert result is None
 
     @pytest.mark.unit

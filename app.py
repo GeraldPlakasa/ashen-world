@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import threading
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, Response
 from werkzeug.security import check_password_hash
 
 from config import (
@@ -304,6 +304,81 @@ def leaderboard():
         current_champions=current_champions,
         all_time=all_time,
     )
+
+@app.route("/history/csv", methods=["GET"])
+def download_history_csv():
+    """Download historical records as CSV (one row per year)."""
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+
+    history = list_yearly_history(finalized_only=True)
+    
+    # CSV header
+    headers = [
+        "Year",
+        "King Name",
+        "King Trait",
+        "Days",
+        "Births",
+        "Deaths",
+        "Immigrants",
+        "Treasury Start",
+        "Treasury End",
+        "Avg Tax Rate",
+        "Total Corruption",
+        "Most ATK Name",
+        "Most ATK Value",
+        "Most INT Name",
+        "Most INT Value",
+        "Richest Name",
+        "Richest Value",
+        "Top Hunter Name",
+        "Top Hunter Value",
+    ]
+    
+    lines = [",".join(headers)]
+    
+    for y in history:
+        # Escape commas in names
+        def esc(val):
+            if val is None:
+                return ""
+            s = str(val)
+            if "," in s or '"' in s:
+                return '"' + s.replace('"', '""') + '"'
+            return s
+        
+        row = [
+            str(y.get("year", "")),
+            esc(y.get("king_name", "")),
+            esc(y.get("king_trait", "")),
+            str(y.get("days_counted", 0)),
+            str(y.get("total_births", 0)),
+            str(y.get("total_deaths", 0)),
+            str(y.get("total_immigrants", 0)),
+            str(y.get("treasury_start", 0)),
+            str(y.get("treasury_end", 0)),
+            f"{(y.get('avg_tax_rate', 0) or 0) * 100:.1f}%",
+            str(y.get("total_corruption", 0)),
+            esc(y.get("most_atk_name", "")),
+            str(y.get("most_atk_value", 0)),
+            esc(y.get("most_int_name", "")),
+            str(y.get("most_int_value", 0)),
+            esc(y.get("richest_name", "")),
+            str(y.get("richest_value", 0)),
+            esc(y.get("top_hunter_name", "")),
+            str(y.get("top_hunter_value", 0)),
+        ]
+        lines.append(",".join(row))
+    
+    csv_content = "\n".join(lines)
+    
+    return Response(
+        csv_content,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=ashen_world_history.csv"}
+    )
+
 
 @app.route("/character/new", methods=["GET", "POST"])
 def create_character():

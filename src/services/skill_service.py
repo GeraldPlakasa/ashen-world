@@ -25,204 +25,197 @@ SKILL_BIRTH_CHANCE = 0.08  # 8% chance to get at least one skill
 # If has skill, chance to get a second one
 SECOND_SKILL_CHANCE = 0.15  # 15% chance for second skill if first acquired
 
-# Skill definitions with effects and job affinities
+# Skill definitions with effects and job affinities (Fantasy/DnD names)
 SKILLS = {
     # COMBAT SKILLS
-    "Swordsmanship": {
+    "Bladesong": {
         "category": "COMBAT",
-        "description": "Natural talent with bladed weapons",
+        "description": "Ancient elven sword technique",
         "stat_bonus": {"atk": 5},
         "job_affinity": ["Soldier", "Guard", "Knight", "Commander", "Captain"],
         "rarity": "common",
     },
-    "Archery": {
+    "Hawkeye": {
         "category": "COMBAT",
-        "description": "Exceptional aim with ranged weapons",
+        "description": "Uncanny precision with ranged weapons",
         "stat_bonus": {"atk": 3, "def": 2},
         "job_affinity": ["Archer", "Ranger", "Hunter"],
         "rarity": "common",
     },
-    "Berserker": {
+    "Bloodrage": {
         "category": "COMBAT",
-        "description": "Fearless fury in battle",
+        "description": "Primal fury that overwhelms foes",
         "stat_bonus": {"atk": 8, "def": -2},
         "job_affinity": ["Soldier", "Guard", "Hunter"],
         "rarity": "rare",
     },
-    "Shield Master": {
+    "Bulwark": {
         "category": "COMBAT",
-        "description": "Expert defensive techniques",
+        "description": "Immovable defensive stance",
         "stat_bonus": {"def": 6, "hp": 10},
         "job_affinity": ["Guard", "Knight", "Soldier"],
         "rarity": "uncommon",
     },
-    "Tactician": {
+    "Battlemaster": {
         "category": "COMBAT",
-        "description": "Strategic mind for warfare",
+        "description": "Strategic genius of warfare",
         "stat_bonus": {"int": 4, "atk": 2},
         "job_affinity": ["Commander", "Captain", "Advisor"],
         "rarity": "rare",
     },
 
     # CRAFT SKILLS
-    "Smithing": {
+    "Forgeblessed": {
         "category": "CRAFT",
-        "description": "Mastery of metalwork",
+        "description": "Blessed touch with metal and flame",
         "stat_bonus": {"atk": 2, "def": 2},
         "job_affinity": ["Blacksmith", "Armorer", "Weaponsmith"],
         "rarity": "common",
     },
-    "Alchemy": {
+    "Transmutation": {
         "category": "CRAFT",
-        "description": "Knowledge of potions and elixirs",
+        "description": "Art of transforming matter",
         "stat_bonus": {"int": 4, "hp": 5},
         "job_affinity": ["Alchemist", "Healer", "Apothecary"],
         "rarity": "uncommon",
     },
-    "Artisan": {
+    "Gilded Hands": {
         "category": "CRAFT",
-        "description": "Skilled in fine craftsmanship",
+        "description": "Masterful precision in delicate work",
         "stat_bonus": {"rep": 3, "int": 2},
         "job_affinity": ["Jeweler", "Tailor", "Carpenter", "Potter"],
         "rarity": "common",
     },
-    "Engineering": {
+    "Artificer": {
         "category": "CRAFT",
-        "description": "Understanding of complex mechanisms",
+        "description": "Creator of wondrous mechanisms",
         "stat_bonus": {"int": 5, "def": 2},
         "job_affinity": ["Engineer", "Architect", "Mason"],
         "rarity": "rare",
     },
-    "Brewing": {
+    "Brewcraft": {
         "category": "CRAFT",
-        "description": "Art of making drinks and potions",
+        "description": "Secret recipes passed through ages",
         "stat_bonus": {"rep": 4, "hp": 3},
         "job_affinity": ["Brewer", "Innkeeper", "Cook"],
         "rarity": "common",
     },
 
     # SOCIAL SKILLS
-    "Charisma": {
+    "Silver Tongue": {
         "category": "SOCIAL",
-        "description": "Natural charm and persuasion",
+        "description": "Words that bend hearts and minds",
         "stat_bonus": {"rep": 6},
         "job_affinity": ["Merchant", "Noble", "Bard", "Diplomat"],
         "rarity": "uncommon",
     },
-    "Leadership": {
+    "Commanding Presence": {
         "category": "SOCIAL",
-        "description": "Born to command others",
+        "description": "Aura of natural authority",
         "stat_bonus": {"rep": 4, "int": 3},
         "job_affinity": ["Commander", "Captain", "Noble", "Advisor"],
         "rarity": "rare",
     },
-    "Negotiation": {
+    "Dealmaker": {
         "category": "SOCIAL",
-        "description": "Skilled at making deals",
+        "description": "Never loses in a bargain",
         "stat_bonus": {"rep": 5, "int": 2},
         "job_affinity": ["Merchant", "Trader", "Diplomat"],
         "rarity": "uncommon",
     },
-    "Intimidation": {
+    "Dreadgaze": {
         "category": "SOCIAL",
-        "description": "Imposing presence that demands respect",
+        "description": "Stare that freezes the boldest souls",
         "stat_bonus": {"rep": 3, "atk": 2},
-        "job_affinity": ["Guard", "Soldier", "Spy", "Assassin"],
+        "job_affinity": ["Guard", "Spy", "Commander"],
         "rarity": "uncommon",
     },
-    "Inspiration": {
+    "Heartspark": {
         "category": "SOCIAL",
-        "description": "Ability to motivate and inspire",
+        "description": "Ignites courage in the downtrodden",
         "stat_bonus": {"rep": 5, "hp": 5},
-        "job_affinity": ["Bard", "Priest", "Noble", "Advisor"],
+        "job_affinity": ["Priest", "Bard", "Noble", "Healer"],
         "rarity": "rare",
     },
 
     # SURVIVAL SKILLS
-    "Tracking": {
+    "Pathfinder": {
         "category": "SURVIVAL",
-        "description": "Expert at following trails",
+        "description": "Reads the wild like an open book",
         "stat_bonus": {"def": 3, "atk": 2},
         "job_affinity": ["Hunter", "Ranger", "Scout", "Forester"],
         "rarity": "common",
     },
-    "Herbalism": {
+    "Herbweaver": {
         "category": "SURVIVAL",
-        "description": "Knowledge of medicinal plants",
+        "description": "Communion with healing flora",
         "stat_bonus": {"hp": 8, "int": 2},
-        "job_affinity": ["Healer", "Druid", "Apothecary", "Farmer"],
+        "job_affinity": ["Healer", "Herbalist", "Druid", "Apothecary"],
+        "rarity": "uncommon",
+    },
+    "Iron Constitution": {
+        "category": "SURVIVAL",
+        "description": "Body forged through hardship",
+        "stat_bonus": {"hp": 15, "def": 3},
+        "job_affinity": ["Soldier", "Miner", "Farmer", "Woodcutter"],
+        "rarity": "uncommon",
+    },
+    "Wayfarer": {
+        "category": "SURVIVAL",
+        "description": "Never lost, even in the darkest wild",
+        "stat_bonus": {"def": 4, "int": 2},
+        "job_affinity": ["Ranger", "Scout", "Sailor", "Courier"],
         "rarity": "common",
     },
-    "Endurance": {
+    "Beastbond": {
         "category": "SURVIVAL",
-        "description": "Exceptional stamina and resilience",
-        "stat_bonus": {"hp": 15, "def": 3},
-        "job_affinity": ["Soldier", "Miner", "Farmer", "Shepherd"],
-        "rarity": "uncommon",
-    },
-    "Navigation": {
-        "category": "SURVIVAL",
-        "description": "Never gets lost, reads terrain well",
-        "stat_bonus": {"def": 4, "int": 2},
-        "job_affinity": ["Scout", "Ranger", "Sailor", "Explorer"],
-        "rarity": "uncommon",
-    },
-    "Animal Handling": {
-        "category": "SURVIVAL",
-        "description": "Natural bond with animals",
+        "description": "Kinship with creatures of nature",
         "stat_bonus": {"def": 2, "rep": 3},
-        "job_affinity": ["Shepherd", "Stablemaster", "Hunter", "Farmer"],
+        "job_affinity": ["Stablemaster", "Falconer", "Shepherd", "Hunter"],
         "rarity": "common",
     },
 
     # KNOWLEDGE SKILLS
-    "Scholarly": {
+    "Lorekeeper": {
         "category": "KNOWLEDGE",
-        "description": "Quick learner with vast knowledge",
+        "description": "Living repository of ancient wisdom",
         "stat_bonus": {"int": 6},
-        "job_affinity": ["Scholar", "Scribe", "Advisor", "Librarian"],
-        "rarity": "uncommon",
+        "job_affinity": ["Scholar", "Scribe", "Advisor", "Priest"],
+        "rarity": "common",
     },
-    "Arcane Sense": {
+    "Arcane Attunement": {
         "category": "KNOWLEDGE",
-        "description": "Sensitivity to magical energies",
+        "description": "Sensitive to flows of mystic energy",
         "stat_bonus": {"int": 5, "hp": 5},
-        "job_affinity": ["Druid", "Alchemist", "Priest"],
+        "job_affinity": ["Druid", "Alchemist", "Priest", "Herbalist"],
         "rarity": "rare",
     },
-    "Medicine": {
+    "Chirurgeon": {
         "category": "KNOWLEDGE",
-        "description": "Understanding of healing arts",
+        "description": "Mastery of wounds and ailments",
         "stat_bonus": {"int": 4, "hp": 8},
-        "job_affinity": ["Healer", "Apothecary", "Priest"],
+        "job_affinity": ["Healer", "Herbalist", "Priest"],
         "rarity": "uncommon",
     },
-    "Linguistics": {
+    "Polyglot": {
         "category": "KNOWLEDGE",
-        "description": "Talent for languages and communication",
+        "description": "Speaks in a hundred tongues",
         "stat_bonus": {"int": 4, "rep": 3},
-        "job_affinity": ["Scribe", "Diplomat", "Merchant", "Scholar"],
+        "job_affinity": ["Scribe", "Merchant", "Diplomat", "Bard"],
         "rarity": "uncommon",
     },
-    "History": {
+    "Chronicle": {
         "category": "KNOWLEDGE",
-        "description": "Deep understanding of the past",
+        "description": "Remembers every tale ever told",
         "stat_bonus": {"int": 5, "rep": 2},
-        "job_affinity": ["Scholar", "Advisor", "Scribe", "Noble"],
-        "rarity": "uncommon",
+        "job_affinity": ["Scholar", "Advisor", "Scribe", "Priest"],
+        "rarity": "common",
     },
-}
-
-# Rarity weights for skill selection
-RARITY_WEIGHTS = {
-    "common": 60,
-    "uncommon": 30,
-    "rare": 10,
 }
 
 
 def get_skill_info(skill_name: str) -> dict | None:
-    """Get information about a specific skill."""
+    """Get information about a skill by name."""
     return SKILLS.get(skill_name)
 
 
@@ -232,133 +225,114 @@ def get_skills_by_category(category: str) -> list[str]:
 
 
 def get_skills_by_rarity(rarity: str) -> list[str]:
-    """Get all skill names of a rarity."""
+    """Get all skill names of a rarity level."""
     return [name for name, data in SKILLS.items() if data["rarity"] == rarity]
+
+
+def get_all_categories() -> set[str]:
+    """Get all unique skill categories."""
+    return {data["category"] for data in SKILLS.values()}
 
 
 def roll_birth_skills() -> list[str]:
     """
-    Roll for skills when a villager is born.
+    Roll for skills at birth.
     Returns a list of 0-2 skill names.
     """
     skills = []
     
     # First skill check
-    if random.random() >= SKILL_BIRTH_CHANCE:
-        return skills  # No skills
-    
-    # Got first skill - select based on rarity
-    first_skill = _select_random_skill()
-    if first_skill:
-        skills.append(first_skill)
-    
-    # Check for second skill
-    if skills and random.random() < SECOND_SKILL_CHANCE:
-        second_skill = _select_random_skill(exclude=skills)
-        if second_skill:
-            skills.append(second_skill)
+    if random.random() < SKILL_BIRTH_CHANCE:
+        # Weight by rarity
+        common = get_skills_by_rarity("common")
+        uncommon = get_skills_by_rarity("uncommon")
+        rare = get_skills_by_rarity("rare")
+        
+        pool = []
+        pool.extend([(s, 60) for s in common])     # 60% common
+        pool.extend([(s, 30) for s in uncommon])   # 30% uncommon
+        pool.extend([(s, 10) for s in rare])       # 10% rare
+        
+        total = sum(w for _, w in pool)
+        roll = random.random() * total
+        cumulative = 0
+        for skill, weight in pool:
+            cumulative += weight
+            if roll <= cumulative:
+                skills.append(skill)
+                break
+        
+        # Second skill check (if first was obtained)
+        if skills and random.random() < SECOND_SKILL_CHANCE:
+            remaining = [(s, w) for s, w in pool if s not in skills]
+            if remaining:
+                total = sum(w for _, w in remaining)
+                roll = random.random() * total
+                cumulative = 0
+                for skill, weight in remaining:
+                    cumulative += weight
+                    if roll <= cumulative:
+                        skills.append(skill)
+                        break
     
     return skills
 
 
-def _select_random_skill(exclude: list[str] | None = None) -> str | None:
-    """Select a random skill based on rarity weights."""
-    exclude = exclude or []
-    
-    # Build weighted pool
-    pool = []
-    for skill_name, skill_data in SKILLS.items():
-        if skill_name in exclude:
-            continue
-        rarity = skill_data["rarity"]
-        weight = RARITY_WEIGHTS.get(rarity, 10)
-        pool.extend([skill_name] * weight)
-    
-    if not pool:
-        return None
-    
-    return random.choice(pool)
-
-
-def apply_skill_bonuses(v: Villager) -> None:
-    """Apply stat bonuses from villager's skills."""
-    skills_str = v.get("skills", "")
+def parse_skills(skills_str: str | None) -> list[str]:
+    """Parse comma-separated skills string to list."""
     if not skills_str:
-        return
+        return []
+    return [s.strip() for s in skills_str.split(",") if s.strip()]
+
+
+def skills_to_string(skills: list[str]) -> str:
+    """Convert skill list to comma-separated string."""
+    return ", ".join(skills)
+
+
+def apply_skill_bonuses(villager: "Villager") -> None:
+    """Apply stat bonuses from skills to villager."""
+    skills = parse_skills(villager.get("skills", ""))
     
-    skill_list = parse_skills(skills_str)
-    
-    for skill_name in skill_list:
-        skill_data = SKILLS.get(skill_name)
-        if not skill_data:
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
             continue
         
-        bonuses = skill_data.get("stat_bonus", {})
-        for stat, amount in bonuses.items():
-            current = int(v.get(stat, 0) or 0)
-            v[stat] = current + amount
+        for stat, bonus in info["stat_bonus"].items():
+            current = int(villager.get(stat, 0) or 0)
+            villager[stat] = current + bonus
 
 
-def get_job_from_skills(skill_list: list[str], available_jobs: list[str]) -> str | None:
+def get_job_from_skills(skills: list[str], available_jobs: list[str]) -> str | None:
     """
-    Suggest a job based on skills.
-    Returns the best matching job or None.
+    Suggest a job based on skill affinities.
+    Returns None if no matching job found.
     """
-    if not skill_list:
+    if not skills:
         return None
     
-    # Collect all job affinities from skills
-    job_scores = {}
-    for skill_name in skill_list:
-        skill_data = SKILLS.get(skill_name)
-        if not skill_data:
+    # Count job affinities from all skills
+    job_scores: dict[str, int] = {}
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
             continue
         
-        for job in skill_data.get("job_affinity", []):
+        for job in info["job_affinity"]:
             if job in available_jobs:
                 job_scores[job] = job_scores.get(job, 0) + 1
     
     if not job_scores:
         return None
     
-    # Return job with highest score (most skill matches)
-    best_job = max(job_scores.keys(), key=lambda j: job_scores[j])
-    return best_job
+    # Return job with highest affinity score
+    return max(job_scores, key=job_scores.get)
 
 
-def parse_skills(skills_str: str) -> list[str]:
-    """Parse skills string to list."""
-    if not skills_str:
-        return []
-    if isinstance(skills_str, list):
-        return skills_str
-    return [s.strip() for s in skills_str.split(",") if s.strip()]
-
-
-def skills_to_string(skills: list[str]) -> str:
-    """Convert skills list to comma-separated string."""
+def get_skill_display(villager: "Villager") -> str:
+    """Get formatted skill display for UI."""
+    skills = parse_skills(villager.get("skills", ""))
+    if not skills:
+        return ""
     return ", ".join(skills)
-
-
-def get_skill_display(v: Villager) -> list[dict]:
-    """Get skills formatted for display."""
-    skills_str = v.get("skills", "")
-    skill_list = parse_skills(skills_str)
-    
-    result = []
-    for skill_name in skill_list:
-        skill_data = SKILLS.get(skill_name)
-        if skill_data:
-            result.append({
-                "name": skill_name,
-                "category": skill_data["category"],
-                "description": skill_data["description"],
-                "rarity": skill_data["rarity"],
-            })
-    
-    return result
-
-
-def get_all_categories() -> list[str]:
-    """Get all skill categories."""
-    return ["COMBAT", "CRAFT", "SOCIAL", "SURVIVAL", "KNOWLEDGE"]
