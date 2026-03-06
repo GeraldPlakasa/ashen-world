@@ -99,6 +99,7 @@
                     <a class="list-group-item list-group-item-action toc-link" href="#familytree" data-target="cFamilyTree">Family Tree</a>
                     <a class="list-group-item list-group-item-action toc-link" href="#rules" data-target="cRules">Rules & Constraints</a>
                     <a class="list-group-item list-group-item-action toc-link" href="#traits" data-target="cTraits">Trait Behaviors</a>
+                    <a class="list-group-item list-group-item-action toc-link" href="#skills" data-target="cSkills">Skill System</a>
                     <a class="list-group-item list-group-item-action toc-link" href="#gear" data-target="cGear">Item / Gear</a>
                   </div>
                 </div>
@@ -1437,6 +1438,112 @@
                               <li><strong>Achievement:</strong> Special traits earned through gameplay milestones</li>
                               <li><strong>Mutation:</strong> Rare chance for opposing trait (e.g., Lazy parent → Diligent child)</li>
                             </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- SKILL SYSTEM -->
+                    <div class="accordion-item" id="skills">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cSkills">Skill System</button>
+                      </h2>
+                      <div id="cSkills" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                          <p class="mb-3">Skills are rare abilities that villagers can be born with. They provide stat bonuses and influence job selection.</p>
+                          
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Birth Chance</div>
+                                <ul class="small mb-0">
+                                  <li>8% chance to have at least one skill</li>
+                                  <li>15% chance for second skill (if first acquired)</li>
+                                  <li>Skills determined at birth, never change</li>
+                                  <li>Stat bonuses applied immediately</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Job Influence</div>
+                                <ul class="small mb-0">
+                                  <li>75% chance to follow skill job affinity</li>
+                                  <li>Skills suggest matching professions</li>
+                                  <li>Multiple skills may stack job preference</li>
+                                  <li>Falls back to trait-based assignment</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">COMBAT Skills</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Swordsmanship</strong> - +5 ATK, Soldier/Guard/Knight</li>
+                                  <li><strong>Archery</strong> - +3 ATK +2 DEF, Archer/Ranger</li>
+                                  <li><strong>Berserker</strong> - +8 ATK -2 DEF (rare)</li>
+                                  <li><strong>Shield Master</strong> - +6 DEF +10 HP</li>
+                                  <li><strong>Tactician</strong> - +4 INT +2 ATK (rare)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">CRAFT Skills</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Smithing</strong> - +2 ATK +2 DEF, Blacksmith</li>
+                                  <li><strong>Alchemy</strong> - +4 INT +5 HP, Alchemist</li>
+                                  <li><strong>Artisan</strong> - +3 REP +2 INT, Jeweler/Tailor</li>
+                                  <li><strong>Engineering</strong> - +5 INT +2 DEF (rare)</li>
+                                  <li><strong>Brewing</strong> - +4 REP +3 HP, Brewer</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">SOCIAL Skills</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Charisma</strong> - +6 REP, Merchant/Noble</li>
+                                  <li><strong>Leadership</strong> - +4 REP +3 INT (rare)</li>
+                                  <li><strong>Negotiation</strong> - +5 REP +2 INT</li>
+                                  <li><strong>Intimidation</strong> - +3 REP +2 ATK</li>
+                                  <li><strong>Inspiration</strong> - +5 REP +5 HP (rare)</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">SURVIVAL Skills</div>
+                                <ul class="small mb-0">
+                                  <li><strong>Tracking</strong> - +3 DEF +2 ATK, Hunter/Ranger</li>
+                                  <li><strong>Herbalism</strong> - +8 HP +2 INT, Healer</li>
+                                  <li><strong>Endurance</strong> - +15 HP +3 DEF</li>
+                                  <li><strong>Navigation</strong> - +4 DEF +2 INT</li>
+                                  <li><strong>Animal Handling</strong> - +2 DEF +3 REP</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="feature-box">
+                            <div style="color: var(--aw-text);" class="small mb-1">KNOWLEDGE Skills</div>
+                            <ul class="small mb-0">
+                              <li><strong>Scholarly</strong> - +6 INT, Scholar/Scribe</li>
+                              <li><strong>Arcane Sense</strong> - +5 INT +5 HP, Druid/Alchemist (rare)</li>
+                              <li><strong>Medicine</strong> - +4 INT +8 HP, Healer</li>
+                              <li><strong>Linguistics</strong> - +4 INT +3 REP, Scribe/Diplomat</li>
+                              <li><strong>History</strong> - +5 INT +2 REP, Scholar/Advisor</li>
+                            </ul>
+                          </div>
+
+                          <div class="mt-3" style="font-size: 12px; color: var(--aw-text-muted);">
+                            <strong>Rarity:</strong> Common (60%), Uncommon (30%), Rare (10%)
                           </div>
                         </div>
                       </div>

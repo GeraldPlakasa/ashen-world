@@ -183,7 +183,8 @@ INT_FIELDS = [
     "immigrantGen", "motherId", "fatherId",
     "kingTerms", "death_day", "spouseId_at_death",
     "spouseId", "spouseSinceDay",
-    "born_day","last_birth_day",
+    "born_day", "last_birth_day",
+    "huntWins", "huntWinsYear", "questWins",
 ]
 
 FIELDNAMES = [
@@ -193,10 +194,10 @@ FIELDNAMES = [
     "action_log", "relationships",
     "spouseId", "spouseSinceDay", "spouseId_at_death",
     "alive", "origin", "owner", "gen", "immigrantGen",
-    "motherId", "fatherId", "childrenIds","kingTerms",
-    "death_day", "huntWins", "huntWinsYear",
-    "born_day","last_birth_day",
-    "achievements", "kingsVotedFor",
+    "motherId", "fatherId", "childrenIds", "kingTerms",
+    "death_day", "huntWins", "huntWinsYear", "questWins",
+    "born_day", "last_birth_day",
+    "achievements", "kingsVotedFor", "skills",
 ]
 
 USERS_FIELDNAMES = ["username", "email", "password_hash"]

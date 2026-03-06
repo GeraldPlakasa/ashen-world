@@ -157,8 +157,9 @@
               </div>
 
               <div class="row g-3 mt-1" id="pinned-extra-row" style="display: none; font-size: 13px;">
-                <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Traits</div><div id="pinned-traits" style="color: var(--aw-text);">-</div></div>
-                <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Last action</div><div id="pinned-last-action" style="color: var(--aw-text);">-</div></div>
+                <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Traits</div><div id="pinned-traits" style="color: var(--aw-text);">-</div></div>
+                <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Skills</div><div id="pinned-skills" style="color: var(--aw-text);">-</div></div>
+                <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Last action</div><div id="pinned-last-action" style="color: var(--aw-text);">-</div></div>
               </div>
 
               <div class="row g-3 mt-2" id="pinned-rel-row" style="display: none; font-size: 13px;">
@@ -200,6 +201,7 @@
                       <th data-key="hp" class="sortable num text-end">HP</th>
                       <th data-key="hunger" class="sortable num text-end">Food</th>
                       <th data-key="traits" class="sortable">Traits</th>
+                      <th data-key="skills" class="sortable">Skills</th>
                       <th data-key="last_action" class="sortable">Action</th>
                       <th data-key="origin" class="sortable">Origin</th>
                       <th data-key="status" class="sortable">Status</th>
@@ -222,6 +224,7 @@
                       <td class="text-end">{{ c.hp }}</td>
                       <td class="text-end">{{ c.hunger }}</td>
                       <td class="aw-traits-cell">{{ c.traits }}</td>
+                      <td style="font-size: 11px; color: var(--aw-text-muted);">{{ c.skills or '-' }}</td>
                       <td><span class="action-badge {{ c.last_action.split()[0] | lower if c.last_action else '' }}">{{ c.last_action or '-' }}</span></td>
                       <td>{% if c.origin == 'player' %}<span class="status-badge player">Player</span>{% else %}<span style="color: var(--aw-text-dim);">NPC</span>{% endif %}</td>
                       <td>{% if c.alive %}<span class="status-badge alive">Alive</span>{% else %}<span class="status-badge dead">Dead</span>{% endif %}</td>

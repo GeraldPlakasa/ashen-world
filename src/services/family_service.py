@@ -260,6 +260,8 @@ def _birth_probability(characters: list[Villager], mom: Villager, dad: Villager,
 
 
 def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, current_day: int) -> Villager:
+    from src.services.skill_service import roll_birth_skills, skills_to_string, apply_skill_bonuses
+    
     taken_names = {c.get("name", "") for c in characters}
     child_id = _new_id(characters)
 
@@ -268,6 +270,10 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
 
     given = _unique_child_name(taken_names)
     full_name = f"{given} {family}".strip()
+
+    # Roll for skills at birth (rare chance)
+    birth_skills = roll_birth_skills()
+    skills_str = skills_to_string(birth_skills)
 
     child = {
         "id": child_id,
@@ -291,6 +297,7 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
         "exp": 0,
 
         "traits": _make_child_traits(mom, dad),
+        "skills": skills_str,  # Rare birth skills
 
         "alive": True,
         "origin": "born",
@@ -310,6 +317,10 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
         "last_action": f"born to {mom.get('name','?')} and {dad.get('name','?')}",
         "action_log": "",
     }
+    
+    # Apply skill stat bonuses
+    if birth_skills:
+        apply_skill_bonuses(child)
 
     mom_kids = _ensure_list_field(mom, "childrenIds")
     dad_kids = _ensure_list_field(dad, "childrenIds")
@@ -439,9 +450,25 @@ def child_daily_phase(characters: list[Villager], current_day: int) -> None:
 def _assign_job_for_young_adult(p: Villager) -> str:
     """
     When a child becomes adult (age >= 17):
-    pick a job based on stats + traits (non-royal).
+    pick a job based on skills (if any), stats + traits (non-royal).
+    
+    Skills have highest priority for job assignment.
     """
+    from src.services.skill_service import parse_skills, get_job_from_skills
+    
     pool = list(JOBS_NO_ROYAL) if JOBS_NO_ROYAL else list(JOBS_POOL)
+    
+    # Check if villager has skills that suggest a job
+    skills = parse_skills(p.get("skills", ""))
+    if skills:
+        skill_job = get_job_from_skills(skills, pool)
+        if skill_job:
+            # 75% chance to follow skill affinity
+            if random.random() < 0.75:
+                p["job"] = skill_job
+                return skill_job
+    
+    # Standard job assignment based on stats/traits
     weights = {j: 1.0 for j in pool}
 
     def add(job: str, w: float):

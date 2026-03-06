@@ -44,6 +44,10 @@ Villager = TypedDict(
         "huntWinsYear": int,
         "born_day": int,
         "last_birth_day": int,
+        "skills": str,  # Comma-separated skill names
+        "questWins": int,
+        "achievements": str,  # JSON list of achievement IDs
+        "kingsVotedFor": str,  # JSON list of king IDs voted for
     },
     total=False,
 )

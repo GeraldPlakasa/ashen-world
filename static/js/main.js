@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hpEl: document.getElementById("pinned-hp"),
     spouseEl: document.getElementById("pinned-spouse"),
     traitsEl: document.getElementById("pinned-traits"),
+    skillsEl: document.getElementById("pinned-skills"),
     lastActionEl: document.getElementById("pinned-last-action"),
     bondsList: document.getElementById("pinned-bonds"),
     conflictsList: document.getElementById("pinned-conflicts"),
@@ -665,6 +666,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (pinned.traitsEl) {
       pinned.traitsEl.textContent = textOrDash(villager.traits);
+    }
+    if (pinned.skillsEl) {
+      pinned.skillsEl.textContent = textOrDash(villager.skills);
     }
     if (pinned.lastActionEl) {
       pinned.lastActionEl.textContent = textOrDash(villager.last_action);
