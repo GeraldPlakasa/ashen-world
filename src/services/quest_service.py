@@ -40,7 +40,8 @@ if TYPE_CHECKING:
 
 
 # Quest type definitions with stat requirements and rewards
-# Thresholds are HIGH - quests are meant to be challenging!
+# Thresholds are VERY HIGH - quests are extremely challenging!
+# Characters level up constantly so stats grow - thresholds must scale accordingly
 QUEST_TYPES = {
     "COMBAT": {
         "name": "Hunt the Beast",
@@ -51,7 +52,7 @@ QUEST_TYPES = {
         ],
         "beasts": ["Dire Wolf", "Cave Troll", "Wyvern", "Bandit Chief", "Orc Warband", "Giant Spider"],
         "stat_focus": "atk",
-        "stat_threshold": 35,  # Average ATK needed per party member (was 25)
+        "stat_threshold": 55,  # VERY HIGH - need strong warriors
         "gold_reward": (150, 400),
         "gear_chance": 0.40,
     },
@@ -64,7 +65,7 @@ QUEST_TYPES = {
         ],
         "villages": ["Riverdale", "Ironhold", "Sunhaven", "Mistwood", "Thornbury", "Goldcrest"],
         "stat_focus": "int",
-        "stat_threshold": 30,  # Was 20
+        "stat_threshold": 45,  # HIGH - need wise scholars
         "gold_reward": (100, 300),
         "gear_chance": 0.25,
     },
@@ -77,7 +78,7 @@ QUEST_TYPES = {
         ],
         "locations": ["Ruins", "Forest", "Mountains", "Caverns", "Marshlands", "Desert Oasis"],
         "stat_focus": "def",
-        "stat_threshold": 32,  # Was 22
+        "stat_threshold": 50,  # VERY HIGH - need tough explorers
         "gold_reward": (120, 350),
         "gear_chance": 0.35,
     },
@@ -90,7 +91,7 @@ QUEST_TYPES = {
         ],
         "goods": ["Spices", "Silk", "Iron Ore", "Gemstones", "Exotic Animals", "Ancient Artifacts"],
         "stat_focus": "rep",
-        "stat_threshold": 25,  # Was 15
+        "stat_threshold": 40,  # HIGH - need reputable traders
         "gold_reward": (200, 500),
         "gear_chance": 0.30,
     },

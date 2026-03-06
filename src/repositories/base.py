@@ -161,6 +161,19 @@ def init_db():
         _ensure_villagers_columns(conn)
         _ensure_yearly_columns(conn)
         _ensure_graveyard_columns(conn)
+        _ensure_indexes(conn)
+
+
+def _ensure_indexes(conn: sqlite3.Connection):
+    """Create indexes for common queries to improve performance."""
+    # Index on villagers.alive for filtering living villagers
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_villagers_alive ON villagers(alive);")
+    # Index on villagers.owner for player character lookups
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_villagers_owner ON villagers(owner);")
+    # Index on villagers.family for family tree queries
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_villagers_family ON villagers(family);")
+    # Index on graveyard.family for family tree queries
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_graveyard_family ON graveyard(family);")
 
 def _ensure_villagers_columns(conn: sqlite3.Connection):
     existing = {r["name"] for r in conn.execute("PRAGMA table_info(villagers);").fetchall()}

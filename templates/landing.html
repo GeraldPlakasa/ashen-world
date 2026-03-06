@@ -109,6 +109,8 @@
 
                 {% if last_quest_message %}
                 {% set quest_year = ((last_quest_day - 1) // 90) + 1 if last_quest_day else none %}
+                {# Parse quest name from message if not stored separately: "QUEST: Quest Name · result" #}
+                {% set parsed_name = last_quest_message.replace('QUEST: ', '').split(' · ')[0] if last_quest_message and ' · ' in last_quest_message else '' %}
                 <div class="d-flex align-items-center gap-2 notification-item" style="padding: 8px 0;">
                   {% if last_quest_success %}
                     <span class="notification-badge" style="min-width: 70px; background: var(--aw-alive); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">QUEST</span>
@@ -119,15 +121,17 @@
                   <span class="notification-content" style="flex: 1;">
                     {% if last_quest_name %}
                       <strong>{{ last_quest_name }}</strong>
-                      {% if last_quest_desc %}<span style="color: var(--aw-text-muted); font-size: 12px;"> · {{ last_quest_desc[:60] }}{% if last_quest_desc|length > 60 %}...{% endif %}</span>{% endif %}
-                      · 
+                      {% if last_quest_desc %}<span style="color: var(--aw-text-muted); font-size: 12px;"> · {{ last_quest_desc[:50] }}{% if last_quest_desc|length > 50 %}...{% endif %}</span>{% endif %}
+                    {% elif parsed_name %}
+                      <strong>{{ parsed_name }}</strong>
                     {% elif last_quest_type %}
-                      <strong>{{ last_quest_type | capitalize }}</strong> · 
+                      <strong>{{ last_quest_type | capitalize }}</strong>
                     {% endif %}
+                    <span style="margin: 0 6px;">·</span>
                     {% if last_quest_success %}
-                      <span style="color: var(--aw-alive);">Success</span>
+                      <span style="color: var(--aw-alive); font-weight: 600;">Success</span>
                     {% else %}
-                      <span style="color: var(--aw-dead);">Failed</span>
+                      <span style="color: var(--aw-dead); font-weight: 600;">Failed</span>
                     {% endif %}
                     <a href="{{ url_for('quest_history') }}" style="margin-left: 8px; font-size: 11px; color: var(--aw-accent);">Details →</a>
                   </span>
