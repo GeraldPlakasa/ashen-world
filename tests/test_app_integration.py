@@ -253,8 +253,8 @@ class TestComputeYearChampions:
 
     @pytest.mark.unit
     def test_computes_top_hunter(self, multiple_villagers):
-        """Should find villager with most hunt wins this year."""
-        multiple_villagers[3]["huntWinsYear"] = 50
+        """Should find villager with most lifetime hunt wins."""
+        multiple_villagers[3]["huntWins"] = 50  # Lifetime total, not yearly
 
         champions = flask_app.compute_year_champions(multiple_villagers)
 
