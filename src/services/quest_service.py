@@ -40,8 +40,8 @@ if TYPE_CHECKING:
 
 
 # Quest type definitions with stat requirements and rewards
-# Thresholds are VERY HIGH - quests are extremely challenging!
-# Characters level up constantly so stats grow - thresholds must scale accordingly
+# Thresholds are EXTREME - quests are nearly impossible without elite parties!
+# Only the strongest, most experienced villagers can succeed
 QUEST_TYPES = {
     "COMBAT": {
         "name": "Hunt the Beast",
@@ -52,7 +52,7 @@ QUEST_TYPES = {
         ],
         "beasts": ["Dire Wolf", "Cave Troll", "Wyvern", "Bandit Chief", "Orc Warband", "Giant Spider"],
         "stat_focus": "atk",
-        "stat_threshold": 55,  # VERY HIGH - need strong warriors
+        "stat_threshold": 200,  # EXTREME - need legendary warriors
         "gold_reward": (150, 400),
         "gear_chance": 0.40,
     },
@@ -65,7 +65,7 @@ QUEST_TYPES = {
         ],
         "villages": ["Riverdale", "Ironhold", "Sunhaven", "Mistwood", "Thornbury", "Goldcrest"],
         "stat_focus": "int",
-        "stat_threshold": 45,  # HIGH - need wise scholars
+        "stat_threshold": 180,  # EXTREME - need master scholars
         "gold_reward": (100, 300),
         "gear_chance": 0.25,
     },
@@ -78,7 +78,7 @@ QUEST_TYPES = {
         ],
         "locations": ["Ruins", "Forest", "Mountains", "Caverns", "Marshlands", "Desert Oasis"],
         "stat_focus": "def",
-        "stat_threshold": 50,  # VERY HIGH - need tough explorers
+        "stat_threshold": 190,  # EXTREME - need veteran explorers
         "gold_reward": (120, 350),
         "gear_chance": 0.35,
     },
@@ -91,7 +91,7 @@ QUEST_TYPES = {
         ],
         "goods": ["Spices", "Silk", "Iron Ore", "Gemstones", "Exotic Animals", "Ancient Artifacts"],
         "stat_focus": "rep",
-        "stat_threshold": 40,  # HIGH - need reputable traders
+        "stat_threshold": 170,  # EXTREME - need legendary traders
         "gold_reward": (200, 500),
         "gear_chance": 0.30,
     },
@@ -304,11 +304,14 @@ def _select_party(characters: list[Villager], quest_type: str, party_size: int =
 
 def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank) -> tuple[bool, float, dict]:
     """
-    Calculate if quest succeeds based STRICTLY on party stats.
+    Calculate if quest succeeds based on party stats, economics, and preparation.
     
-    Success is primarily determined by stat ratio vs threshold.
-    Randomness is minimal - strong parties almost always succeed,
-    weak parties almost always fail.
+    Factors considered:
+    - Primary stat vs high threshold
+    - Party economic resources (coins for supplies/bribes)
+    - Party HP/stamina
+    - Building support
+    - Random elements (luck/circumstances)
     
     Returns:
         (success, margin, stats_info)
@@ -317,11 +320,12 @@ def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank)
     stat_focus = qt_data["stat_focus"]
     threshold = qt_data["stat_threshold"]
     
-    # Calculate party stats - primary stat + secondary stats contribute
+    # Calculate party stats
     total_primary = 0
     total_secondary = 0
     total_level = 0
     total_hp = 0
+    total_coins = 0
     
     for v in party:
         # Primary stat (full weight)
@@ -334,102 +338,118 @@ def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank)
         else:  # rep
             total_primary += int(v.get("rep", 0) or 0) + 10
         
-        # Secondary stats (25% weight each)
+        # Secondary stats (small contribution)
         atk = int(v.get("atk", 10) or 10)
         deff = int(v.get("def", 10) or 10)
         intel = int(v.get("int", 10) or 10)
         rep = int(v.get("rep", 0) or 0)
         
-        # Average of non-primary stats
         if stat_focus == "atk":
-            total_secondary += (deff + intel + rep) * 0.08
+            total_secondary += (deff + intel) * 0.05
         elif stat_focus == "int":
-            total_secondary += (atk + deff + rep) * 0.08
+            total_secondary += (atk + deff) * 0.05
         elif stat_focus == "def":
-            total_secondary += (atk + intel + rep) * 0.08
+            total_secondary += (atk + intel) * 0.05
         else:
-            total_secondary += (atk + deff + intel) * 0.08
+            total_secondary += (atk + deff + intel) * 0.03
         
         total_level += int(v.get("level", 1) or 1)
         total_hp += int(v.get("hp", 100) or 100)
+        total_coins += int(v.get("coins", 0) or 0)
     
     party_size = len(party)
     avg_primary = total_primary / party_size
     avg_secondary = total_secondary / party_size
     avg_level = total_level / party_size
     avg_hp = total_hp / party_size
+    avg_coins = total_coins / party_size
     
-    # Building bonuses
+    # Building bonuses (smaller impact)
     building_bonus = 0
     if quest_type == "COMBAT":
         barracks_lvl = get_building_level(bank, "barracks")
-        building_bonus = barracks_lvl * 2.5
+        building_bonus = barracks_lvl * 2.0
     elif quest_type == "DIPLOMACY":
         court_lvl = get_building_level(bank, "royal_court")
-        building_bonus = court_lvl * 2.5
+        building_bonus = court_lvl * 2.0
     elif quest_type == "TRADE":
         market_lvl = get_building_level(bank, "market")
-        building_bonus = market_lvl * 2.5
+        building_bonus = market_lvl * 2.0
     elif quest_type == "EXPLORATION":
         library_lvl = get_building_level(bank, "library")
-        building_bonus = library_lvl * 2.0
+        building_bonus = library_lvl * 1.5
     
-    # Level bonus (experienced adventurers perform better)
-    level_bonus = avg_level * 0.8
+    # Level bonus (smaller)
+    level_bonus = avg_level * 0.3
     
-    # Party size bonus (larger coordinated parties have advantage)
-    size_bonus = (party_size - 2) * 1.5 if party_size > 2 else 0
+    # Party size bonus (minimal)
+    size_bonus = (party_size - 2) * 0.5 if party_size > 2 else 0
     
-    effective_stat = avg_primary + avg_secondary + building_bonus + level_bonus + size_bonus
+    # Economic bonus - wealthy parties can buy supplies/bribes
+    # But capped to prevent money from solving everything
+    econ_bonus = 0
+    if quest_type == "TRADE":
+        # Trade quests benefit more from money
+        econ_bonus = min(avg_coins / 50, 5)  # Max 5 bonus
+    elif quest_type == "DIPLOMACY":
+        # Diplomacy can use bribes
+        econ_bonus = min(avg_coins / 80, 3)  # Max 3 bonus
+    else:
+        # Combat/Exploration - money for supplies
+        econ_bonus = min(avg_coins / 100, 2)  # Max 2 bonus
     
-    # Calculate success - STRICT stat-based with minimal randomness
-    # ratio determines outcome with only small variance window
+    # Treasury support (kingdom backing the quest)
+    treasury = int(bank.get("balance", 0) or 0)
+    treasury_bonus = min(treasury / 2000, 3)  # Max 3 bonus if treasury > 6000
+    
+    effective_stat = (avg_primary + avg_secondary + building_bonus + 
+                      level_bonus + size_bonus + econ_bonus + treasury_bonus)
+    
+    # Calculate success ratio - with EXTREME threshold, ratio will be low
     ratio = effective_stat / threshold
     
-    # Determine base success and variance window
-    if ratio >= 1.8:
-        # Overwhelming power: guaranteed success
-        success_chance = 1.0
-        variance = 0.0
-    elif ratio >= 1.4:
-        # Strong party: very high success, tiny variance
-        success_chance = 0.95
-        variance = 0.05
-    elif ratio >= 1.15:
-        # Good party: high success
-        success_chance = 0.85
-        variance = 0.10
+    # HARSH success calculation - most quests should fail
+    # ratio < 0.3: near impossible (1-5%)
+    # ratio 0.3-0.5: very hard (5-15%)
+    # ratio 0.5-0.7: hard (15-35%)
+    # ratio 0.7-0.9: challenging (35-55%)
+    # ratio 0.9-1.0: difficult (55-70%)
+    # ratio 1.0-1.2: moderate (70-85%)
+    # ratio > 1.2: achievable (85-95%)
+    
+    if ratio >= 1.2:
+        base_chance = 0.85 + (ratio - 1.2) * 0.25  # 85-95%, cap at 95%
+        base_chance = min(base_chance, 0.95)
     elif ratio >= 1.0:
-        # Adequate party: moderate-high success
-        success_chance = 0.70
-        variance = 0.15
-    elif ratio >= 0.85:
-        # Slightly weak: coin flip
-        success_chance = 0.50
-        variance = 0.15
+        base_chance = 0.70 + (ratio - 1.0) * 0.75  # 70-85%
+    elif ratio >= 0.9:
+        base_chance = 0.55 + (ratio - 0.9) * 1.5   # 55-70%
     elif ratio >= 0.7:
-        # Weak party: low success
-        success_chance = 0.30
-        variance = 0.10
+        base_chance = 0.35 + (ratio - 0.7) * 1.0   # 35-55%
     elif ratio >= 0.5:
-        # Very weak: very low success
-        success_chance = 0.15
-        variance = 0.10
+        base_chance = 0.15 + (ratio - 0.5) * 1.0   # 15-35%
+    elif ratio >= 0.3:
+        base_chance = 0.05 + (ratio - 0.3) * 0.5   # 5-15%
     else:
-        # Severely underpowered: almost guaranteed failure
-        success_chance = 0.05
-        variance = 0.05
+        base_chance = max(0.01, ratio * 0.17)      # 1-5%
     
-    # HP factor - low HP party has significant penalty
-    if avg_hp < 40:
-        success_chance *= 0.6
-        variance *= 0.5
-    elif avg_hp < 60:
-        success_chance *= 0.8
+    # HP penalty - exhausted party fails more
+    if avg_hp < 30:
+        base_chance *= 0.4
+    elif avg_hp < 50:
+        base_chance *= 0.6
+    elif avg_hp < 70:
+        base_chance *= 0.8
     
-    # Apply variance (small random adjustment within window)
-    adjustment = random.uniform(-variance, variance)
-    final_chance = clamp(success_chance + adjustment, 0.0, 1.0)
+    # Hunger check - starving party members reduce success
+    hungry_count = sum(1 for v in party if int(v.get("hunger", 0) or 0) > 70)
+    if hungry_count > 0:
+        hunger_penalty = 1 - (hungry_count / party_size) * 0.3
+        base_chance *= hunger_penalty
+    
+    # Random variance (luck factor) - can swing ±15%
+    variance = random.uniform(-0.15, 0.15)
+    final_chance = clamp(base_chance + variance, 0.01, 0.95)  # Never 0% or 100%
     
     # Determine outcome
     roll = random.random()
@@ -441,13 +461,16 @@ def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank)
         "avg_secondary": round(avg_secondary, 1),
         "avg_level": round(avg_level, 1),
         "avg_hp": round(avg_hp, 1),
+        "avg_coins": round(avg_coins, 1),
         "building_bonus": round(building_bonus, 1),
         "level_bonus": round(level_bonus, 1),
         "size_bonus": round(size_bonus, 1),
+        "econ_bonus": round(econ_bonus, 1),
+        "treasury_bonus": round(treasury_bonus, 1),
         "effective_stat": round(effective_stat, 1),
         "threshold": threshold,
         "ratio": round(ratio, 2),
-        "base_chance": round(success_chance * 100, 1),
+        "base_chance": round(base_chance * 100, 1),
         "final_chance": round(final_chance * 100, 1),
     }
     

@@ -99,6 +99,66 @@
       gap: 8px;
       margin-top: 8px;
     }
+    /* Filter and Search Styles */
+    .quest-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    .quest-search {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 14px;
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      background: var(--aw-card-bg);
+      color: var(--aw-text);
+      font-size: 14px;
+    }
+    .quest-search:focus {
+      outline: none;
+      border-color: var(--aw-accent);
+      box-shadow: 0 0 0 2px rgba(var(--aw-accent-rgb), 0.2);
+    }
+    .quest-search::placeholder {
+      color: var(--aw-text-muted);
+    }
+    .filter-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-tag {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--aw-border);
+      background: var(--aw-bg-card);
+      color: var(--aw-text-muted);
+      transition: all 0.15s;
+    }
+    .filter-tag:hover {
+      border-color: var(--aw-accent);
+      color: var(--aw-text);
+    }
+    .filter-tag.active {
+      background: var(--aw-accent);
+      border-color: var(--aw-accent);
+      color: #fff;
+    }
+    .filter-tag.combat.active { background: #991b1b; border-color: #991b1b; }
+    .filter-tag.diplomacy.active { background: #1e40af; border-color: #1e40af; }
+    .filter-tag.exploration.active { background: #166534; border-color: #166534; }
+    .filter-tag.trade.active { background: #92400e; border-color: #92400e; }
+    .filter-tag.success-tag.active { background: var(--aw-alive); border-color: var(--aw-alive); }
+    .filter-tag.failed-tag.active { background: var(--aw-dead); border-color: var(--aw-dead); }
+    .quest-card.hidden {
+      display: none !important;
+    }
     .party-member {
       display: inline-flex;
       align-items: center;
@@ -185,12 +245,31 @@
           </section>
           {% endif %}
 
+          <!-- Filters and Search -->
+          {% if quest_history %}
+          <div class="quest-filters">
+            <input type="text" class="quest-search" id="questSearch" placeholder="🔍 Search quests, party members, kings..." autocomplete="off" />
+            <div class="filter-tags">
+              <span class="filter-tag" data-filter="all">All</span>
+              <span class="filter-tag combat" data-filter="combat">Combat</span>
+              <span class="filter-tag diplomacy" data-filter="diplomacy">Diplomacy</span>
+              <span class="filter-tag exploration" data-filter="exploration">Exploration</span>
+              <span class="filter-tag trade" data-filter="trade">Trade</span>
+              <span class="filter-tag success-tag" data-filter="success">Success</span>
+              <span class="filter-tag failed-tag" data-filter="failed">Failed</span>
+            </div>
+          </div>
+          {% endif %}
+
           <!-- Quest List - 2 Column Layout -->
           <section>
             {% if quest_history %}
-              <div class="row g-3">
+              <div class="row g-3" id="questList">
               {% for quest in quest_history | reverse %}
-              <div class="col-12 col-lg-6">
+              <div class="col-12 col-lg-6 quest-item" 
+                   data-type="{{ quest.type | lower }}" 
+                   data-result="{{ 'success' if quest.success else 'failed' }}"
+                   data-searchable="{{ quest.name | lower }} {{ quest.description | lower }} {{ quest.king_name | lower }} {{ quest.party | join(' ') | lower }}">
               <div class="quest-card {{ 'success' if quest.success else 'failed' }}" style="height: 100%;">
                 <div class="quest-header">
                   <span class="quest-type-badge {{ quest.type | lower }}">{{ quest.type }}</span>
@@ -271,7 +350,7 @@
               <div class="empty-state">
                 <div class="empty-state-icon">📜</div>
                 <div style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No Quests Yet</div>
-                <div style="font-size: 13px;">Quests occur every 2 years starting from Year 2.<br>The King will issue quests based on their traits.</div>
+                <div style="font-size: 13px;">Quests occur every 3 years starting from Year 3.<br>The King will issue quests based on their traits.</div>
               </div>
             {% endif %}
           </section>
@@ -281,5 +360,110 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function() {
+      const searchInput = document.getElementById('questSearch');
+      const filterTags = document.querySelectorAll('.filter-tag');
+      const questItems = document.querySelectorAll('.quest-item');
+      
+      if (!searchInput || !questItems.length) return;
+      
+      let activeFilters = {
+        type: null,    // combat, diplomacy, exploration, trade
+        result: null   // success, failed
+      };
+      
+      function applyFilters() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        
+        questItems.forEach(item => {
+          const itemType = item.dataset.type;
+          const itemResult = item.dataset.result;
+          const searchable = item.dataset.searchable || '';
+          
+          let showByType = !activeFilters.type || itemType === activeFilters.type;
+          let showByResult = !activeFilters.result || itemResult === activeFilters.result;
+          let showBySearch = !searchTerm || searchable.includes(searchTerm);
+          
+          if (showByType && showByResult && showBySearch) {
+            item.classList.remove('hidden');
+            item.style.display = '';
+          } else {
+            item.classList.add('hidden');
+            item.style.display = 'none';
+          }
+        });
+        
+        // Update visible count
+        const visibleCount = document.querySelectorAll('.quest-item:not(.hidden)').length;
+        const countEl = document.getElementById('visibleCount');
+        if (countEl) {
+          countEl.textContent = visibleCount;
+        }
+      }
+      
+      // Search input handler
+      searchInput.addEventListener('input', applyFilters);
+      
+      // Filter tag handlers
+      filterTags.forEach(tag => {
+        tag.addEventListener('click', () => {
+          const filter = tag.dataset.filter;
+          
+          if (filter === 'all') {
+            // Clear all filters
+            activeFilters.type = null;
+            activeFilters.result = null;
+            filterTags.forEach(t => t.classList.remove('active'));
+            tag.classList.add('active');
+          } else if (['combat', 'diplomacy', 'exploration', 'trade'].includes(filter)) {
+            // Type filter
+            if (activeFilters.type === filter) {
+              activeFilters.type = null;
+              tag.classList.remove('active');
+            } else {
+              // Remove other type filters
+              filterTags.forEach(t => {
+                if (['combat', 'diplomacy', 'exploration', 'trade'].includes(t.dataset.filter)) {
+                  t.classList.remove('active');
+                }
+              });
+              activeFilters.type = filter;
+              tag.classList.add('active');
+            }
+            // Remove 'all' active state
+            document.querySelector('.filter-tag[data-filter="all"]')?.classList.remove('active');
+          } else if (['success', 'failed'].includes(filter)) {
+            // Result filter
+            if (activeFilters.result === filter) {
+              activeFilters.result = null;
+              tag.classList.remove('active');
+            } else {
+              // Remove other result filters
+              filterTags.forEach(t => {
+                if (['success', 'failed'].includes(t.dataset.filter)) {
+                  t.classList.remove('active');
+                }
+              });
+              activeFilters.result = filter;
+              tag.classList.add('active');
+            }
+            // Remove 'all' active state
+            document.querySelector('.filter-tag[data-filter="all"]')?.classList.remove('active');
+          }
+          
+          // If no filters active, activate 'all'
+          if (!activeFilters.type && !activeFilters.result) {
+            document.querySelector('.filter-tag[data-filter="all"]')?.classList.add('active');
+          }
+          
+          applyFilters();
+        });
+      });
+      
+      // Initialize 'All' as active
+      document.querySelector('.filter-tag[data-filter="all"]')?.classList.add('active');
+    })();
+  </script>
 </body>
 </html>

@@ -41,7 +41,7 @@ ELECTION_INTERVAL_YEARS = 5      # hold election every 5 game years
 KING_MAX_TERMS = 3               # lifetime limit for one villager as King
 DYNASTY_BONUS = 1000             # extra leadership if same family as previous King
 
-QUEST_INTERVAL_YEARS = 2         # King issues quests every 2 years
+QUEST_INTERVAL_YEARS = 3         # King issues quests every 3 years
 
 MAX_DEAD_YEARS = 25
 
