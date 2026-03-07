@@ -150,6 +150,26 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
             char_power *= 1.05  # +5% combat power
         if t == "Brave":
             char_power *= 1.08  # +8% combat power
+        if t == "Cautious":
+            char_power *= 0.95  # -5% combat power (defensive focus)
+        if t == "Reckless":
+            char_power *= 1.12  # +12% combat power (risky)
+        if t == "Hot-headed":
+            char_power *= 1.06  # +6% combat power
+
+    # Skill bonuses for combat
+    from src.services.skill_service import parse_skills, get_skill_info
+    skills = parse_skills(v.get("skills", ""))
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
+            continue
+        cat = info.get("category", "")
+        
+        if cat == "COMBAT":
+            char_power *= 1.12  # +12% per combat skill
+        elif cat == "SURVIVAL":
+            char_power *= 1.05  # +5% survival helps in fights
 
     # Weather effect (rain makes fights riskier)
     w = (weather or "sunny").strip().lower()
@@ -188,6 +208,19 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
             dmg_var = max(0, int(round(dmg_var * 0.85)))  # -15% damage taken
         if t == "Immortal":
             dmg_var = max(0, int(round(dmg_var * 0.80)))  # -20% damage taken
+        if t == "Stoic":
+            dmg_var = max(0, int(round(dmg_var * 0.92)))  # -8% damage taken
+        if t == "Protective":
+            dmg_var = max(0, int(round(dmg_var * 0.90)))  # -10% damage taken
+    
+    # Skill-based damage reduction
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
+            continue
+        # Bulwark and Iron Constitution reduce damage
+        if skill_name in ("Bulwark", "Iron Constitution"):
+            dmg_var = max(0, int(round(dmg_var * 0.85)))  # -15% damage
 
     result = {
         "enemy": enemy,

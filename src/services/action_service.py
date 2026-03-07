@@ -17,6 +17,7 @@ from src.services.relationship_service import (
     adjust_relationship,
     relationship_label,
 )
+from src.services.skill_service import parse_skills, get_skill_info
 from src.models.villager import Villager
 from src.models.bank import Bank
 from src.models.combat import ShopOffer
@@ -119,6 +120,27 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         if t == "Deceitful":
             weights["steal"] += 0.9
             weights["socialize"] -= 0.3
+        if t == "Stoic":
+            weights["rest"] -= 0.3
+            weights["train"] += 0.3
+            weights["work"] += 0.2
+        if t == "Naive":
+            weights["socialize"] += 0.4
+            weights["hangout"] += 0.3
+            weights["steal"] -= 0.3
+        if t == "Loyal":
+            weights["work"] += 0.4
+            weights["steal"] -= 0.4
+            weights["socialize"] += 0.3
+        if t == "Strict":
+            weights["train"] += 0.4
+            weights["work"] += 0.3
+            weights["rest"] -= 0.2
+            weights["hangout"] -= 0.2
+        if t == "Patient":
+            weights["study"] += 0.5
+            weights["work"] += 0.3
+            weights["train"] += 0.2
         
         # Achievement traits
         if t == "Patriarch":
@@ -177,6 +199,42 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
     if job in ["Spy"]:
         weights["steal"] += 0.8
         weights["socialize"] += 0.3
+
+    # Skill-based action modifiers
+    skills = parse_skills(villager.get("skills", ""))
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
+            continue
+        cat = info.get("category", "")
+        
+        # COMBAT skills boost train/hunt
+        if cat == "COMBAT":
+            weights["train"] += 0.5
+            weights["hunt"] += 0.5
+            weights["buy_gear"] += 0.3
+        
+        # CRAFT skills boost work
+        if cat == "CRAFT":
+            weights["work"] += 0.6
+            weights["buy_gear"] += 0.2
+        
+        # SOCIAL skills boost socializing
+        if cat == "SOCIAL":
+            weights["socialize"] += 0.6
+            weights["hangout"] += 0.4
+            weights["work"] += 0.2
+        
+        # SURVIVAL skills boost hunt and reduce need for rest
+        if cat == "SURVIVAL":
+            weights["hunt"] += 0.5
+            weights["rest"] -= 0.2
+            weights["buy_food"] -= 0.1
+        
+        # KNOWLEDGE skills boost study
+        if cat == "KNOWLEDGE":
+            weights["study"] += 0.7
+            weights["work"] += 0.2
 
     w = (weather or "sunny").strip().lower()
     if w not in WEATHER_TYPES:
@@ -440,6 +498,12 @@ def apply_action(
         delta_exp    = rand_int(3, 7)
         delta_hunger = rand_int(4, 9)
 
+        # Rain is good for studying (stay indoors focused)
+        w = (weather or "sunny").strip().lower()
+        if w == "rain":
+            delta_int = max(1, int(round(delta_int * 1.15)))
+            delta_exp = max(1, int(round(delta_exp * 1.10)))
+
         if bank is not None:
             lvl_library = get_building_level(bank, "library")
             lvl_temple  = get_building_level(bank, "temple")
@@ -530,6 +594,10 @@ def apply_action(
 
     # -------------------- SOCIALIZE --------------------
     elif action == "socialize":
+        # Rain reduces social interaction quality
+        w = (weather or "sunny").strip().lower()
+        rain_penalty = 0.85 if w == "rain" else 1.0
+        
         if not all_characters:
             v["hunger"] -= rand_int(1, 4)
             v["hp"] += rand_int(0, 3)
@@ -545,7 +613,7 @@ def apply_action(
                 other = random.choice(candidates)
 
                 if random.random() < 0.85:
-                    delta = rand_int(5, 15)
+                    delta = int(rand_int(5, 15) * rain_penalty)
                 else:
                     delta = -rand_int(1, 2)
 

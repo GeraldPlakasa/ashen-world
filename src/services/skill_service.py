@@ -19,11 +19,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from src.models.villager import Villager
 
-# Chance for a newborn to have any skill (very rare)
-SKILL_BIRTH_CHANCE = 0.08  # 8% chance to get at least one skill
+# Chance for a newborn to have any skill
+SKILL_BIRTH_CHANCE = 0.12  # 12% chance to get at least one skill
 
 # If has skill, chance to get a second one
-SECOND_SKILL_CHANCE = 0.15  # 15% chance for second skill if first acquired
+SECOND_SKILL_CHANCE = 0.20  # 20% chance for second skill if first acquired
 
 # Skill definitions with effects and job affinities (Fantasy/DnD names)
 SKILLS = {

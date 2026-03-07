@@ -137,19 +137,19 @@ def elder_decay_phase(characters: list[Villager], current_day: int = 0) -> int:
 
 def maybe_add_immigrants(characters: list[Villager], bank: Bank) -> tuple[list[Villager], int]:
     """
-    Daily chance for 1-3 immigrants to arrive.
-    Base 8% chance, tavern increases by 3% per level.
+    Daily chance for 1-2 immigrants to arrive.
+    Base 3% chance, tavern increases by 2% per level.
     """
     tavern_lvl = get_building_level(bank, "tavern")
 
-    # Higher base chance for more population growth
-    base_chance = 0.08 + 0.03 * tavern_lvl  # 8% base, +3% per tavern level
-    chance = max(0.05, min(0.35, base_chance))  # 5-35% range
+    # Lower base chance for controlled population growth
+    base_chance = 0.03 + 0.02 * tavern_lvl  # 3% base, +2% per tavern level
+    chance = max(0.02, min(0.15, base_chance))  # 2-15% range
 
     if random.random() >= chance:
         return characters, 0
 
-    add_count = rand_int(1, 3)  # 1-3 immigrants per arrival
+    add_count = rand_int(1, 2)  # 1-2 immigrants per arrival
 
     taken_names = {c.get("name", "") for c in characters}
     added = []
