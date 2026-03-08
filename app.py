@@ -270,6 +270,18 @@ def admin():
     # Load skill descriptions for UI
     from src.services.skill_service import SKILLS
     skill_descriptions = {name: data["description"] for name, data in SKILLS.items()}
+    
+    # Load achievement descriptions for UI
+    from src.services.achievement_service import ACHIEVEMENTS
+    achievement_descriptions = {
+        aid: {
+            "name": data["name"],
+            "description": data["description"],
+            "icon": data.get("icon", "🏆"),
+            "reward": data.get("reward", {})
+        }
+        for aid, data in ACHIEVEMENTS.items()
+    }
 
     return render_template(
         "admin.html",
@@ -281,6 +293,7 @@ def admin():
         village_buildings=village_buildings,
         graveyard_index=graveyard_index,
         skill_descriptions=skill_descriptions,
+        achievement_descriptions=achievement_descriptions,
     )
 
 @app.route("/leaderboard", methods=["GET"])

@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     metaBottomEl: document.getElementById("pinned-meta-bottom"),
     statsRow: document.getElementById("pinned-stats-row"),
     extraRow: document.getElementById("pinned-extra-row"),
+    actionRow: document.getElementById("pinned-action-row"),
     relRow: document.getElementById("pinned-rel-row"),
     jobEl: document.getElementById("pinned-job"),
     ageEl: document.getElementById("pinned-age"),
@@ -34,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     spouseEl: document.getElementById("pinned-spouse"),
     traitsEl: document.getElementById("pinned-traits"),
     skillsEl: document.getElementById("pinned-skills"),
+    achievementsEl: document.getElementById("pinned-achievements"),
     lastActionEl: document.getElementById("pinned-last-action"),
     bondsList: document.getElementById("pinned-bonds"),
     conflictsList: document.getElementById("pinned-conflicts"),
@@ -437,7 +439,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (pinned.statsRow) pinned.statsRow.style.display = "none";
     if (pinned.extraRow) pinned.extraRow.style.display = "none";
+    if (pinned.actionRow) pinned.actionRow.style.display = "none";
     if (pinned.relRow) pinned.relRow.style.display = "none";
+    
+    if (pinned.achievementsEl) pinned.achievementsEl.innerHTML = "-";
 
     if (pinned.bondsList) pinned.bondsList.innerHTML = "";
     if (pinned.conflictsList) pinned.conflictsList.innerHTML = "";
@@ -684,6 +689,51 @@ document.addEventListener("DOMContentLoaded", () => {
         pinned.skillsEl.innerHTML = skillsHtml || "-";
       }
     }
+    
+    // Achievements with descriptions
+    if (pinned.achievementsEl) {
+      const achievementsRaw = villager.achievements || "[]";
+      let achievementsArr = [];
+      try {
+        achievementsArr = typeof achievementsRaw === "string" ? JSON.parse(achievementsRaw) : achievementsRaw;
+        if (!Array.isArray(achievementsArr)) achievementsArr = [];
+        // Filter out internal tracking entries
+        achievementsArr = achievementsArr.filter(a => !a.startsWith("iron_will_count_"));
+      } catch {
+        achievementsArr = [];
+      }
+      
+      if (!achievementsArr.length) {
+        pinned.achievementsEl.innerHTML = '<span style="color: var(--aw-text-muted);">None yet</span>';
+      } else {
+        const achDescriptions = window.AW_ACHIEVEMENT_DESCRIPTIONS || {};
+        const achHtml = achievementsArr.map(achId => {
+          const achData = achDescriptions[achId] || {};
+          const icon = achData.icon || "🏆";
+          const name = achData.name || achId;
+          const desc = achData.description || "";
+          const reward = achData.reward || {};
+          
+          // Build reward text
+          let rewardText = "";
+          if (reward.stat && reward.value) {
+            rewardText = `+${reward.value} ${reward.stat.toUpperCase()}`;
+          }
+          if (reward.trait) {
+            rewardText += (rewardText ? ", " : "") + `"${reward.trait}" trait`;
+          }
+          
+          return `<div style="margin-bottom: 6px; padding: 4px 8px; background: var(--aw-bg-dark); border-radius: 6px;">
+            <div style="font-weight: 600;">${icon} ${name}</div>
+            <div style="font-size: 11px; color: var(--aw-text-muted);">${desc}</div>
+            ${rewardText ? `<div style="font-size: 10px; color: var(--aw-gold); margin-top: 2px;">Reward: ${rewardText}</div>` : ""}
+          </div>`;
+        }).join("");
+        pinned.achievementsEl.innerHTML = achHtml;
+      }
+    }
+    
+    if (pinned.actionRow) pinned.actionRow.style.display = "";
     if (pinned.lastActionEl) {
       pinned.lastActionEl.textContent = textOrDash(villager.last_action);
     }

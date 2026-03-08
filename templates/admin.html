@@ -159,7 +159,11 @@
               <div class="row g-3 mt-1" id="pinned-extra-row" style="display: none; font-size: 13px;">
                 <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Traits</div><div id="pinned-traits" style="color: var(--aw-text);">-</div></div>
                 <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Skills</div><div id="pinned-skills" style="color: var(--aw-text);">-</div></div>
-                <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Last action</div><div id="pinned-last-action" style="color: var(--aw-text);">-</div></div>
+                <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Achievements</div><div id="pinned-achievements" style="color: var(--aw-text);">-</div></div>
+              </div>
+
+              <div class="row g-3 mt-1" id="pinned-action-row" style="display: none; font-size: 13px;">
+                <div class="col-12"><div style="color: var(--aw-text-muted);">Last action</div><div id="pinned-last-action" style="color: var(--aw-text);">-</div></div>
               </div>
 
               <div class="row g-3 mt-2" id="pinned-rel-row" style="display: none; font-size: 13px;">
@@ -244,6 +248,7 @@
     window.AW_CHARACTERS = {{ characters | tojson | safe }};
     window.AW_GRAVEYARD = {{ graveyard_index | default({}) | tojson | safe }};
     window.AW_SKILL_DESCRIPTIONS = {{ skill_descriptions | default({}) | tojson | safe }};
+    window.AW_ACHIEVEMENT_DESCRIPTIONS = {{ achievement_descriptions | default({}) | tojson | safe }};
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
