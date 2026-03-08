@@ -417,16 +417,16 @@ def download_quest_csv():
         "Quest Type",
         "Quest Name",
         "Description",
-        "Difficulty",
+        "Threshold",
         "Success",
         "Success Chance",
         "Gold Reward",
         "Party Members",
         "Party Size",
-        "Total ATK",
-        "Total DEF",
-        "Total INT",
-        "Total REP",
+        "Avg Primary Stat",
+        "Avg Level",
+        "Deaths",
+        "King",
     ]
     
     lines = [",".join(headers)]
@@ -440,30 +440,38 @@ def download_quest_csv():
         return s
     
     for q in quest_history:
-        # party contains names as strings, party_details contains full objects
+        # party contains names as strings
         party = q.get("party", [])
+        
         # Handle both string list and dict list formats
         if party and isinstance(party[0], dict):
             party_names = [p.get("name", "?") for p in party]
         else:
             party_names = [str(p) for p in party]
         
+        # Get stats_info for success chance and threshold
+        stats_info = q.get("stats_info", {})
+        success_chance = stats_info.get("final_chance", 0)
+        threshold = stats_info.get("threshold", 0)
+        avg_stat = stats_info.get("avg_stat", 0)
+        avg_level = stats_info.get("avg_level", 0)
+        
         row = [
             str(q.get("year", "")),
-            str(q.get("day", "")),
-            esc(q.get("quest_type", "")),
-            esc(q.get("quest_name", "")),
+            str(q.get("day_in_year", q.get("day", ""))),
+            esc(q.get("type", "")),
+            esc(q.get("name", "")),
             esc(q.get("description", "")),
-            str(q.get("difficulty", "")),
+            str(threshold),
             "Yes" if q.get("success") else "No",
-            f"{q.get('success_chance', 0):.1f}%",
+            f"{success_chance:.1f}%",
             str(q.get("gold", 0)),
             esc(", ".join(party_names)),
-            str(len(party)),
-            str(q.get("total_atk", 0)),
-            str(q.get("total_def", 0)),
-            str(q.get("total_int", 0)),
-            str(q.get("total_rep", 0)),
+            str(q.get("party_size", len(party))),
+            str(avg_stat),
+            str(avg_level),
+            str(q.get("deaths", 0)),
+            esc(q.get("king_name", "")),
         ]
         lines.append(",".join(row))
     
