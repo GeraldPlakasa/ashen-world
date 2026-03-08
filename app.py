@@ -440,8 +440,13 @@ def download_quest_csv():
         return s
     
     for q in quest_history:
+        # party contains names as strings, party_details contains full objects
         party = q.get("party", [])
-        party_names = [p.get("name", "?") for p in party]
+        # Handle both string list and dict list formats
+        if party and isinstance(party[0], dict):
+            party_names = [p.get("name", "?") for p in party]
+        else:
+            party_names = [str(p) for p in party]
         
         row = [
             str(q.get("year", "")),
