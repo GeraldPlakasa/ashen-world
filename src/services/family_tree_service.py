@@ -316,3 +316,89 @@ def build_family_graph(
             "graph_nodes": len(nodes),
         },
     }
+
+
+def get_all_families(characters: list[Villager]) -> list[dict]:
+    """
+    Get all family names with their members.
+    
+    Returns list of dicts:
+    [
+        {
+            "name": "Stormborn",
+            "members": [villager_dicts...],
+            "alive_count": int,
+            "dead_count": int,
+            "total_count": int,
+            "avg_age": float,
+            "total_wealth": int,
+            "founders": [villager names without parents in family]
+        }
+    ]
+    """
+    # Group by family name
+    family_map: dict[str, list[Villager]] = {}
+    
+    for c in characters:
+        family = (c.get("family", "") or "").strip()
+        if not family:
+            family = "(No Family)"
+        
+        if family not in family_map:
+            family_map[family] = []
+        family_map[family].append(c)
+    
+    result = []
+    
+    for family_name, members in family_map.items():
+        alive_members = [m for m in members if m.get("alive", True)]
+        dead_members = [m for m in members if not m.get("alive", True)]
+        
+        # Calculate stats
+        alive_count = len(alive_members)
+        dead_count = len(dead_members)
+        total_count = len(members)
+        
+        # Average age of living members
+        if alive_members:
+            avg_age = sum(int(m.get("age", 0) or 0) for m in alive_members) / len(alive_members)
+        else:
+            avg_age = 0
+        
+        # Total wealth of living members
+        total_wealth = sum(int(m.get("coins", 0) or 0) for m in alive_members)
+        
+        # Find founders (members without parents in the same family)
+        family_ids = {int(m.get("id", 0) or 0) for m in members}
+        founders = []
+        for m in members:
+            mom_id = int(m.get("motherId", 0) or 0)
+            dad_id = int(m.get("fatherId", 0) or 0)
+            # If neither parent is in this family, they're a founder
+            if mom_id not in family_ids and dad_id not in family_ids:
+                founders.append(m.get("name", "?"))
+        
+        # Sort members: alive first, then by age descending
+        sorted_members = sorted(
+            members,
+            key=lambda m: (
+                0 if m.get("alive", True) else 1,  # alive first
+                -int(m.get("age", 0) or 0),  # older first
+            )
+        )
+        
+        result.append({
+            "name": family_name,
+            "members": sorted_members,
+            "alive_count": alive_count,
+            "dead_count": dead_count,
+            "total_count": total_count,
+            "avg_age": round(avg_age, 1),
+            "total_wealth": total_wealth,
+            "founders": founders[:3],  # Top 3 founders
+        })
+    
+    # Sort families by alive count descending
+    result.sort(key=lambda f: (-f["alive_count"], f["name"]))
+    
+    return result

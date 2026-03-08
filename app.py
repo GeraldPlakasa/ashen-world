@@ -35,6 +35,7 @@ from src.services.family_tree_service import (
     build_family_graph,
     build_graveyard_index_for,
     find_person,
+    get_all_families,
 )
 from src.services.character_service import (
     create_player_character,
@@ -549,6 +550,28 @@ def create_character():
 
     flash(f"Created new character: {result} (Player).", "success")
     return redirect(url_for("landing"))
+
+@app.route("/families", methods=["GET"])
+def families():
+    """List all families with their members."""
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+
+    username = session.get("username")
+    characters, bank, year, day_in_year, _, weather = get_current_state()
+
+    all_families = get_all_families(characters)
+
+    return render_template(
+        "families.html",
+        active_page="families",
+        username=username,
+        year=year,
+        day=day_in_year,
+        families=all_families,
+        total_families=len(all_families),
+    )
+
 
 @app.route("/family-tree", methods=["GET"])
 def family_tree():

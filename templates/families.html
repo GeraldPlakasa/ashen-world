@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Ashen World • Families</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    .family-card {
+      background: var(--aw-bg-card);
+      border: 1px solid var(--aw-border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .family-header {
+      background: var(--aw-bg-dark);
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.15s;
+    }
+    .family-header:hover {
+      background: var(--aw-bg-hover);
+    }
+    .family-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--aw-text);
+    }
+    .family-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+    }
+    .family-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .family-stat-value {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .family-stat-value.alive { color: var(--aw-alive); }
+    .family-stat-value.dead { color: var(--aw-text-muted); }
+    .family-stat-value.wealth { color: var(--aw-gold); }
+    .family-stat-label {
+      color: var(--aw-text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    .family-body {
+      padding: 16px;
+      display: none;
+    }
+    .family-body.show {
+      display: block;
+    }
+    .family-founders {
+      font-size: 12px;
+      color: var(--aw-text-muted);
+      margin-bottom: 12px;
+    }
+    .members-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .member-card {
+      background: var(--aw-bg-dark);
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+    }
+    .member-card.dead {
+      opacity: 0.6;
+      border-style: dashed;
+    }
+    .member-name {
+      font-weight: 600;
+      color: var(--aw-text);
+      margin-bottom: 4px;
+    }
+    .member-name.dead {
+      text-decoration: line-through;
+      color: var(--aw-text-muted);
+    }
+    .member-info {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--aw-text-muted);
+    }
+    .member-info span {
+      padding: 2px 6px;
+      background: var(--aw-bg-card);
+      border-radius: 4px;
+    }
+    .member-stats {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .member-stats .stat-pill {
+      font-size: 10px;
+      padding: 2px 6px;
+    }
+    .expand-icon {
+      transition: transform 0.2s;
+      color: var(--aw-text-muted);
+    }
+    .expand-icon.expanded {
+      transform: rotate(180deg);
+    }
+    .search-box {
+      background: var(--aw-bg-dark);
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--aw-text);
+      width: 100%;
+      max-width: 300px;
+    }
+    .search-box:focus {
+      outline: none;
+      border-color: var(--aw-accent);
+    }
+    .family-card.hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body class="game-theme">
+  <div class="aw-layout">
+    {% include '_sidebar.html' %}
+
+    <div class="aw-main-shell">
+      <div class="page-shell">
+        <header class="aw-header d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex flex-column">
+            <span class="header-title">Noble Houses</span>
+            <span class="header-subtitle">
+              {{ total_families }} families in the realm
+              {% if year is not none and day is not none %} · Year {{ year }}, Day {{ day }}{% endif %}
+            </span>
+          </div>
+          <input type="text" class="search-box" id="familySearch" placeholder="🔍 Search family..." autocomplete="off" />
+        </header>
+
+        <main class="aw-main">
+          <!-- Summary Stats -->
+          <section class="game-card mb-3">
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-6 col-md-3">
+                  <div class="kpi-card">
+                    <div class="kpi-value">{{ total_families }}</div>
+                    <div class="kpi-label">Families</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="kpi-card">
+                    <div class="kpi-value" style="color: var(--aw-alive);">{{ families | sum(attribute='alive_count') }}</div>
+                    <div class="kpi-label">Living Members</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="kpi-card">
+                    <div class="kpi-value" style="color: var(--aw-text-muted);">{{ families | sum(attribute='dead_count') }}</div>
+                    <div class="kpi-label">Deceased</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="kpi-card">
+                    <div class="kpi-value" style="color: var(--aw-gold);">{{ families | sum(attribute='total_wealth') }}</div>
+                    <div class="kpi-label">Total Wealth</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Family List -->
+          <section id="familyList">
+            {% for fam in families %}
+            <div class="family-card" data-family="{{ fam.name | lower }}">
+              <div class="family-header" onclick="toggleFamily(this)">
+                <div>
+                  <div class="family-name">{{ fam.name }}</div>
+                  {% if fam.founders %}
+                  <div class="family-founders">Founded by: {{ fam.founders | join(', ') }}</div>
+                  {% endif %}
+                </div>
+                <div class="d-flex align-items-center gap-4">
+                  <div class="family-stats">
+                    <div class="family-stat">
+                      <span class="family-stat-value alive">{{ fam.alive_count }}</span>
+                      <span class="family-stat-label">Alive</span>
+                    </div>
+                    <div class="family-stat">
+                      <span class="family-stat-value dead">{{ fam.dead_count }}</span>
+                      <span class="family-stat-label">Dead</span>
+                    </div>
+                    <div class="family-stat">
+                      <span class="family-stat-value wealth">{{ fam.total_wealth }}</span>
+                      <span class="family-stat-label">Coins</span>
+                    </div>
+                    <div class="family-stat">
+                      <span class="family-stat-value">{{ fam.avg_age }}</span>
+                      <span class="family-stat-label">Avg Age</span>
+                    </div>
+                  </div>
+                  <span class="expand-icon">▼</span>
+                </div>
+              </div>
+              <div class="family-body">
+                <div class="members-grid">
+                  {% for m in fam.members %}
+                  <div class="member-card {% if not m.alive %}dead{% endif %}">
+                    <div class="member-name {% if not m.alive %}dead{% endif %}">
+                      {% if m.job == 'King' %}♔ {% endif %}{{ m.name }}
+                    </div>
+                    <div class="member-info">
+                      <span>{{ m.gender }}</span>
+                      <span>Age {{ m.age }}</span>
+                      <span>{{ m.job }}</span>
+                      {% if not m.alive %}<span style="color: var(--aw-dead);">† Deceased</span>{% endif %}
+                    </div>
+                    {% if m.alive %}
+                    <div class="member-stats">
+                      <span class="stat-pill atk">ATK {{ m.atk }}</span>
+                      <span class="stat-pill def">DEF {{ m.def }}</span>
+                      <span class="stat-pill int">INT {{ m.int }}</span>
+                      <span class="stat-pill coins">{{ m.coins }} coins</span>
+                    </div>
+                    {% endif %}
+                    {% if m.traits %}
+                    <div style="margin-top: 6px; font-size: 11px; color: var(--aw-text-muted);">
+                      {{ m.traits }}
+                    </div>
+                    {% endif %}
+                    {% if m.skills %}
+                    <div style="margin-top: 4px; font-size: 10px; color: var(--aw-accent);">
+                      ★ {{ m.skills }}
+                    </div>
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <div class="game-card">
+              <div class="card-body text-center" style="padding: 60px;">
+                <div style="font-size: 48px; opacity: 0.5; margin-bottom: 16px;">👨‍👩‍👧‍👦</div>
+                <div style="color: var(--aw-text-muted);">No families found.</div>
+              </div>
+            </div>
+            {% endfor %}
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function toggleFamily(header) {
+      const body = header.nextElementSibling;
+      const icon = header.querySelector('.expand-icon');
+      body.classList.toggle('show');
+      icon.classList.toggle('expanded');
+    }
+
+    // Search functionality
+    const searchBox = document.getElementById('familySearch');
+    const familyCards = document.querySelectorAll('.family-card');
+
+    searchBox.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+      
+      familyCards.forEach(card => {
+        const familyName = card.dataset.family;
+        const memberNames = card.textContent.toLowerCase();
+        
+        if (!query || familyName.includes(query) || memberNames.includes(query)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

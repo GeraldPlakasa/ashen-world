@@ -39,6 +39,12 @@
         <span class="aw-nav-link-label">Lineage</span>
       </a>
     </li>
+    <li>
+      <a href="{{ url_for('families') }}" class="aw-nav-link {% if active_page == 'families' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">⌂</span>
+        <span class="aw-nav-link-label">Families</span>
+      </a>
+    </li>
     {% if session.get('logged_in') %}
     <li>
       <a href="{{ url_for('create_character') }}" class="aw-nav-link {% if active_page == 'create_character' %}aw-nav-link-active{% endif %}">

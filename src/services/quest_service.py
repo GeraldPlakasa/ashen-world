@@ -40,8 +40,8 @@ if TYPE_CHECKING:
 
 
 # Quest type definitions with stat requirements and rewards
-# Thresholds are EXTREME - quests are nearly impossible without elite parties!
-# Only the strongest, most experienced villagers can succeed
+# Thresholds are BRUTAL - quests require legendary heroes!
+# Only the strongest, most experienced villagers can hope to succeed
 QUEST_TYPES = {
     "COMBAT": {
         "name": "Hunt the Beast",
@@ -52,7 +52,7 @@ QUEST_TYPES = {
         ],
         "beasts": ["Dire Wolf", "Cave Troll", "Wyvern", "Bandit Chief", "Orc Warband", "Giant Spider"],
         "stat_focus": "atk",
-        "stat_threshold": 200,  # EXTREME - need legendary warriors
+        "stat_threshold": 250,  # BRUTAL - need legendary warriors
         "gold_reward": (150, 400),
         "gear_chance": 0.40,
     },
@@ -65,7 +65,7 @@ QUEST_TYPES = {
         ],
         "villages": ["Riverdale", "Ironhold", "Sunhaven", "Mistwood", "Thornbury", "Goldcrest"],
         "stat_focus": "int",
-        "stat_threshold": 180,  # EXTREME - need master scholars
+        "stat_threshold": 220,  # BRUTAL - need master scholars
         "gold_reward": (100, 300),
         "gear_chance": 0.25,
     },
@@ -78,7 +78,7 @@ QUEST_TYPES = {
         ],
         "locations": ["Ruins", "Forest", "Mountains", "Caverns", "Marshlands", "Desert Oasis"],
         "stat_focus": "def",
-        "stat_threshold": 190,  # EXTREME - need veteran explorers
+        "stat_threshold": 230,  # BRUTAL - need veteran explorers
         "gold_reward": (120, 350),
         "gear_chance": 0.35,
     },
@@ -91,7 +91,7 @@ QUEST_TYPES = {
         ],
         "goods": ["Spices", "Silk", "Iron Ore", "Gemstones", "Exotic Animals", "Ancient Artifacts"],
         "stat_focus": "rep",
-        "stat_threshold": 170,  # EXTREME - need legendary traders
+        "stat_threshold": 210,  # BRUTAL - need legendary traders
         "gold_reward": (200, 500),
         "gear_chance": 0.30,
     },

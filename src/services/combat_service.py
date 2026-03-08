@@ -268,6 +268,11 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
         if died_after_win:
             v["hp"] = 0
             v["alive"] = False
+        else:
+            # Check for Iron Will achievement (survived with low HP)
+            from src.services.achievement_service import trigger_iron_will_check
+            if v["hp"] < 80:
+                trigger_iron_will_check(v)
 
         result.update(
             {
@@ -306,6 +311,11 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
             }
         )
     else:
+        # Check for Iron Will achievement (survived with low HP)
+        from src.services.achievement_service import trigger_iron_will_check
+        if v["hp"] < 80:
+            trigger_iron_will_check(v)
+        
         result.update(
             {
                 "outcome": "LOSS",

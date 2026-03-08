@@ -66,7 +66,7 @@ ACHIEVEMENTS = {
     },
     "iron_will": {
         "name": "Iron Will",
-        "description": "Survive with HP below 10 five times",
+        "description": "Survive combat with HP below 80 five times",
         "icon": "💪",
         "reward": {"type": "both", "stat": "def", "value": 15, "trait": "Resilient"},
     },
