@@ -138,6 +138,34 @@
     .family-card.hidden {
       display: none;
     }
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-select {
+      background: var(--aw-bg-dark);
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--aw-text);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--aw-accent);
+    }
+    .filter-label {
+      font-size: 12px;
+      color: var(--aw-text-muted);
+      margin-right: 4px;
+    }
+    .sort-indicator {
+      margin-left: 4px;
+      opacity: 0.6;
+    }
   </style>
 </head>
 
@@ -147,15 +175,48 @@
 
     <div class="aw-main-shell">
       <div class="page-shell">
-        <header class="aw-header d-flex align-items-center justify-content-between mb-3">
-          <div class="d-flex flex-column">
-            <span class="header-title">Noble Houses</span>
-            <span class="header-subtitle">
-              {{ total_families }} families in the realm
-              {% if year is not none and day is not none %} · Year {{ year }}, Day {{ day }}{% endif %}
-            </span>
+        <header class="aw-header mb-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex flex-column">
+              <span class="header-title">Noble Houses</span>
+              <span class="header-subtitle">
+                {{ total_families }} families in the realm
+                {% if year is not none and day is not none %} · Year {{ year }}, Day {{ day }}{% endif %}
+              </span>
+            </div>
+            <input type="text" class="search-box" id="familySearch" placeholder="🔍 Search family..." autocomplete="off" />
           </div>
-          <input type="text" class="search-box" id="familySearch" placeholder="🔍 Search family..." autocomplete="off" />
+          
+          <div class="filter-bar">
+            <div class="d-flex align-items-center">
+              <span class="filter-label">Sort:</span>
+              <select class="filter-select" id="sortBy">
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="wealth-desc">Wealth (High → Low)</option>
+                <option value="wealth-asc">Wealth (Low → High)</option>
+                <option value="alive-desc">Living Members (Most)</option>
+                <option value="alive-asc">Living Members (Least)</option>
+                <option value="total-desc">Total Members (Most)</option>
+                <option value="total-asc">Total Members (Least)</option>
+                <option value="age-desc">Avg Age (Oldest)</option>
+                <option value="age-asc">Avg Age (Youngest)</option>
+              </select>
+            </div>
+            
+            <div class="d-flex align-items-center">
+              <span class="filter-label">Filter:</span>
+              <select class="filter-select" id="filterBy">
+                <option value="all">All Families</option>
+                <option value="living">Has Living Members</option>
+                <option value="extinct">Extinct (No Living)</option>
+                <option value="wealthy">Wealthy (100+ coins)</option>
+                <option value="large">Large (5+ members)</option>
+              </select>
+            </div>
+            
+            <button class="btn btn-sm btn-outline-secondary" id="resetFilters" title="Reset filters">↺ Reset</button>
+          </div>
         </header>
 
         <main class="aw-main">
@@ -194,7 +255,13 @@
           <!-- Family List -->
           <section id="familyList">
             {% for fam in families %}
-            <div class="family-card" data-family="{{ fam.name | lower }}">
+            <div class="family-card" 
+                 data-family="{{ fam.name | lower }}"
+                 data-name="{{ fam.name }}"
+                 data-wealth="{{ fam.total_wealth }}"
+                 data-alive="{{ fam.alive_count }}"
+                 data-total="{{ fam.total_count }}"
+                 data-age="{{ fam.avg_age }}">
               <div class="family-header" onclick="toggleFamily(this)">
                 <div>
                   <div class="family-name">{{ fam.name }}</div>
@@ -283,24 +350,118 @@
       icon.classList.toggle('expanded');
     }
 
-    // Search functionality
+    // Elements
     const searchBox = document.getElementById('familySearch');
-    const familyCards = document.querySelectorAll('.family-card');
+    const sortSelect = document.getElementById('sortBy');
+    const filterSelect = document.getElementById('filterBy');
+    const resetBtn = document.getElementById('resetFilters');
+    const familyList = document.getElementById('familyList');
+    
+    // Get all family cards
+    function getFamilyCards() {
+      return Array.from(document.querySelectorAll('.family-card'));
+    }
 
-    searchBox.addEventListener('input', function() {
-      const query = this.value.toLowerCase().trim();
+    // Sort families
+    function sortFamilies() {
+      const [sortKey, sortDir] = sortSelect.value.split('-');
+      const cards = getFamilyCards();
       
-      familyCards.forEach(card => {
+      cards.sort((a, b) => {
+        let valA, valB;
+        
+        switch(sortKey) {
+          case 'name':
+            valA = a.dataset.name.toLowerCase();
+            valB = b.dataset.name.toLowerCase();
+            return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+          case 'wealth':
+            valA = parseInt(a.dataset.wealth) || 0;
+            valB = parseInt(b.dataset.wealth) || 0;
+            break;
+          case 'alive':
+            valA = parseInt(a.dataset.alive) || 0;
+            valB = parseInt(b.dataset.alive) || 0;
+            break;
+          case 'total':
+            valA = parseInt(a.dataset.total) || 0;
+            valB = parseInt(b.dataset.total) || 0;
+            break;
+          case 'age':
+            valA = parseFloat(a.dataset.age) || 0;
+            valB = parseFloat(b.dataset.age) || 0;
+            break;
+          default:
+            return 0;
+        }
+        
+        return sortDir === 'asc' ? valA - valB : valB - valA;
+      });
+      
+      // Re-append in sorted order
+      cards.forEach(card => familyList.appendChild(card));
+    }
+
+    // Filter and search families
+    function filterFamilies() {
+      const query = searchBox.value.toLowerCase().trim();
+      const filter = filterSelect.value;
+      
+      getFamilyCards().forEach(card => {
         const familyName = card.dataset.family;
         const memberNames = card.textContent.toLowerCase();
+        const wealth = parseInt(card.dataset.wealth) || 0;
+        const alive = parseInt(card.dataset.alive) || 0;
+        const total = parseInt(card.dataset.total) || 0;
         
-        if (!query || familyName.includes(query) || memberNames.includes(query)) {
+        // Check search match
+        const matchesSearch = !query || familyName.includes(query) || memberNames.includes(query);
+        
+        // Check filter match
+        let matchesFilter = true;
+        switch(filter) {
+          case 'living':
+            matchesFilter = alive > 0;
+            break;
+          case 'extinct':
+            matchesFilter = alive === 0;
+            break;
+          case 'wealthy':
+            matchesFilter = wealth >= 100;
+            break;
+          case 'large':
+            matchesFilter = total >= 5;
+            break;
+        }
+        
+        if (matchesSearch && matchesFilter) {
           card.classList.remove('hidden');
         } else {
           card.classList.add('hidden');
         }
       });
+    }
+
+    // Apply both sort and filter
+    function applyFilters() {
+      sortFamilies();
+      filterFamilies();
+    }
+
+    // Event listeners
+    searchBox.addEventListener('input', filterFamilies);
+    sortSelect.addEventListener('change', applyFilters);
+    filterSelect.addEventListener('change', filterFamilies);
+    
+    resetBtn.addEventListener('click', function() {
+      searchBox.value = '';
+      sortSelect.value = 'name-asc';
+      filterSelect.value = 'all';
+      applyFilters();
     });
+    
+    // Initial sort
+    sortFamilies();
   </script>
 </body>
 </html>
