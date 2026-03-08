@@ -774,9 +774,6 @@ def maybe_trigger_quest(
     if not isinstance(quest_history, list):
         quest_history = []
     quest_history.append(record)
-    # Keep last 50 quests
-    if len(quest_history) > 50:
-        quest_history = quest_history[-50:]
     bank["quest_history"] = quest_history
     
     return message, record
