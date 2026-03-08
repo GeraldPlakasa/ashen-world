@@ -266,6 +266,10 @@ def admin():
     users = load_users()
     total_users = len(users)
 
+    # Load skill descriptions for UI
+    from src.services.skill_service import SKILLS
+    skill_descriptions = {name: data["description"] for name, data in SKILLS.items()}
+
     return render_template(
         "admin.html",
         characters=characters,
@@ -275,6 +279,7 @@ def admin():
         total_users=total_users,
         village_buildings=village_buildings,
         graveyard_index=graveyard_index,
+        skill_descriptions=skill_descriptions,
     )
 
 @app.route("/leaderboard", methods=["GET"])
@@ -377,6 +382,78 @@ def download_history_csv():
         csv_content,
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment;filename=ashen_world_history.csv"}
+    )
+
+
+@app.route("/quests/csv", methods=["GET"])
+def download_quest_csv():
+    """Download quest history as CSV."""
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+
+    characters, bank, year, day_in_year, total_day, weather = get_current_state()
+    quest_history = bank.get("quest_history", [])
+    if not isinstance(quest_history, list):
+        quest_history = []
+    
+    # CSV header
+    headers = [
+        "Year",
+        "Day",
+        "Quest Type",
+        "Quest Name",
+        "Description",
+        "Difficulty",
+        "Success",
+        "Success Chance",
+        "Gold Reward",
+        "Party Members",
+        "Party Size",
+        "Total ATK",
+        "Total DEF",
+        "Total INT",
+        "Total REP",
+    ]
+    
+    lines = [",".join(headers)]
+    
+    def esc(val):
+        if val is None:
+            return ""
+        s = str(val)
+        if "," in s or '"' in s:
+            return '"' + s.replace('"', '""') + '"'
+        return s
+    
+    for q in quest_history:
+        party = q.get("party", [])
+        party_names = [p.get("name", "?") for p in party]
+        
+        row = [
+            str(q.get("year", "")),
+            str(q.get("day", "")),
+            esc(q.get("quest_type", "")),
+            esc(q.get("quest_name", "")),
+            esc(q.get("description", "")),
+            str(q.get("difficulty", "")),
+            "Yes" if q.get("success") else "No",
+            f"{q.get('success_chance', 0):.1f}%",
+            str(q.get("gold", 0)),
+            esc(", ".join(party_names)),
+            str(len(party)),
+            str(q.get("total_atk", 0)),
+            str(q.get("total_def", 0)),
+            str(q.get("total_int", 0)),
+            str(q.get("total_rep", 0)),
+        ]
+        lines.append(",".join(row))
+    
+    csv_content = "\n".join(lines)
+    
+    return Response(
+        csv_content,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=ashen_world_quests.csv"}
     )
 
 

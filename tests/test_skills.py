@@ -137,40 +137,51 @@ class TestSkillParsing:
 
 
 class TestSkillBonuses:
-    """Tests for skill stat bonuses."""
+    """Tests for skill action bonuses (skills no longer add stats at birth)."""
 
     @pytest.mark.unit
-    def test_apply_skill_bonuses(self):
-        """Should apply stat bonuses from skills."""
+    def test_apply_skill_bonuses_deprecated(self):
+        """apply_skill_bonuses is now a no-op (skills apply during actions)."""
         villager = {
             "skills": "Bladesong",
             "atk": 10,
             "def": 10,
         }
         apply_skill_bonuses(villager)
-        assert villager["atk"] == 15  # +5 from Bladesong
-
-    @pytest.mark.unit
-    def test_apply_multiple_skill_bonuses(self):
-        """Should apply bonuses from multiple skills."""
-        villager = {
-            "skills": "Bladesong, Hawkeye",
-            "atk": 10,
-            "def": 10,
-        }
-        apply_skill_bonuses(villager)
-        assert villager["atk"] == 18  # +5 + +3
-        assert villager["def"] == 12  # +2
-
-    @pytest.mark.unit
-    def test_apply_no_skills(self):
-        """Should not change stats if no skills."""
-        villager = {
-            "skills": "",
-            "atk": 10,
-        }
-        apply_skill_bonuses(villager)
+        # Skills no longer add stats at birth
         assert villager["atk"] == 10
+
+    @pytest.mark.unit
+    def test_get_train_bonus(self):
+        """Combat skills should boost training."""
+        from src.services.skill_service import get_train_bonus
+        villager = {"skills": "Bladesong"}
+        bonus = get_train_bonus(villager)
+        assert bonus["atk_mult"] > 1.0  # Combat skill increases ATK training
+
+    @pytest.mark.unit
+    def test_get_work_bonus(self):
+        """Craft skills should boost work income."""
+        from src.services.skill_service import get_work_bonus
+        villager = {"skills": "Forgeblessed"}
+        bonus = get_work_bonus(villager)
+        assert bonus["coin_mult"] > 1.0  # Craft skill increases coins
+
+    @pytest.mark.unit
+    def test_get_study_bonus(self):
+        """Knowledge skills should boost studying."""
+        from src.services.skill_service import get_study_bonus
+        villager = {"skills": "Lorekeeper"}
+        bonus = get_study_bonus(villager)
+        assert bonus["int_mult"] > 1.0  # Knowledge skill increases INT gain
+
+    @pytest.mark.unit
+    def test_no_skills_no_bonus(self):
+        """Should have base multipliers if no skills."""
+        from src.services.skill_service import get_train_bonus
+        villager = {"skills": ""}
+        bonus = get_train_bonus(villager)
+        assert bonus["atk_mult"] == 1.0
 
 
 class TestJobFromSkills:
@@ -195,6 +206,44 @@ class TestJobFromSkills:
         """Should return None for empty skills."""
         result = get_job_from_skills([], ["Soldier", "Farmer"])
         assert result is None
+
+
+class TestSkillInheritance:
+    """Tests for skill inheritance from parents."""
+
+    @pytest.mark.unit
+    def test_inheritance_with_parent_skills(self):
+        """Children have extra chance to inherit parent skills."""
+        from src.services.skill_service import roll_birth_skills_with_inheritance
+        import random
+        
+        mom = {"skills": "Bladesong"}
+        dad = {"skills": "Lorekeeper"}
+        
+        # Run many times to see inheritance
+        inherited_count = 0
+        for i in range(100):
+            random.seed(i)
+            skills = roll_birth_skills_with_inheritance(mom, dad)
+            if "Bladesong" in skills or "Lorekeeper" in skills:
+                inherited_count += 1
+        
+        # Should inherit sometimes (25% per parent skill)
+        assert inherited_count > 10
+
+    @pytest.mark.unit
+    def test_inheritance_without_parent_skills(self):
+        """Works normally if parents have no skills."""
+        from src.services.skill_service import roll_birth_skills_with_inheritance
+        import random
+        
+        mom = {"skills": ""}
+        dad = {"skills": ""}
+        
+        random.seed(42)
+        skills = roll_birth_skills_with_inheritance(mom, dad)
+        assert isinstance(skills, list)
+        assert len(skills) <= 2
 
 
 class TestRollBirthSkills:

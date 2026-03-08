@@ -243,6 +243,7 @@
   <script>
     window.AW_CHARACTERS = {{ characters | tojson | safe }};
     window.AW_GRAVEYARD = {{ graveyard_index | default({}) | tojson | safe }};
+    window.AW_SKILL_DESCRIPTIONS = {{ skill_descriptions | default({}) | tojson | safe }};
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>

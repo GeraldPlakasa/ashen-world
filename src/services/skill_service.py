@@ -234,48 +234,93 @@ def get_all_categories() -> set[str]:
     return {data["category"] for data in SKILLS.values()}
 
 
+# Chance to inherit a parent's skill
+INHERIT_SKILL_CHANCE = 0.25  # 25% chance per parent skill
+
+
+def _pick_skill_weighted(exclude: list[str] = None) -> str | None:
+    """Pick a random skill weighted by rarity."""
+    common = get_skills_by_rarity("common")
+    uncommon = get_skills_by_rarity("uncommon")
+    rare = get_skills_by_rarity("rare")
+    
+    pool = []
+    pool.extend([(s, 60) for s in common])     # 60% common
+    pool.extend([(s, 30) for s in uncommon])   # 30% uncommon
+    pool.extend([(s, 10) for s in rare])       # 10% rare
+    
+    if exclude:
+        pool = [(s, w) for s, w in pool if s not in exclude]
+    
+    if not pool:
+        return None
+    
+    total = sum(w for _, w in pool)
+    roll = random.random() * total
+    cumulative = 0
+    for skill, weight in pool:
+        cumulative += weight
+        if roll <= cumulative:
+            return skill
+    return pool[-1][0] if pool else None
+
+
 def roll_birth_skills() -> list[str]:
     """
-    Roll for skills at birth.
+    Roll for skills at birth (no inheritance).
     Returns a list of 0-2 skill names.
     """
     skills = []
     
     # First skill check
     if random.random() < SKILL_BIRTH_CHANCE:
-        # Weight by rarity
-        common = get_skills_by_rarity("common")
-        uncommon = get_skills_by_rarity("uncommon")
-        rare = get_skills_by_rarity("rare")
-        
-        pool = []
-        pool.extend([(s, 60) for s in common])     # 60% common
-        pool.extend([(s, 30) for s in uncommon])   # 30% uncommon
-        pool.extend([(s, 10) for s in rare])       # 10% rare
-        
-        total = sum(w for _, w in pool)
-        roll = random.random() * total
-        cumulative = 0
-        for skill, weight in pool:
-            cumulative += weight
-            if roll <= cumulative:
-                skills.append(skill)
-                break
+        skill = _pick_skill_weighted()
+        if skill:
+            skills.append(skill)
         
         # Second skill check (if first was obtained)
         if skills and random.random() < SECOND_SKILL_CHANCE:
-            remaining = [(s, w) for s, w in pool if s not in skills]
-            if remaining:
-                total = sum(w for _, w in remaining)
-                roll = random.random() * total
-                cumulative = 0
-                for skill, weight in remaining:
-                    cumulative += weight
-                    if roll <= cumulative:
-                        skills.append(skill)
-                        break
+            skill2 = _pick_skill_weighted(exclude=skills)
+            if skill2:
+                skills.append(skill2)
     
     return skills
+
+
+def roll_birth_skills_with_inheritance(mom: "Villager", dad: "Villager") -> list[str]:
+    """
+    Roll for skills at birth with parent inheritance.
+    Children have a chance to inherit parent skills.
+    Returns a list of 0-2 skill names.
+    """
+    skills = []
+    
+    # Collect parent skills
+    mom_skills = parse_skills(mom.get("skills", ""))
+    dad_skills = parse_skills(dad.get("skills", ""))
+    parent_skills = list(set(mom_skills + dad_skills))
+    
+    # First: check for inherited skills from parents
+    for parent_skill in parent_skills:
+        if len(skills) >= 2:
+            break
+        if random.random() < INHERIT_SKILL_CHANCE:
+            if parent_skill not in skills:
+                skills.append(parent_skill)
+    
+    # Then: roll for random skills as normal (if not already full)
+    if len(skills) < 2 and random.random() < SKILL_BIRTH_CHANCE:
+        new_skill = _pick_skill_weighted(exclude=skills)
+        if new_skill:
+            skills.append(new_skill)
+        
+        # Second random skill
+        if len(skills) < 2 and random.random() < SECOND_SKILL_CHANCE:
+            new_skill2 = _pick_skill_weighted(exclude=skills)
+            if new_skill2:
+                skills.append(new_skill2)
+    
+    return skills[:2]  # Max 2 skills
 
 
 def parse_skills(skills_str: str | None) -> list[str]:
@@ -291,17 +336,194 @@ def skills_to_string(skills: list[str]) -> str:
 
 
 def apply_skill_bonuses(villager: "Villager") -> None:
-    """Apply stat bonuses from skills to villager."""
+    """
+    DEPRECATED: Skills no longer add stats at birth.
+    Kept for backwards compatibility.
+    """
+    pass  # Skills provide bonuses during actions, not at birth
+
+
+# ============================================================================
+# SKILL BONUSES DURING ACTIONS
+# ============================================================================
+
+def get_train_bonus(villager: "Villager") -> dict:
+    """
+    Get training bonuses from skills.
+    Returns: {"atk_mult": float, "def_mult": float, "exp_mult": float}
+    """
     skills = parse_skills(villager.get("skills", ""))
+    bonus = {"atk_mult": 1.0, "def_mult": 1.0, "exp_mult": 1.0}
+    
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
+            continue
+        cat = info.get("category", "")
+        
+        if cat == "COMBAT":
+            bonus["atk_mult"] += 0.20  # +20% ATK gain
+            bonus["def_mult"] += 0.15  # +15% DEF gain
+            bonus["exp_mult"] += 0.10  # +10% EXP
+        
+        # Specific skills
+        if skill_name == "Bladesong":
+            bonus["atk_mult"] += 0.10
+        if skill_name == "Bulwark":
+            bonus["def_mult"] += 0.20
+        if skill_name == "Battlemaster":
+            bonus["exp_mult"] += 0.15
+    
+    return bonus
+
+
+def get_study_bonus(villager: "Villager") -> dict:
+    """
+    Get study bonuses from skills.
+    Returns: {"int_mult": float, "exp_mult": float}
+    """
+    skills = parse_skills(villager.get("skills", ""))
+    bonus = {"int_mult": 1.0, "exp_mult": 1.0}
+    
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
+            continue
+        cat = info.get("category", "")
+        
+        if cat == "KNOWLEDGE":
+            bonus["int_mult"] += 0.25  # +25% INT gain
+            bonus["exp_mult"] += 0.15  # +15% EXP
+        
+        # Specific skills
+        if skill_name == "Lorekeeper":
+            bonus["int_mult"] += 0.15
+        if skill_name == "Arcane Attunement":
+            bonus["int_mult"] += 0.10
+            bonus["exp_mult"] += 0.10
+        if skill_name == "Polyglot":
+            bonus["exp_mult"] += 0.20
+    
+    return bonus
+
+
+def get_work_bonus(villager: "Villager") -> dict:
+    """
+    Get work bonuses from skills.
+    Returns: {"coin_mult": float, "exp_mult": float}
+    """
+    skills = parse_skills(villager.get("skills", ""))
+    bonus = {"coin_mult": 1.0, "exp_mult": 1.0}
+    
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
+            continue
+        cat = info.get("category", "")
+        
+        if cat == "CRAFT":
+            bonus["coin_mult"] += 0.20  # +20% coin gain
+            bonus["exp_mult"] += 0.10
+        if cat == "SOCIAL":
+            bonus["coin_mult"] += 0.10  # +10% from social skills
+        
+        # Specific skills
+        if skill_name == "Gilded Hands":
+            bonus["coin_mult"] += 0.15
+        if skill_name == "Dealmaker":
+            bonus["coin_mult"] += 0.20
+        if skill_name == "Forgeblessed":
+            bonus["coin_mult"] += 0.10
+    
+    return bonus
+
+
+def get_socialize_bonus(villager: "Villager") -> dict:
+    """
+    Get socializing bonuses from skills.
+    Returns: {"relation_mult": float, "rep_mult": float}
+    """
+    skills = parse_skills(villager.get("skills", ""))
+    bonus = {"relation_mult": 1.0, "rep_mult": 1.0}
+    
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
+            continue
+        cat = info.get("category", "")
+        
+        if cat == "SOCIAL":
+            bonus["relation_mult"] += 0.25  # +25% relationship gain
+            bonus["rep_mult"] += 0.15
+        
+        # Specific skills
+        if skill_name == "Silver Tongue":
+            bonus["relation_mult"] += 0.20
+        if skill_name == "Commanding Presence":
+            bonus["rep_mult"] += 0.25
+        if skill_name == "Heartspark":
+            bonus["relation_mult"] += 0.15
+            bonus["rep_mult"] += 0.10
+    
+    return bonus
+
+
+def get_hunt_bonus(villager: "Villager") -> dict:
+    """
+    Get hunting bonuses from skills.
+    Returns: {"power_mult": float, "coin_mult": float, "exp_mult": float}
+    """
+    skills = parse_skills(villager.get("skills", ""))
+    bonus = {"power_mult": 1.0, "coin_mult": 1.0, "exp_mult": 1.0}
+    
+    for skill_name in skills:
+        info = get_skill_info(skill_name)
+        if not info:
+            continue
+        cat = info.get("category", "")
+        
+        if cat == "COMBAT":
+            bonus["power_mult"] += 0.15
+            bonus["exp_mult"] += 0.10
+        if cat == "SURVIVAL":
+            bonus["power_mult"] += 0.10
+            bonus["coin_mult"] += 0.15  # Better at harvesting loot
+        
+        # Specific skills
+        if skill_name == "Hawkeye":
+            bonus["power_mult"] += 0.15
+        if skill_name == "Pathfinder":
+            bonus["power_mult"] += 0.10
+            bonus["coin_mult"] += 0.10
+        if skill_name == "Bloodrage":
+            bonus["power_mult"] += 0.25
+    
+    return bonus
+
+
+def get_rest_bonus(villager: "Villager") -> dict:
+    """
+    Get resting bonuses from skills.
+    Returns: {"hp_mult": float, "hunger_reduce": float}
+    """
+    skills = parse_skills(villager.get("skills", ""))
+    bonus = {"hp_mult": 1.0, "hunger_reduce": 0}
     
     for skill_name in skills:
         info = get_skill_info(skill_name)
         if not info:
             continue
         
-        for stat, bonus in info["stat_bonus"].items():
-            current = int(villager.get(stat, 0) or 0)
-            villager[stat] = current + bonus
+        # Specific skills
+        if skill_name == "Iron Constitution":
+            bonus["hp_mult"] += 0.30
+        if skill_name == "Herbweaver":
+            bonus["hp_mult"] += 0.20
+            bonus["hunger_reduce"] += 3
+        if skill_name == "Chirurgeon":
+            bonus["hp_mult"] += 0.25
+    
+    return bonus
 
 
 def get_job_from_skills(skills: list[str], available_jobs: list[str]) -> str | None:

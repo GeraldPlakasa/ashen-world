@@ -203,11 +203,18 @@
               {% if year is not none and day is not none %} · Year {{ year }}, Day {{ day }}{% endif %}
             </span>
           </div>
-          {% if username %}
-          <div style="color: var(--aw-text-muted); font-size: 13px;">
-            Playing as <strong style="color: var(--aw-text);">{{ username }}</strong>
+          <div class="d-flex align-items-center gap-3">
+            {% if quest_history %}
+            <a href="{{ url_for('download_quest_csv') }}" class="btn btn-sm btn-outline-light" style="font-size: 12px;">
+              <span style="margin-right: 4px;">⬇</span> Download CSV
+            </a>
+            {% endif %}
+            {% if username %}
+            <div style="color: var(--aw-text-muted); font-size: 13px;">
+              Playing as <strong style="color: var(--aw-text);">{{ username }}</strong>
+            </div>
+            {% endif %}
           </div>
-          {% endif %}
         </header>
 
         <main class="aw-main">

@@ -668,7 +668,21 @@ document.addEventListener("DOMContentLoaded", () => {
       pinned.traitsEl.textContent = textOrDash(villager.traits);
     }
     if (pinned.skillsEl) {
-      pinned.skillsEl.textContent = textOrDash(villager.skills);
+      const skillsStr = villager.skills || "";
+      if (!skillsStr) {
+        pinned.skillsEl.innerHTML = "-";
+      } else {
+        const skillDescriptions = window.AW_SKILL_DESCRIPTIONS || {};
+        const skillsArr = skillsStr.split(",").map(s => s.trim()).filter(Boolean);
+        const skillsHtml = skillsArr.map(skill => {
+          const desc = skillDescriptions[skill] || "";
+          if (desc) {
+            return `<div style="margin-bottom: 4px;"><strong>${skill}</strong><br><span style="font-size: 11px; color: var(--aw-text-muted);">${desc}</span></div>`;
+          }
+          return `<strong>${skill}</strong>`;
+        }).join("");
+        pinned.skillsEl.innerHTML = skillsHtml || "-";
+      }
     }
     if (pinned.lastActionEl) {
       pinned.lastActionEl.textContent = textOrDash(villager.last_action);

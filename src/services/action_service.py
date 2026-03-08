@@ -17,7 +17,11 @@ from src.services.relationship_service import (
     adjust_relationship,
     relationship_label,
 )
-from src.services.skill_service import parse_skills, get_skill_info
+from src.services.skill_service import (
+    parse_skills, get_skill_info,
+    get_train_bonus, get_study_bonus, get_work_bonus,
+    get_socialize_bonus, get_hunt_bonus, get_rest_bonus,
+)
 from src.models.villager import Villager
 from src.models.bank import Bank
 from src.models.combat import ShopOffer
@@ -486,6 +490,12 @@ def apply_action(
                     1, int(round(delta_hunger * (1 - 0.08 * lvl_granary)))
                 )
 
+        # Skill bonuses for training
+        skill_bonus = get_train_bonus(v)
+        delta_atk = max(1, int(round(delta_atk * skill_bonus["atk_mult"])))
+        delta_def = max(1, int(round(delta_def * skill_bonus["def_mult"])))
+        delta_exp = max(1, int(round(delta_exp * skill_bonus["exp_mult"])))
+
         v["atk"]    += delta_atk
         v["def"]    += delta_def
         v["hp"]     += delta_hp
@@ -522,6 +532,11 @@ def apply_action(
                     1, int(round(delta_hunger * (1 - 0.06 * lvl_granary)))
                 )
 
+        # Skill bonuses for studying
+        skill_bonus = get_study_bonus(v)
+        delta_int = max(1, int(round(delta_int * skill_bonus["int_mult"])))
+        delta_exp = max(1, int(round(delta_exp * skill_bonus["exp_mult"])))
+
         v["int"]    += delta_int
         v["exp"]    += delta_exp
         v["hunger"] += delta_hunger
@@ -553,6 +568,11 @@ def apply_action(
 
             if lvl_tavern > 0:
                 v["rep"] += rand_int(0, lvl_tavern)
+
+        # Skill bonuses for work
+        skill_bonus = get_work_bonus(v)
+        gross = max(1, int(round(gross * skill_bonus["coin_mult"])))
+        exp_delta = max(1, int(round(exp_delta * skill_bonus["exp_mult"])))
 
         if bank is not None:
             res = apply_tax_on_income(v, gross, bank)
@@ -589,6 +609,11 @@ def apply_action(
                     round(hunger_delta * (1 + 0.15 * lvl_granary))
                 )
 
+        # Skill bonuses for resting
+        skill_bonus = get_rest_bonus(v)
+        hp_delta = max(1, int(round(hp_delta * skill_bonus["hp_mult"])))
+        hunger_delta = max(0, hunger_delta - skill_bonus["hunger_reduce"])
+
         v["hunger"] += hunger_delta
         v["hp"]     += hp_delta
 
@@ -597,6 +622,9 @@ def apply_action(
         # Rain reduces social interaction quality
         w = (weather or "sunny").strip().lower()
         rain_penalty = 0.85 if w == "rain" else 1.0
+        
+        # Skill bonuses for socializing
+        skill_bonus = get_socialize_bonus(v)
         
         if not all_characters:
             v["hunger"] -= rand_int(1, 4)
@@ -613,7 +641,8 @@ def apply_action(
                 other = random.choice(candidates)
 
                 if random.random() < 0.85:
-                    delta = int(rand_int(5, 15) * rain_penalty)
+                    base_delta = rand_int(5, 15)
+                    delta = int(base_delta * rain_penalty * skill_bonus["relation_mult"])
                 else:
                     delta = -rand_int(1, 2)
 

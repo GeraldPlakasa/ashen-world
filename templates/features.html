@@ -1453,25 +1453,36 @@
                           <p class="mb-3">Skills are rare abilities that villagers can be born with. They provide stat bonuses and influence job selection.</p>
                           
                           <div class="row g-2 mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                               <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Birth Chance</div>
+                                <div style="color: var(--aw-text);" class="small mb-1">Birth & Inheritance</div>
                                 <ul class="small mb-0">
                                   <li>12% chance to have at least one skill</li>
-                                  <li>20% chance for second skill (if first acquired)</li>
-                                  <li>Skills determined at birth, never change</li>
-                                  <li>Stat bonuses applied immediately</li>
+                                  <li>20% chance for second skill</li>
+                                  <li>25% chance to inherit each parent's skill</li>
+                                  <li>Max 2 skills per villager</li>
                                 </ul>
                               </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                              <div class="feature-box">
+                                <div style="color: var(--aw-text);" class="small mb-1">Action Bonuses</div>
+                                <ul class="small mb-0">
+                                  <li>Skills boost gains during actions</li>
+                                  <li>COMBAT: +20% train ATK/DEF</li>
+                                  <li>CRAFT: +20% work income</li>
+                                  <li>KNOWLEDGE: +25% study INT</li>
+                                  <li>SOCIAL: +25% relationship gains</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="col-md-4">
                               <div class="feature-box">
                                 <div style="color: var(--aw-text);" class="small mb-1">Job Influence</div>
                                 <ul class="small mb-0">
-                                  <li>75% chance to follow skill job affinity</li>
+                                  <li>75% chance to follow skill affinity</li>
                                   <li>Skills suggest matching professions</li>
-                                  <li>Multiple skills may stack job preference</li>
-                                  <li>Falls back to trait-based assignment</li>
+                                  <li>Falls back to trait-based</li>
                                 </ul>
                               </div>
                             </div>
@@ -1480,25 +1491,25 @@
                           <div class="row g-2 mb-3">
                             <div class="col-md-6">
                               <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">COMBAT Skills</div>
+                                <div style="color: var(--aw-text);" class="small mb-1">COMBAT Skills (boost train/hunt)</div>
                                 <ul class="small mb-0">
-                                  <li><strong>Bladesong</strong> - +5 ATK, Soldier/Guard/Knight</li>
-                                  <li><strong>Hawkeye</strong> - +3 ATK +2 DEF, Archer/Ranger</li>
-                                  <li><strong>Bloodrage</strong> - +8 ATK -2 DEF (rare)</li>
-                                  <li><strong>Bulwark</strong> - +6 DEF +10 HP</li>
-                                  <li><strong>Battlemaster</strong> - +4 INT +2 ATK (rare)</li>
+                                  <li><strong>Bladesong</strong> - +30% ATK training, Soldier/Guard</li>
+                                  <li><strong>Hawkeye</strong> - +20% ATK/DEF, Archer/Ranger</li>
+                                  <li><strong>Bloodrage</strong> - +25% hunt power (rare)</li>
+                                  <li><strong>Bulwark</strong> - +35% DEF training, -15% damage</li>
+                                  <li><strong>Battlemaster</strong> - +15% EXP gain (rare)</li>
                                 </ul>
                               </div>
                             </div>
                             <div class="col-md-6">
                               <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">CRAFT Skills</div>
+                                <div style="color: var(--aw-text);" class="small mb-1">CRAFT Skills (boost work)</div>
                                 <ul class="small mb-0">
-                                  <li><strong>Forgeblessed</strong> - +2 ATK +2 DEF, Blacksmith</li>
-                                  <li><strong>Transmutation</strong> - +4 INT +5 HP, Alchemist</li>
-                                  <li><strong>Gilded Hands</strong> - +3 REP +2 INT, Jeweler/Tailor</li>
-                                  <li><strong>Artificer</strong> - +5 INT +2 DEF (rare)</li>
-                                  <li><strong>Brewcraft</strong> - +4 REP +3 HP, Brewer</li>
+                                  <li><strong>Forgeblessed</strong> - +30% work income, Blacksmith</li>
+                                  <li><strong>Transmutation</strong> - +20% coins, Alchemist</li>
+                                  <li><strong>Gilded Hands</strong> - +35% work income, Jeweler</li>
+                                  <li><strong>Artificer</strong> - +20% coins (rare)</li>
+                                  <li><strong>Brewcraft</strong> - +20% coins, Brewer</li>
                                 </ul>
                               </div>
                             </div>
@@ -1507,43 +1518,44 @@
                           <div class="row g-2 mb-3">
                             <div class="col-md-6">
                               <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">SOCIAL Skills</div>
+                                <div style="color: var(--aw-text);" class="small mb-1">SOCIAL Skills (boost socialize)</div>
                                 <ul class="small mb-0">
-                                  <li><strong>Silver Tongue</strong> - +6 REP, Merchant/Noble</li>
-                                  <li><strong>Commanding Presence</strong> - +4 REP +3 INT (rare)</li>
-                                  <li><strong>Dealmaker</strong> - +5 REP +2 INT</li>
-                                  <li><strong>Dreadgaze</strong> - +3 REP +2 ATK</li>
-                                  <li><strong>Heartspark</strong> - +5 REP +5 HP (rare)</li>
+                                  <li><strong>Silver Tongue</strong> - +45% relationship, Merchant</li>
+                                  <li><strong>Commanding Presence</strong> - +25% REP (rare)</li>
+                                  <li><strong>Dealmaker</strong> - +25% relations, +20% work</li>
+                                  <li><strong>Dreadgaze</strong> - +25% relations, Guard</li>
+                                  <li><strong>Heartspark</strong> - +40% relations (rare)</li>
                                 </ul>
                               </div>
                             </div>
                             <div class="col-md-6">
                               <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">SURVIVAL Skills</div>
+                                <div style="color: var(--aw-text);" class="small mb-1">SURVIVAL Skills (boost hunt/rest)</div>
                                 <ul class="small mb-0">
-                                  <li><strong>Pathfinder</strong> - +3 DEF +2 ATK, Hunter/Ranger</li>
-                                  <li><strong>Herbweaver</strong> - +8 HP +2 INT, Healer</li>
-                                  <li><strong>Iron Constitution</strong> - +15 HP +3 DEF</li>
-                                  <li><strong>Wayfarer</strong> - +4 DEF +2 INT</li>
-                                  <li><strong>Beastbond</strong> - +2 DEF +3 REP</li>
+                                  <li><strong>Pathfinder</strong> - +20% hunt power, Hunter</li>
+                                  <li><strong>Herbweaver</strong> - +20% rest HP, -3 hunger</li>
+                                  <li><strong>Iron Constitution</strong> - +30% rest HP, -15% dmg</li>
+                                  <li><strong>Wayfarer</strong> - +10% hunt power, Scout</li>
+                                  <li><strong>Beastbond</strong> - +10% hunt, Shepherd</li>
                                 </ul>
                               </div>
                             </div>
                           </div>
 
                           <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">KNOWLEDGE Skills</div>
+                            <div style="color: var(--aw-text);" class="small mb-1">KNOWLEDGE Skills (boost study)</div>
                             <ul class="small mb-0">
-                              <li><strong>Lorekeeper</strong> - +6 INT, Scholar/Scribe</li>
-                              <li><strong>Arcane Attunement</strong> - +5 INT +5 HP, Druid/Alchemist (rare)</li>
-                              <li><strong>Chirurgeon</strong> - +4 INT +8 HP, Healer</li>
-                              <li><strong>Polyglot</strong> - +4 INT +3 REP, Scribe/Diplomat</li>
-                              <li><strong>Chronicle</strong> - +5 INT +2 REP, Scholar/Advisor</li>
+                              <li><strong>Lorekeeper</strong> - +40% INT study, Scholar/Scribe</li>
+                              <li><strong>Arcane Attunement</strong> - +35% INT, +10% EXP (rare)</li>
+                              <li><strong>Chirurgeon</strong> - +25% INT, +25% rest HP, Healer</li>
+                              <li><strong>Polyglot</strong> - +25% INT, +20% EXP, Diplomat</li>
+                              <li><strong>Chronicle</strong> - +25% INT study, Scholar/Advisor</li>
                             </ul>
                           </div>
 
                           <div class="mt-3" style="font-size: 12px; color: var(--aw-text-muted);">
-                            <strong>Rarity:</strong> Common (60%), Uncommon (30%), Rare (10%)
+                            <strong>Rarity:</strong> Common (60%), Uncommon (30%), Rare (10%)<br>
+                            <strong>Note:</strong> Skills provide bonuses during actions, not flat stat increases.
                           </div>
                         </div>
                       </div>
