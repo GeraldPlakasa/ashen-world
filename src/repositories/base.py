@@ -235,6 +235,13 @@ def _ensure_yearly_columns(conn: sqlite3.Connection):
         "total_corruption": "total_corruption INTEGER DEFAULT 0",
         "total_births": "total_births INTEGER DEFAULT 0",
         "king_trait": "king_trait TEXT DEFAULT ''",
+        
+        # Emergency election tracking
+        "emergency_elections": "emergency_elections INTEGER DEFAULT 0",
+        
+        # Wealthiest family tracking
+        "wealthiest_family": "wealthiest_family TEXT DEFAULT ''",
+        "wealthiest_family_coins": "wealthiest_family_coins INTEGER DEFAULT 0",
 
         "most_atk_id": "most_atk_id INTEGER",
         "most_atk_name": "most_atk_name TEXT DEFAULT ''",

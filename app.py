@@ -311,6 +311,19 @@ def leaderboard():
 
     # All-time legends from archived years
     all_time = get_all_time_leaders(finalized_only=True) or {}
+    
+    # Compute current wealthiest family
+    family_wealth = {}
+    for v in characters:
+        if v.get("alive", True):
+            family = (v.get("family") or "").strip()
+            if family:
+                family_wealth[family] = family_wealth.get(family, 0) + int(v.get("coins", 0) or 0)
+    
+    current_wealthiest_family = None
+    if family_wealth:
+        top_family = max(family_wealth.items(), key=lambda x: x[1])
+        current_wealthiest_family = {"name": top_family[0], "coins": top_family[1]}
 
     return render_template(
         "leaderboard.html",
@@ -322,6 +335,7 @@ def leaderboard():
         current_entry=current_entry,
         current_champions=current_champions,
         all_time=all_time,
+        current_wealthiest_family=current_wealthiest_family,
     )
 
 @app.route("/history/csv", methods=["GET"])
@@ -345,6 +359,9 @@ def download_history_csv():
         "Treasury End",
         "Avg Tax Rate",
         "Total Corruption",
+        "Emergency Elections",
+        "Wealthiest Family",
+        "Wealthiest Family Coins",
         "Most ATK Name",
         "Most ATK Value",
         "Most INT Name",
@@ -379,6 +396,9 @@ def download_history_csv():
             str(y.get("treasury_end", 0)),
             f"{(y.get('avg_tax_rate', 0) or 0) * 100:.1f}%",
             str(y.get("total_corruption", 0)),
+            str(y.get("emergency_elections", 0)),
+            esc(y.get("wealthiest_family", "")),
+            str(y.get("wealthiest_family_coins", 0)),
             esc(y.get("most_atk_name", "")),
             str(y.get("most_atk_value", 0)),
             esc(y.get("most_int_name", "")),

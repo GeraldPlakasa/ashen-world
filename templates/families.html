@@ -210,7 +210,7 @@
                 <option value="all">All Families</option>
                 <option value="living">Has Living Members</option>
                 <option value="extinct">Extinct (No Living)</option>
-                <option value="wealthy">Wealthy (100+ coins)</option>
+                <option value="wealthy">Wealthy (2000+ coins)</option>
                 <option value="large">Large (5+ members)</option>
               </select>
             </div>
@@ -427,7 +427,7 @@
             matchesFilter = alive === 0;
             break;
           case 'wealthy':
-            matchesFilter = wealth >= 100;
+            matchesFilter = wealth >= 2000;
             break;
           case 'large':
             matchesFilter = total >= 5;

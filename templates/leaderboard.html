@@ -152,7 +152,19 @@
                       <div class="reign-stat-value" style="color: var(--aw-warning);">{{ current_entry.total_corruption or 0 }}</div>
                       <div class="reign-stat-label">Corruption</div>
                     </div>
+                    <div class="reign-stat">
+                      <div class="reign-stat-value" style="color: var(--aw-dead);">{{ current_entry.emergency_elections or 0 }}</div>
+                      <div class="reign-stat-label">Emergency Votes</div>
+                    </div>
                   </div>
+                  
+                  <!-- Wealthiest Family -->
+                  {% if current_wealthiest_family %}
+                  <div class="mt-3 p-2" style="background: rgba(234,179,8,0.1); border-radius: 8px; border: 1px solid rgba(234,179,8,0.2);">
+                    <div style="font-size: 10px; color: var(--aw-text-muted); text-transform: uppercase;">Wealthiest Family</div>
+                    <div style="font-size: 14px; color: var(--aw-gold); font-weight: 600;">{{ current_wealthiest_family.name }} <span style="font-weight: 400; font-size: 12px;">({{ current_wealthiest_family.coins }} coins)</span></div>
+                  </div>
+                  {% endif %}
                 </div>
 
                 <!-- Right Column: Champions -->
@@ -266,6 +278,16 @@
                           <div style="color: var(--aw-text-muted);">Corruption</div>
                           <div style="color: var(--aw-warning);">{{ y.total_corruption or 0 }} coins</div>
                         </div>
+                        <div class="col-6">
+                          <div style="color: var(--aw-text-muted);">Emergency Votes</div>
+                          <div style="color: var(--aw-dead);">{{ y.emergency_elections or 0 }}</div>
+                        </div>
+                        {% if y.wealthiest_family %}
+                        <div class="col-6">
+                          <div style="color: var(--aw-text-muted);">Top Family</div>
+                          <div style="color: var(--aw-gold);">{{ y.wealthiest_family }} ({{ y.wealthiest_family_coins or 0 }})</div>
+                        </div>
+                        {% endif %}
                       </div>
 
                       <div style="color: var(--aw-text-muted); font-size: 10px; margin-bottom: 6px; text-transform: uppercase;">Champions</div>

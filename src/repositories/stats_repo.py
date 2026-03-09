@@ -268,6 +268,40 @@ def get_all_time_leaders(finalized_only: bool = True) -> dict[str, AllTimeLeader
     }
 
 
+def increment_emergency_election(year: int) -> None:
+    """Increment emergency election count for a year."""
+    init_db()
+    with db_conn() as conn:
+        conn.execute("INSERT OR IGNORE INTO yearly_stats(year) VALUES(?);", (int(year),))
+        conn.execute(
+            """
+            UPDATE yearly_stats
+            SET emergency_elections = COALESCE(emergency_elections, 0) + 1,
+                updated_at = datetime('now')
+            WHERE year = ?;
+            """,
+            (int(year),),
+        )
+
+
+def update_wealthiest_family(year: int, family_name: str, total_coins: int) -> None:
+    """Update wealthiest family for a year if this one is richer."""
+    init_db()
+    with db_conn() as conn:
+        conn.execute("INSERT OR IGNORE INTO yearly_stats(year) VALUES(?);", (int(year),))
+        # Only update if this family is wealthier
+        conn.execute(
+            """
+            UPDATE yearly_stats
+            SET wealthiest_family = ?,
+                wealthiest_family_coins = ?,
+                updated_at = datetime('now')
+            WHERE year = ? AND COALESCE(wealthiest_family_coins, 0) < ?;
+            """,
+            (family_name, int(total_coins), int(year), int(total_coins)),
+        )
+
+
 # ---------------------------------------------------------------------------
 #  OPTIONAL: one-time migration from existing CSV/JSON into SQLite
 # ---------------------------------------------------------------------------

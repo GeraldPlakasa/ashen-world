@@ -233,6 +233,9 @@ def advance_one_day() -> tuple:
                 bank["last_election_year"] = int(yr)
                 bank["last_election_message"] = f"[Emergency] {emergency_msg}"
                 bank = update_tax_policy(characters, bank, log_it=False)
+                # Track emergency election in yearly stats
+                from src.repositories.stats_repo import increment_emergency_election
+                increment_emergency_election(yr)
 
         # --- Yearly stats bucket for CURRENT year (after elections/emergency) ---
         yr_now, _ = compute_year_and_day(new_total_day)
@@ -308,6 +311,19 @@ def advance_one_day() -> tuple:
             births_today=births_today,
             king_trait=king_trait,
         )
+        
+        # Track wealthiest family
+        from src.repositories.stats_repo import update_wealthiest_family
+        family_wealth = {}
+        for v in characters:
+            if v.get("alive", True):
+                family = (v.get("family") or "").strip()
+                if family:
+                    family_wealth[family] = family_wealth.get(family, 0) + int(v.get("coins", 0) or 0)
+        
+        if family_wealth:
+            top_family = max(family_wealth.items(), key=lambda x: x[1])
+            update_wealthiest_family(yr_now, top_family[0], top_family[1])
 
         # Persist updated state
         save_villagers(characters)
