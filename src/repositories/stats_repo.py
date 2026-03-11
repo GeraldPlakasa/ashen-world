@@ -80,7 +80,7 @@ def update_year_daily(
         # Ensure exists
         conn.execute("INSERT OR IGNORE INTO yearly_stats(year) VALUES(?);", (int(year),))
 
-        # Update rollup
+        # Update rollup (cap days_counted at DAYS_PER_YEAR to prevent overflow)
         conn.execute(
             """
             UPDATE yearly_stats
@@ -92,7 +92,7 @@ def update_year_daily(
                 total_immigrants = COALESCE(total_immigrants, 0) + ?,
                 total_births = COALESCE(total_births, 0) + ?,
                 tax_rate_sum = COALESCE(tax_rate_sum, 0) + ?,
-                days_counted = COALESCE(days_counted, 0) + 1,
+                days_counted = MIN(COALESCE(days_counted, 0) + 1, ?),
                 treasury_end = ?,
                 total_corruption = COALESCE(total_corruption, 0) + ?,
                 updated_at = datetime('now')
@@ -106,6 +106,7 @@ def update_year_daily(
                 int(immigrants_today),
                 int(births_today),
                 float(tax_rate_today),
+                config.DAYS_PER_YEAR,  # Cap for days_counted
                 int(treasury_end),
                 int(corruption_today),
                 int(year),
