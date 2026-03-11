@@ -60,7 +60,7 @@ ACHIEVEMENTS = {
     },
     "elder_statesman": {
         "name": "Elder Statesman",
-        "description": "Become King at age 60+",
+        "description": "Become King at age 80+",
         "icon": "👑",
         "reward": {"type": "both", "stat": "rep", "value": 20, "trait": "Wise"},
     },
@@ -247,12 +247,12 @@ def check_wealthy(v: Villager) -> bool:
 
 
 def check_elder_statesman(v: Villager) -> bool:
-    """Check if villager became King at age 60+."""
+    """Check if villager became King at age 80+."""
     if has_achievement(v, "elder_statesman"):
         return False
     job = v.get("job", "")
     age = int(v.get("age", 0) or 0)
-    return job == "King" and age >= 60
+    return job == "King" and age >= 80
 
 
 def check_questmaster(v: Villager) -> bool:

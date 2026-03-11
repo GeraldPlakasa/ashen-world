@@ -183,7 +183,7 @@
                               <div class="feature-box">
                                 <div style="color: var(--aw-text);" class="small mb-1">Elder Statesman</div>
                                 <ul class="small mb-0">
-                                  <li>Become King at age 60+</li>
+                                  <li>Become King at age 80+</li>
                                   <li><strong>Reward:</strong> +20 REP, "Wise" trait</li>
                                 </ul>
                               </div>
@@ -192,7 +192,7 @@
                               <div class="feature-box">
                                 <div style="color: var(--aw-text);" class="small mb-1">Iron Will</div>
                                 <ul class="small mb-0">
-                                  <li>Survive with HP below 10, five times</li>
+                                  <li>Survive combat with HP below 80, five times</li>
                                   <li><strong>Reward:</strong> +15 DEF, "Resilient" trait</li>
                                 </ul>
                               </div>
@@ -218,7 +218,7 @@
                       </h2>
                       <div id="cQuests" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                         <div class="accordion-body">
-                          <p class="mb-3">Every 2 years, the King issues a quest. Villagers volunteer based on their traits, stats, and economic conditions. Parties of 2-5 villagers embark on missions with rewards and risks.</p>
+                          <p class="mb-3">Every 3 years, the King issues a quest. Villagers volunteer based on their traits, stats, and economic conditions. Parties of 2-5 villagers embark on missions with rewards and risks.</p>
                           
                           <div class="row g-2 mb-3">
                             <div class="col-md-6">
@@ -729,11 +729,11 @@
                               <div class="feature-box">
                                 <div style="color: var(--aw-text);" class="small mb-1">🏷️ Relationship Labels</div>
                                 <ul class="small mb-0">
-                                  <li><strong>Enemy:</strong> -100 to -50</li>
-                                  <li><strong>Rival:</strong> -50 to -10</li>
-                                  <li><strong>Friend:</strong> +30 to +60</li>
-                                  <li><strong>Best Friend:</strong> +60 to +85</li>
-                                  <li><strong>Love:</strong> +85 to +120</li>
+                                  <li><strong>Enemy:</strong> ≤ -60</li>
+                                  <li><strong>Rival:</strong> -59 to -30</li>
+                                  <li><strong>Friend:</strong> +30 to +59</li>
+                                  <li><strong>Best Friend:</strong> +60 to +84</li>
+                                  <li><strong>Love:</strong> +85 to +120 (M-F only)</li>
                                 </ul>
                               </div>
                             </div>
@@ -763,8 +763,8 @@
                               <div class="feature-box">
                                 <div style="color: var(--aw-text);" class="small mb-1">Marriage Requirements</div>
                                 <ul class="small mb-0">
-                                  <li><strong>Love threshold:</strong> 70+ relationship score</li>
-                                  <li><strong>Age:</strong> Both partners must be 18+</li>
+                                  <li><strong>Love threshold:</strong> 85+ relationship score</li>
+                                  <li><strong>Age:</strong> Both partners must be 18-60</li>
                                   <li><strong>Family:</strong> Different families only</li>
                                   <li><strong>Status:</strong> Both must be unmarried</li>
                                 </ul>
@@ -876,9 +876,9 @@
                               <div class="feature-box">
                                 <div style="color: var(--aw-text);" class="small mb-1">📊 Leadership Score</div>
                                 <ul class="small mb-0">
-                                  <li>INT × 1.2 + REP × 0.9 + Level × 2.0</li>
-                                  <li>Trait bonuses: Wise (+14), Generous (+8)</li>
-                                  <li>Trait penalties: Greedy (-10), Deceitful (-12)</li>
+                                  <li>INT×1.2 + REP×0.9 + Level×2.0 + ATK×0.4 + DEF×0.5</li>
+                                  <li>Trait bonuses: Wise (+14), Generous/Loyal (+8), Brave/Empathic/Diligent (+6)</li>
+                                  <li>Trait penalties: Deceitful (-12), Greedy/Lazy (-10), Hot-headed (-8)</li>
                                   <li>Age preference: 22-55 years optimal</li>
                                 </ul>
                               </div>
@@ -921,10 +921,10 @@
                               <div class="feature-box">
                                 <div style="color: var(--aw-text);" class="small mb-1">📈 Tax System</div>
                                 <ul class="small mb-0">
-                                  <li><strong>Rate:</strong> 0–35% (set by King's traits)</li>
+                                  <li><strong>Base rate:</strong> 10% (capped 0–35%)</li>
                                   <li><strong>Applied to:</strong> Work income, hunt loot</li>
-                                  <li><strong>Generous King:</strong> Lower tax (5-10%)</li>
-                                  <li><strong>Greedy King:</strong> Higher tax (25-35%)</li>
+                                  <li><strong>Generous:</strong> -4%, <strong>Greedy:</strong> +8%</li>
+                                  <li><strong>Buildings:</strong> Tax Office/Treasury add %</li>
                                 </ul>
                               </div>
                             </div>
@@ -1248,7 +1248,7 @@
                                 <ul class="small mb-0">
                                   <li><strong>Actions:</strong> +40% buy food, +40% socialize, +50% hangout, -20% steal</li>
                                   <li><strong>Leadership:</strong> +8 score</li>
-                                  <li><strong>Tax Policy:</strong> Lower taxes (5-10%) as King</li>
+                                  <li><strong>Tax Policy:</strong> -4% tax rate as King</li>
                                 </ul>
                               </div>
                             </div>
@@ -1338,7 +1338,7 @@
                                 <ul class="small mb-0">
                                   <li><strong>Actions:</strong> +80% work, +50% steal</li>
                                   <li><strong>Leadership:</strong> -10 score</li>
-                                  <li><strong>Tax Policy:</strong> Higher taxes (25-35%) as King</li>
+                                  <li><strong>Tax Policy:</strong> +8% tax rate as King</li>
                                   <li><strong>Corruption:</strong> Higher chance to skim treasury</li>
                                 </ul>
                               </div>
