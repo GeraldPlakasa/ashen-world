@@ -95,6 +95,34 @@ QUEST_TYPES = {
         "gold_reward": (200, 500),
         "gear_chance": 0.30,
     },
+    "RESCUE": {
+        "name": "Rescue Mission",
+        "descriptions": [
+            "Rescue the villagers kidnapped by {enemy}",
+            "Save the hostages held by {enemy}",
+            "Free the prisoners from {enemy} camp",
+        ],
+        "enemies": ["Bandits", "Orcs", "Slavers", "Cultists", "Goblins", "Dark Mages"],
+        "stat_focus": "atk",
+        "stat_threshold": 240,  # BRUTAL - need elite warriors
+        "gold_reward": (100, 250),
+        "gear_chance": 0.35,
+        "special": "rescue",  # Can restore dead villagers
+    },
+    "TREASURE_HUNT": {
+        "name": "Treasure Hunt",
+        "descriptions": [
+            "Find the legendary {treasure} hidden in the old ruins",
+            "Recover the lost {treasure} from the ancient temple",
+            "Retrieve the fabled {treasure} before others claim it",
+        ],
+        "treasures": ["Crown of Kings", "Dragon's Hoard", "Enchanted Chest", "Sacred Relics", "Lost Artifacts", "Golden Idol"],
+        "stat_focus": "int",
+        "stat_threshold": 200,  # Moderate - need smart explorers
+        "gold_reward": (300, 700),
+        "gear_chance": 0.50,
+        "special": "treasure",  # Extra gold bonus
+    },
 }
 
 # Gear rewards for quest success (similar to shop items)
@@ -123,32 +151,33 @@ QUEST_GEAR_T3 = [
 
 # Trait influences on quest type preference (for King)
 KING_TRAIT_QUEST_WEIGHTS = {
-    "Brave": {"COMBAT": 2.0, "EXPLORATION": 1.5},
-    "Wise": {"DIPLOMACY": 2.0, "TRADE": 1.3},
-    "Greedy": {"TRADE": 2.5, "EXPLORATION": 1.2},
-    "Ambitious": {"COMBAT": 1.5, "DIPLOMACY": 1.5, "EXPLORATION": 1.5},
+    "Brave": {"COMBAT": 2.0, "EXPLORATION": 1.5, "RESCUE": 2.0},
+    "Wise": {"DIPLOMACY": 2.0, "TRADE": 1.3, "TREASURE_HUNT": 1.5},
+    "Greedy": {"TRADE": 2.5, "EXPLORATION": 1.2, "TREASURE_HUNT": 2.5},
+    "Ambitious": {"COMBAT": 1.5, "DIPLOMACY": 1.5, "EXPLORATION": 1.5, "TREASURE_HUNT": 1.5},
     "Cautious": {"DIPLOMACY": 2.0, "TRADE": 1.5},
-    "Hot-headed": {"COMBAT": 2.5},
-    "Clever": {"TRADE": 2.0, "DIPLOMACY": 1.5},
-    "Generous": {"DIPLOMACY": 1.5, "TRADE": 1.5},
+    "Hot-headed": {"COMBAT": 2.5, "RESCUE": 1.5},
+    "Clever": {"TRADE": 2.0, "DIPLOMACY": 1.5, "TREASURE_HUNT": 2.0},
+    "Generous": {"DIPLOMACY": 1.5, "TRADE": 1.5, "RESCUE": 2.0},
     "Diligent": {"TRADE": 1.5, "EXPLORATION": 1.5},
+    "Protective": {"RESCUE": 2.5, "COMBAT": 1.5},
 }
 
 # Trait influences on volunteer willingness
 VOLUNTEER_TRAIT_WEIGHTS = {
-    "Brave": {"COMBAT": 2.0, "EXPLORATION": 1.5},
-    "Reckless": {"COMBAT": 2.5, "EXPLORATION": 2.0},
-    "Cautious": {"DIPLOMACY": 1.5, "TRADE": 1.5, "COMBAT": 0.3},
-    "Wise": {"DIPLOMACY": 2.0},
-    "Clever": {"DIPLOMACY": 1.5, "TRADE": 1.5},
-    "Greedy": {"TRADE": 2.5},
-    "Ambitious": {"COMBAT": 1.3, "EXPLORATION": 1.5, "DIPLOMACY": 1.3},
-    "Lazy": {"COMBAT": 0.2, "EXPLORATION": 0.3, "TRADE": 0.5, "DIPLOMACY": 0.5},
-    "Curious": {"EXPLORATION": 2.5},
-    "Hot-headed": {"COMBAT": 2.0},
-    "Protective": {"COMBAT": 1.5},
-    "Hunter": {"COMBAT": 2.5, "EXPLORATION": 1.5},
-    "Veteran": {"COMBAT": 2.0, "EXPLORATION": 1.8, "DIPLOMACY": 1.5, "TRADE": 1.5},
+    "Brave": {"COMBAT": 2.0, "EXPLORATION": 1.5, "RESCUE": 2.5},
+    "Reckless": {"COMBAT": 2.5, "EXPLORATION": 2.0, "RESCUE": 2.0},
+    "Cautious": {"DIPLOMACY": 1.5, "TRADE": 1.5, "COMBAT": 0.3, "RESCUE": 0.5},
+    "Wise": {"DIPLOMACY": 2.0, "TREASURE_HUNT": 1.5},
+    "Clever": {"DIPLOMACY": 1.5, "TRADE": 1.5, "TREASURE_HUNT": 2.0},
+    "Greedy": {"TRADE": 2.5, "TREASURE_HUNT": 2.5},
+    "Ambitious": {"COMBAT": 1.3, "EXPLORATION": 1.5, "DIPLOMACY": 1.3, "TREASURE_HUNT": 1.5},
+    "Lazy": {"COMBAT": 0.2, "EXPLORATION": 0.3, "TRADE": 0.5, "DIPLOMACY": 0.5, "RESCUE": 0.3, "TREASURE_HUNT": 0.4},
+    "Curious": {"EXPLORATION": 2.5, "TREASURE_HUNT": 2.0},
+    "Hot-headed": {"COMBAT": 2.0, "RESCUE": 1.5},
+    "Protective": {"COMBAT": 1.5, "RESCUE": 2.5},
+    "Hunter": {"COMBAT": 2.5, "EXPLORATION": 1.5, "TREASURE_HUNT": 1.5},
+    "Veteran": {"COMBAT": 2.0, "EXPLORATION": 1.8, "DIPLOMACY": 1.5, "TRADE": 1.5, "RESCUE": 2.0, "TREASURE_HUNT": 1.5},
 }
 
 

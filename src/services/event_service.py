@@ -38,6 +38,8 @@ EVENT_WEIGHTS = {
     "INVASION": 12,
     "GOOD_HARVEST": 25,
     "BLESSING": 15,
+    "WINDFALL": 12,     # Positive: treasure discovery
+    "STORM": 10,        # Negative: natural disaster
 }
 
 # In-memory event history (will be reset on server restart)
@@ -401,6 +403,132 @@ def _apply_blessing(characters: list[Villager], bank: Bank | None, current_day: 
     return msg, affected
 
 
+def _apply_windfall(characters: list[Villager], bank: Bank | None, current_day: int) -> tuple[str, int]:
+    """
+    WINDFALL event: A traveling merchant or hidden treasure brings fortune.
+    Market boosts effects.
+    """
+    alive = [c for c in characters if c.get("alive", True)]
+    if not alive:
+        return "Fortune arrived but no one claimed it.", 0
+    
+    # Market boosts windfall
+    market_level = get_building_level(bank, "market") if bank else 0
+    bonus_mod = 1.0 + market_level * 0.3
+    
+    affected = 0
+    total_coins = 0
+    
+    # Pick lucky villagers (30-50% of population)
+    lucky_ones = [v for v in alive if random.random() < 0.40]
+    
+    for v in lucky_ones:
+        affected += 1
+        
+        # Coin bonus: 20-60 coins per villager
+        coins = int(v.get("coins", 0) or 0)
+        coin_bonus = int(rand_int(20, 60) * bonus_mod)
+        v["coins"] = coins + coin_bonus
+        total_coins += coin_bonus
+        
+        # Small chance for stat boost
+        if random.random() < 0.15:
+            stat = random.choice(["atk", "def", "int"])
+            current = int(v.get(stat, 10) or 10)
+            boost = rand_int(1, 2)
+            v[stat] = current + boost
+            
+            if v.get("last_action"):
+                v["last_action"] = f"{v['last_action']} / found treasure (+{coin_bonus} coins, +{boost} {stat})"
+            else:
+                v["last_action"] = f"found treasure (+{coin_bonus} coins, +{boost} {stat})"
+        else:
+            if v.get("last_action"):
+                v["last_action"] = f"{v['last_action']} / found treasure (+{coin_bonus} coins)"
+            else:
+                v["last_action"] = f"found treasure (+{coin_bonus} coins)"
+    
+    # Village treasury also gets bonus
+    if bank:
+        balance = int(bank.get("balance", 0) or 0)
+        treasury_gain = int(rand_int(200, 500) * bonus_mod)
+        bank["balance"] = balance + treasury_gain
+        msg = f"💰 WINDFALL! A merchant caravan brought riches! {affected} villagers found treasure. Treasury gained {treasury_gain} coins!"
+    else:
+        msg = f"💰 WINDFALL! {affected} villagers found treasure worth {total_coins} coins total!"
+    
+    return msg, affected
+
+
+def _apply_storm(characters: list[Villager], bank: Bank | None, current_day: int) -> tuple[str, int]:
+    """
+    STORM event: A terrible storm damages buildings and injures villagers.
+    Walls reduce impact.
+    """
+    alive = [c for c in characters if c.get("alive", True)]
+    if not alive:
+        return "Storm passed over an empty village.", 0
+    
+    # Walls reduce storm damage
+    walls_level = get_building_level(bank, "walls") if bank else 0
+    severity_mod = max(0.4, 1.0 - walls_level * 0.2)
+    
+    affected = 0
+    deaths = 0
+    
+    for v in alive:
+        # 40-60% of villagers affected
+        if random.random() > 0.50:
+            continue
+        
+        affected += 1
+        hp = int(v.get("hp", 100) or 100)
+        
+        # Damage: 10-30 HP from debris/lightning
+        damage = int(rand_int(10, 30) * severity_mod)
+        new_hp = max(0, hp - damage)
+        v["hp"] = new_hp
+        
+        if new_hp <= 0:
+            v["alive"] = False
+            v["death_day"] = current_day
+            v["last_action"] = "killed by storm"
+            deaths += 1
+        else:
+            if v.get("last_action"):
+                v["last_action"] = f"{v['last_action']} / injured in storm (-{damage} HP)"
+            else:
+                v["last_action"] = f"injured in storm (-{damage} HP)"
+    
+    # Storm damages buildings and treasury
+    coins_lost = 0
+    building_damage = ""
+    if bank:
+        balance = int(bank.get("balance", 0) or 0)
+        coins_lost = int(balance * random.uniform(0.05, 0.15) * severity_mod)
+        bank["balance"] = max(0, balance - coins_lost)
+        
+        # Damage random buildings
+        buildings = bank.get("buildings", {})
+        if buildings:
+            damaged_buildings = []
+            for bname, bdata in buildings.items():
+                if random.random() < 0.3 * severity_mod:
+                    health = bdata.get("health", 100)
+                    damage_pct = rand_int(10, 25)
+                    bdata["health"] = max(0, health - damage_pct)
+                    damaged_buildings.append(bname)
+            if damaged_buildings:
+                building_damage = f" Buildings damaged: {', '.join(damaged_buildings)}."
+    
+    if deaths > 0:
+        msg = f"🌪️ TERRIBLE STORM! {deaths} villagers killed, {affected - deaths} injured. Lost {coins_lost} coins to repairs.{building_damage}"
+    else:
+        msg = f"🌪️ STORM struck the village! {affected} villagers injured. Lost {coins_lost} coins to repairs.{building_damage}"
+    
+    return msg, affected
+
+
 def _get_current_year(current_day: int) -> int:
     """Calculate the current year from total day (1-indexed)."""
     return ((current_day - 1) // DAYS_PER_YEAR) + 1
@@ -469,6 +597,8 @@ def maybe_trigger_event(
         "INVASION": _apply_invasion,
         "GOOD_HARVEST": _apply_good_harvest,
         "BLESSING": _apply_blessing,
+        "WINDFALL": _apply_windfall,
+        "STORM": _apply_storm,
     }
     
     handler = event_handlers.get(event_type)
