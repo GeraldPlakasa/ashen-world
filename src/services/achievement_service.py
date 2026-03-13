@@ -309,7 +309,7 @@ def trigger_survivor_achievement(v: Villager) -> bool:
 
 def trigger_iron_will_check(v: Villager) -> bool:
     """
-    Called when villager's HP drops below 10 but survives.
+    Called when villager's HP drops below 80 but survives combat.
     Tracks count internally and awards at 5 occurrences.
     """
     if has_achievement(v, "iron_will"):

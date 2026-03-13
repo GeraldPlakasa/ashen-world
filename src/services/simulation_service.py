@@ -56,10 +56,10 @@ def elder_decay_phase(characters: list[Villager], current_day: int = 0) -> int:
     """
     Apply daily decay for elderly villagers (70+).
     
-    - Age 70-79: Small HP decay (1-3), minor stat decay chance
-    - Age 80-89: Moderate HP decay (2-5), stat decay, death chance
-    - Age 90-99: Heavy HP decay (3-8), stat decay, higher death chance
-    - Age 100+: Severe decay, high death chance
+    - Age 70-79: HP decay 0-1, 2% stat decay chance, ~1.8% yearly death
+    - Age 80-89: HP decay 1-2, 5% stat decay chance, ~7% yearly death
+    - Age 90-99: HP decay 1-3, 10% stat decay chance, ~17% yearly death
+    - Age 100+: HP decay 2-5, 15% stat decay chance, ~30% yearly death
     
     Returns number of natural deaths from old age.
     """
