@@ -44,6 +44,7 @@ DYNASTY_BONUS = 1000             # extra leadership if same family as previous K
 QUEST_INTERVAL_YEARS = 3         # King issues quests every 3 years
 
 MAX_DEAD_YEARS = 25
+MAX_GRAVEYARD_YEARS = 100  # Remove from graveyard after 100 years dead
 
 CHILD_MAX_AGE = 16
 

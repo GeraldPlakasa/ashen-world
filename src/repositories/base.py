@@ -278,6 +278,7 @@ def _ensure_graveyard_columns(conn: sqlite3.Connection):
         "childrenIds": "childrenIds TEXT DEFAULT '[]'",
         "spouseId": "spouseId INTEGER DEFAULT 0",
         "born_day": "born_day INTEGER DEFAULT 0",
+        "death_day": "death_day INTEGER DEFAULT 0",
         "created_at": "created_at TEXT DEFAULT (datetime('now'))",
     }
     for col, ddl in desired.items():

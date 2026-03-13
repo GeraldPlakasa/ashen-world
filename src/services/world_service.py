@@ -13,11 +13,13 @@ from config import (
     AUTO_SIM_SECONDS,
     ELECTION_INTERVAL_YEARS,
     MAX_DEAD_YEARS,
+    MAX_GRAVEYARD_YEARS,
 )
 from src.repositories.villager_repo import (
     save_villagers,
     load_villagers,
     graveyard_upsert_from_villager,
+    graveyard_cleanup_old,
 )
 from src.repositories.world_repo import (
     load_day,
@@ -286,6 +288,14 @@ def advance_one_day() -> tuple:
             # DO NOT append (means pruned)
 
         characters = pruned_characters
+
+        # Clean up graveyard entries older than MAX_GRAVEYARD_YEARS
+        try:
+            cleaned = graveyard_cleanup_old(new_total_day, MAX_GRAVEYARD_YEARS)
+            if cleaned > 0:
+                print(f"[graveyard] Cleaned {cleaned} entries older than {MAX_GRAVEYARD_YEARS} years")
+        except Exception as exc:
+            print(f"[graveyard] Cleanup failed: {exc}")
 
         # --- For yearly stats: compute immigrants/deaths TODAY ---
         after_ids = {int(v.get("id", 0) or 0) for v in characters if int(v.get("id", 0) or 0) > 0}

@@ -79,6 +79,15 @@
                     <input type="text" class="feature-search" id="featureSearch" placeholder="🔍 Search features..." autocomplete="off" />
                   </div>
 
+                  <!-- Sort Dropdown -->
+                  <div class="mb-3">
+                    <select class="form-select form-select-sm" id="tocSort" style="background: var(--aw-card-bg); color: var(--aw-text); border-color: var(--aw-border);">
+                      <option value="default">Sort: Default</option>
+                      <option value="az">Sort: A-Z</option>
+                      <option value="za">Sort: Z-A</option>
+                    </select>
+                  </div>
+
                   <div class="list-group list-group-flush" id="tocList" style="font-size: 13px;">
                     <a class="list-group-item list-group-item-action toc-link" href="#achievements" data-target="cAchievements">Achievements</a>
                     <a class="list-group-item list-group-item-action toc-link" href="#quests" data-target="cQuests">Quest System</a>
@@ -1628,19 +1637,54 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   
-  <!-- Search functionality -->
+  <!-- Search and Sort functionality -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const searchInput = document.getElementById('featureSearch');
-      const tocLinks = document.querySelectorAll('.toc-link');
-      const accordion = document.getElementById('featuresAccordion');
+      const sortSelect = document.getElementById('tocSort');
+      const tocList = document.getElementById('tocList');
+      let tocLinks = Array.from(document.querySelectorAll('.toc-link'));
       
+      // Store original order
+      const originalOrder = tocLinks.map(link => link.cloneNode(true));
+      
+      // Sort functionality
+      sortSelect.addEventListener('change', function() {
+        const sortType = this.value;
+        let sortedLinks;
+        
+        if (sortType === 'default') {
+          sortedLinks = originalOrder.map(link => link.cloneNode(true));
+        } else if (sortType === 'az') {
+          sortedLinks = [...tocLinks].sort((a, b) => 
+            a.textContent.trim().localeCompare(b.textContent.trim())
+          );
+        } else if (sortType === 'za') {
+          sortedLinks = [...tocLinks].sort((a, b) => 
+            b.textContent.trim().localeCompare(a.textContent.trim())
+          );
+        }
+        
+        // Re-render TOC
+        tocList.innerHTML = '';
+        sortedLinks.forEach(link => {
+          const newLink = link.cloneNode(true);
+          attachLinkEvents(newLink);
+          tocList.appendChild(newLink);
+        });
+        
+        // Update tocLinks reference
+        tocLinks = Array.from(document.querySelectorAll('.toc-link'));
+      });
+      
+      // Search functionality
       searchInput.addEventListener('input', function() {
         const query = this.value.toLowerCase().trim();
+        const currentLinks = document.querySelectorAll('.toc-link');
         
         if (query === '') {
           // Reset: show all links, remove highlights
-          tocLinks.forEach(link => {
+          currentLinks.forEach(link => {
             link.classList.remove('hidden', 'highlight');
           });
           return;
@@ -1648,7 +1692,7 @@
         
         let firstMatch = null;
         
-        tocLinks.forEach(link => {
+        currentLinks.forEach(link => {
           const text = link.textContent.toLowerCase();
           const targetId = link.getAttribute('data-target');
           const accordionBody = document.getElementById(targetId);
@@ -1668,20 +1712,41 @@
         
         // Auto-open first match
         if (firstMatch) {
-          const collapseEl = document.getElementById(firstMatch.targetId);
-          if (collapseEl && !collapseEl.classList.contains('show')) {
-            const bsCollapse = new bootstrap.Collapse(collapseEl, { toggle: true });
-          }
+          openAccordion(firstMatch.targetId);
         }
       });
       
-      // Clear highlights when clicking a link
-      tocLinks.forEach(link => {
-        link.addEventListener('click', function() {
+      // Function to open accordion
+      function openAccordion(targetId) {
+        const collapseEl = document.getElementById(targetId);
+        if (collapseEl && !collapseEl.classList.contains('show')) {
+          const bsCollapse = new bootstrap.Collapse(collapseEl, { toggle: true });
+        }
+      }
+      
+      // Function to attach events to a link
+      function attachLinkEvents(link) {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Clear search
           searchInput.value = '';
-          tocLinks.forEach(l => l.classList.remove('hidden', 'highlight'));
+          document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('hidden', 'highlight'));
+          
+          // Auto-open the accordion
+          const targetId = this.getAttribute('data-target');
+          openAccordion(targetId);
+          
+          // Scroll to the section
+          const targetSection = document.getElementById(targetId);
+          if (targetSection) {
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
         });
-      });
+      }
+      
+      // Attach events to initial links
+      tocLinks.forEach(link => attachLinkEvents(link));
     });
   </script>
 </body>

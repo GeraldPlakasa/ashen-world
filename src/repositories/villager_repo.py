@@ -126,6 +126,7 @@ def graveyard_upsert_from_villager(v: Villager) -> None:
         "childrenIds": json.dumps(v.get("childrenIds", []) or [], ensure_ascii=False),
         "spouseId": int(v.get("spouseId", 0) or 0),
         "born_day": int(v.get("born_day", 0) or 0),
+        "death_day": int(v.get("death_day", 0) or 0),
     }
 
     with db_conn() as conn:
@@ -133,9 +134,9 @@ def graveyard_upsert_from_villager(v: Villager) -> None:
             """
             INSERT INTO graveyard (
                 id, name, family, gender, traits, origin, owner,
-                motherId, fatherId, childrenIds, spouseId, born_day
+                motherId, fatherId, childrenIds, spouseId, born_day, death_day
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 name=excluded.name,
                 family=excluded.family,
@@ -147,7 +148,8 @@ def graveyard_upsert_from_villager(v: Villager) -> None:
                 fatherId=excluded.fatherId,
                 childrenIds=excluded.childrenIds,
                 spouseId=excluded.spouseId,
-                born_day=excluded.born_day;
+                born_day=excluded.born_day,
+                death_day=excluded.death_day;
             """,
             (
                 payload["id"],
@@ -162,6 +164,7 @@ def graveyard_upsert_from_villager(v: Villager) -> None:
                 payload["childrenIds"],
                 payload["spouseId"],
                 payload["born_day"],
+                payload["death_day"],
             ),
         )
 
@@ -210,3 +213,24 @@ def graveyard_get_many(ids: list[int]) -> dict[int, GraveyardRecord]:
             r["childrenIds"] = []
         out[int(r["id"])] = r
     return out
+
+
+def graveyard_cleanup_old(current_total_day: int, max_years: int) -> int:
+    """
+    Remove graveyard entries where death occurred more than max_years ago.
+    Returns count of deleted records.
+    """
+    init_db()
+    max_dead_days = max_years * config.DAYS_PER_YEAR
+    cutoff_day = current_total_day - max_dead_days
+
+    with db_conn() as conn:
+        # Delete entries where death_day > 0 and death_day < cutoff
+        cursor = conn.execute(
+            """
+            DELETE FROM graveyard
+            WHERE death_day > 0 AND death_day < ?;
+            """,
+            (cutoff_day,),
+        )
+        return cursor.rowcount
