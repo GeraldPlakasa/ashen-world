@@ -703,7 +703,6 @@
                                 <div style="color: var(--aw-text);" class="small mb-1">❤️ Recovery Actions</div>
                                 <ul class="small mb-0">
                                   <li><strong>Rest</strong> — Recover 2-6 HP. Triggered when HP low. Clinic/Tavern boost healing.</li>
-                                  <li><strong>Heal Others</strong> — Healers can restore HP to injured villagers.</li>
                                 </ul>
                               </div>
                             </div>
@@ -712,8 +711,6 @@
                                 <div style="color: var(--aw-text);" class="small mb-1">⚔️ Combat Actions</div>
                                 <ul class="small mb-0">
                                   <li><strong>Hunt</strong> — Fight monsters. Win: XP + coins + minor damage. Lose: significant HP loss.</li>
-                                  <li><strong>Patrol</strong> — Guards/Soldiers patrol, may encounter threats.</li>
-                                  <li><strong>Duel</strong> — Challenge another villager. Affects reputation.</li>
                                 </ul>
                               </div>
                             </div>
@@ -725,9 +722,7 @@
                                 <div style="color: var(--aw-text);" class="small mb-1">🤝 Social Actions</div>
                                 <ul class="small mb-0">
                                   <li><strong>Socialize</strong> — Improve relationship with one villager (+5-15 points).</li>
-                                  <li><strong>Hangout</strong> — Group activity, smaller bonus to multiple villagers.</li>
-                                  <li><strong>Flirt</strong> — Romantic interest, can lead to courtship/marriage.</li>
-                                  <li><strong>Gossip</strong> — Spread rumors, affects reputation of others.</li>
+                                  <li><strong>Hangout</strong> — Group activity with 2-5 villagers (+3-10 each).</li>
                                 </ul>
                               </div>
                             </div>
@@ -735,9 +730,7 @@
                               <div class="feature-box">
                                 <div style="color: var(--aw-text);" class="small mb-1">🎭 Risk Actions</div>
                                 <ul class="small mb-0">
-                                  <li><strong>Steal</strong> — Attempt theft. Success: coins. Fail: reputation loss, possible jail.</li>
-                                  <li><strong>Assassinate</strong> — Rare, high-risk action by certain traits.</li>
-                                  <li><strong>Rebel</strong> — Villagers with low loyalty may rebel against King.</li>
+                                  <li><strong>Steal</strong> — Attempt theft. Success: 5-15 coins. Fail: reputation loss (-1-4 REP).</li>
                                 </ul>
                               </div>
                             </div>
@@ -750,9 +743,9 @@
                                 <ul class="small mb-0">
                                   <li><strong>Priority System:</strong> Survival (hunger/HP) → Combat (if warrior) → Economic → Social</li>
                                   <li><strong>Trait Influence:</strong> Brave villagers hunt more, Lazy ones rest more, Greedy ones work/steal more</li>
-                                  <li><strong>Job Influence:</strong> Soldiers train/patrol, Merchants work/trade, Scholars study</li>
-                                  <li><strong>Relationship Influence:</strong> Friends hangout together, rivals may duel, lovers flirt</li>
-                                  <li><strong>Random Factor:</strong> 10-20% chance to do unexpected actions for variety</li>
+                                  <li><strong>Job Influence:</strong> Soldiers train/hunt, Merchants work, Scholars study</li>
+                                  <li><strong>Building Influence:</strong> Barracks → more training/hunting, Library → more studying</li>
+                                  <li><strong>Weighted Random:</strong> Actions chosen probabilistically based on all factors</li>
                                 </ul>
                               </div>
                             </div>
