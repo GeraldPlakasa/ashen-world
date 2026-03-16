@@ -45,6 +45,7 @@ Villager = TypedDict(
         "born_day": int,
         "last_birth_day": int,
         "skills": str,  # Comma-separated skill names
+        "skill_learning": str,  # JSON dict of {skill_name: lesson_count} for mentoring progress
         "questWins": int,
         "achievements": str,  # JSON list of achievement IDs
         "kingsVotedFor": str,  # JSON list of king IDs voted for

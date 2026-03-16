@@ -558,3 +558,95 @@ def get_skill_display(villager: "Villager") -> str:
     if not skills:
         return ""
     return ", ".join(skills)
+
+
+# ════════════════════════════════════════════════════════════════
+# SKILL LEARNING SYSTEM (for mentoring)
+# ════════════════════════════════════════════════════════════════
+
+import json
+
+def get_learning_progress(villager: "Villager") -> dict[str, int]:
+    """
+    Get the skill learning progress for a villager.
+    Returns a dict of {skill_name: lesson_count}.
+    Stored in villager["skill_learning"] as JSON.
+    """
+    raw = villager.get("skill_learning", "")
+    if not raw:
+        return {}
+    try:
+        return json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
+def set_learning_progress(villager: "Villager", progress: dict[str, int]) -> None:
+    """
+    Set the skill learning progress for a villager.
+    """
+    villager["skill_learning"] = json.dumps(progress)
+
+
+def add_learning_progress(villager: "Villager", skill_name: str, amount: int = 1) -> int:
+    """
+    Add learning progress for a specific skill.
+    Returns the new total progress for that skill.
+    """
+    progress = get_learning_progress(villager)
+    current = progress.get(skill_name, 0)
+    progress[skill_name] = current + amount
+    set_learning_progress(villager, progress)
+    return progress[skill_name]
+
+
+def reset_learning_progress(villager: "Villager", skill_name: str) -> None:
+    """
+    Reset learning progress for a specific skill to 0.
+    Used when learning fails.
+    """
+    progress = get_learning_progress(villager)
+    if skill_name in progress:
+        progress[skill_name] = 0
+        set_learning_progress(villager, progress)
+
+
+def add_skill_to_villager(villager: "Villager", skill_name: str) -> bool:
+    """
+    Add a skill to a villager (after completing learning).
+    Returns True if skill was added, False if already had it.
+    """
+    # Validate skill exists
+    if skill_name not in SKILLS:
+        return False
+    
+    current_skills = parse_skills(villager.get("skills", ""))
+    
+    # Check if already has this skill
+    if skill_name in current_skills:
+        return False
+    
+    # Add the skill
+    current_skills.append(skill_name)
+    villager["skills"] = ",".join(current_skills)
+    
+    # Apply stat bonuses from the new skill
+    info = SKILLS[skill_name]
+    for stat, bonus in info.get("stat_bonus", {}).items():
+        villager[stat] = villager.get(stat, 0) + bonus
+    
+    return True
+
+
+def get_learning_display(villager: "Villager") -> str:
+    """Get formatted learning progress display for UI."""
+    progress = get_learning_progress(villager)
+    if not progress:
+        return ""
+    
+    parts = []
+    for skill, count in sorted(progress.items(), key=lambda x: -x[1]):
+        pct = min(100, count)
+        parts.append(f"{skill}: {pct}%")
+    
+    return ", ".join(parts)

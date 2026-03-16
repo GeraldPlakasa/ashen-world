@@ -21,7 +21,10 @@ from src.services.skill_service import (
     parse_skills, get_skill_info,
     get_train_bonus, get_study_bonus, get_work_bonus,
     get_socialize_bonus, get_hunt_bonus, get_rest_bonus,
+    add_skill_to_villager, get_learning_progress, add_learning_progress,
+    reset_learning_progress,
 )
+from config import CHILD_MAX_AGE
 from src.models.villager import Villager
 from src.models.bank import Bank
 from src.models.combat import ShopOffer
@@ -43,6 +46,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         "socialize": 0.6,
         "hangout": 0.4,
         "steal": 0.2,
+        "mentor": 0.0,  # Only enabled for age 20+ with skills
     }
 
     # Building-based adjustments (village-wide passives)
@@ -239,6 +243,30 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         if cat == "KNOWLEDGE":
             weights["study"] += 0.7
             weights["work"] += 0.2
+
+    # Mentor action: only for age 20+ with skills
+    age = villager.get("age", 0)
+    if age >= 20 and skills:
+        weights["mentor"] = 0.5  # Base weight for mentoring
+        
+        # Traits that boost mentoring
+        for t in traits:
+            if t in ("Wise", "Patient", "Generous", "Empathic"):
+                weights["mentor"] += 0.4
+            if t == "Strict":
+                weights["mentor"] += 0.3
+            if t == "Lazy":
+                weights["mentor"] -= 0.3
+        
+        # Social/Knowledge skills boost mentoring more
+        for skill_name in skills:
+            info = get_skill_info(skill_name)
+            if info and info.get("category") in ("SOCIAL", "KNOWLEDGE"):
+                weights["mentor"] += 0.3
+        
+        # Teachers and scholars are natural mentors
+        if job in ["Scholar", "Scribe", "Advisor", "Priest", "Druid"]:
+            weights["mentor"] += 0.6
 
     w = (weather or "sunny").strip().lower()
     if w not in WEATHER_TYPES:
@@ -861,6 +889,97 @@ def apply_action(
             v["last_action"] = (
                 f"buy_gear (wanted {offer['type']} but lacked coins: {cost})"
             )
+
+    # -------------------- MENTOR --------------------
+    elif action == "mentor":
+        """
+        Mentor action: Age 20+ villagers with skills can teach children.
+        - Randomly selects 1-2 children as mentees
+        - Teaches one of their skills
+        - Children track learning progress per skill
+        - After 100 lessons in a skill, child gains the skill
+        - Small chance of failure (progress resets)
+        - Mentor gains: relationship, reputation, small stats
+        """
+        mentor_skills = parse_skills(v.get("skills", ""))
+        
+        if not mentor_skills or not all_characters:
+            # No skills to teach or no other characters
+            v["hunger"] += rand_int(2, 5)
+            v["last_action"] = "mentor (no one to teach)"
+        else:
+            # Find eligible children (age <= CHILD_MAX_AGE, alive)
+            children = [
+                c for c in all_characters
+                if c.get("id") != v.get("id")
+                and c.get("alive", True)
+                and c.get("age", 100) <= CHILD_MAX_AGE
+            ]
+            
+            if not children:
+                v["hunger"] += rand_int(2, 5)
+                v["last_action"] = "mentor (no children available)"
+            else:
+                # Select 1-2 children to mentor
+                num_mentees = min(rand_int(1, 2), len(children))
+                random.shuffle(children)
+                mentees = children[:num_mentees]
+                
+                # Choose a skill to teach
+                skill_to_teach = random.choice(mentor_skills)
+                skill_info = get_skill_info(skill_to_teach)
+                
+                taught_names = []
+                skills_gained = []
+                progress_reset = []
+                
+                for child in mentees:
+                    # Chance of failure (5% base, reduced by mentor's int)
+                    mentor_int = v.get("int", 10)
+                    fail_chance = max(0.02, 0.05 - (mentor_int / 1000))
+                    
+                    if random.random() < fail_chance:
+                        # Learning failed - reset progress for this skill
+                        reset_learning_progress(child, skill_to_teach)
+                        progress_reset.append(child["name"])
+                    else:
+                        # Add learning progress
+                        current = add_learning_progress(child, skill_to_teach, rand_int(1, 3))
+                        
+                        # Check if mastered (100+ lessons)
+                        if current >= 100:
+                            # Child gains the skill!
+                            if add_skill_to_villager(child, skill_to_teach):
+                                skills_gained.append((child["name"], skill_to_teach))
+                                reset_learning_progress(child, skill_to_teach)
+                        
+                        taught_names.append(child["name"])
+                    
+                    # Build relationship between mentor and child
+                    rel_gain = rand_int(3, 8)
+                    adjust_relationship(v, child, rel_gain)
+                    adjust_relationship(child, v, rel_gain)
+                
+                # Mentor rewards
+                v["rep"] = clamp(v.get("rep", 0) + rand_int(1, 3), -100, 100)
+                v["exp"] += rand_int(2, 5)
+                v["int"] += rand_int(0, 1)  # Small int boost from teaching
+                v["hunger"] += rand_int(3, 7)
+                
+                # Build action message
+                action_parts = []
+                if taught_names:
+                    action_parts.append(f"taught {', '.join(taught_names)} [{skill_to_teach}]")
+                if skills_gained:
+                    for name, skill in skills_gained:
+                        action_parts.append(f"{name} mastered {skill}!")
+                if progress_reset:
+                    action_parts.append(f"{', '.join(progress_reset)} failed to learn")
+                
+                if action_parts:
+                    v["last_action"] = f"mentor ({'; '.join(action_parts)})"
+                else:
+                    v["last_action"] = "mentor (no results)"
 
     # -------------------- HUNT --------------------
     elif action == "hunt":
