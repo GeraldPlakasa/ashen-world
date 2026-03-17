@@ -231,9 +231,17 @@ def _generate_quest_description(quest_type: str) -> tuple[str, str]:
     elif quest_type == "EXPLORATION":
         target = random.choice(qt_data["locations"])
         desc = desc_template.format(location=target)
-    else:  # TRADE
+    elif quest_type == "TRADE":
         target = random.choice(qt_data["goods"])
         desc = desc_template.format(goods=target)
+    elif quest_type == "RESCUE":
+        target = random.choice(qt_data["enemies"])
+        desc = desc_template.format(enemy=target)
+    elif quest_type == "TREASURE_HUNT":
+        target = random.choice(qt_data["treasures"])
+        desc = desc_template.format(treasure=target)
+    else:
+        desc = desc_template
     
     return qt_data["name"], desc
 
