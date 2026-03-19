@@ -74,6 +74,29 @@ class TestQuestDescription:
         assert name == "Trade Expedition"
         assert any(goods in desc for goods in QUEST_TYPES["TRADE"]["goods"])
 
+    @pytest.mark.unit
+    def test_generates_rescue_description(self):
+        """Should generate valid rescue quest description."""
+        name, desc = _generate_quest_description("RESCUE")
+        assert name == "Rescue Mission"
+        assert any(enemy in desc for enemy in QUEST_TYPES["RESCUE"]["enemies"])
+
+    @pytest.mark.unit
+    def test_generates_treasure_hunt_description(self):
+        """Should generate valid treasure hunt quest description."""
+        name, desc = _generate_quest_description("TREASURE_HUNT")
+        assert name == "Treasure Hunt"
+        assert any(treasure in desc for treasure in QUEST_TYPES["TREASURE_HUNT"]["treasures"])
+
+    @pytest.mark.unit
+    def test_all_quest_types_generate_valid_description(self):
+        """All quest types should generate valid descriptions without error."""
+        for quest_type in QUEST_TYPES.keys():
+            name, desc = _generate_quest_description(quest_type)
+            assert name is not None
+            assert desc is not None
+            assert len(desc) > 0
+
 
 class TestVolunteerScore:
     """Tests for volunteer scoring."""

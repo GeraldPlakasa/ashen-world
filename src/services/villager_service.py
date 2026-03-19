@@ -176,8 +176,7 @@ def generate_characters(n: int = 50) -> list[Villager]:
             forced_job="Queen",
         )
         characters.append(queen_row)
-
-    _set_spouses(king_row, queen_row, current_day=0)
+        _set_spouses(king_row, queen_row, current_day=0)
 
     # Ensure Queen title matches rule (Queen = King's spouse)
     sync_queen_to_king_spouse(characters, current_day=0)
