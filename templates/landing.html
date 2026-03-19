@@ -111,7 +111,7 @@
                 {% set quest_year = ((last_quest_day - 1) // 90) + 1 if last_quest_day else none %}
                 {# Parse quest name from message if not stored separately: "QUEST: Quest Name · result" #}
                 {% set parsed_name = last_quest_message.replace('QUEST: ', '').split(' · ')[0] if last_quest_message and ' · ' in last_quest_message else '' %}
-                <a href="{{ url_for('quest_history') }}" class="d-flex align-items-center gap-2 notification-item" style="padding: 8px 0; text-decoration: none; color: inherit;">
+                <a href="{{ url_for('stats.quest_history') }}" class="d-flex align-items-center gap-2 notification-item" style="padding: 8px 0; text-decoration: none; color: inherit;">
                   {% if last_quest_success %}
                     <span class="notification-badge" style="min-width: 70px; background: var(--aw-alive); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">QUEST</span>
                   {% else %}
@@ -341,7 +341,7 @@
                   <div style="color: var(--aw-text);" class="h5 mb-1">Create Your Hero</div>
                   <div style="color: var(--aw-text-muted);">Spawn a villager that will live and grow in this simulation.</div>
                 </div>
-                <a href="{{ url_for('create_character') }}" class="btn btn-primary">Create Hero</a>
+                <a href="{{ url_for('character.create_character') }}" class="btn btn-primary">Create Hero</a>
               </div>
             </section>
             {% else %}
@@ -351,7 +351,7 @@
                   <div style="color: var(--aw-text);" class="h5 mb-1">Join the Simulation</div>
                   <div style="color: var(--aw-text-muted);">Create a villager that will live, work, and fight inside Ashen World.</div>
                 </div>
-                <a href="{{ url_for('login') }}" class="btn btn-outline-light">Sign In</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light">Sign In</a>
               </div>
             </section>
             {% endif %}

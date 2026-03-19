@@ -32,7 +32,7 @@
         {% endwith %}
 
         <!-- Register Form -->
-        <form method="POST" action="{{ url_for('register') }}">
+        <form method="POST" action="{{ url_for('auth.register') }}">
           <div class="mb-3">
             <label for="username" class="form-label">Username</label>
             <input type="text" class="form-control" id="username" name="username" required autofocus placeholder="Choose a username" minlength="3" maxlength="20" />
@@ -54,13 +54,13 @@
         </form>
 
         <div class="text-center" style="color: var(--aw-text-muted); font-size: 13px;">
-          Already have an account? <a href="{{ url_for('login') }}" style="color: var(--aw-accent);">Sign in</a>
+          Already have an account? <a href="{{ url_for('auth.login') }}" style="color: var(--aw-accent);">Sign in</a>
         </div>
 
         <hr style="border-color: var(--aw-border);" />
 
         <div class="text-center">
-          <a href="{{ url_for('landing') }}" style="color: var(--aw-text-dim); font-size: 13px;">← Back to Kingdom</a>
+          <a href="{{ url_for('main.landing') }}" style="color: var(--aw-text-dim); font-size: 13px;">← Back to Kingdom</a>
         </div>
       </div>
     </div>
