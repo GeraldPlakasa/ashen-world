@@ -156,6 +156,42 @@ def init_db():
             """
         )
 
+        # Normalized relationship table (replaces JSON in villagers.relationships)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS villager_relationships (
+                villager_id INTEGER NOT NULL,
+                other_id INTEGER NOT NULL,
+                score INTEGER DEFAULT 0,
+                PRIMARY KEY (villager_id, other_id)
+            );
+            """
+        )
+
+        # Normalized achievement table (replaces JSON in villagers.achievements)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS villager_achievements (
+                villager_id INTEGER NOT NULL,
+                achievement_id TEXT NOT NULL,
+                earned_day INTEGER DEFAULT 0,
+                PRIMARY KEY (villager_id, achievement_id)
+            );
+            """
+        )
+
+        # Normalized vote tracking (replaces JSON in villagers.kingsVotedFor)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS villager_votes (
+                villager_id INTEGER NOT NULL,
+                king_id INTEGER NOT NULL,
+                vote_day INTEGER DEFAULT 0,
+                PRIMARY KEY (villager_id, king_id)
+            );
+            """
+        )
+
         _ensure_world_defaults(conn)
         _ensure_bank_defaults(conn)
         _ensure_villagers_columns(conn)
@@ -174,6 +210,12 @@ def _ensure_indexes(conn: sqlite3.Connection):
     conn.execute("CREATE INDEX IF NOT EXISTS idx_villagers_family ON villagers(family);")
     # Index on graveyard.family for family tree queries
     conn.execute("CREATE INDEX IF NOT EXISTS idx_graveyard_family ON graveyard(family);")
+    # Indexes for normalized relationship/achievement/vote tables
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_vr_villager ON villager_relationships(villager_id);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_vr_other ON villager_relationships(other_id);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_va_villager ON villager_achievements(villager_id);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_vv_villager ON villager_votes(villager_id);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_vv_king ON villager_votes(king_id);")
 
 def _ensure_villagers_columns(conn: sqlite3.Connection):
     existing = {r["name"] for r in conn.execute("PRAGMA table_info(villagers);").fetchall()}
