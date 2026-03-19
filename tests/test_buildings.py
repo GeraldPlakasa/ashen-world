@@ -4,7 +4,7 @@ Unit tests for buildings.py - building and tax calculations.
 import pytest
 import math
 
-from buildings import (
+from src.services.building_service import (
     get_building_level,
     upgrade_cost,
     repair_cost_for,

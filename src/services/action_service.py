@@ -5,11 +5,11 @@ import random
 from config import (
     WEATHER_TYPES,
 )
-from world_utils import (
+from src.utils.world_utils import (
     clamp,
     rand_int,
 )
-from buildings import (
+from src.services.building_service import (
     get_building_level,
     apply_tax_on_income,
 )
@@ -334,7 +334,7 @@ def handle_level_up(v: Villager) -> None:
     """
     Apply level-up logic in-place.
     """
-    from world_utils import exp_to_next_level
+    from src.utils.world_utils import exp_to_next_level
 
     leveled = False
 

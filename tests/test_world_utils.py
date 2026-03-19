@@ -4,7 +4,7 @@ Unit tests for world_utils.py - pure utility functions.
 import pytest
 import random
 
-from world_utils import clamp, exp_to_next_level, is_child, pick, rand_int, pick_weighted
+from src.utils.world_utils import clamp, exp_to_next_level, is_child, pick, rand_int, pick_weighted
 
 
 class TestClamp:

@@ -10,7 +10,7 @@ import random
 from typing import Callable
 
 from src.models.villager import Villager
-from world_utils import clamp
+from src.utils.world_utils import clamp
 
 
 # ===========================================================================

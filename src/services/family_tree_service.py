@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 
 from src.models import Villager
-from world_utils import safe_int
+from src.utils.world_utils import safe_int
 from src.repositories.villager_repo import graveyard_get, graveyard_get_many
 
 

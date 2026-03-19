@@ -3,7 +3,7 @@ Family routes: Family list and family tree.
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 
-from world_utils import safe_int
+from src.utils.world_utils import safe_int
 from src.services.world_service import get_current_state, load_characters_locked
 from src.services.family_tree_service import (
     build_family_graph,

@@ -5,8 +5,12 @@ Tests choose_action and related pure logic with controlled randomness.
 import pytest
 import random
 
-# Import the module to access internal functions
-import villagers
+from src.services.action_service import choose_action
+from src.services.villager_service import (
+    make_row,
+    generate_characters,
+    reset_id_from_characters,
+)
 
 
 class TestChooseAction:
@@ -21,7 +25,7 @@ class TestChooseAction:
         sample_villager["traits"] = ""
 
         # With coins >= 10 and hunger >= 70, should always buy_food (hard rule)
-        action = villagers.choose_action(sample_villager, sample_bank)
+        action = choose_action(sample_villager, sample_bank)
         assert action == "buy_food"
 
         # Without coins, should prefer hunting/rest
@@ -29,7 +33,7 @@ class TestChooseAction:
         food_or_hunt_count = 0
         for i in range(100):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             if action in ("buy_food", "hunt", "rest"):
                 food_or_hunt_count += 1
 
@@ -48,7 +52,7 @@ class TestChooseAction:
         # The choose_action function doesn't directly prioritize rest for low HP
         # It mainly responds to traits, job, hunger, and coins
         # This test verifies the function works with low HP villagers
-        action = villagers.choose_action(sample_villager, sample_bank)
+        action = choose_action(sample_villager, sample_bank)
         valid_actions = {
             "train", "study", "work", "rest", "buy_food", "buy_gear",
             "hunt", "socialize", "hangout", "steal"
@@ -67,7 +71,7 @@ class TestChooseAction:
         combat_without = 0
         for i in range(100):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             if action in ("hunt", "train", "buy_gear"):
                 combat_without += 1
 
@@ -76,7 +80,7 @@ class TestChooseAction:
         combat_with = 0
         for i in range(100):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             if action in ("hunt", "train", "buy_gear"):
                 combat_with += 1
 
@@ -95,7 +99,7 @@ class TestChooseAction:
         study_without = 0
         for i in range(100):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             if action == "study":
                 study_without += 1
 
@@ -104,7 +108,7 @@ class TestChooseAction:
         study_with = 0
         for i in range(100):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             if action == "study":
                 study_with += 1
 
@@ -123,7 +127,7 @@ class TestChooseAction:
         work_without = 0
         for i in range(100):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             if action == "work":
                 work_without += 1
 
@@ -132,7 +136,7 @@ class TestChooseAction:
         work_with = 0
         for i in range(100):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             if action == "work":
                 work_with += 1
 
@@ -151,7 +155,7 @@ class TestChooseAction:
         rest_without = 0
         for i in range(100):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             if action == "rest":
                 rest_without += 1
 
@@ -160,7 +164,7 @@ class TestChooseAction:
         rest_with = 0
         for i in range(100):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             if action == "rest":
                 rest_with += 1
 
@@ -178,7 +182,7 @@ class TestChooseAction:
 
         for i in range(50):
             random.seed(i)
-            action = villagers.choose_action(sample_villager, sample_bank)
+            action = choose_action(sample_villager, sample_bank)
             assert action in valid_actions
 
 
@@ -191,7 +195,7 @@ class TestMakeRow:
         seeded_random(42)
         taken_names = set()
 
-        row = villagers.make_row(taken_names)
+        row = make_row(taken_names)
 
         # Check essential fields exist
         assert "id" in row
@@ -209,7 +213,7 @@ class TestMakeRow:
         seeded_random(123)  # Use different seed to avoid collision
         taken_names = {"Test Name"}
 
-        row = villagers.make_row(taken_names)
+        row = make_row(taken_names)
 
         # The generated name should not be "Test Name"
         assert row["name"] != "Test Name"
@@ -220,7 +224,7 @@ class TestMakeRow:
         seeded_random(42)
         from config import JOBS_POOL
 
-        row = villagers.make_row(set())
+        row = make_row(set())
 
         assert row["job"] in JOBS_POOL
 
@@ -231,7 +235,7 @@ class TestMakeRow:
 
         for i in range(20):
             random.seed(i)
-            row = villagers.make_row(set())
+            row = make_row(set())
             # Age should be a positive integer (can include children)
             assert row["age"] >= 0
             assert isinstance(row["age"], int)
@@ -243,7 +247,7 @@ class TestMakeRow:
 
         for i in range(20):
             random.seed(i)
-            row = villagers.make_row(set())
+            row = make_row(set())
             assert row["gender"] in ("Male", "Female")
 
     @pytest.mark.unit
@@ -251,7 +255,7 @@ class TestMakeRow:
         """make_row should assign traits."""
         seeded_random(42)
 
-        row = villagers.make_row(set())
+        row = make_row(set())
 
         assert row.get("traits")
         # Should have at least one trait
@@ -267,7 +271,7 @@ class TestGenerateCharacters:
         """generate_characters should create the requested number."""
         seeded_random(42)
 
-        characters = villagers.generate_characters(10)
+        characters = generate_characters(10)
 
         assert len(characters) == 10
 
@@ -276,7 +280,7 @@ class TestGenerateCharacters:
         """All generated characters should have unique IDs."""
         seeded_random(42)
 
-        characters = villagers.generate_characters(20)
+        characters = generate_characters(20)
         ids = [c["id"] for c in characters]
 
         assert len(ids) == len(set(ids))
@@ -286,7 +290,7 @@ class TestGenerateCharacters:
         """All generated characters should have unique names."""
         seeded_random(42)
 
-        characters = villagers.generate_characters(20)
+        characters = generate_characters(20)
         names = [c["name"] for c in characters]
 
         assert len(names) == len(set(names))
@@ -296,7 +300,7 @@ class TestGenerateCharacters:
         """Generated population should include a King."""
         seeded_random(42)
 
-        characters = villagers.generate_characters(50)
+        characters = generate_characters(50)
         jobs = [c["job"] for c in characters]
 
         assert "King" in jobs
@@ -306,7 +310,7 @@ class TestGenerateCharacters:
         """All generated characters should be alive."""
         seeded_random(42)
 
-        characters = villagers.generate_characters(20)
+        characters = generate_characters(20)
 
         for c in characters:
             assert c["alive"] is True
@@ -321,18 +325,18 @@ class TestResetIdFromCharacters:
         # Get the max ID in the list
         max_id = max(v["id"] for v in multiple_villagers)
 
-        villagers.reset_id_from_characters(multiple_villagers)
+        reset_id_from_characters(multiple_villagers)
 
         # Next generated villager should have ID > max_id
         # We can't directly test _next_villager_id, but we can verify behavior
-        row = villagers.make_row(set())
+        row = make_row(set())
         assert row["id"] > max_id
 
     @pytest.mark.unit
     def test_reset_id_empty_list(self):
         """reset_id_from_characters with empty list should work."""
-        villagers.reset_id_from_characters([])
+        reset_id_from_characters([])
 
         # Should not crash, and next ID should be reasonable
-        row = villagers.make_row(set())
+        row = make_row(set())
         assert row["id"] >= 1

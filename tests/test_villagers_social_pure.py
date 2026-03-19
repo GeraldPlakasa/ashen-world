@@ -4,9 +4,11 @@ Tests leadership_score, get_traits_set, relationship_label, and related helpers.
 """
 import pytest
 
-from villagers_social import (
+from src.services.election_service import (
     leadership_score,
     get_traits_set,
+)
+from src.services.relationship_service import (
     relationship_label,
     get_relationship_score,
     set_relationship_score,

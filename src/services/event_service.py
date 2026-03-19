@@ -22,8 +22,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from config import DAYS_PER_YEAR
-from world_utils import clamp, rand_int
-from buildings import get_building_level
+from src.utils.world_utils import clamp, rand_int
+from src.services.building_service import get_building_level
 from src.services.achievement_service import trigger_survivor_achievement
 
 if TYPE_CHECKING:

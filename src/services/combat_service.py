@@ -6,12 +6,12 @@ import random
 from config import (
     ENEMY_BASE,
 )
-from world_utils import (
+from src.utils.world_utils import (
     rand_int,
     pick_weighted,
     is_child,
 )
-from buildings import (
+from src.services.building_service import (
     get_building_level,
     apply_tax_on_income,
 )

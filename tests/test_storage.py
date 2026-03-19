@@ -5,19 +5,15 @@ Tests save/load roundtrip for villagers, bank, and day.
 import pytest
 import json
 
-import storage
-from storage import (
+from src.repositories.base import init_db
+from src.repositories.villager_repo import (
     save_villagers,
     load_villagers,
-    save_bank,
-    load_bank,
-    save_day,
-    load_day,
-    compute_year_and_day,
-    init_db,
     graveyard_upsert_from_villager,
     graveyard_get,
 )
+from src.repositories.bank_repo import save_bank, load_bank
+from src.repositories.world_repo import save_day, load_day, compute_year_and_day
 
 
 class TestVillagerPersistence:

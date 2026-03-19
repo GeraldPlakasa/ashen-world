@@ -15,7 +15,7 @@ from config import (
     COUPLE_DECAY,
     FAMILY_DECAY,
 )
-from world_utils import (
+from src.utils.world_utils import (
     clamp,
     pick,
     rand_int,

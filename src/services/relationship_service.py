@@ -6,12 +6,12 @@ import random
 from config import (
     JOBS_NO_ROYAL,
 )
-from world_utils import (
+from src.utils.world_utils import (
     clamp,
     pick,
     rand_int,
 )
-from buildings import (
+from src.services.building_service import (
     get_building_level,
 )
 from src.models.villager import Villager

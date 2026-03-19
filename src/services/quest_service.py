@@ -31,8 +31,8 @@ import json
 from typing import TYPE_CHECKING
 
 from config import DAYS_PER_YEAR, QUEST_INTERVAL_YEARS
-from world_utils import clamp, rand_int
-from buildings import get_building_level
+from src.utils.world_utils import clamp, rand_int
+from src.services.building_service import get_building_level
 
 if TYPE_CHECKING:
     from src.models.villager import Villager

@@ -7,7 +7,7 @@ from config import (
     MAX_BUILDING_LEVEL,
     REPAIR_THRESHOLD,
 )
-from world_utils import (
+from src.utils.world_utils import (
     rand_int,
     pick_weighted,
 )

@@ -7,7 +7,7 @@ from config import (
     KING_MAX_TERMS,
     DYNASTY_BONUS,
 )
-from world_utils import (
+from src.utils.world_utils import (
     pick_weighted,
 )
 from src.services.relationship_service import (

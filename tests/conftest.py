@@ -168,17 +168,15 @@ def test_db_path() -> Generator[str, None, None]:
 @pytest.fixture
 def test_db_connection(test_db_path: str, monkeypatch: pytest.MonkeyPatch) -> Generator[str, None, None]:
     """
-    Patches storage.DB_PATH to use a temporary test database.
-    Also patches config.DB_PATH since storage imports from there.
+    Patches config.DB_PATH to use a temporary test database.
     """
     import config
-    import storage
+    from src.repositories import base as repo_base
 
     monkeypatch.setattr(config, "DB_PATH", test_db_path)
-    monkeypatch.setattr(storage, "DB_PATH", test_db_path)
 
     # Initialize the test database
-    storage.init_db()
+    repo_base.init_db()
 
     yield test_db_path
 

@@ -6,7 +6,7 @@ import random
 import config
 from config import TRAITS, JOBS_NO_ROYAL
 from src.models import Villager
-from world_utils import safe_int
+from src.utils.world_utils import safe_int
 from src.services.villager_service import make_row, reset_id_from_characters
 from src.repositories.villager_repo import load_villagers, save_villagers, graveyard_get_many
 from src.services.family_tree_service import parse_children_ids

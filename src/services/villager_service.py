@@ -10,7 +10,7 @@ from config import (
     JOBS_POOL,
     JOBS_NO_ROYAL,
 )
-from world_utils import (
+from src.utils.world_utils import (
     pick,
     rand_int,
 )
