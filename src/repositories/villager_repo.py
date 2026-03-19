@@ -7,15 +7,21 @@ import config
 from src.repositories.base import db_conn, init_db
 from src.models.villager import Villager
 from src.models.graveyard import GraveyardRecord
+from src.repositories import relationship_repo, achievement_repo, vote_repo
 
 def save_villagers(rows: list[Villager]) -> None:
     """
     Persist all villagers to SQLite.
+    Also syncs normalized tables (relationships, achievements, votes).
     """
     init_db()
 
     with db_conn() as conn:
         conn.execute("DELETE FROM villagers;")  # simplest "replace all" behavior
+        # Clear normalized tables for full sync
+        conn.execute("DELETE FROM villager_relationships;")
+        conn.execute("DELETE FROM villager_achievements;")
+        conn.execute("DELETE FROM villager_votes;")
 
         if not rows:
             return
@@ -28,16 +34,57 @@ def save_villagers(rows: list[Villager]) -> None:
 
         for r in rows:
             r2 = dict(r)
+            vid = int(r2.get("id", 0) or 0)
 
             # Store boolean alive as TEXT "true"/"false"
             r2["alive"] = "true" if r2.get("alive", True) else "false"
 
-            # JSON fields stored as TEXT
+            # JSON fields stored as TEXT (keep for backward compat)
             r2["childrenIds"] = json.dumps(r2.get("childrenIds", []), ensure_ascii=False)
             rels = r2.get("relationships", {})
             if not isinstance(rels, dict):
                 rels = {}
             r2["relationships"] = json.dumps(rels, ensure_ascii=False)
+
+            # Sync relationships to normalized table
+            for other_id, score in rels.items():
+                try:
+                    conn.execute(
+                        "INSERT INTO villager_relationships (villager_id, other_id, score) VALUES (?, ?, ?)",
+                        (vid, int(other_id), int(score)),
+                    )
+                except (ValueError, TypeError):
+                    pass
+
+            # Sync achievements to normalized table
+            achs = r2.get("achievements", "[]")
+            if isinstance(achs, str):
+                try:
+                    achs = json.loads(achs) if achs else []
+                except json.JSONDecodeError:
+                    achs = []
+            for ach_id in (achs or []):
+                if ach_id:
+                    conn.execute(
+                        "INSERT INTO villager_achievements (villager_id, achievement_id) VALUES (?, ?)",
+                        (vid, str(ach_id)),
+                    )
+
+            # Sync votes to normalized table
+            votes = r2.get("kingsVotedFor", "[]")
+            if isinstance(votes, str):
+                try:
+                    votes = json.loads(votes) if votes else []
+                except json.JSONDecodeError:
+                    votes = []
+            for king_id in (votes or []):
+                try:
+                    conn.execute(
+                        "INSERT INTO villager_votes (villager_id, king_id) VALUES (?, ?)",
+                        (vid, int(king_id)),
+                    )
+                except (ValueError, TypeError):
+                    pass
 
             r2.setdefault("last_action", "")
             r2.setdefault("owner", "")
@@ -50,6 +97,7 @@ def save_villagers(rows: list[Villager]) -> None:
 def load_villagers() -> list[Villager]:
     """
     Load all villagers from SQLite.
+    Populates relationships, achievements, votes from normalized tables.
     """
     init_db()
 
@@ -57,8 +105,36 @@ def load_villagers() -> list[Villager]:
         cur = conn.execute("SELECT * FROM villagers;")
         out: list[Villager] = []
 
+        # Pre-load all normalized data for efficiency
+        rel_rows = conn.execute("SELECT villager_id, other_id, score FROM villager_relationships").fetchall()
+        ach_rows = conn.execute("SELECT villager_id, achievement_id FROM villager_achievements").fetchall()
+        vote_rows = conn.execute("SELECT villager_id, king_id FROM villager_votes").fetchall()
+
+        # Build lookup dicts
+        rels_by_vid: dict[int, dict[str, int]] = {}
+        for r in rel_rows:
+            vid = r["villager_id"]
+            if vid not in rels_by_vid:
+                rels_by_vid[vid] = {}
+            rels_by_vid[vid][str(r["other_id"])] = r["score"]
+
+        achs_by_vid: dict[int, list[str]] = {}
+        for r in ach_rows:
+            vid = r["villager_id"]
+            if vid not in achs_by_vid:
+                achs_by_vid[vid] = []
+            achs_by_vid[vid].append(r["achievement_id"])
+
+        votes_by_vid: dict[int, list[int]] = {}
+        for r in vote_rows:
+            vid = r["villager_id"]
+            if vid not in votes_by_vid:
+                votes_by_vid[vid] = []
+            votes_by_vid[vid].append(r["king_id"])
+
         for row in cur.fetchall():
             r2 = dict(row)
+            vid = int(r2.get("id", 0) or 0)
 
             for key in config.INT_FIELDS:
                 val = r2.get(key)
@@ -74,12 +150,24 @@ def load_villagers() -> list[Villager]:
             except Exception:
                 r2["childrenIds"] = []
 
-            rel_str = r2.get("relationships") or "{}"
-            try:
-                data = json.loads(rel_str)
-                r2["relationships"] = data if isinstance(data, dict) else {}
-            except Exception:
-                r2["relationships"] = {}
+            # Load from normalized tables (preferred) or fallback to JSON column
+            if vid in rels_by_vid:
+                r2["relationships"] = rels_by_vid[vid]
+            else:
+                rel_str = r2.get("relationships") or "{}"
+                try:
+                    data = json.loads(rel_str)
+                    r2["relationships"] = data if isinstance(data, dict) else {}
+                except Exception:
+                    r2["relationships"] = {}
+
+            if vid in achs_by_vid:
+                r2["achievements"] = json.dumps(achs_by_vid[vid])
+            # else keep existing JSON column value
+
+            if vid in votes_by_vid:
+                r2["kingsVotedFor"] = json.dumps(votes_by_vid[vid])
+            # else keep existing JSON column value
 
             if r2.get("last_action") is None:
                 r2["last_action"] = ""

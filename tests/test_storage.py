@@ -111,6 +111,56 @@ class TestVillagerPersistence:
 
         assert loaded[0]["childrenIds"] == []
 
+    @pytest.mark.integration
+    def test_relationships_synced_to_normalized_table(self, test_db_connection, sample_villager):
+        """Relationships should be synced to villager_relationships table."""
+        from src.repositories.relationship_repo import get_all_relationships
+        
+        sample_villager["relationships"] = {"2": 50, "3": -20}
+        save_villagers([sample_villager])
+        
+        # Check normalized table has data
+        rels = get_all_relationships(sample_villager["id"])
+        assert rels == {2: 50, 3: -20}
+        
+        # Check load returns correct data
+        loaded = load_villagers()
+        assert loaded[0]["relationships"] == {"2": 50, "3": -20}
+
+    @pytest.mark.integration
+    def test_achievements_synced_to_normalized_table(self, test_db_connection, sample_villager):
+        """Achievements should be synced to villager_achievements table."""
+        from src.repositories.achievement_repo import get_achievements
+        
+        sample_villager["achievements"] = '["centurion", "hunter"]'
+        save_villagers([sample_villager])
+        
+        # Check normalized table has data
+        achs = get_achievements(sample_villager["id"])
+        assert set(achs) == {"centurion", "hunter"}
+        
+        # Check load returns correct data
+        loaded = load_villagers()
+        loaded_achs = json.loads(loaded[0]["achievements"])
+        assert set(loaded_achs) == {"centurion", "hunter"}
+
+    @pytest.mark.integration
+    def test_votes_synced_to_normalized_table(self, test_db_connection, sample_villager):
+        """kingsVotedFor should be synced to villager_votes table."""
+        from src.repositories.vote_repo import get_kings_voted_for
+        
+        sample_villager["kingsVotedFor"] = '[10, 20]'
+        save_villagers([sample_villager])
+        
+        # Check normalized table has data
+        votes = get_kings_voted_for(sample_villager["id"])
+        assert set(votes) == {10, 20}
+        
+        # Check load returns correct data
+        loaded = load_villagers()
+        loaded_votes = json.loads(loaded[0]["kingsVotedFor"])
+        assert set(loaded_votes) == {10, 20}
+
 
 class TestBankPersistence:
     """Tests for bank save/load roundtrip."""
