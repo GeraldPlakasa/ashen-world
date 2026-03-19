@@ -4,6 +4,10 @@ from __future__ import annotations
 import threading
 import time
 
+from src.utils.logger import get_simulation_logger
+
+logger = get_simulation_logger()
+
 from src.models import Villager, Bank
 from src.models.stats import YearlyChampions
 
@@ -130,6 +134,7 @@ def advance_one_day() -> tuple:
         new_total_day = old_total_day + 1
 
         yr_now, day_now = compute_year_and_day(new_total_day)
+        logger.debug("Advancing to day %d (year %d, day %d)", new_total_day, yr_now, day_now)
 
         # If day_in_year == 0, we are on the first day of a new year.
         if day_now == 0:
@@ -154,8 +159,9 @@ def advance_one_day() -> tuple:
         crossed_year = new_year_idx > old_year_idx
 
         if crossed_year:
-
             old_year = old_year_idx + 1
+            new_year = new_year_idx + 1
+            logger.info("=== Year %d begins (pop: %d) ===", new_year, len([v for v in characters if v.get("alive", True)]))
 
             # compute champions for the year that just ended
             champions = compute_year_champions(characters)
@@ -167,11 +173,9 @@ def advance_one_day() -> tuple:
                     v["age"] = int(v.get("age", 0) or 0) + 1
                 v["huntWinsYear"] = 0
 
-            # Compute the new year number (1-based)
-            new_year = new_year_idx + 1
-
             # Scheduled election: every ELECTION_INTERVAL_YEARS
             if new_year % ELECTION_INTERVAL_YEARS == 0:
+                logger.info("Election triggered for year %d", new_year)
                 winner, election_msg = hold_election(
                     characters,
                     current_day=new_total_day,
@@ -179,6 +183,7 @@ def advance_one_day() -> tuple:
                 if winner and election_msg:
                     bank["last_election_year"] = int(new_year)
                     bank["last_election_message"] = election_msg
+                    logger.info("Election result: %s elected as King", winner.get("name"))
 
         # Update tax policy based on current (possibly new) King traits
         bank = update_tax_policy(characters, bank, log_it=False)
@@ -190,8 +195,13 @@ def advance_one_day() -> tuple:
         if event_message:
             bank["last_event_message"] = event_message
             bank["last_event_day"] = new_total_day
+            logger.info("World event: %s", event_message[:100] if len(event_message) > 100 else event_message)
         
-        # Quest message is stored inside quest_service, no need to store again
+        if quest_message:
+            logger.info("Quest completed: %s", quest_message[:100] if len(quest_message) > 100 else quest_message)
+        
+        if births_today > 0:
+            logger.debug("Births today: %d", births_today)
 
         for v in characters:
             if not v.get("alive", True) or v.get("hp", 0) <= 0:
@@ -226,6 +236,7 @@ def advance_one_day() -> tuple:
                 king_died_today = True
 
         if (current_king is None and characters) or king_died_today:
+            logger.info("Emergency election triggered (king died: %s)", king_died_today)
             winner_em, emergency_msg = hold_election(
                 characters,
                 current_day=new_total_day,
@@ -283,7 +294,7 @@ def advance_one_day() -> tuple:
             try:
                 graveyard_upsert_from_villager(v)
             except Exception as exc:
-                print("[prune] graveyard_upsert failed:", exc)
+                logger.warning("Graveyard upsert failed for villager %s: %s", v.get("id"), exc)
 
             # DO NOT append (means pruned)
 
@@ -293,9 +304,9 @@ def advance_one_day() -> tuple:
         try:
             cleaned = graveyard_cleanup_old(new_total_day, MAX_GRAVEYARD_YEARS)
             if cleaned > 0:
-                print(f"[graveyard] Cleaned {cleaned} entries older than {MAX_GRAVEYARD_YEARS} years")
+                logger.info("Graveyard cleanup: removed %d entries older than %d years", cleaned, MAX_GRAVEYARD_YEARS)
         except Exception as exc:
-            print(f"[graveyard] Cleanup failed: {exc}")
+            logger.error("Graveyard cleanup failed: %s", exc)
 
         # --- For yearly stats: compute immigrants/deaths TODAY ---
         after_ids = {int(v.get("id", 0) or 0) for v in characters if int(v.get("id", 0) or 0) > 0}
@@ -414,4 +425,4 @@ def auto_simulation_loop() -> None:
         try:
             advance_one_day()
         except Exception as exc:
-            print("[auto_simulation_loop] Error:", exc)
+            logger.exception("Auto-simulation loop error: %s", exc)

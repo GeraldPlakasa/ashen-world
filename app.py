@@ -11,6 +11,7 @@ import threading
 from flask import Flask
 
 from config import AUTO_SIM_ENABLED, ENV_FLASK_SECRET_KEY
+from src.utils.logger import get_logger
 from src.services.world_service import (
     auto_simulation_loop,
     advance_one_day,
@@ -18,6 +19,8 @@ from src.services.world_service import (
 )
 from src.services.family_tree_service import build_family_graph
 from src.routes import register_blueprints
+
+logger = get_logger(__name__)
 
 # Re-export for backward compatibility with tests
 __all__ = [
@@ -45,9 +48,11 @@ with app.app_context():
     """
     Start background auto-simulation thread at startup (beware debug reloader).
     """
+    logger.info("Ashen World starting up...")
     if AUTO_SIM_ENABLED:
         t = threading.Thread(target=auto_simulation_loop, daemon=True)
         t.start()
+        logger.info("Auto-simulation thread started")
 
 # ---------------------------------------------------------------------------
 #  Main entry point

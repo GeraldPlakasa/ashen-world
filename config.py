@@ -14,6 +14,14 @@ USERS_CSV = os.path.join(DATA_DIR, "users.csv")
 
 DB_PATH = os.path.join(DATA_DIR, "ashen_world.sqlite3")
 
+# Logging configuration
+LOG_DIR = os.path.join(DATA_DIR, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
+LOG_FILE = os.path.join(LOG_DIR, "ashen_world.log")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")  # DEBUG, INFO, WARNING, ERROR
+LOG_MAX_BYTES = 5 * 1024 * 1024  # 5 MB per file
+LOG_BACKUP_COUNT = 3  # Keep 3 backup files
+
 # Load optional .env (local dev). In production, prefer real env vars.
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
