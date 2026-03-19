@@ -39,14 +39,13 @@ def save_villagers(rows: list[Villager]) -> None:
             # Store boolean alive as TEXT "true"/"false"
             r2["alive"] = "true" if r2.get("alive", True) else "false"
 
-            # JSON fields stored as TEXT (keep for backward compat)
+            # childrenIds still stored as JSON in villagers table
             r2["childrenIds"] = json.dumps(r2.get("childrenIds", []), ensure_ascii=False)
+
+            # Save relationships to normalized table
             rels = r2.get("relationships", {})
             if not isinstance(rels, dict):
                 rels = {}
-            r2["relationships"] = json.dumps(rels, ensure_ascii=False)
-
-            # Sync relationships to normalized table
             for other_id, score in rels.items():
                 try:
                     conn.execute(
@@ -56,13 +55,17 @@ def save_villagers(rows: list[Villager]) -> None:
                 except (ValueError, TypeError):
                     pass
 
-            # Sync achievements to normalized table
+            # Save achievements to normalized table
             achs = r2.get("achievements", "[]")
             if isinstance(achs, str):
                 try:
                     achs = json.loads(achs) if achs else []
                 except json.JSONDecodeError:
                     achs = []
+            elif isinstance(achs, list):
+                pass  # already a list
+            else:
+                achs = []
             for ach_id in (achs or []):
                 if ach_id:
                     conn.execute(
@@ -70,13 +73,17 @@ def save_villagers(rows: list[Villager]) -> None:
                         (vid, str(ach_id)),
                     )
 
-            # Sync votes to normalized table
+            # Save votes to normalized table
             votes = r2.get("kingsVotedFor", "[]")
             if isinstance(votes, str):
                 try:
                     votes = json.loads(votes) if votes else []
                 except json.JSONDecodeError:
                     votes = []
+            elif isinstance(votes, list):
+                pass  # already a list
+            else:
+                votes = []
             for king_id in (votes or []):
                 try:
                     conn.execute(
@@ -150,24 +157,10 @@ def load_villagers() -> list[Villager]:
             except Exception:
                 r2["childrenIds"] = []
 
-            # Load from normalized tables (preferred) or fallback to JSON column
-            if vid in rels_by_vid:
-                r2["relationships"] = rels_by_vid[vid]
-            else:
-                rel_str = r2.get("relationships") or "{}"
-                try:
-                    data = json.loads(rel_str)
-                    r2["relationships"] = data if isinstance(data, dict) else {}
-                except Exception:
-                    r2["relationships"] = {}
-
-            if vid in achs_by_vid:
-                r2["achievements"] = json.dumps(achs_by_vid[vid])
-            # else keep existing JSON column value
-
-            if vid in votes_by_vid:
-                r2["kingsVotedFor"] = json.dumps(votes_by_vid[vid])
-            # else keep existing JSON column value
+            # Load from normalized tables (columns dropped from villagers table)
+            r2["relationships"] = rels_by_vid.get(vid, {})
+            r2["achievements"] = json.dumps(achs_by_vid.get(vid, []))
+            r2["kingsVotedFor"] = json.dumps(votes_by_vid.get(vid, []))
 
             if r2.get("last_action") is None:
                 r2["last_action"] = ""

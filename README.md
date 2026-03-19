@@ -5,7 +5,7 @@ A living-village simulation game built with Flask. Watch villagers live, work, m
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Tests](https://img.shields.io/badge/Tests-181%20passed-brightgreen.svg)
+![Tests](https://img.shields.io/badge/Tests-461%20passed-brightgreen.svg)
 
 ## 🚀 Quick Start
 
@@ -64,29 +64,62 @@ Visit `http://localhost:5000` in your browser.
 ```
 ashen-world/
 ├── app.py                    # Flask entrypoint
-├── config.py                 # World constants
-├── world_utils.py            # Utility functions
+├── config.py                 # World constants & settings
 ├── src/
 │   ├── services/             # Business logic
-│   │   ├── simulation_service.py   # Daily loop
-│   │   ├── election_service.py     # Elections
+│   │   ├── simulation_service.py   # Daily simulation loop
+│   │   ├── election_service.py     # King elections
 │   │   ├── quest_service.py        # Quest system
 │   │   ├── family_service.py       # Birth, childhood
-│   │   ├── relationship_service.py # Marriage, social
+│   │   ├── relationship_service.py # Marriage, social bonds
 │   │   ├── building_service.py     # Tax, construction
-│   │   ├── event_service.py        # World events
-│   │   ├── combat_service.py       # Combat resolution
-│   │   ├── action_service.py       # Daily actions
-│   │   └── achievement_service.py  # Achievement system
-│   ├── repositories/         # Data persistence
-│   └── models/               # TypedDict models
+│   │   ├── event_service.py        # World events (plague, famine, etc)
+│   │   ├── combat_service.py       # Combat & hunting
+│   │   ├── action_service.py       # Daily villager actions
+│   │   ├── achievement_service.py  # Achievement tracking
+│   │   ├── skill_service.py        # Skill learning
+│   │   └── villager_service.py     # Villager creation
+│   ├── repositories/         # Data persistence (SQLite)
+│   │   ├── base.py                 # DB connection & init
+│   │   ├── villager_repo.py        # Villager CRUD
+│   │   ├── relationship_repo.py    # Normalized relationships
+│   │   ├── achievement_repo.py     # Normalized achievements
+│   │   ├── vote_repo.py            # Normalized votes
+│   │   ├── bank_repo.py            # Treasury & buildings
+│   │   ├── world_repo.py           # World state
+│   │   └── stats_repo.py           # Yearly statistics
+│   ├── routes/               # Flask blueprints
+│   ├── models/               # TypedDict definitions
+│   └── utils/                # Helper functions
 ├── templates/                # Jinja2 templates
 ├── static/
 │   ├── css/                  # Styles
 │   └── js/                   # Frontend scripts
-├── tests/                    # Pytest suite (181 tests)
+├── tests/                    # Pytest suite (461 tests)
+├── scripts/                  # Migration & maintenance scripts
 └── data/                     # SQLite database (auto-created)
 ```
+
+## 🗄️ Database Schema
+
+### Core Tables
+
+| Table | Purpose |
+|-------|---------|
+| `villagers` | Active villager records (37 columns) |
+| `graveyard` | Deceased villager identities |
+| `bank_state` | Treasury, buildings, tax policy |
+| `world_state` | Day counter, weather |
+| `yearly_stats` | Historical statistics by year |
+| `users` | Player accounts |
+
+### Normalized Tables (v2.0+)
+
+| Table | Purpose |
+|-------|---------|
+| `villager_relationships` | Social bonds (villager_id, other_id, score) |
+| `villager_achievements` | Achievement tracking (villager_id, achievement_id) |
+| `villager_votes` | Election vote history (villager_id, king_id) |
 
 ## ⚙️ Configuration
 
@@ -113,9 +146,17 @@ pytest
 # Run with verbose output
 pytest -v
 
+# Run specific test file
+pytest tests/test_quest.py
+
 # Run with coverage
-pytest --cov=src --cov=world_utils --cov=app --cov-report=term-missing
+pytest --cov=src --cov-report=term-missing
 ```
+
+### Test Categories
+
+- **Unit tests** (`@pytest.mark.unit`): Pure function tests
+- **Integration tests** (`@pytest.mark.integration`): Database & service tests
 
 ## 🔌 API Endpoints
 
@@ -129,7 +170,22 @@ pytest --cov=src --cov=world_utils --cov=app --cov-report=term-missing
 - **Backend:** Flask, SQLite, Python 3.10+
 - **Frontend:** Bootstrap 5, Jinja2, JavaScript
 - **Visualization:** vis-network (family trees)
-- **Testing:** pytest
+- **Testing:** pytest (461 tests)
+
+## 📜 Migrations
+
+For existing databases, run migrations in order:
+
+```bash
+# 1. Normalize JSON fields to separate tables
+python scripts/migrate_normalize_json.py
+
+# 2. Drop old JSON columns (optional, after verifying)
+python scripts/migrate_drop_json_columns.py
+
+# 3. Fix integer columns if needed
+python scripts/migrate_fix_int_columns.py
+```
 
 ## 📜 License
 
