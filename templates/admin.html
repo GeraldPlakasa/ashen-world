@@ -1,14 +1,31 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <title>Ashen World – Control</title>
+  <title>Ashen World – Control Hall</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    .chart-card { background: var(--aw-bg-card); border: 1px solid var(--aw-border); border-radius: 8px; padding: 16px; height: 100%; }
+    .chart-title { color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    .chart-container { position: relative; height: 200px; }
+    .chart-container-lg { position: relative; height: 280px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+    .stat-item { text-align: center; padding: 12px; background: var(--aw-bg-dark); border-radius: 6px; }
+    .stat-value { font-size: 24px; font-weight: 600; color: var(--aw-text); }
+    .stat-label { font-size: 11px; color: var(--aw-text-muted); text-transform: uppercase; }
+    .tab-btn { background: transparent; border: 1px solid var(--aw-border); color: var(--aw-text-muted); padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .tab-btn.active { background: var(--aw-accent); border-color: var(--aw-accent); color: #fff; }
+    .tab-btn:hover:not(.active) { border-color: var(--aw-text-muted); }
+    .mini-table { font-size: 12px; }
+    .mini-table th { color: var(--aw-text-muted); font-weight: 500; }
+    .mini-table td { color: var(--aw-text); }
+  </style>
 </head>
 <body class="game-theme">
   <div class="aw-layout">
@@ -19,12 +36,11 @@
         <header class="aw-header d-flex align-items-center justify-content-between mb-3">
           <div class="d-flex flex-column">
             <span class="header-title">Control Hall</span>
-            <span class="header-subtitle">Manage simulation and world state</span>
+            <span class="header-subtitle">Analytics & World Management</span>
           </div>
-
           <form method="POST" class="m-0 d-flex gap-2">
             <button type="submit" name="op" value="next_day" class="btn btn-outline-light btn-sm">+1 Day</button>
-            <button type="submit" name="op" value="generate" class="btn btn-danger btn-sm">Reset</button>
+            <button type="submit" name="op" value="generate" class="btn btn-danger btn-sm">Reset World</button>
           </form>
         </header>
 
@@ -42,203 +58,389 @@
           {% endif %}
           {% endwith %}
 
-          <!-- World Status -->
+          <!-- KPI Cards Row -->
           <section class="row g-3 mb-3">
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-2">
               <div class="kpi-card accent">
-                <div class="kpi-value">Y<span id="current-year">{{ year }}</span></div>
+                <div class="kpi-value">Y<span id="kpi-year">{{ year }}</span></div>
                 <div class="kpi-label">Year</div>
               </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-2">
               <div class="kpi-card">
-                <div class="kpi-value">D<span id="current-day">{{ day }}</span></div>
+                <div class="kpi-value">D<span id="kpi-day">{{ day }}</span></div>
                 <div class="kpi-label">Day</div>
               </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-2">
               <div class="kpi-card">
-                <div class="kpi-value">{{ characters|length if characters else 0 }}</div>
-                <div class="kpi-label">Villagers</div>
+                <div class="kpi-value" id="kpi-population">{{ characters|selectattr('alive')|list|length if characters else 0 }}</div>
+                <div class="kpi-label">Population</div>
               </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-2">
               <div class="kpi-card">
-                <div class="kpi-value">{{ total_users }}</div>
+                <div class="kpi-value" id="kpi-dead">{{ characters|rejectattr('alive')|list|length if characters else 0 }}</div>
+                <div class="kpi-label">Dead</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-2">
+              <div class="kpi-card">
+                <div class="kpi-value" id="kpi-treasury">0</div>
+                <div class="kpi-label">Treasury</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-2">
+              <div class="kpi-card">
+                <div class="kpi-value" id="kpi-users">{{ total_users }}</div>
                 <div class="kpi-label">Users</div>
               </div>
             </div>
           </section>
 
-          <!-- Auto Simulation -->
-          <section class="game-card mb-3">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Auto Simulation</div>
-                <span id="auto-status" class="status-badge" style="background: var(--aw-bg-dark); color: var(--aw-text-dim); border: 1px solid var(--aw-border);">Stopped</span>
-              </div>
+          <!-- Tab Navigation -->
+          <section class="mb-3 d-flex gap-2 flex-wrap">
+            <button class="tab-btn active" data-tab="overview">Overview</button>
+            <button class="tab-btn" data-tab="population">Population</button>
+            <button class="tab-btn" data-tab="quests">Quests & Events</button>
+            <button class="tab-btn" data-tab="villagers">Villagers</button>
+            <button class="tab-btn" data-tab="buildings">Buildings</button>
+          </section>
 
-              <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 13px;">
-                <div class="d-flex align-items-center gap-2">
-                  <label for="auto-interval" style="color: var(--aw-text-muted);">Interval (sec):</label>
-                  <input type="number" id="auto-interval" class="form-control form-control-sm" min="1" value="3" style="width: 70px;" />
+          <!-- Tab: Overview -->
+          <div id="tab-overview" class="tab-content">
+            <div class="row g-3 mb-3">
+              <!-- Population Over Time -->
+              <div class="col-12 col-lg-8">
+                <div class="chart-card">
+                  <div class="chart-title">Population & Treasury Over Time</div>
+                  <div class="chart-container-lg">
+                    <canvas id="chart-population-treasury"></canvas>
+                  </div>
                 </div>
-                <div class="d-flex gap-2">
-                  <button type="button" id="auto-start" class="btn btn-sm btn-outline-success" style="min-width: 60px;">Start</button>
-                  <button type="button" id="auto-stop" class="btn btn-sm btn-outline-danger" style="min-width: 60px;" disabled>Stop</button>
+              </div>
+              <!-- Quick Stats -->
+              <div class="col-12 col-lg-4">
+                <div class="chart-card">
+                  <div class="chart-title">Quick Stats</div>
+                  <div class="stat-grid" id="quick-stats">
+                    <div class="stat-item"><div class="stat-value" id="stat-births">-</div><div class="stat-label">Total Births</div></div>
+                    <div class="stat-item"><div class="stat-value" id="stat-deaths">-</div><div class="stat-label">Total Deaths</div></div>
+                    <div class="stat-item"><div class="stat-value" id="stat-immigrants">-</div><div class="stat-label">Immigrants</div></div>
+                    <div class="stat-item"><div class="stat-value" id="stat-quests">-</div><div class="stat-label">Quests</div></div>
+                    <div class="stat-item"><div class="stat-value" id="stat-events">-</div><div class="stat-label">Events</div></div>
+                    <div class="stat-item"><div class="stat-value" id="stat-years">-</div><div class="stat-label">Years</div></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </section>
 
-          <!-- Buildings -->
-          <section class="game-card mb-3">
-            <div class="card-body">
-              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Buildings</div>
+            <div class="row g-3 mb-3">
+              <!-- Birth/Death/Immigration Trends -->
+              <div class="col-12 col-md-6">
+                <div class="chart-card">
+                  <div class="chart-title">Births, Deaths & Immigration by Year</div>
+                  <div class="chart-container">
+                    <canvas id="chart-demographics"></canvas>
+                  </div>
+                </div>
+              </div>
+              <!-- Gender Distribution -->
+              <div class="col-12 col-md-3">
+                <div class="chart-card">
+                  <div class="chart-title">Gender Distribution</div>
+                  <div class="chart-container">
+                    <canvas id="chart-gender"></canvas>
+                  </div>
+                </div>
+              </div>
+              <!-- Age Distribution -->
+              <div class="col-12 col-md-3">
+                <div class="chart-card">
+                  <div class="chart-title">Age Distribution</div>
+                  <div class="chart-container">
+                    <canvas id="chart-age"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-              <div id="admin-buildings-wrapper">
-                {% if village_buildings %}
-                <div class="row g-2">
-                  {% for b in village_buildings %}
-                  <div class="col-6 col-md-4 col-lg-3">
-                    <div class="building-card {% if not b.built %}not-built{% endif %}">
-                      <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="building-name">{{ b.name }}</span>
+            <!-- Auto Simulation Control -->
+            <div class="game-card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div class="chart-title mb-0">Auto Simulation</div>
+                  <span id="auto-status" class="status-badge" style="background: var(--aw-bg-dark); color: var(--aw-text-dim); border: 1px solid var(--aw-border);">Stopped</span>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 13px;">
+                  <div class="d-flex align-items-center gap-2">
+                    <label for="auto-interval" style="color: var(--aw-text-muted);">Interval (sec):</label>
+                    <input type="number" id="auto-interval" class="form-control form-control-sm" min="1" value="3" style="width: 70px;" />
+                  </div>
+                  <div class="d-flex gap-2">
+                    <button type="button" id="auto-start" class="btn btn-sm btn-outline-success">Start</button>
+                    <button type="button" id="auto-stop" class="btn btn-sm btn-outline-danger" disabled>Stop</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Population -->
+          <div id="tab-population" class="tab-content" style="display: none;">
+            <div class="row g-3 mb-3">
+              <!-- Job Distribution -->
+              <div class="col-12 col-md-6">
+                <div class="chart-card">
+                  <div class="chart-title">Job Distribution</div>
+                  <div class="chart-container-lg">
+                    <canvas id="chart-jobs"></canvas>
+                  </div>
+                </div>
+              </div>
+              <!-- Origin Distribution -->
+              <div class="col-12 col-md-6">
+                <div class="chart-card">
+                  <div class="chart-title">Origin Distribution</div>
+                  <div class="chart-container-lg">
+                    <canvas id="chart-origins"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <!-- Skills Distribution -->
+              <div class="col-12 col-md-6">
+                <div class="chart-card">
+                  <div class="chart-title">Skill Distribution</div>
+                  <div class="chart-container-lg">
+                    <canvas id="chart-skills"></canvas>
+                  </div>
+                </div>
+              </div>
+              <!-- Top Traits -->
+              <div class="col-12 col-md-6">
+                <div class="chart-card">
+                  <div class="chart-title">Top 10 Traits</div>
+                  <div class="chart-container-lg">
+                    <canvas id="chart-traits"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="chart-card">
+                  <div class="chart-title">Achievement Distribution</div>
+                  <div class="chart-container">
+                    <canvas id="chart-achievements"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Quests & Events -->
+          <div id="tab-quests" class="tab-content" style="display: none;">
+            <div class="row g-3 mb-3">
+              <!-- Quest Type Distribution -->
+              <div class="col-12 col-md-4">
+                <div class="chart-card">
+                  <div class="chart-title">Quest Types</div>
+                  <div class="chart-container">
+                    <canvas id="chart-quest-types"></canvas>
+                  </div>
+                </div>
+              </div>
+              <!-- Quest Success Rate -->
+              <div class="col-12 col-md-4">
+                <div class="chart-card">
+                  <div class="chart-title">Quest Success Rate</div>
+                  <div class="chart-container">
+                    <canvas id="chart-quest-success"></canvas>
+                  </div>
+                </div>
+              </div>
+              <!-- Event Types -->
+              <div class="col-12 col-md-4">
+                <div class="chart-card">
+                  <div class="chart-title">Event Types</div>
+                  <div class="chart-container">
+                    <canvas id="chart-event-types"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <!-- Recent Quests -->
+              <div class="col-12 col-md-6">
+                <div class="chart-card">
+                  <div class="chart-title">Recent Quests</div>
+                  <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table mini-table mb-0">
+                      <thead><tr><th>Year</th><th>Type</th><th>Result</th><th>Gold</th></tr></thead>
+                      <tbody id="recent-quests"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <!-- Recent Events -->
+              <div class="col-12 col-md-6">
+                <div class="chart-card">
+                  <div class="chart-title">Recent Events</div>
+                  <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table mini-table mb-0">
+                      <thead><tr><th>Year</th><th>Type</th><th>Affected</th></tr></thead>
+                      <tbody id="recent-events"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Villagers -->
+          <div id="tab-villagers" class="tab-content" style="display: none;">
+            <!-- Pinned Villager -->
+            <section class="game-card mb-3" id="admin-pinned-card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <div class="chart-title mb-0">Inspect Villager</div>
+                    <div id="pinned-name" style="color: var(--aw-text);" class="h5 mb-0">Select a villager</div>
+                    <div id="pinned-subtitle" style="color: var(--aw-text-dim); font-size: 13px;">Click a row below</div>
+                  </div>
+                  <div class="text-end" style="font-size: 13px;">
+                    <div id="pinned-meta-top" style="color: var(--aw-text);"></div>
+                    <div id="pinned-meta-bottom" style="color: var(--aw-text-muted);"></div>
+                  </div>
+                </div>
+                <div class="row g-3" id="pinned-stats-row" style="display: none; font-size: 13px;">
+                  <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Job</div><div id="pinned-job" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Gender</div><div id="pinned-gender" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Age</div><div id="pinned-age" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Level / EXP</div><div id="pinned-level" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">HP / Hunger</div><div id="pinned-hp" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Spouse</div><div id="pinned-spouse" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Mother</div><div id="pinned-mother" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Father</div><div id="pinned-father" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-12"><div style="color: var(--aw-text-muted);">Children</div><div id="pinned-children" style="color: var(--aw-text);">-</div></div>
+                </div>
+                <div class="row g-3 mt-1" id="pinned-extra-row" style="display: none; font-size: 13px;">
+                  <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Traits</div><div id="pinned-traits" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Skills</div><div id="pinned-skills" style="color: var(--aw-text);">-</div></div>
+                  <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Achievements</div><div id="pinned-achievements" style="color: var(--aw-text);">-</div></div>
+                </div>
+                <div class="row g-3 mt-1" id="pinned-action-row" style="display: none; font-size: 13px;">
+                  <div class="col-12"><div style="color: var(--aw-text-muted);">Last action</div><div id="pinned-last-action" style="color: var(--aw-text);">-</div></div>
+                </div>
+                <div class="row g-3 mt-2" id="pinned-rel-row" style="display: none; font-size: 13px;">
+                  <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Bonds</div><ul class="mb-0" id="pinned-bonds" style="color: var(--aw-text);"></ul></div>
+                  <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Rivals</div><ul class="mb-0" id="pinned-conflicts" style="color: var(--aw-text);"></ul></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Villagers Table -->
+            <section class="game-card">
+              <div class="card-body p-0">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 px-3 pt-3 pb-2" style="border-bottom: 1px solid var(--aw-border);">
+                  <div class="chart-title mb-0">Villagers Data</div>
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="form-check form-switch small mb-0">
+                      <input class="form-check-input" type="checkbox" id="only-alive-toggle" checked />
+                      <label class="form-check-label" for="only-alive-toggle" style="color: var(--aw-text-muted);">Alive only</label>
+                    </div>
+                    <input type="search" id="table-search" class="form-control form-control-sm" placeholder="Search..." autocomplete="off" style="width: 150px;" />
+                  </div>
+                </div>
+                <div class="table-responsive aw-table-wrapper">
+                  <table id="characters-table" class="table aw-table mb-0 align-middle">
+                    <thead>
+                      <tr>
+                        <th data-key="name" class="sortable">Name</th>
+                        <th data-key="gender" class="sortable">Gender</th>
+                        <th data-key="job" class="sortable">Job</th>
+                        <th data-key="coins" class="sortable num text-end">Coins</th>
+                        <th data-key="age" class="sortable num text-end">Age</th>
+                        <th data-key="level" class="sortable num text-end">LVL</th>
+                        <th data-key="atk" class="sortable num text-end">ATK</th>
+                        <th data-key="def" class="sortable num text-end">DEF</th>
+                        <th data-key="hp" class="sortable num text-end">HP</th>
+                        <th data-key="traits" class="sortable">Traits</th>
+                        <th data-key="skills" class="sortable">Skills</th>
+                        <th data-key="last_action" class="sortable">Action</th>
+                        <th data-key="status" class="sortable">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for c in characters %}
+                      <tr class="aw-row-clickable {% if not c.alive %}aw-row-dead{% endif %}" data-char-id="{{ c.id }}">
+                        <td class="{% if not c.alive %}aw-name-dead{% endif %}">{% if c.job == 'King' %}♔ {% endif %}{{ c.name }}</td>
+                        <td>{{ c.gender }}</td>
+                        <td>{{ c.job }}</td>
+                        <td class="text-end">{{ c.coins }}</td>
+                        <td class="text-end">{{ c.age }}</td>
+                        <td class="text-end">{{ c.level }}</td>
+                        <td class="text-end">{{ c.atk }}</td>
+                        <td class="text-end">{{ c.def }}</td>
+                        <td class="text-end">{{ c.hp }}</td>
+                        <td class="aw-traits-cell">{{ c.traits }}</td>
+                        <td style="font-size: 11px; color: var(--aw-text-muted);">{{ c.skills or '-' }}</td>
+                        <td><span class="action-badge {{ c.last_action.split()[0] | lower if c.last_action else '' }}">{{ c.last_action or '-' }}</span></td>
+                        <td>{% if c.alive %}<span class="status-badge alive">Alive</span>{% else %}<span class="status-badge dead">Dead</span>{% endif %}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Tab: Buildings -->
+          <div id="tab-buildings" class="tab-content" style="display: none;">
+            <div class="game-card">
+              <div class="card-body">
+                <div class="chart-title">Village Buildings</div>
+                <div id="admin-buildings-wrapper">
+                  {% if village_buildings %}
+                  <div class="row g-3">
+                    {% for b in village_buildings %}
+                    <div class="col-6 col-md-4 col-lg-3">
+                      <div class="building-card {% if not b.built %}not-built{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <span class="building-name">{{ b.name }}</span>
+                          {% if b.built %}
+                            <span class="building-level built">Lv {{ b.level }}</span>
+                          {% else %}
+                            <span class="building-level not-built">—</span>
+                          {% endif %}
+                        </div>
                         {% if b.built %}
-                          <span class="building-level built">Lv {{ b.level }}</span>
-                        {% else %}
-                          <span class="building-level not-built">—</span>
+                        <div class="d-flex justify-content-between mb-1" style="font-size: 11px; color: var(--aw-text-muted);">
+                          <span>Health</span><span>{{ b.health }}%</span>
+                        </div>
+                        <div class="building-health-bar">
+                          <div class="building-health-fill {% if b.health > 60 %}healthy{% elif b.health > 25 %}damaged{% else %}critical{% endif %}" style="width: {{ b.health }}%;"></div>
+                        </div>
                         {% endif %}
                       </div>
-                      {% if b.built %}
-                      <div class="d-flex justify-content-between mb-1" style="font-size: 11px; color: var(--aw-text-muted);">
-                        <span>Health</span><span>{{ b.health }}%</span>
-                      </div>
-                      <div class="building-health-bar">
-                        <div class="building-health-fill {% if b.health > 60 %}healthy{% elif b.health > 25 %}damaged{% else %}critical{% endif %}" style="width: {{ b.health }}%;"></div>
-                      </div>
-                      {% endif %}
                     </div>
-                  </div>
-                  {% endfor %}
-                </div>
-                {% else %}
-                <div style="color: var(--aw-text-muted);">No buildings yet.</div>
-                {% endif %}
-              </div>
-            </div>
-          </section>
-
-          <!-- Pinned Villager -->
-          <section class="game-card mb-3" id="admin-pinned-card">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Inspect Villager</div>
-                  <div id="pinned-name" style="color: var(--aw-text);" class="h5 mb-0">Select a villager</div>
-                  <div id="pinned-subtitle" style="color: var(--aw-text-dim); font-size: 13px;">Click a row below</div>
-                </div>
-                <div class="text-end" style="font-size: 13px;">
-                  <div id="pinned-meta-top" style="color: var(--aw-text);"></div>
-                  <div id="pinned-meta-bottom" style="color: var(--aw-text-muted);"></div>
-                </div>
-              </div>
-
-              <div class="row g-3" id="pinned-stats-row" style="display: none; font-size: 13px;">
-                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Job</div><div id="pinned-job" style="color: var(--aw-text);">-</div></div>
-                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Gender</div><div id="pinned-gender" style="color: var(--aw-text);">-</div></div>
-                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Age</div><div id="pinned-age" style="color: var(--aw-text);">-</div></div>
-                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Level / EXP</div><div id="pinned-level" style="color: var(--aw-text);">-</div></div>
-                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">HP / Hunger</div><div id="pinned-hp" style="color: var(--aw-text);">-</div></div>
-                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Spouse</div><div id="pinned-spouse" style="color: var(--aw-text);">-</div></div>
-                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Mother</div><div id="pinned-mother" style="color: var(--aw-text);">-</div></div>
-                <div class="col-6 col-md-3"><div style="color: var(--aw-text-muted);">Father</div><div id="pinned-father" style="color: var(--aw-text);">-</div></div>
-                <div class="col-12"><div style="color: var(--aw-text-muted);">Children</div><div id="pinned-children" style="color: var(--aw-text);">-</div></div>
-              </div>
-
-              <div class="row g-3 mt-1" id="pinned-extra-row" style="display: none; font-size: 13px;">
-                <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Traits</div><div id="pinned-traits" style="color: var(--aw-text);">-</div></div>
-                <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Skills</div><div id="pinned-skills" style="color: var(--aw-text);">-</div></div>
-                <div class="col-12 col-md-4"><div style="color: var(--aw-text-muted);">Achievements</div><div id="pinned-achievements" style="color: var(--aw-text);">-</div></div>
-              </div>
-
-              <div class="row g-3 mt-1" id="pinned-action-row" style="display: none; font-size: 13px;">
-                <div class="col-12"><div style="color: var(--aw-text-muted);">Last action</div><div id="pinned-last-action" style="color: var(--aw-text);">-</div></div>
-              </div>
-
-              <div class="row g-3 mt-2" id="pinned-rel-row" style="display: none; font-size: 13px;">
-                <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Bonds</div><ul class="mb-0" id="pinned-bonds" style="color: var(--aw-text);"></ul></div>
-                <div class="col-12 col-md-6"><div style="color: var(--aw-text-muted);">Rivals</div><ul class="mb-0" id="pinned-conflicts" style="color: var(--aw-text);"></ul></div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Villagers Table -->
-          <section class="game-card">
-            <div class="card-body p-0">
-              <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 px-3 pt-3 pb-2" style="border-bottom: 1px solid var(--aw-border);">
-                <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Villagers Data</div>
-                <div class="d-flex align-items-center gap-3">
-                  <div class="form-check form-switch small mb-0">
-                    <input class="form-check-input" type="checkbox" id="only-alive-toggle" checked />
-                    <label class="form-check-label" for="only-alive-toggle" style="color: var(--aw-text-muted);">Alive only</label>
-                  </div>
-                  <input type="search" id="table-search" class="form-control form-control-sm" placeholder="Search..." autocomplete="off" style="width: 150px;" />
-                </div>
-              </div>
-
-              <div class="table-responsive aw-table-wrapper">
-                <table id="characters-table" class="table aw-table mb-0 align-middle">
-                  <thead>
-                    <tr>
-                      <th data-key="name" class="sortable">Name</th>
-                      <th data-key="gender" class="sortable">Gender</th>
-                      <th data-key="job" class="sortable">Job</th>
-                      <th data-key="coins" class="sortable num text-end">Coins</th>
-                      <th data-key="age" class="sortable num text-end">Age</th>
-                      <th data-key="int" class="sortable num text-end">INT</th>
-                      <th data-key="rep" class="sortable num text-end">REP</th>
-                      <th data-key="level" class="sortable num text-end">LVL</th>
-                      <th data-key="exp" class="sortable num text-end">EXP</th>
-                      <th data-key="atk" class="sortable num text-end">ATK</th>
-                      <th data-key="def" class="sortable num text-end">DEF</th>
-                      <th data-key="hp" class="sortable num text-end">HP</th>
-                      <th data-key="hunger" class="sortable num text-end">Food</th>
-                      <th data-key="traits" class="sortable">Traits</th>
-                      <th data-key="skills" class="sortable">Skills</th>
-                      <th data-key="last_action" class="sortable">Action</th>
-                      <th data-key="origin" class="sortable">Origin</th>
-                      <th data-key="status" class="sortable">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for c in characters %}
-                    <tr class="aw-row-clickable {% if not c.alive %}aw-row-dead{% endif %}" data-char-id="{{ c.id }}">
-                      <td class="{% if not c.alive %}aw-name-dead{% endif %}">{% if c.job == 'King' %}♔ {% endif %}{{ c.name }}</td>
-                      <td>{{ c.gender }}</td>
-                      <td>{{ c.job }}</td>
-                      <td class="text-end">{{ c.coins }}</td>
-                      <td class="text-end">{{ c.age }}</td>
-                      <td class="text-end">{{ c.int }}</td>
-                      <td class="text-end">{{ c.rep }}</td>
-                      <td class="text-end">{{ c.level }}</td>
-                      <td class="text-end">{{ c.exp }}</td>
-                      <td class="text-end">{{ c.atk }}</td>
-                      <td class="text-end">{{ c.def }}</td>
-                      <td class="text-end">{{ c.hp }}</td>
-                      <td class="text-end">{{ c.hunger }}</td>
-                      <td class="aw-traits-cell">{{ c.traits }}</td>
-                      <td style="font-size: 11px; color: var(--aw-text-muted);">{{ c.skills or '-' }}</td>
-                      <td><span class="action-badge {{ c.last_action.split()[0] | lower if c.last_action else '' }}">{{ c.last_action or '-' }}</span></td>
-                      <td>{% if c.origin == 'player' %}<span class="status-badge player">Player</span>{% else %}<span style="color: var(--aw-text-dim);">NPC</span>{% endif %}</td>
-                      <td>{% if c.alive %}<span class="status-badge alive">Alive</span>{% else %}<span class="status-badge dead">Dead</span>{% endif %}</td>
-                    </tr>
                     {% endfor %}
-                  </tbody>
-                </table>
+                  </div>
+                  {% else %}
+                  <div style="color: var(--aw-text-muted);">No buildings yet.</div>
+                  {% endif %}
+                </div>
               </div>
             </div>
-          </section>
+          </div>
+
         </main>
       </div>
     </div>
@@ -252,5 +454,6 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin-charts.js') }}"></script>
 </body>
 </html>
