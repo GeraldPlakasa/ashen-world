@@ -310,9 +310,22 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
 
         "spouseId": 0,
         "spouseSinceDay": 0,
+        "spouseId_at_death": 0,
 
         "born_day": int(current_day),
         "last_birth_day": 0,
+        "death_day": 0,
+
+        "kingTerms": 0,
+        "huntWins": 0,
+        "huntWinsYear": 0,
+        "questWins": 0,
+
+        "gen": max(int(mom.get("gen", 1) or 1), int(dad.get("gen", 1) or 1)) + 1,
+        "immigrantGen": 0,
+
+        "achievements": "[]",
+        "kingsVotedFor": "[]",
 
         "last_action": f"born to {mom.get('name','?')} and {dad.get('name','?')}",
         "action_log": "",

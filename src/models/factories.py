@@ -49,8 +49,13 @@ def create_default_villager(**overrides: Any) -> Villager:
         "death_day": 0,
         "huntWins": 0,
         "huntWinsYear": 0,
+        "questWins": 0,
         "born_day": 0,
         "last_birth_day": 0,
+        "achievements": "[]",
+        "kingsVotedFor": "[]",
+        "skills": "",
+        "skill_learning": "{}",
     }
     base.update(overrides)  # type: ignore[typeddict-item]
     return base
