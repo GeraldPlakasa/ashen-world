@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -10,37 +10,20 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
   <style>
-    .feature-search-wrapper {
-      position: relative;
-      margin-bottom: 1rem;
-    }
-    .feature-search {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid var(--aw-border);
-      border-radius: 8px;
-      background: var(--aw-card-bg);
-      color: var(--aw-text);
-      font-size: 14px;
-    }
-    .feature-search:focus {
-      outline: none;
-      border-color: var(--aw-accent);
-      box-shadow: 0 0 0 2px rgba(var(--aw-accent-rgb), 0.2);
-    }
-    .feature-search::placeholder {
-      color: var(--aw-text-muted);
-    }
-    .toc-link {
-      transition: background-color 0.15s, color 0.15s;
-    }
-    .toc-link.highlight {
-      background-color: var(--aw-accent) !important;
-      color: #fff !important;
-    }
-    .toc-link.hidden {
-      display: none !important;
-    }
+    .feature-search { width: 100%; padding: 10px 14px; border: 1px solid var(--aw-border); border-radius: 8px; background: var(--aw-card-bg); color: var(--aw-text); font-size: 14px; }
+    .feature-search:focus { outline: none; border-color: var(--aw-accent); }
+    .feature-box { background: var(--aw-bg-dark); border-radius: 6px; padding: 12px; margin-bottom: 8px; }
+    .feature-box h6 { color: var(--aw-text); margin-bottom: 8px; font-size: 14px; }
+    .feature-box ul { margin-bottom: 0; padding-left: 20px; }
+    .feature-box li { color: var(--aw-text-muted); font-size: 13px; }
+    .feature-table { font-size: 13px; }
+    .feature-table th { color: var(--aw-text-muted); font-weight: 500; }
+    .feature-table td { color: var(--aw-text); }
+    .badge-rarity { font-size: 10px; padding: 2px 6px; }
+    .badge-common { background: #6b7280; }
+    .badge-uncommon { background: #22c55e; }
+    .badge-rare { background: #8b5cf6; }
+    .stat-pill { display: inline-block; background: var(--aw-bg-dark); padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 2px; }
   </style>
 </head>
 
@@ -53,1685 +36,631 @@
         <header class="aw-header d-flex align-items-center justify-content-between mb-3">
           <div class="d-flex flex-column">
             <span class="header-title">Feature Guide</span>
-            <span class="header-subtitle">
-              All systems in Ashen World
-              {% if year is not none and day is not none %} · Year {{ year }}, Day {{ day }}{% endif %}
-            </span>
+            <span class="header-subtitle">Complete game documentation</span>
           </div>
-          {% if username %}
-          <div style="color: var(--aw-text-muted); font-size: 13px;">
-            Playing as <strong style="color: var(--aw-text);">{{ username }}</strong>
-          </div>
-          {% endif %}
         </header>
 
         <main class="aw-main">
           <div class="row g-3">
-            <!-- TOC -->
-            <div class="col-12 col-lg-4">
-              <section class="game-card">
+            <!-- TOC Sidebar -->
+            <div class="col-12 col-lg-3">
+              <section class="game-card sticky-top" style="top: 20px;">
                 <div class="card-body">
-                  <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Navigate</div>
-                  <div style="color: var(--aw-text);" class="h6 mb-3">Table of Contents</div>
-
-                  <!-- Search Box -->
-                  <div class="feature-search-wrapper">
-                    <input type="text" class="feature-search" id="featureSearch" placeholder="🔍 Search features..." autocomplete="off" />
-                  </div>
-
-                  <!-- Sort Dropdown -->
-                  <div class="mb-3">
-                    <select class="form-select form-select-sm" id="tocSort" style="background: var(--aw-card-bg); color: var(--aw-text); border-color: var(--aw-border);">
-                      <option value="default">Sort: Default</option>
-                      <option value="az">Sort: A-Z</option>
-                      <option value="za">Sort: Z-A</option>
-                    </select>
-                  </div>
-
-                  <div class="list-group list-group-flush" id="tocList" style="font-size: 13px;">
-                    <a class="list-group-item list-group-item-action toc-link" href="#achievements" data-target="cAchievements">Achievements</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#quests" data-target="cQuests">Quest System</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#aging" data-target="cAging">Aging System</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#events" data-target="cEvents">World Events</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#weather" data-target="cWeather">Weather System</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#pop" data-target="cPop">Village Population</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#actions" data-target="cActions">Daily Actions</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#combat" data-target="cCombat">Combat & Progression</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#relations" data-target="cRel">Relationships</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#marriage" data-target="cMarriage">Marriage & Family</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#birth" data-target="cBirth">Birth & Childhood</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#inherit" data-target="cInherit">Inheritance</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#politics" data-target="cPolitics">Leadership & Elections</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#economy" data-target="cEco">Economy & Tax</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#buildings" data-target="cBuildings">Building System</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#leaderboard" data-target="cLeaderboard">Leaderboard</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#familytree" data-target="cFamilyTree">Family Tree</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#rules" data-target="cRules">Rules & Constraints</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#traits" data-target="cTraits">Trait Behaviors</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#skills" data-target="cSkills">Skill System</a>
-                    <a class="list-group-item list-group-item-action toc-link" href="#gear" data-target="cGear">Item / Gear</a>
+                  <div class="chart-title">Navigation</div>
+                  <input type="text" class="feature-search mb-3" id="featureSearch" placeholder="🔍 Search..." />
+                  <div class="list-group list-group-flush" id="tocList" style="font-size: 13px; max-height: 60vh; overflow-y: auto;">
+                    <a class="list-group-item list-group-item-action" href="#simulation">🎮 Simulation</a>
+                    <a class="list-group-item list-group-item-action" href="#villagers">👥 Villagers</a>
+                    <a class="list-group-item list-group-item-action" href="#actions">⚡ Daily Actions</a>
+                    <a class="list-group-item list-group-item-action" href="#skills">✨ Skills</a>
+                    <a class="list-group-item list-group-item-action" href="#achievements">🏆 Achievements</a>
+                    <a class="list-group-item list-group-item-action" href="#combat">⚔️ Combat</a>
+                    <a class="list-group-item list-group-item-action" href="#quests">📜 Quests</a>
+                    <a class="list-group-item list-group-item-action" href="#events">🌪️ World Events</a>
+                    <a class="list-group-item list-group-item-action" href="#relationships">💕 Relationships</a>
+                    <a class="list-group-item list-group-item-action" href="#family">👨‍👩‍👧 Family</a>
+                    <a class="list-group-item list-group-item-action" href="#elections">👑 Elections</a>
+                    <a class="list-group-item list-group-item-action" href="#economy">💰 Economy</a>
+                    <a class="list-group-item list-group-item-action" href="#buildings">🏗️ Buildings</a>
+                    <a class="list-group-item list-group-item-action" href="#weather">🌤️ Weather</a>
+                    <a class="list-group-item list-group-item-action" href="#traits">🎭 Traits</a>
                   </div>
                 </div>
               </section>
             </div>
 
-            <!-- CONTENT -->
-            <div class="col-12 col-lg-8">
-              <section class="game-card">
+            <!-- Main Content -->
+            <div class="col-12 col-lg-9">
+              
+              <!-- SIMULATION -->
+              <section class="game-card mb-3" id="simulation">
                 <div class="card-body">
-                  <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Game Systems</div>
-                  <div style="color: var(--aw-text);" class="h6 mb-3">Detailed Documentation</div>
-
-                  <div class="accordion" id="featuresAccordion">
-
-                    <!-- ACHIEVEMENT SYSTEM -->
-                    <div class="accordion-item" id="achievements">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cAchievements">Achievement System</button>
-                      </h2>
-                      <div id="cAchievements" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Earn achievements by reaching milestones. Each achievement grants stat bonuses or unlocks special traits!</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Dynasty Founder</div>
-                                <ul class="small mb-0">
-                                  <li>Have 5 or more children</li>
-                                  <li><strong>Reward:</strong> +15 REP, "Patriarch" trait</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Kingmaker</div>
-                                <ul class="small mb-0">
-                                  <li>Vote for 5 different winning kings</li>
-                                  <li><strong>Reward:</strong> +10 INT</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Centurion</div>
-                                <ul class="small mb-0">
-                                  <li>Reach age 100</li>
-                                  <li><strong>Reward:</strong> +50 HP, "Immortal" trait</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Legendary Hunter</div>
-                                <ul class="small mb-0">
-                                  <li>Win 500 hunts total</li>
-                                  <li><strong>Reward:</strong> +25 ATK, "Hunter" trait</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Wealthy</div>
-                                <ul class="small mb-0">
-                                  <li>Accumulate 10,000 coins</li>
-                                  <li><strong>Reward:</strong> +1,000 coins bonus</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Survivor</div>
-                                <ul class="small mb-0">
-                                  <li>Survive a plague event</li>
-                                  <li><strong>Reward:</strong> +10 DEF</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Elder Statesman</div>
-                                <ul class="small mb-0">
-                                  <li>Become King at age 80+</li>
-                                  <li><strong>Reward:</strong> +20 REP, "Wise" trait</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Iron Will</div>
-                                <ul class="small mb-0">
-                                  <li>Survive combat with HP below 80, five times</li>
-                                  <li><strong>Reward:</strong> +15 DEF, "Resilient" trait</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Questmaster</div>
-                                <ul class="small mb-0">
-                                  <li>Complete 5 successful quests</li>
-                                  <li><strong>Reward:</strong> +10 ATK, "Veteran" trait</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                  <h5 class="mb-3">🎮 Simulation Overview</h5>
+                  <p>Ashen World runs a continuous village simulation where each day advances automatically or manually.</p>
+                  
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Time System</h6>
+                        <ul>
+                          <li><strong>90 days = 1 year</strong></li>
+                          <li>Auto-simulation: 1 real second per day</li>
+                          <li>Manual advancement available</li>
+                          <li>Year rollover triggers aging, elections, stats</li>
+                        </ul>
                       </div>
                     </div>
-
-                    <!-- QUEST SYSTEM -->
-                    <div class="accordion-item" id="quests">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cQuests">Quest System</button>
-                      </h2>
-                      <div id="cQuests" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Every 3 years, the King issues a quest. Villagers volunteer based on their traits, stats, and economic conditions. Parties of 2-5 villagers embark on missions with rewards and risks.</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Combat Quest</div>
-                                <ul class="small mb-0">
-                                  <li>Hunt dangerous creatures or bandits</li>
-                                  <li>Stat focus: ATK</li>
-                                  <li>Rewards: 150-400 gold</li>
-                                  <li>Barracks building boosts success</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Diplomacy Quest</div>
-                                <ul class="small mb-0">
-                                  <li>Negotiate with neighboring villages</li>
-                                  <li>Stat focus: INT</li>
-                                  <li>Rewards: 100-300 gold</li>
-                                  <li>Royal Court building boosts success</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Exploration Quest</div>
-                                <ul class="small mb-0">
-                                  <li>Scout ruins, forests, or mountains</li>
-                                  <li>Stat focus: DEF</li>
-                                  <li>Rewards: 120-350 gold</li>
-                                  <li>Library building boosts success</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Trade Quest</div>
-                                <ul class="small mb-0">
-                                  <li>Acquire goods or establish trade routes</li>
-                                  <li>Stat focus: REP</li>
-                                  <li>Rewards: 200-500 gold</li>
-                                  <li>Market building boosts success</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🛡️ Rescue Quest</div>
-                                <ul class="small mb-0">
-                                  <li>Save kidnapped villagers from enemies</li>
-                                  <li>Stat focus: ATK</li>
-                                  <li>Rewards: 100-250 gold</li>
-                                  <li>Special: Can restore recently dead villagers</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💎 Treasure Hunt Quest</div>
-                                <ul class="small mb-0">
-                                  <li>Find legendary treasures in ancient ruins</li>
-                                  <li>Stat focus: INT</li>
-                                  <li>Rewards: 300-700 gold (highest!)</li>
-                                  <li>Special: 50% gear drop chance</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Party Formation</div>
-                                <ul class="small mb-0">
-                                  <li>2-5 villagers per party</li>
-                                  <li>Volunteers scored by relevant stats + traits</li>
-                                  <li>Poor villagers more likely to volunteer</li>
-                                  <li>King/Queen never participate</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">King's Influence</div>
-                                <ul class="small mb-0">
-                                  <li>Brave King: More combat/exploration quests</li>
-                                  <li>Wise King: More diplomacy/trade quests</li>
-                                  <li>Greedy King: More trade quests</li>
-                                  <li>Hot-headed King: More combat quests</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Success Calculation (EXTREME)</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Combat:</strong> ~250 avg ATK threshold</li>
-                                  <li><strong>Diplomacy:</strong> ~220 avg INT threshold</li>
-                                  <li><strong>Exploration:</strong> ~230 avg DEF threshold</li>
-                                  <li><strong>Trade:</strong> ~210 avg REP threshold</li>
-                                  <li>Buildings add +2 per level</li>
-                                  <li>Success rate: 1-95% based on ratio</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Economic Factors</div>
-                                <ul class="small mb-0">
-                                  <li>Party wealth affects supplies/bribes</li>
-                                  <li>Trade quests: up to +5 bonus from coins</li>
-                                  <li>Diplomacy: up to +3 bonus (bribes)</li>
-                                  <li>Combat/Exploration: up to +2 (supplies)</li>
-                                  <li>Treasury support: up to +3 bonus</li>
-                                  <li>Hungry/low HP members reduce success</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Gear Rewards</div>
-                                <ul class="small mb-0">
-                                  <li>25-40% chance to earn gear on success</li>
-                                  <li>Best performer receives the gear</li>
-                                  <li><strong>T1:</strong> Battle Trophy, Explorer's Cloak (+3-7)</li>
-                                  <li><strong>T2:</strong> Slayer's Blade, Guardian's Shield (+8-14)</li>
-                                  <li><strong>T3:</strong> Dragonslayer's Edge, Champion's Plate (+14-22)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Difficulty Scaling</div>
-                                <ul class="small mb-0">
-                                  <li>Quests are <strong>extremely difficult</strong></li>
-                                  <li>Most early-game quests will fail</li>
-                                  <li>Need high-level veteran warriors</li>
-                                  <li>Economy and HP matter significantly</li>
-                                  <li>Random luck factor: ±15%</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">Outcomes</div>
-                            <ul class="small mb-0">
-                              <li><strong>Success:</strong> Gold + gear for best performer + XP + stat boosts</li>
-                              <li><strong>Failure:</strong> HP damage (15-65), possible deaths, treasury loses 50-150 gold</li>
-                              <li><strong>Timing:</strong> Every 3 years on a random day (Year 3, 6, 9...)</li>
-                              <li><strong>Achievement:</strong> Complete 5 quests → Questmaster (+10 ATK, "Veteran" trait)</li>
-                            </ul>
-                          </div>
-                        </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Daily Cycle</h6>
+                        <ul>
+                          <li>Each villager chooses an action</li>
+                          <li>Actions resolve (combat, work, social)</li>
+                          <li>Births, deaths, marriages processed</li>
+                          <li>World events may trigger</li>
+                        </ul>
                       </div>
                     </div>
-
-                    <!-- AGING SYSTEM -->
-                    <div class="accordion-item" id="aging">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cAging">Aging System</button>
-                      </h2>
-                      <div id="cAging" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Villagers experience the effects of aging as they grow older. Decay is gradual to allow elders to live longer.</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Prime Years (18-69)</div>
-                                <ul class="small mb-0">
-                                  <li>No age-related penalties</li>
-                                  <li>Full stat growth potential</li>
-                                  <li>Normal HP recovery</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Early Elder (70-79)</div>
-                                <ul class="small mb-0">
-                                  <li>0 to -1 HP per day</li>
-                                  <li>2% daily chance of stat decay</li>
-                                  <li>~2% yearly natural death chance</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Old Age (80-89)</div>
-                                <ul class="small mb-0">
-                                  <li>-1 to -2 HP per day</li>
-                                  <li>5% daily chance of stat decay</li>
-                                  <li>~7% yearly natural death chance</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Very Old (90-99)</div>
-                                <ul class="small mb-0">
-                                  <li>-1 to -3 HP per day</li>
-                                  <li>10% daily chance of stat decay</li>
-                                  <li>~17% yearly natural death chance</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-12">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Centurion (100+)</div>
-                                <ul class="small mb-0">
-                                  <li>-2 to -5 HP per day, 15% daily stat decay chance, ~30% yearly death chance</li>
-                                  <li>Reaching 100 unlocks the <strong>Centurion achievement</strong> (+50 HP, "Immortal" trait)</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- EVENTS SYSTEM -->
-                    <div class="accordion-item" id="events">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cEvents">World Events System</button>
-                      </h2>
-                      <div id="cEvents" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Random world events add dynamic challenges and rewards to the village. Events occur <strong>once per year</strong> on a random day.</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">☠️ Plague</div>
-                                <ul class="small mb-0">
-                                  <li>-15-40 HP for 40-55% of villagers</li>
-                                  <li>Can cause deaths</li>
-                                  <li><strong>Mitigation:</strong> Clinic (-20% severity per level)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🌾 Famine</div>
-                                <ul class="small mb-0">
-                                  <li>+15-30 hunger for 60-80% of villagers</li>
-                                  <li>Treasury loses 5-15%</li>
-                                  <li><strong>Mitigation:</strong> Granary (-20% severity per level)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🎉 Festival</div>
-                                <ul class="small mb-0">
-                                  <li>+2-8 REP, HP restore, hunger reduction</li>
-                                  <li>Treasury gains 50-150 coins</li>
-                                  <li><strong>Boost:</strong> Temple, Tavern (+15% per level)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">⚔️ Invasion</div>
-                                <ul class="small mb-0">
-                                  <li>Combat damage (20-50 HP), possible deaths</li>
-                                  <li>Treasury loses 10-25%</li>
-                                  <li><strong>Mitigation:</strong> Barracks (-15%), Walls (-20% per level)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🌻 Good Harvest</div>
-                                <ul class="small mb-0">
-                                  <li>Reduces hunger for all villagers</li>
-                                  <li>Bonus coins for nature workers</li>
-                                  <li><strong>Boost:</strong> Granary, Market (+20% per level)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">✨ Blessing</div>
-                                <ul class="small mb-0">
-                                  <li>+25-50 HP heal for all</li>
-                                  <li>30% chance of +1-3 ATK/DEF/INT</li>
-                                  <li><strong>Boost:</strong> Temple (+25% per level)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💰 Windfall</div>
-                                <ul class="small mb-0">
-                                  <li>30-50% villagers find treasure (+20-60 coins)</li>
-                                  <li>Treasury gains 200-500 coins</li>
-                                  <li><strong>Boost:</strong> Market (+30% per level)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🌪️ Storm</div>
-                                <ul class="small mb-0">
-                                  <li>40-60% villagers injured (-10-30 HP)</li>
-                                  <li>Buildings may be damaged, treasury loses 5-15%</li>
-                                  <li><strong>Mitigation:</strong> Walls (-20% severity per level)</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">Event Timing</div>
-                            <ul class="small mb-0">
-                              <li><strong>Frequency:</strong> Once per year, on a random day</li>
-                              <li><strong>Event Type:</strong> Weighted random (positive events more common)</li>
-                              <li>Event notifications show Year for easier tracking</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- WEATHER SYSTEM -->
-                    <div class="accordion-item" id="weather">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cWeather">Weather System</button>
-                      </h2>
-                      <div id="cWeather" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Dynamic weather system that affects gameplay, action effectiveness, and visuals.</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">☀️ Sunny Weather (65%)</div>
-                                <ul class="small mb-0">
-                                  <li>Normal work efficiency (100%)</li>
-                                  <li>Standard hunting conditions</li>
-                                  <li>Base socializing bonuses</li>
-                                  <li>Warm golden background glow</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🌧️ Rainy Weather (35%)</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Study:</strong> +15% INT gain (indoor focus)</li>
-                                  <li><strong>Work:</strong> -10% efficiency (wet conditions)</li>
-                                  <li><strong>Socialize:</strong> -15% gains (indoors, less interaction)</li>
-                                  <li><strong>Combat:</strong> -7% power (slippery footing)</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">⚙️ Weather Mechanics</div>
-                            <ul class="small mb-0">
-                              <li><strong>Roll frequency:</strong> Every 5 in-game days</li>
-                              <li><strong>Header badge:</strong> Current weather shown in dashboard header</li>
-                              <li><strong>Visual effects:</strong> Background gradient + animated rain particles</li>
-                              <li><strong>Gameplay impact:</strong> Weather directly affects action outcomes</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="pop">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cPop">Village Population System</button>
-                      </h2>
-                      <div id="cPop" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🎲 Generation</div>
-                                <ul class="small mb-0">
-                                  <li><strong>50 initial villagers</strong> with randomized stats</li>
-                                  <li>Gender-based system (Male/Female)</li>
-                                  <li>Random age distribution (18-50)</li>
-                                  <li>Family name assignment</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">📊 Stats & Attributes</div>
-                                <ul class="small mb-0">
-                                  <li><strong>HP:</strong> Health (0 = death)</li>
-                                  <li><strong>ATK/DEF:</strong> Combat stats</li>
-                                  <li><strong>INT:</strong> Intelligence</li>
-                                  <li><strong>REP:</strong> Reputation</li>
-                                  <li><strong>Hunger:</strong> Food level (100 = starving)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">⏰ Time System</div>
-                                <ul class="small mb-0">
-                                  <li><strong>1 year = 90 in-game days</strong></li>
-                                  <li>Villagers age +1 at year boundary</li>
-                                  <li>Natural death at old age (70+)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🚪 Immigration</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Base chance:</strong> 3% daily</li>
-                                  <li><strong>Tavern boost:</strong> +2% per level</li>
-                                  <li><strong>Total range:</strong> 2-15% chance</li>
-                                  <li><strong>Arrivals:</strong> 1-2 villagers per event</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">💼 Jobs (50+ Occupations)</div>
-                            <p class="small mb-1">Farmer, Blacksmith, Merchant, Scholar, Soldier, Hunter, Healer, Priest, Noble, Knight, Guard, Baker, Tailor, Mason, Carpenter, Miner, Shepherd, Fisherman, Brewer, Innkeeper, Scribe, Alchemist, Bard, Thief, Assassin, and many more...</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="actions">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cActions">Daily Action System</button>
-                      </h2>
-                      <div id="cActions" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="small text-muted mb-3">Each day, every villager performs ONE action based on their AI decision-making. Actions are influenced by traits, stats, hunger, HP, and relationships.</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💪 Training Actions</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Train</strong> — +1-3 ATK, +1-2 DEF. Soldiers/Guards prefer this. Barracks boosts gains.</li>
-                                  <li><strong>Study</strong> — +1-3 INT. Scholars/Healers prefer this. Library boosts gains (+25%/level).</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💰 Economic Actions</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Work</strong> — Earn 10-100 coins (before tax). Taxed by King. Market boosts income (+20%/level).</li>
-                                  <li><strong>Buy Food</strong> — Spend 3-10 coins to reduce hunger by 8-18. Granary boosts effect.</li>
-                                  <li><strong>Buy Gear</strong> — Spend coins on stat-boosting items from shop.</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">❤️ Recovery Actions</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Rest</strong> — Recover 2-6 HP. Triggered when HP low. Clinic/Tavern boost healing.</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">⚔️ Combat Actions</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Hunt</strong> — Fight monsters. Win: XP + coins + minor damage. Lose: significant HP loss.</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🤝 Social Actions</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Socialize</strong> — Improve relationship with one villager (+5-15 points).</li>
-                                  <li><strong>Hangout</strong> — Group activity with 2-5 villagers (+3-10 each).</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🎭 Risk Actions</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Steal</strong> — Attempt theft. Success: 5-15 coins. Fail: reputation loss (-1-4 REP).</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🎓 Teaching Actions</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Mentor</strong> — Adults 20+ with skills can teach children. After 100 lessons, child gains the skill. Mentor gains +REP and relationship.</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div class="row g-2">
-                            <div class="col-12">
-                              <div class="feature-box" style="background: var(--aw-bg-alt);">
-                                <div style="color: var(--aw-text);" class="small mb-1">🧠 AI Decision Making</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Priority System:</strong> Survival (hunger/HP) → Combat (if warrior) → Economic → Social</li>
-                                  <li><strong>Trait Influence:</strong> Brave villagers hunt more, Lazy ones rest more, Greedy ones work/steal more</li>
-                                  <li><strong>Job Influence:</strong> Soldiers train/hunt, Merchants work, Scholars study</li>
-                                  <li><strong>Building Influence:</strong> Barracks → more training/hunting, Library → more studying</li>
-                                  <li><strong>Weighted Random:</strong> Actions chosen probabilistically based on all factors</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="combat">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cCombat">Combat & Progression</button>
-                      </h2>
-                      <div id="cCombat" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🎯 Hunt System</div>
-                                <ul class="small mb-0">
-                                  <li>Procedural enemy generation</li>
-                                  <li><strong>Common:</strong> Basic creatures</li>
-                                  <li><strong>Elite:</strong> Stronger foes (2x stats)</li>
-                                  <li><strong>Legendary:</strong> Rare bosses (3x stats)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">⚡ Combat Resolution</div>
-                                <ul class="small mb-0">
-                                  <li>ATK vs enemy DEF calculation</li>
-                                  <li>Win: XP + coins + small scratch damage (10%)</li>
-                                  <li>Loss: Significant HP damage</li>
-                                  <li>Death: HP reaches 0</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">📈 Leveling & HP</div>
-                                <ul class="small mb-0">
-                                  <li>XP from combat, training, work</li>
-                                  <li>Level up grants ATK/DEF/HP bonuses</li>
-                                  <li><strong>HP has no upper limit</strong> — grows with level</li>
-                                  <li>Higher level = stronger enemies</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💀 Starvation</div>
-                                <ul class="small mb-0">
-                                  <li>Hunger 100+ = HP damage/day</li>
-                                  <li>Buy food to reduce hunger</li>
-                                  <li>Children immune to hunger</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="relations">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRel">Relationship System</button>
-                      </h2>
-                      <div id="cRel" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">📊 Relationship Scores</div>
-                                <ul class="small mb-0">
-                                  <li>Range: <strong>-100 to +120</strong></li>
-                                  <li>Grows through socialize (+5 to +15) / hangout (+3 to +10)</li>
-                                  <li>Minimal decay (15% chance of -1 to -2)</li>
-                                  <li>Traits affect relationship gains</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🏷️ Relationship Labels</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Enemy:</strong> ≤ -60</li>
-                                  <li><strong>Rival:</strong> -59 to -30</li>
-                                  <li><strong>Friend:</strong> +30 to +64</li>
-                                  <li><strong>Best Friend:</strong> +65 to +79</li>
-                                  <li><strong>Love:</strong> +80 to +120 (M-F only)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-12">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💥 Relationship Effects</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Love:</strong> Enables marriage proposal</li>
-                                  <li><strong>Enemy:</strong> May trigger assassination attempts</li>
-                                  <li><strong>Family:</strong> Base relationship bonus for relatives</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="marriage">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cMarriage">Marriage & Family</button>
-                      </h2>
-                      <div id="cMarriage" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <div class="row g-2">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Marriage Requirements</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Love threshold:</strong> 85+ relationship score</li>
-                                  <li><strong>Age:</strong> Both partners must be 18-60</li>
-                                  <li><strong>Family:</strong> Different families only</li>
-                                  <li><strong>Status:</strong> Both must be unmarried</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Spouse System</div>
-                                <ul class="small mb-0">
-                                  <li>Mutual spouse tracking (spouseId)</li>
-                                  <li>King's spouse becomes Queen automatically</li>
-                                  <li>Widowing on spouse death</li>
-                                  <li>Remarriage allowed after widowing</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-12">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Breakup & Divorce</div>
-                                <ul class="small mb-0">
-                                  <li>Relationship decay can trigger breakup</li>
-                                  <li>Negative relationship scores lead to divorce</li>
-                                  <li>Children remain linked to both parents</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="birth">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cBirth">Birth & Childhood</button>
-                      </h2>
-                      <div id="cBirth" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <div class="row g-2">
-                            <div class="col-12">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Birth Logic</div>
-                                <ul class="small mb-0">
-                                  <li>Mothers 18–50, fathers 18–75</li>
-                                  <li>Birth cooldown: 45 days</li>
-                                  <li>Probability by love score</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-12">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Children (0–16)</div>
-                                <ul class="small mb-0">
-                                  <li>Immune to hunger</li>
-                                  <li>Limited actions</li>
-                                  <li>Stat/trait inheritance</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="inherit">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cInherit">Inheritance System</button>
-                      </h2>
-                      <div id="cInherit" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <ul class="mb-0">
-                            <li>Estate distribution on death</li>
-                            <li>Priority: children → spouse → family → treasury</li>
-                            <li>Player character succession</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="politics">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cPolitics">Leadership & Elections</button>
-                      </h2>
-                      <div id="cPolitics" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <div class="row g-2">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">👑 King System</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Scheduled:</strong> Elections every 5 years</li>
-                                  <li><strong>Emergency:</strong> Immediate election if King dies</li>
-                                  <li><strong>Term limits:</strong> 3 terms lifetime max</li>
-                                  <li><strong>Dynasty bonus:</strong> Same family gets advantage</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🗳️ Election Mechanics</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Voters:</strong> All villagers age 16+</li>
-                                  <li><strong>Candidates:</strong> Adults 18+, prefer males</li>
-                                  <li><strong>Results:</strong> Vote count + percentage shown</li>
-                                  <li><strong>Tie-breaker:</strong> Leadership → REP → INT → Level</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">📊 Leadership Score</div>
-                                <ul class="small mb-0">
-                                  <li>INT×1.2 + REP×0.9 + Level×2.0 + ATK×0.4 + DEF×0.5</li>
-                                  <li>Trait bonuses: Wise (+14), Generous/Loyal (+8), Brave/Empathic/Diligent (+6)</li>
-                                  <li>Trait penalties: Deceitful (-12), Greedy/Lazy (-10), Hot-headed (-8)</li>
-                                  <li>Age preference: 22-55 years optimal</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🗡️ Assassination</div>
-                                <ul class="small mb-0">
-                                  <li>Daily chance to assassinate enemies</li>
-                                  <li>Influenced by traits (Deceitful, Brave)</li>
-                                  <li>Walls building reduces success rate</li>
-                                  <li>Royal Court increases detection</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="economy">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cEco">Economy & Tax</button>
-                      </h2>
-                      <div id="cEco" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🏦 Treasury System</div>
-                                <ul class="small mb-0">
-                                  <li>Village-wide treasury balance</li>
-                                  <li>Funds building construction</li>
-                                  <li>Treasury building adds daily interest</li>
-                                  <li>Events can add/remove treasury funds</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">📈 Tax System</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Base rate:</strong> 10% (capped 0–35%)</li>
-                                  <li><strong>Applied to:</strong> Work income, hunt loot</li>
-                                  <li><strong>Generous:</strong> -4%, <strong>Greedy:</strong> +8%</li>
-                                  <li><strong>Buildings:</strong> Tax Office/Treasury add %</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💸 Corruption</div>
-                                <ul class="small mb-0">
-                                  <li>King/Queen/Nobles can skim treasury</li>
-                                  <li>Daily chance based on traits</li>
-                                  <li><strong>Greedy:</strong> Higher corruption chance</li>
-                                  <li>Tracked yearly in Leaderboard</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💵 Income Sources</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Work:</strong> Base coins by job</li>
-                                  <li><strong>Hunt:</strong> Loot from defeated enemies</li>
-                                  <li><strong>Steal:</strong> Risk action for coins</li>
-                                  <li><strong>Inheritance:</strong> From deceased relatives</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="buildings">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cBuildings">Building System</button>
-                      </h2>
-                      <div id="cBuildings" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Economic Buildings</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Marketplace</strong> — work income, harvest boost</li>
-                                  <li><strong>Treasury</strong> — passive interest (0.3%/level/day)</li>
-                                  <li><strong>Tax Office</strong> — adjusts tax rate</li>
-                                  <li><strong>Blacksmith</strong> — gear quality</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Military Buildings</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Barracks</strong> — training, invasion -15%/level</li>
-                                  <li><strong>Walls</strong> — defense, invasion -20%/level</li>
-                                  <li><strong>Royal Court</strong> — prestige, assassination detection</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Survival Buildings</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Clinic</strong> — survival, plague -20%/level</li>
-                                  <li><strong>Granary</strong> — hunger, famine -20%/level</li>
-                                  <li><strong>Library</strong> — study boost</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Social Buildings</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Temple</strong> — REP gains, blessing +25%/level</li>
-                                  <li><strong>Tavern</strong> — social, festival +15%/level</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">🔧 Mechanics</div>
-                            <ul class="small mb-0">
-                              <li><strong>3 levels</strong> per building (upgrade costs increase)</li>
-                              <li><strong>Health system:</strong> 0–100%, decays over time</li>
-                              <li><strong>Auto-repair:</strong> Triggers below 60% health</li>
-                              <li><strong>Event mitigations:</strong> Buildings reduce negative event impacts</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- LEADERBOARD -->
-                    <div class="accordion-item" id="leaderboard">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cLeaderboard">Leaderboard / Hall of Legends</button>
-                      </h2>
-                      <div id="cLeaderboard" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Track champions and historical records across all years.</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🏅 All-Time Champions</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Greatest Warrior:</strong> Highest ATK ever</li>
-                                  <li><strong>Greatest Scholar:</strong> Highest INT ever</li>
-                                  <li><strong>Wealthiest:</strong> Most coins ever</li>
-                                  <li><strong>Greatest Hunter:</strong> Most kills in a year</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">📊 Current Reign Stats</div>
-                                <ul class="small mb-0">
-                                  <li>King name + traits</li>
-                                  <li>Days elapsed, births, deaths</li>
-                                  <li>Immigration count</li>
-                                  <li>Treasury balance, corruption</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🏆 Yearly Champions</div>
-                                <ul class="small mb-0">
-                                  <li>Top ATK/INT/Coins/Kills per year</li>
-                                  <li>Updated in real-time during current year</li>
-                                  <li>Finalized at year end</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">📜 Past Reigns Archive</div>
-                                <ul class="small mb-0">
-                                  <li>Complete records of previous years</li>
-                                  <li>King name + trait for each year</li>
-                                  <li>Birth/death/immigration/tax stats</li>
-                                  <li>Treasury change and corruption totals</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- FAMILY TREE -->
-                    <div class="accordion-item" id="familytree">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cFamilyTree">Family Tree</button>
-                      </h2>
-                      <div id="cFamilyTree" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Interactive visualization of all family relationships in the village.</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🔍 Visualization</div>
-                                <ul class="small mb-0">
-                                  <li>Powered by vis-network library</li>
-                                  <li>Interactive drag and zoom</li>
-                                  <li>Color-coded by status (alive/dead)</li>
-                                  <li>Gender indicators (M/F)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">👨‍👩‍👧 Relationships</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Parent→Child:</strong> Birth connections</li>
-                                  <li><strong>Spouse↔Spouse:</strong> Marriage links</li>
-                                  <li>Multi-generational dynasties</li>
-                                  <li>Orphan detection</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-12">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">⚰️ Graveyard Integration</div>
-                                <ul class="small mb-0">
-                                  <li>Dead villagers remain in tree (faded)</li>
-                                  <li>Archived villagers (25+ years dead) preserved in graveyard index</li>
-                                  <li>Historical lineages maintained across generations</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="rules">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cRules">Rules & Constraints</button>
-                      </h2>
-                      <div id="cRules" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <ul class="mb-0">
-                            <li>Children can't work until age 17</li>
-                            <li>Marriage age: 18–60</li>
-                            <li>Graveyard archival after 25 years dead</li>
-                            <li>One player character per user</li>
-                            <li>King term limits: 3 lifetime</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- TRAIT BEHAVIORS - EXPANDED -->
-                    <div class="accordion-item" id="traits">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cTraits">Trait Behaviors</button>
-                      </h2>
-                      <div id="cTraits" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Each villager has 1-2 traits that influence their daily actions, leadership potential, and social interactions. Traits are assigned at birth (inherited or random) or earned through achievements.</p>
-
-                          <div class="row g-2 mb-3">
-                            <!-- COMBAT / PHYSICAL TRAITS -->
-                            <div class="col-12">
-                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">⚔️ Combat & Physical</div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🦁 Brave</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +60% train, +60% hunt, +30% buy gear</li>
-                                  <li><strong>Leadership:</strong> +6 score</li>
-                                  <li><strong>Combat:</strong> More likely to engage enemies</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🔥 Hot-headed</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +40% train, +40% hunt, +30% steal</li>
-                                  <li><strong>Leadership:</strong> -8 score (impulsive)</li>
-                                  <li><strong>Social:</strong> May damage relationships</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">⚡ Reckless</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +60% train, +60% hunt, +30% buy gear</li>
-                                  <li><strong>Leadership:</strong> -6 score (careless)</li>
-                                  <li><strong>Risk:</strong> Takes dangerous actions often</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🛡️ Protective</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +60% train, +60% hunt, +30% buy gear</li>
-                                  <li><strong>Social:</strong> Defends family and friends</li>
-                                  <li><strong>Combat:</strong> Prioritizes defense</li>
-                                </ul>
-                              </div>
-                            </div>
-
-                            <!-- INTELLECTUAL TRAITS -->
-                            <div class="col-12 mt-3">
-                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">📚 Intellectual</div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🧠 Wise</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +80% study, +40% socialize</li>
-                                  <li><strong>Leadership:</strong> +14 score (highest bonus)</li>
-                                  <li><strong>Elections:</strong> Highly valued by voters</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💡 Clever</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +80% study, +40% socialize, +30% hangout</li>
-                                  <li><strong>Work:</strong> More efficient at intellectual jobs</li>
-                                  <li><strong>Combat:</strong> Better tactical decisions</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🔍 Curious</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +80% study, +40% socialize, +30% hangout</li>
-                                  <li><strong>Learning:</strong> Faster skill acquisition</li>
-                                  <li><strong>Social:</strong> Engages with many villagers</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🐢 Cautious</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +40% study, +20% rest, -30% hunt, -20% steal</li>
-                                  <li><strong>Leadership:</strong> +2 score</li>
-                                  <li><strong>Risk:</strong> Avoids dangerous situations</li>
-                                </ul>
-                              </div>
-                            </div>
-
-                            <!-- SOCIAL TRAITS -->
-                            <div class="col-12 mt-3">
-                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">💬 Social & Personality</div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💝 Generous</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +40% buy food, +40% socialize, +50% hangout, -20% steal</li>
-                                  <li><strong>Leadership:</strong> +8 score</li>
-                                  <li><strong>Tax Policy:</strong> -4% tax rate as King</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💚 Empathic</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +40% buy food, +40% socialize, +50% hangout, -20% steal</li>
-                                  <li><strong>Leadership:</strong> +6 score</li>
-                                  <li><strong>Relationships:</strong> Builds bonds faster</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🤝 Loyal</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Leadership:</strong> +8 score</li>
-                                  <li><strong>Relationships:</strong> Stronger family bonds</li>
-                                  <li><strong>Elections:</strong> Votes for same candidate repeatedly</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">⏳ Patient</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Leadership:</strong> +5 score</li>
-                                  <li><strong>Work:</strong> Better at long-term tasks</li>
-                                  <li><strong>Combat:</strong> Waits for right moment</li>
-                                </ul>
-                              </div>
-                            </div>
-
-                            <!-- WORK / AMBITION TRAITS -->
-                            <div class="col-12 mt-3">
-                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">💼 Work & Ambition</div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">⚒️ Diligent</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +60% work, +40% train, +30% buy gear, +20% socialize</li>
-                                  <li><strong>Leadership:</strong> +6 score</li>
-                                  <li><strong>Income:</strong> Earns more coins</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🚀 Ambitious</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +60% work, +40% train, +30% buy gear, +20% socialize</li>
-                                  <li><strong>Leadership:</strong> +3 score</li>
-                                  <li><strong>Growth:</strong> Faster level progression</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">😴 Lazy</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +100% rest, -40% train, -40% work</li>
-                                  <li><strong>Leadership:</strong> -10 score</li>
-                                  <li><strong>Income:</strong> Earns less coins</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🧒 Naive</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Leadership:</strong> Lower score</li>
-                                  <li><strong>Social:</strong> Easily influenced</li>
-                                  <li><strong>Risk:</strong> May be deceived</li>
-                                </ul>
-                              </div>
-                            </div>
-
-                            <!-- NEGATIVE / RISKY TRAITS -->
-                            <div class="col-12 mt-3">
-                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">⚠️ Risky & Negative</div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💰 Greedy</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +80% work, +50% steal</li>
-                                  <li><strong>Leadership:</strong> -10 score</li>
-                                  <li><strong>Tax Policy:</strong> +8% tax rate as King</li>
-                                  <li><strong>Corruption:</strong> Higher chance to skim treasury</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🎭 Deceitful</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Actions:</strong> +90% steal, -30% socialize</li>
-                                  <li><strong>Leadership:</strong> -12 score (worst penalty)</li>
-                                  <li><strong>Assassination:</strong> Higher success rate</li>
-                                  <li><strong>Trust:</strong> Harder to build relationships</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">😐 Stoic</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Emotions:</strong> Less affected by events</li>
-                                  <li><strong>Relationships:</strong> Slower to form bonds</li>
-                                  <li><strong>Combat:</strong> Remains calm under pressure</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">📏 Strict</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Leadership:</strong> Enforces rules firmly</li>
-                                  <li><strong>Social:</strong> May alienate others</li>
-                                  <li><strong>Work:</strong> High standards</li>
-                                </ul>
-                              </div>
-                            </div>
-
-                            <!-- ACHIEVEMENT TRAITS -->
-                            <div class="col-12 mt-3">
-                              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;" class="mb-2">🏆 Achievement Traits (Earned)</div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">👴 Patriarch</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Source:</strong> Dynasty Founder achievement</li>
-                                  <li><strong>Actions:</strong> +50% socialize, +60% hangout, +30% work</li>
-                                  <li><strong>Family:</strong> Respected by descendants</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🏹 Hunter</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Source:</strong> Legendary Hunter achievement</li>
-                                  <li><strong>Actions:</strong> +100% hunt, +40% train</li>
-                                  <li><strong>Combat:</strong> Expert at tracking enemies</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">✨ Immortal</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Source:</strong> Centurion achievement (age 100)</li>
-                                  <li><strong>Actions:</strong> +40% rest, +30% hunt</li>
-                                  <li><strong>Survival:</strong> Reduced aging effects</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">💪 Resilient</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Source:</strong> Iron Will achievement</li>
-                                  <li><strong>Actions:</strong> +50% train, +30% hunt, -20% rest</li>
-                                  <li><strong>Survival:</strong> Recovers from low HP</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">⚔️ Veteran</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Source:</strong> Questmaster achievement (5 quests)</li>
-                                  <li><strong>Actions:</strong> +60% hunt, +40% train, +20% buy gear</li>
-                                  <li><strong>Quests:</strong> Higher volunteer priority</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">📊 Trait Inheritance</div>
-                            <ul class="small mb-0">
-                              <li><strong>Children:</strong> 60% chance to inherit one parent's trait</li>
-                              <li><strong>Random:</strong> 40% chance for a completely random trait</li>
-                              <li><strong>Achievement:</strong> Special traits earned through gameplay milestones</li>
-                              <li><strong>Mutation:</strong> Rare chance for opposing trait (e.g., Lazy parent → Diligent child)</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- SKILL SYSTEM -->
-                    <div class="accordion-item" id="skills">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cSkills">Skill System</button>
-                      </h2>
-                      <div id="cSkills" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <p class="mb-3">Skills are rare abilities that villagers can be born with. They provide stat bonuses and influence job selection.</p>
-                          
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-4">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Birth & Inheritance</div>
-                                <ul class="small mb-0">
-                                  <li>12% chance to have at least one skill</li>
-                                  <li>20% chance for second skill</li>
-                                  <li>25% chance to inherit each parent's skill</li>
-                                  <li>Max 2 skills per villager</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-4">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Action Bonuses</div>
-                                <ul class="small mb-0">
-                                  <li>Skills boost gains during actions</li>
-                                  <li>COMBAT: +20% train ATK/DEF</li>
-                                  <li>CRAFT: +20% work income</li>
-                                  <li>KNOWLEDGE: +25% study INT</li>
-                                  <li>SOCIAL: +25% relationship gains</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-4">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">Job Influence</div>
-                                <ul class="small mb-0">
-                                  <li>75% chance to follow skill affinity</li>
-                                  <li>Skills suggest matching professions</li>
-                                  <li>Falls back to trait-based</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">COMBAT Skills (boost train/hunt)</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Bladesong</strong> - +30% ATK training, Soldier/Guard</li>
-                                  <li><strong>Hawkeye</strong> - +20% ATK/DEF, Archer/Ranger</li>
-                                  <li><strong>Bloodrage</strong> - +25% hunt power (rare)</li>
-                                  <li><strong>Bulwark</strong> - +35% DEF training, -15% damage</li>
-                                  <li><strong>Battlemaster</strong> - +15% EXP gain (rare)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">CRAFT Skills (boost work)</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Forgeblessed</strong> - +30% work income, Blacksmith</li>
-                                  <li><strong>Transmutation</strong> - +20% coins, Alchemist</li>
-                                  <li><strong>Gilded Hands</strong> - +35% work income, Jeweler</li>
-                                  <li><strong>Artificer</strong> - +20% coins (rare)</li>
-                                  <li><strong>Brewcraft</strong> - +20% coins, Brewer</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">SOCIAL Skills (boost socialize)</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Silver Tongue</strong> - +45% relationship, Merchant</li>
-                                  <li><strong>Commanding Presence</strong> - +25% REP (rare)</li>
-                                  <li><strong>Dealmaker</strong> - +25% relations, +20% work</li>
-                                  <li><strong>Dreadgaze</strong> - +25% relations, Guard</li>
-                                  <li><strong>Heartspark</strong> - +40% relations (rare)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">SURVIVAL Skills (boost hunt/rest)</div>
-                                <ul class="small mb-0">
-                                  <li><strong>Pathfinder</strong> - +20% hunt power, Hunter</li>
-                                  <li><strong>Herbweaver</strong> - +20% rest HP, -3 hunger</li>
-                                  <li><strong>Iron Constitution</strong> - +30% rest HP, -15% dmg</li>
-                                  <li><strong>Wayfarer</strong> - +10% hunt power, Scout</li>
-                                  <li><strong>Beastbond</strong> - +10% hunt, Shepherd</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">KNOWLEDGE Skills (boost study)</div>
-                            <ul class="small mb-0">
-                              <li><strong>Lorekeeper</strong> - +40% INT study, Scholar/Scribe</li>
-                              <li><strong>Arcane Attunement</strong> - +35% INT, +10% EXP (rare)</li>
-                              <li><strong>Chirurgeon</strong> - +25% INT, +25% rest HP, Healer</li>
-                              <li><strong>Polyglot</strong> - +25% INT, +20% EXP, Diplomat</li>
-                              <li><strong>Chronicle</strong> - +25% INT study, Scholar/Advisor</li>
-                            </ul>
-                          </div>
-
-                          <div class="mt-3" style="font-size: 12px; color: var(--aw-text-muted);">
-                            <strong>Rarity:</strong> Common (60%), Uncommon (30%), Rare (10%)<br>
-                            <strong>Note:</strong> Skills provide bonuses during actions, not flat stat increases.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="accordion-item" id="gear">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cGear">Item / Gear System</button>
-                      </h2>
-                      <div id="cGear" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                        <div class="accordion-body">
-                          <div class="row g-2 mb-3">
-                            <div class="col-md-4">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🟢 Tier 1 (Common)</div>
-                                <ul class="small mb-0">
-                                  <li>Iron Sword (+2-4 ATK)</li>
-                                  <li>Leather Armor (+2-4 DEF)</li>
-                                  <li>Basic Tome (+2-4 INT)</li>
-                                  <li>Simple Ring (+5-10 HP)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-4">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🔵 Tier 2 (Rare)</div>
-                                <ul class="small mb-0">
-                                  <li>Steel Blade (+5-8 ATK)</li>
-                                  <li>Chainmail (+5-8 DEF)</li>
-                                  <li>Mageweave Robe (+5-8 INT)</li>
-                                  <li>Vitality Belt (+15-25 HP)</li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="col-md-4">
-                              <div class="feature-box">
-                                <div style="color: var(--aw-text);" class="small mb-1">🟣 Tier 3 (Legendary)</div>
-                                <ul class="small mb-0">
-                                  <li>Dragonbone Blade (+10-15 ATK)</li>
-                                  <li>Voidsteel Plate (+10-15 DEF)</li>
-                                  <li>Archmage Codex (+10-15 INT)</li>
-                                  <li>Heart of the Mountain (+30-50 HP)</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="feature-box">
-                            <div style="color: var(--aw-text);" class="small mb-1">⚙️ Mechanics</div>
-                            <ul class="small mb-0">
-                              <li><strong>30+ item types</strong> across 3 tiers</li>
-                              <li><strong>Permanent bonuses:</strong> Stats added immediately</li>
-                              <li><strong>Tier weighting:</strong> Higher level = better tier chance</li>
-                              <li><strong>Blacksmith bonus:</strong> Building level improves gear quality</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                   </div>
                 </div>
               </section>
+
+              <!-- VILLAGERS -->
+              <section class="game-card mb-3" id="villagers">
+                <div class="card-body">
+                  <h5 class="mb-3">👥 Villagers</h5>
+                  <p>Each villager has unique stats, traits, and behaviors that influence their daily choices.</p>
+                  
+                  <div class="table-responsive">
+                    <table class="table feature-table">
+                      <thead><tr><th>Stat</th><th>Range</th><th>Effect</th></tr></thead>
+                      <tbody>
+                        <tr><td>HP</td><td>0-100+</td><td>Health. Death at 0.</td></tr>
+                        <tr><td>ATK</td><td>1-100+</td><td>Combat damage, hunting success</td></tr>
+                        <tr><td>DEF</td><td>1-100+</td><td>Damage reduction</td></tr>
+                        <tr><td>INT</td><td>1-100+</td><td>Study bonus, election influence</td></tr>
+                        <tr><td>REP</td><td>0-100+</td><td>Reputation, leadership score</td></tr>
+                        <tr><td>Level</td><td>1-100</td><td>Overall progression</td></tr>
+                        <tr><td>Coins</td><td>0-∞</td><td>Currency for purchases</td></tr>
+                        <tr><td>Hunger</td><td>0-100</td><td>Food need. Death possible at 100.</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="feature-box mt-3">
+                    <h6>Origins</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                      <span class="stat-pill">NPC - Generated at world creation</span>
+                      <span class="stat-pill">Player - Created by user</span>
+                      <span class="stat-pill">Born - Child of villagers</span>
+                      <span class="stat-pill">Immigrant - Joined later</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- ACTIONS -->
+              <section class="game-card mb-3" id="actions">
+                <div class="card-body">
+                  <h5 class="mb-3">⚡ Daily Actions</h5>
+                  <p>Each day, villagers choose one action based on their needs, traits, and situation.</p>
+                  
+                  <div class="table-responsive">
+                    <table class="table feature-table">
+                      <thead><tr><th>Action</th><th>Effect</th><th>Priority When</th></tr></thead>
+                      <tbody>
+                        <tr><td><strong>Work</strong></td><td>Earn coins (job-based)</td><td>Low coins</td></tr>
+                        <tr><td><strong>Train</strong></td><td>+ATK, +DEF, +EXP</td><td>Brave trait, military job</td></tr>
+                        <tr><td><strong>Study</strong></td><td>+INT, +EXP</td><td>Wise trait, learned job</td></tr>
+                        <tr><td><strong>Hunt</strong></td><td>Combat for coins/food</td><td>Brave, hungry, hunter job</td></tr>
+                        <tr><td><strong>Rest</strong></td><td>Restore HP</td><td>Low HP, Lazy trait</td></tr>
+                        <tr><td><strong>Socialize</strong></td><td>+REP, relationship gains</td><td>Charming, Sociable traits</td></tr>
+                        <tr><td><strong>Buy Food</strong></td><td>Reduce hunger (-10 coins)</td><td>High hunger, has coins</td></tr>
+                        <tr><td><strong>Buy Gear</strong></td><td>+ATK or +DEF</td><td>Has excess coins</td></tr>
+                        <tr><td><strong>Hangout</strong></td><td>Small social gains</td><td>Default fallback</td></tr>
+                        <tr><td><strong>Steal</strong></td><td>Risk/reward coins</td><td>Deceitful trait</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+
+              <!-- SKILLS -->
+              <section class="game-card mb-3" id="skills">
+                <div class="card-body">
+                  <h5 class="mb-3">✨ Skills (25 Total)</h5>
+                  <p>Skills provide passive bonuses during actions. Acquired at birth (rare) or through mentoring.</p>
+                  
+                  <div class="row g-3">
+                    <!-- Combat Skills -->
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>⚔️ Combat Skills</h6>
+                        <ul>
+                          <li><strong>Bladesong</strong> <span class="badge badge-rarity badge-common">Common</span> - ATK bonus</li>
+                          <li><strong>Hawkeye</strong> <span class="badge badge-rarity badge-common">Common</span> - Crit chance</li>
+                          <li><strong>Bulwark</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - DEF bonus</li>
+                          <li><strong>Bloodrage</strong> <span class="badge badge-rarity badge-rare">Rare</span> - Damage boost at low HP</li>
+                          <li><strong>Battlemaster</strong> <span class="badge badge-rarity badge-rare">Rare</span> - All combat stats</li>
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <!-- Craft Skills -->
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>🔨 Craft Skills</h6>
+                        <ul>
+                          <li><strong>Forgeblessed</strong> <span class="badge badge-rarity badge-common">Common</span> - Gear quality</li>
+                          <li><strong>Gilded Hands</strong> <span class="badge badge-rarity badge-common">Common</span> - Work income</li>
+                          <li><strong>Brewcraft</strong> <span class="badge badge-rarity badge-common">Common</span> - Tavern bonus</li>
+                          <li><strong>Transmutation</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Resource conversion</li>
+                          <li><strong>Artificer</strong> <span class="badge badge-rarity badge-rare">Rare</span> - Building bonus</li>
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <!-- Social Skills -->
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>💬 Social Skills</h6>
+                        <ul>
+                          <li><strong>Silver Tongue</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Negotiation</li>
+                          <li><strong>Dealmaker</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Trade bonus</li>
+                          <li><strong>Dreadgaze</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Intimidation</li>
+                          <li><strong>Commanding Presence</strong> <span class="badge badge-rarity badge-rare">Rare</span> - Leadership</li>
+                          <li><strong>Heartspark</strong> <span class="badge badge-rarity badge-rare">Rare</span> - Romance bonus</li>
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <!-- Survival Skills -->
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>🏕️ Survival Skills</h6>
+                        <ul>
+                          <li><strong>Pathfinder</strong> <span class="badge badge-rarity badge-common">Common</span> - Exploration</li>
+                          <li><strong>Wayfarer</strong> <span class="badge badge-rarity badge-common">Common</span> - Travel bonus</li>
+                          <li><strong>Beastbond</strong> <span class="badge badge-rarity badge-common">Common</span> - Animal handling</li>
+                          <li><strong>Herbweaver</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Healing</li>
+                          <li><strong>Iron Constitution</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - HP regen</li>
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <!-- Knowledge Skills -->
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>📚 Knowledge Skills</h6>
+                        <ul>
+                          <li><strong>Lorekeeper</strong> <span class="badge badge-rarity badge-common">Common</span> - Study bonus</li>
+                          <li><strong>Chronicle</strong> <span class="badge badge-rarity badge-common">Common</span> - Memory bonus</li>
+                          <li><strong>Chirurgeon</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Medical skill</li>
+                          <li><strong>Polyglot</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Diplomacy</li>
+                          <li><strong>Arcane Attunement</strong> <span class="badge badge-rarity badge-rare">Rare</span> - Magic affinity</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- ACHIEVEMENTS -->
+              <section class="game-card mb-3" id="achievements">
+                <div class="card-body">
+                  <h5 class="mb-3">🏆 Achievements (9 Total)</h5>
+                  <p>Achievements are permanent milestones that grant rewards when earned.</p>
+                  
+                  <div class="table-responsive">
+                    <table class="table feature-table">
+                      <thead><tr><th>Achievement</th><th>Requirement</th><th>Reward</th></tr></thead>
+                      <tbody>
+                        <tr><td>👨‍👩‍👧‍👦 Dynasty Founder</td><td>Have 5+ children</td><td>+15 REP, "Patriarch" trait</td></tr>
+                        <tr><td>👑 Kingmaker</td><td>Vote for 5 winning kings</td><td>+10 INT</td></tr>
+                        <tr><td>💯 Centurion</td><td>Reach age 100</td><td>+50 HP, "Immortal" trait</td></tr>
+                        <tr><td>🎯 Legendary Hunter</td><td>Win 500 hunts</td><td>+25 ATK, "Hunter" trait</td></tr>
+                        <tr><td>💰 Wealthy</td><td>Accumulate 10,000 coins</td><td>+1,000 coins bonus</td></tr>
+                        <tr><td>🛡️ Survivor</td><td>Survive 3 world events</td><td>+20 DEF</td></tr>
+                        <tr><td>🏛️ Elder Statesman</td><td>Serve 3 terms as King</td><td>+30 REP, "Legendary" trait</td></tr>
+                        <tr><td>💪 Iron Will</td><td>Survive 5 days at HP < 20</td><td>+15 HP, +10 DEF</td></tr>
+                        <tr><td>📜 Questmaster</td><td>Complete 10 quests</td><td>+20 REP, quest bonuses</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+
+              <!-- COMBAT -->
+              <section class="game-card mb-3" id="combat">
+                <div class="card-body">
+                  <h5 class="mb-3">⚔️ Combat System</h5>
+                  <p>Combat occurs during hunting and invasion events. Outcomes depend on stats and gear.</p>
+                  
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Hunting</h6>
+                        <ul>
+                          <li>Enemy tier scales with villager level</li>
+                          <li>Base damage = ATK - Enemy DEF</li>
+                          <li>Critical hits possible (2x damage)</li>
+                          <li>Rewards: coins, EXP, food</li>
+                          <li>Risk: HP loss, possible death</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Gear Effects</h6>
+                        <ul>
+                          <li>Weapon: +ATK bonus</li>
+                          <li>Armor: +DEF bonus</li>
+                          <li>Gear purchased via "Buy Gear" action</li>
+                          <li>Blacksmith building improves quality</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- QUESTS -->
+              <section class="game-card mb-3" id="quests">
+                <div class="card-body">
+                  <h5 class="mb-3">📜 Quest System (6 Types)</h5>
+                  <p>Quests trigger every 2 years. A party of 2-5 villagers embarks on an adventure.</p>
+                  
+                  <div class="table-responsive">
+                    <table class="table feature-table">
+                      <thead><tr><th>Quest Type</th><th>Focus</th><th>Rewards</th></tr></thead>
+                      <tbody>
+                        <tr><td>🐉 Hunt the Beast</td><td>Combat (ATK/DEF)</td><td>Gold, gear, REP</td></tr>
+                        <tr><td>🤝 Diplomatic Mission</td><td>Social (INT/REP)</td><td>Alliances, trade deals</td></tr>
+                        <tr><td>🗺️ Explore Unknown Lands</td><td>Survival</td><td>Resources, territory</td></tr>
+                        <tr><td>💼 Trade Expedition</td><td>Commerce</td><td>Coins, trade goods</td></tr>
+                        <tr><td>🆘 Rescue Mission</td><td>Mixed</td><td>Rescued villagers, REP</td></tr>
+                        <tr><td>💎 Treasure Hunt</td><td>Exploration</td><td>Rare items, gold</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="feature-box mt-3">
+                    <h6>Quest Mechanics</h6>
+                    <ul>
+                      <li>King's traits influence quest type selection</li>
+                      <li>Volunteers selected based on relevant stats</li>
+                      <li>Success/failure based on party strength vs difficulty</li>
+                      <li>Survivors gain EXP, achievements progress</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              <!-- EVENTS -->
+              <section class="game-card mb-3" id="events">
+                <div class="card-body">
+                  <h5 class="mb-3">🌪️ World Events (8 Types)</h5>
+                  <p>Random events occur once per year, affecting the entire village.</p>
+                  
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>⚠️ Negative Events</h6>
+                        <ul>
+                          <li><strong>Plague</strong> - HP damage, deaths. Clinic reduces impact.</li>
+                          <li><strong>Famine</strong> - Hunger increase. Granary helps.</li>
+                          <li><strong>Invasion</strong> - Combat event. Walls/Barracks defend.</li>
+                          <li><strong>Storm</strong> - Building damage.</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>✨ Positive Events</h6>
+                        <ul>
+                          <li><strong>Festival</strong> - Happiness, relationship boosts.</li>
+                          <li><strong>Good Harvest</strong> - Food surplus, coin bonus.</li>
+                          <li><strong>Blessing</strong> - HP restoration for all.</li>
+                          <li><strong>Windfall</strong> - Treasury bonus.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- RELATIONSHIPS -->
+              <section class="game-card mb-3" id="relationships">
+                <div class="card-body">
+                  <h5 class="mb-3">💕 Relationships</h5>
+                  <p>Villagers form bonds through daily interactions. Relationships range from -100 (enemies) to +100 (best friends).</p>
+                  
+                  <div class="table-responsive">
+                    <table class="table feature-table">
+                      <thead><tr><th>Score Range</th><th>Label</th><th>Effects</th></tr></thead>
+                      <tbody>
+                        <tr><td>80+</td><td>Best Friend / Love</td><td>Marriage eligible, cooperation bonus</td></tr>
+                        <tr><td>50-79</td><td>Friend</td><td>Positive interactions</td></tr>
+                        <tr><td>0-49</td><td>Acquaintance</td><td>Neutral</td></tr>
+                        <tr><td>-49 to -1</td><td>Rival</td><td>Competition, minor conflicts</td></tr>
+                        <tr><td>-100 to -50</td><td>Enemy</td><td>Active hostility</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="feature-box mt-3">
+                    <h6>Relationship Factors</h6>
+                    <ul>
+                      <li>Same family: +20 base bonus</li>
+                      <li>Same job guild: +10 bonus</li>
+                      <li>Socializing together: +5 to +15 per interaction</li>
+                      <li>Stealing from someone: -20 penalty</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              <!-- FAMILY -->
+              <section class="game-card mb-3" id="family">
+                <div class="card-body">
+                  <h5 class="mb-3">👨‍👩‍👧 Family System</h5>
+                  
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Marriage</h6>
+                        <ul>
+                          <li>Requires: Both adults (17+), opposite gender</li>
+                          <li>Both unmarried, relationship 60+</li>
+                          <li>Not family members</li>
+                          <li>Spouse takes partner's family name</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Children</h6>
+                        <ul>
+                          <li>Birth chance based on couple age/health</li>
+                          <li>Child inherits parents' family name</li>
+                          <li>Stats partially inherited (with variance)</li>
+                          <li>Rare chance to inherit skills</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Childhood (Age 0-16)</h6>
+                        <ul>
+                          <li>Job: "Child" (no work income)</li>
+                          <li>Cannot marry or vote</li>
+                          <li>Protected from dangerous quests</li>
+                          <li>At 17: assigned adult job</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Inheritance</h6>
+                        <ul>
+                          <li>On death: coins go to spouse or children</li>
+                          <li>If no heirs: coins go to treasury</li>
+                          <li>Family name persists through children</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- ELECTIONS -->
+              <section class="game-card mb-3" id="elections">
+                <div class="card-body">
+                  <h5 class="mb-3">👑 Elections & Leadership</h5>
+                  
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Regular Elections</h6>
+                        <ul>
+                          <li>Every 5 years</li>
+                          <li>All adults can vote</li>
+                          <li>Leadership score = REP + INT + traits</li>
+                          <li>Winner becomes King</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Emergency Elections</h6>
+                        <ul>
+                          <li>Triggered when King dies</li>
+                          <li>Immediate vote among survivors</li>
+                          <li>No term limit for emergency</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>King Benefits</h6>
+                        <ul>
+                          <li>Sets tax policy (trait-based)</li>
+                          <li>Influences quest selection</li>
+                          <li>Queen consort (spouse) assigned</li>
+                          <li>Protected from certain risks</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Term Limits</h6>
+                        <ul>
+                          <li>Max 3 terms per villager</li>
+                          <li>After 3rd term: ineligible</li>
+                          <li>Encourages dynasty diversity</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- ECONOMY -->
+              <section class="game-card mb-3" id="economy">
+                <div class="card-body">
+                  <h5 class="mb-3">💰 Economy & Taxation</h5>
+                  
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Income Sources</h6>
+                        <ul>
+                          <li>Work action (job-based pay)</li>
+                          <li>Hunting rewards</li>
+                          <li>Quest completion</li>
+                          <li>Inheritance</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Tax System</h6>
+                        <ul>
+                          <li>Base rate: 10%</li>
+                          <li>King traits modify rate (±8%)</li>
+                          <li>Tax Office building: +1% per level</li>
+                          <li>Treasury building: +0.5% per level</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="feature-box">
+                        <h6>King Trait Effects on Tax</h6>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                          <span class="stat-pill">Greedy: +8%</span>
+                          <span class="stat-pill">Ambitious: +3%</span>
+                          <span class="stat-pill">Cautious: +2%</span>
+                          <span class="stat-pill">Hot-headed: +1%</span>
+                          <span class="stat-pill">Generous: -4%</span>
+                          <span class="stat-pill">Wise: -2%</span>
+                          <span class="stat-pill">Loyal: -2%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- BUILDINGS -->
+              <section class="game-card mb-3" id="buildings">
+                <div class="card-body">
+                  <h5 class="mb-3">🏗️ Buildings (12 Types)</h5>
+                  <p>Buildings are constructed automatically when treasury has enough funds. Max level: 3.</p>
+                  
+                  <div class="table-responsive">
+                    <table class="table feature-table">
+                      <thead><tr><th>Building</th><th>Cost</th><th>Effect</th></tr></thead>
+                      <tbody>
+                        <tr><td>🏪 Marketplace</td><td>400</td><td>Trade bonuses, buy_food discount</td></tr>
+                        <tr><td>📚 Library</td><td>350</td><td>+INT bonus on study action</td></tr>
+                        <tr><td>⚔️ Barracks</td><td>450</td><td>+ATK/DEF training bonus, invasion defense</td></tr>
+                        <tr><td>🌾 Granary</td><td>300</td><td>Food storage, famine resistance</td></tr>
+                        <tr><td>🏥 Clinic</td><td>320</td><td>HP recovery, plague resistance</td></tr>
+                        <tr><td>🏰 City Walls</td><td>600</td><td>Invasion defense bonus</td></tr>
+                        <tr><td>⛪ Temple</td><td>380</td><td>Blessing frequency, morale</td></tr>
+                        <tr><td>🔨 Blacksmith</td><td>300</td><td>Gear quality, repair</td></tr>
+                        <tr><td>💎 Treasury</td><td>500</td><td>Interest on balance, tax bonus</td></tr>
+                        <tr><td>👑 Royal Court</td><td>480</td><td>Election influence, REP bonus</td></tr>
+                        <tr><td>📋 Tax Office</td><td>320</td><td>Tax collection efficiency</td></tr>
+                        <tr><td>🍺 Tavern</td><td>240</td><td>Socialization bonus, happiness</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+
+              <!-- WEATHER -->
+              <section class="game-card mb-3" id="weather">
+                <div class="card-body">
+                  <h5 class="mb-3">🌤️ Weather System</h5>
+                  <p>Weather changes every few days and affects villager activities.</p>
+                  
+                  <div class="table-responsive">
+                    <table class="table feature-table">
+                      <thead><tr><th>Weather</th><th>Effect</th></tr></thead>
+                      <tbody>
+                        <tr><td>☀️ Sunny</td><td>Normal activities, good harvest bonus</td></tr>
+                        <tr><td>🌧️ Rainy</td><td>Reduced outdoor work, hunting penalty</td></tr>
+                        <tr><td>❄️ Snowy</td><td>Higher hunger drain, travel penalty</td></tr>
+                        <tr><td>🌪️ Stormy</td><td>Building damage risk, stay indoors</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+
+              <!-- TRAITS -->
+              <section class="game-card mb-3" id="traits">
+                <div class="card-body">
+                  <h5 class="mb-3">🎭 Traits</h5>
+                  <p>Each villager has 1-3 traits that influence their behavior and choices.</p>
+                  
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <div class="feature-box">
+                        <h6>Combat Traits</h6>
+                        <ul>
+                          <li><strong>Brave</strong> - Prefers hunt, train</li>
+                          <li><strong>Hot-headed</strong> - Aggression bonus</li>
+                          <li><strong>Cautious</strong> - Defense focus</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="feature-box">
+                        <h6>Social Traits</h6>
+                        <ul>
+                          <li><strong>Charming</strong> - Relationship bonus</li>
+                          <li><strong>Sociable</strong> - More socializing</li>
+                          <li><strong>Loyal</strong> - Family/spouse focus</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="feature-box">
+                        <h6>Work Traits</h6>
+                        <ul>
+                          <li><strong>Wise</strong> - Study preference</li>
+                          <li><strong>Greedy</strong> - Work preference</li>
+                          <li><strong>Lazy</strong> - Rest preference</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="feature-box">
+                        <h6>Personality</h6>
+                        <ul>
+                          <li><strong>Ambitious</strong> - Leadership drive</li>
+                          <li><strong>Generous</strong> - Sharing bonus</li>
+                          <li><strong>Deceitful</strong> - May steal</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="feature-box">
+                        <h6>Special Traits</h6>
+                        <ul>
+                          <li><strong>Patriarch</strong> - Dynasty Founder reward</li>
+                          <li><strong>Immortal</strong> - Centurion reward</li>
+                          <li><strong>Hunter</strong> - Legendary Hunter reward</li>
+                          <li><strong>Legendary</strong> - Elder Statesman reward</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
             </div>
           </div>
         </main>
@@ -1740,117 +669,22 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <!-- Search and Sort functionality -->
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const searchInput = document.getElementById('featureSearch');
-      const sortSelect = document.getElementById('tocSort');
-      const tocList = document.getElementById('tocList');
-      let tocLinks = Array.from(document.querySelectorAll('.toc-link'));
-      
-      // Store original order
-      const originalOrder = tocLinks.map(link => link.cloneNode(true));
-      
-      // Sort functionality
-      sortSelect.addEventListener('change', function() {
-        const sortType = this.value;
-        let sortedLinks;
-        
-        if (sortType === 'default') {
-          sortedLinks = originalOrder.map(link => link.cloneNode(true));
-        } else if (sortType === 'az') {
-          sortedLinks = [...tocLinks].sort((a, b) => 
-            a.textContent.trim().localeCompare(b.textContent.trim())
-          );
-        } else if (sortType === 'za') {
-          sortedLinks = [...tocLinks].sort((a, b) => 
-            b.textContent.trim().localeCompare(a.textContent.trim())
-          );
-        }
-        
-        // Re-render TOC
-        tocList.innerHTML = '';
-        sortedLinks.forEach(link => {
-          const newLink = link.cloneNode(true);
-          attachLinkEvents(newLink);
-          tocList.appendChild(newLink);
-        });
-        
-        // Update tocLinks reference
-        tocLinks = Array.from(document.querySelectorAll('.toc-link'));
+    // Search functionality
+    document.getElementById('featureSearch').addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.game-card[id]').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(query) ? '' : 'none';
       });
-      
-      // Search functionality
-      searchInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
-        const currentLinks = document.querySelectorAll('.toc-link');
-        
-        if (query === '') {
-          // Reset: show all links, remove highlights
-          currentLinks.forEach(link => {
-            link.classList.remove('hidden', 'highlight');
-          });
-          return;
-        }
-        
-        let firstMatch = null;
-        
-        currentLinks.forEach(link => {
-          const text = link.textContent.toLowerCase();
-          const targetId = link.getAttribute('data-target');
-          const accordionBody = document.getElementById(targetId);
-          const bodyText = accordionBody ? accordionBody.textContent.toLowerCase() : '';
-          
-          if (text.includes(query) || bodyText.includes(query)) {
-            link.classList.remove('hidden');
-            link.classList.add('highlight');
-            if (!firstMatch) {
-              firstMatch = { link, targetId };
-            }
-          } else {
-            link.classList.add('hidden');
-            link.classList.remove('highlight');
-          }
-        });
-        
-        // Auto-open first match
-        if (firstMatch) {
-          openAccordion(firstMatch.targetId);
+      // Highlight TOC links
+      document.querySelectorAll('#tocList a').forEach(link => {
+        const targetId = link.getAttribute('href').slice(1);
+        const card = document.getElementById(targetId);
+        if (card) {
+          link.style.display = card.style.display === 'none' ? 'none' : '';
         }
       });
-      
-      // Function to open accordion
-      function openAccordion(targetId) {
-        const collapseEl = document.getElementById(targetId);
-        if (collapseEl && !collapseEl.classList.contains('show')) {
-          const bsCollapse = new bootstrap.Collapse(collapseEl, { toggle: true });
-        }
-      }
-      
-      // Function to attach events to a link
-      function attachLinkEvents(link) {
-        link.addEventListener('click', function(e) {
-          e.preventDefault();
-          
-          // Clear search
-          searchInput.value = '';
-          document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('hidden', 'highlight'));
-          
-          // Auto-open the accordion
-          const targetId = this.getAttribute('data-target');
-          openAccordion(targetId);
-          
-          // Scroll to the section
-          const targetSection = document.getElementById(targetId);
-          if (targetSection) {
-            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        });
-      }
-      
-      // Attach events to initial links
-      tocLinks.forEach(link => attachLinkEvents(link));
     });
   </script>
 </body>
