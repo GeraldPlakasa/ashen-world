@@ -73,6 +73,7 @@ def update_year_daily(
     corruption_today: int = 0,
     births_today: int = 0,
     king_trait: str | None = None,
+    population_end: int = 0,
 ):
     """Accumulate daily stats (deaths, immigrants, tax, corruption, births) into the yearly_stats row for a year."""
     init_db()
@@ -95,6 +96,7 @@ def update_year_daily(
                 days_counted = MIN(COALESCE(days_counted, 0) + 1, ?),
                 treasury_end = ?,
                 total_corruption = COALESCE(total_corruption, 0) + ?,
+                population_end = ?,
                 updated_at = datetime('now')
             WHERE year = ?;
             """,
@@ -109,6 +111,7 @@ def update_year_daily(
                 config.DAYS_PER_YEAR,  # Cap for days_counted
                 int(treasury_end),
                 int(corruption_today),
+                int(population_end),
                 int(year),
             ),
         )

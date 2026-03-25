@@ -256,32 +256,11 @@ function renderPopulationTimelineChart(data) {
     return;
   }
   
-  // Start with current population and calculate backwards
-  // Current population is at the END of the most recent year
-  let runningPop = data.current?.population || 0;
-  const popByYear = [];
-  
-  // Process in DESC order (newest to oldest) to calculate backwards
-  yearlyDesc.forEach((y, idx) => {
-    if (idx === 0) {
-      // Most recent year - population is current
-      popByYear.push({ year: y.year, population: runningPop });
-    } else {
-      // Calculate previous year's end population by reversing the changes
-      // Pop_prev_year = Pop_this_year - births_this_year - immigrants_this_year + deaths_this_year
-      const prevYear = yearlyDesc[idx - 1];
-      const births = prevYear.total_births || 0;
-      const deaths = prevYear.total_deaths || 0;
-      const immigrants = prevYear.total_immigrants || 0;
-      runningPop = runningPop - births - immigrants + deaths;
-      popByYear.push({ year: y.year, population: Math.max(0, runningPop) });
-    }
-  });
-  
-  // popByYear is now in DESC order, reverse to get chronological (oldest first)
-  const chronological = popByYear.slice().reverse();
+  // Use population_end directly from DB (accurate snapshot each year)
+  const filtered = filterYearlyData(yearlyDesc);
+  const chronological = filtered.slice().reverse();
   const labels = chronological.map(p => 'Y' + p.year);
-  const popData = chronological.map(p => p.population);
+  const popData = chronological.map(p => p.population_end || 0);
   
   if (charts['population-timeline']) charts['population-timeline'].destroy();
   

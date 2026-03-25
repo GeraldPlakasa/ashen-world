@@ -285,6 +285,9 @@ def _ensure_yearly_columns(conn: sqlite3.Connection):
         "wealthiest_family": "wealthiest_family TEXT DEFAULT ''",
         "wealthiest_family_coins": "wealthiest_family_coins INTEGER DEFAULT 0",
 
+        # Population snapshot at end of each day (latest value = year-end population)
+        "population_end": "population_end INTEGER DEFAULT 0",
+
         "most_atk_id": "most_atk_id INTEGER",
         "most_atk_name": "most_atk_name TEXT DEFAULT ''",
         "most_atk_value": "most_atk_value INTEGER DEFAULT 0",

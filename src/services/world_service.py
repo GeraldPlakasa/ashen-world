@@ -322,6 +322,7 @@ def advance_one_day() -> tuple:
         king_name = final_king.get("name") if final_king else None
         king_trait = final_king.get("traits", "") if final_king else None
 
+        alive_count = len([v for v in characters if v.get("alive", True)])
         update_year_daily(
             year=yr_now,
             king_id=king_id,
@@ -333,6 +334,7 @@ def advance_one_day() -> tuple:
             corruption_today=corruption_today,
             births_today=births_today,
             king_trait=king_trait,
+            population_end=alive_count,
         )
         
         # Track wealthiest family
