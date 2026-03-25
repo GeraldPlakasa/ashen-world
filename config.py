@@ -46,7 +46,7 @@ REPAIR_THRESHOLD = 60    # repair if building health < 60%
 _next_villager_id = 0 
 
 ELECTION_INTERVAL_YEARS = 5      # hold election every 5 game years
-KING_MAX_TERMS = 3               # lifetime limit for one villager as King
+KING_MAX_TERMS = 3               # max consecutive terms for one villager as King
 DYNASTY_BONUS = 1000             # extra leadership if same family as previous King
 
 QUEST_INTERVAL_YEARS = 3         # King issues quests every 3 years
@@ -190,7 +190,7 @@ INT_FIELDS = [
     "id", "coins", "age", "int", "rep", "level", "exp",
     "atk", "def", "hp", "hunger", "gen",
     "immigrantGen", "motherId", "fatherId",
-    "kingTerms", "death_day", "spouseId_at_death",
+    "kingTerms", "consecutiveTerms", "death_day", "spouseId_at_death",
     "spouseId", "spouseSinceDay",
     "born_day", "last_birth_day",
     "huntWins", "huntWinsYear", "questWins",
@@ -203,7 +203,7 @@ FIELDNAMES = [
     "action_log",  # relationships moved to villager_relationships table
     "spouseId", "spouseSinceDay", "spouseId_at_death",
     "alive", "origin", "owner", "gen", "immigrantGen",
-    "motherId", "fatherId", "childrenIds", "kingTerms",
+    "motherId", "fatherId", "childrenIds", "kingTerms", "consecutiveTerms",
     "death_day", "huntWins", "huntWinsYear", "questWins",
     "born_day", "last_birth_day",
     "skills",  # achievements/kingsVotedFor moved to normalized tables

@@ -39,6 +39,7 @@ Villager = TypedDict(
         "fatherId": int,
         "childrenIds": list,
         "kingTerms": int,
+        "consecutiveTerms": int,
         "death_day": int,
         "huntWins": int,
         "huntWinsYear": int,

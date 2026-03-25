@@ -46,6 +46,7 @@ def create_default_villager(**overrides: Any) -> Villager:
         "fatherId": 0,
         "childrenIds": [],
         "kingTerms": 0,
+        "consecutiveTerms": 0,
         "death_day": 0,
         "huntWins": 0,
         "huntWinsYear": 0,

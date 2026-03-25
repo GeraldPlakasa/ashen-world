@@ -241,6 +241,7 @@ def advance_one_day() -> tuple:
             winner_em, emergency_msg = hold_election(
                 characters,
                 current_day=new_total_day,
+                emergency=True,
             )
             if winner_em and emergency_msg:
                 yr, _ = compute_year_and_day(new_total_day)

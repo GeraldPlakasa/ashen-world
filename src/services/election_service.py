@@ -201,12 +201,13 @@ def reassign_job_by_traits(p: Villager) -> str:
     p["job"] = job
     return job
 
-def hold_election(characters: list[Villager], current_day: int | None = None) -> tuple[Villager | None, str | None]:
+def hold_election(characters: list[Villager], current_day: int | None = None, emergency: bool = False) -> tuple[Villager | None, str | None]:
     """
-    Yearly election:
+    Election:
     - every living villager votes, adults are candidates (prefer males).
-    - respects KING_MAX_TERMS (lifetime).
-    - updates King job, reassigns dethroned King, increments kingTerms.
+    - respects KING_MAX_TERMS (consecutive terms).
+    - emergency elections do NOT count toward term limits.
+    - updates King job, reassigns dethroned King, increments consecutiveTerms.
     Returns (winner, message) or (None, None).
     """
     alive = [r for r in characters if r.get("alive", True)]
@@ -222,10 +223,18 @@ def hold_election(characters: list[Villager], current_day: int | None = None) ->
     if not candidates:
         return None, None
 
-    under_limit = [c for c in candidates if (c.get("kingTerms", 0) or 0) < KING_MAX_TERMS]
+    # Use consecutiveTerms for term limit (fallback to legacy kingTerms)
+    def get_consecutive(c):
+        return int(c.get("consecutiveTerms", 0) or c.get("kingTerms", 0) or 0)
+
+    under_limit = [c for c in candidates if get_consecutive(c) < KING_MAX_TERMS]
     term_limited_only = len(under_limit) == 0
     if not term_limited_only:
         candidates = under_limit
+    else:
+        # Instead of opening ALL, pick those with fewest consecutive terms
+        min_terms = min(get_consecutive(c) for c in candidates)
+        candidates = [c for c in candidates if get_consecutive(c) == min_terms]
 
     base_score = {c["id"]: leadership_score(c, prev_king) for c in candidates}
 
@@ -329,8 +338,14 @@ def hold_election(characters: list[Villager], current_day: int | None = None) ->
     if prev_king and prev_king is not winner:
         if prev_king.get("job") == "King":
             prev_king["job"] = reassign_job_by_traits(prev_king)
+        # Reset consecutive terms when dethroned
+        prev_king["consecutiveTerms"] = 0
 
     winner["job"] = "King"
+    # Emergency elections don't count toward consecutive term limit
+    if not emergency:
+        winner["consecutiveTerms"] = int(winner.get("consecutiveTerms", 0) or 0) + 1
+    # Keep legacy kingTerms as lifetime counter (for stats/display)
     winner["kingTerms"] = int(winner.get("kingTerms", 0) or 0) + 1
 
     # Track kingmaker achievement: record who voted for the winning king
