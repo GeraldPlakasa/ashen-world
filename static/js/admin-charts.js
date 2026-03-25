@@ -22,6 +22,9 @@ const COLORS = {
 // Store chart instances for updates
 const charts = {};
 
+// Year range filter (default 20)
+let yearRangeLimit = 20;
+
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -104,6 +107,7 @@ function renderAllCharts(data) {
   renderDemographicsChart(data);
   renderGenderChart(data);
   renderAgeChart(data);
+  renderPopulationTimelineChart(data);
   renderJobsChart(data);
   renderOriginsChart(data);
   renderSkillsChart(data);
@@ -114,22 +118,19 @@ function renderAllCharts(data) {
   renderEventTypesChart(data);
 }
 
+function filterYearlyData(yearly) {
+  if (!yearly || yearly.length === 0) return [];
+  if (yearRangeLimit === 0) return yearly; // All time
+  return yearly.slice(-yearRangeLimit);
+}
+
 function renderPopulationTreasuryChart(data) {
   const ctx = document.getElementById('chart-population-treasury');
   if (!ctx) return;
   
-  const yearly = data.yearly_stats || [];
+  // Filter and reverse for most recent on left
+  const yearly = filterYearlyData(data.yearly_stats || []).slice().reverse();
   const labels = yearly.map(y => 'Y' + y.year);
-  
-  // Calculate end-of-year population (start + births + immigrants - deaths)
-  // This is an approximation since we don't have exact end population
-  const popData = yearly.map(y => {
-    const births = y.total_births || 0;
-    const deaths = y.total_deaths || 0;
-    const immigrants = y.total_immigrants || 0;
-    // We'll use treasury_start as a proxy for activity
-    return births + immigrants - deaths + 50; // Base 50
-  });
   
   const treasuryData = yearly.map(y => y.treasury_end || y.treasury_start || 0);
   
@@ -177,7 +178,8 @@ function renderDemographicsChart(data) {
   const ctx = document.getElementById('chart-demographics');
   if (!ctx) return;
   
-  const yearly = data.yearly_stats || [];
+  // Filter and reverse for most recent on left
+  const yearly = filterYearlyData(data.yearly_stats || []).slice().reverse();
   const labels = yearly.map(y => 'Y' + y.year);
   
   if (charts['demographics']) charts['demographics'].destroy();
@@ -219,6 +221,73 @@ function renderGenderChart(data) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { position: 'bottom' } }
+    }
+  });
+}
+
+function renderPopulationTimelineChart(data) {
+  const ctx = document.getElementById('chart-population-timeline');
+  if (!ctx) return;
+  
+  const yearly = data.yearly_stats || [];
+  if (yearly.length === 0) {
+    if (charts['population-timeline']) charts['population-timeline'].destroy();
+    return;
+  }
+  
+  // Calculate cumulative alive population per year
+  // Start with initial population and add births/immigrants, subtract deaths
+  let runningPop = data.current?.initial_population || 50;
+  const popByYear = [];
+  
+  yearly.forEach(y => {
+    const births = y.total_births || 0;
+    const deaths = y.total_deaths || 0;
+    const immigrants = y.total_immigrants || 0;
+    runningPop = runningPop + births + immigrants - deaths;
+    popByYear.push({ year: y.year, population: Math.max(0, runningPop) });
+  });
+  
+  // Reverse so most recent is on the left
+  const reversed = popByYear.slice().reverse();
+  const labels = reversed.map(p => 'Y' + p.year);
+  const popData = reversed.map(p => p.population);
+  
+  if (charts['population-timeline']) charts['population-timeline'].destroy();
+  
+  charts['population-timeline'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Alive Population',
+        data: popData,
+        borderColor: COLORS.primary,
+        backgroundColor: 'rgba(99, 102, 241, 0.15)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        pointBackgroundColor: COLORS.primary
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `Population: ${ctx.raw}`
+          }
+        }
+      },
+      scales: {
+        y: { 
+          beginAtZero: true,
+          title: { display: true, text: 'Population' }
+        }
+      }
     }
   });
 }
@@ -441,6 +510,17 @@ function renderEventTypesChart(data) {
     }
   });
 }
+
+// Year range filter handler
+document.addEventListener('DOMContentLoaded', () => {
+  const rangeFilter = document.getElementById('year-range-filter');
+  if (rangeFilter) {
+    rangeFilter.addEventListener('change', (e) => {
+      yearRangeLimit = parseInt(e.target.value) || 0;
+      loadAnalytics();
+    });
+  }
+});
 
 // Load analytics on page load
 document.addEventListener('DOMContentLoaded', loadAnalytics);

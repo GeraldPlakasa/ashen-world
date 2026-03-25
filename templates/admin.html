@@ -109,6 +109,17 @@
 
           <!-- Tab: Overview -->
           <div id="tab-overview" class="tab-content">
+            <!-- Year Range Filter -->
+            <div class="d-flex align-items-center gap-3 mb-3" style="font-size: 13px;">
+              <label style="color: var(--aw-text-muted);">Show last</label>
+              <select id="year-range-filter" class="form-select form-select-sm" style="width: auto;">
+                <option value="10">10 years</option>
+                <option value="20" selected>20 years</option>
+                <option value="50">50 years</option>
+                <option value="100">100 years</option>
+                <option value="0">All time</option>
+              </select>
+            </div>
             <div class="row g-3 mb-3">
               <!-- Population Over Time -->
               <div class="col-12 col-lg-8">
@@ -165,29 +176,22 @@
               </div>
             </div>
 
-            <!-- Auto Simulation Control -->
-            <div class="game-card mb-3">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <div class="chart-title mb-0">Auto Simulation</div>
-                  <span id="auto-status" class="status-badge" style="background: var(--aw-bg-dark); color: var(--aw-text-dim); border: 1px solid var(--aw-border);">Stopped</span>
-                </div>
-                <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 13px;">
-                  <div class="d-flex align-items-center gap-2">
-                    <label for="auto-interval" style="color: var(--aw-text-muted);">Interval (sec):</label>
-                    <input type="number" id="auto-interval" class="form-control form-control-sm" min="1" value="3" style="width: 70px;" />
-                  </div>
-                  <div class="d-flex gap-2">
-                    <button type="button" id="auto-start" class="btn btn-sm btn-outline-success">Start</button>
-                    <button type="button" id="auto-stop" class="btn btn-sm btn-outline-danger" disabled>Stop</button>
+            </div>
+
+          <!-- Tab: Population -->
+          <div id="tab-population" class="tab-content" style="display: none;">
+            <!-- Population Over Time Chart -->
+            <div class="row g-3 mb-3">
+              <div class="col-12">
+                <div class="chart-card">
+                  <div class="chart-title">Alive Population Over Time</div>
+                  <div class="chart-container-lg">
+                    <canvas id="chart-population-timeline"></canvas>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Tab: Population -->
-          <div id="tab-population" class="tab-content" style="display: none;">
             <div class="row g-3 mb-3">
               <!-- Job Distribution -->
               <div class="col-12 col-md-6">
