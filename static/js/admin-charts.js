@@ -53,7 +53,7 @@ async function loadAnalytics() {
 function updateKPIs(data) {
   const c = data.current;
   document.getElementById('kpi-year').textContent = c.year || '-';
-  document.getElementById('kpi-day').textContent = c.day || '-';
+  document.getElementById('kpi-day').textContent = c.day != null ? c.day : '-';
   document.getElementById('kpi-population').textContent = c.population || 0;
   document.getElementById('kpi-dead').textContent = c.dead_count || 0;
   document.getElementById('kpi-treasury').textContent = c.treasury || 0;
@@ -138,6 +138,9 @@ function renderPopulationTreasuryChart(data) {
   const yearly = filterYearlyData(data.yearly_stats || []);
   const labels = yearly.map(y => 'Y' + y.year);
   
+  // Store king names for tooltip
+  const kingNames = yearly.map(y => y.king_name || 'No King');
+  
   const treasuryData = yearly.map(y => y.treasury_end || y.treasury_start || 0);
   
   if (charts['population-treasury']) charts['population-treasury'].destroy();
@@ -171,7 +174,18 @@ function renderPopulationTreasuryChart(data) {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { intersect: false, mode: 'index' },
-      plugins: { legend: { position: 'top' } },
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              if (!items.length) return '';
+              const idx = items[0].dataIndex;
+              return `${labels[idx]} — King: ${kingNames[idx]}`;
+            }
+          }
+        }
+      },
       scales: {
         y: { position: 'left', title: { display: true, text: 'Pop Change' } },
         y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Treasury' } }
@@ -335,7 +349,8 @@ function renderJobsChart(data) {
   if (!ctx) return;
   
   const jobs = data.distributions?.jobs || {};
-  const sorted = Object.entries(jobs).sort((a, b) => b[1] - a[1]);
+  // Filter out "Child" from job distribution
+  const sorted = Object.entries(jobs).filter(([k]) => k.toLowerCase() !== 'child').sort((a, b) => b[1] - a[1]);
   
   if (charts['jobs']) charts['jobs'].destroy();
   
@@ -359,14 +374,16 @@ function renderOriginsChart(data) {
   if (!ctx) return;
   
   const origins = data.distributions?.origins || {};
+  // Filter out "immigrant" since immigrants become NPC origin
+  const filtered = Object.entries(origins).filter(([k]) => k.toLowerCase() !== 'immigrant');
   
   if (charts['origins']) charts['origins'].destroy();
   
   charts['origins'] = new Chart(ctx, {
     type: 'pie',
     data: {
-      labels: Object.keys(origins).map(o => o.charAt(0).toUpperCase() + o.slice(1)),
-      datasets: [{ data: Object.values(origins), backgroundColor: COLORS.palette }]
+      labels: filtered.map(([k]) => k.charAt(0).toUpperCase() + k.slice(1)),
+      datasets: [{ data: filtered.map(([, v]) => v), backgroundColor: COLORS.palette }]
     },
     options: {
       responsive: true,
@@ -430,14 +447,22 @@ function renderAchievementsChart(data) {
   
   const achs = data.distributions?.achievements || {};
   const achDefs = data.achievement_definitions || {};
-  const sorted = Object.entries(achs).sort((a, b) => b[1] - a[1]);
+  
+  // Merge entries that map to the same achievement name
+  // (handles cases like count_1, count_2 variants of the same achievement)
+  const merged = {};
+  for (const [id, count] of Object.entries(achs)) {
+    const name = achDefs[id]?.name || id;
+    merged[name] = (merged[name] || 0) + count;
+  }
+  const sorted = Object.entries(merged).sort((a, b) => b[1] - a[1]);
   
   if (charts['achievements']) charts['achievements'].destroy();
   
   charts['achievements'] = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: sorted.map(a => achDefs[a[0]]?.name || a[0]),
+      labels: sorted.map(a => a[0]),
       datasets: [{ label: 'Earned', data: sorted.map(a => a[1]), backgroundColor: COLORS.success }]
     },
     options: {
