@@ -106,7 +106,7 @@ def api_analytics():
                     skill_counts[skill] = skill_counts.get(skill, 0) + 1
     
     # Achievement distribution
-    import json
+    import json, re
     achievement_counts = {}
     for c in characters:
         achs_raw = c.get("achievements", "[]")
@@ -115,6 +115,9 @@ def api_analytics():
         except:
             achs = []
         for ach in (achs or []):
+            # Skip progress trackers like iron_will_count_1, iron_will_count_2, etc.
+            if re.search(r'_count_\d+$', ach):
+                continue
             achievement_counts[ach] = achievement_counts.get(ach, 0) + 1
     
     # Quest history stats
