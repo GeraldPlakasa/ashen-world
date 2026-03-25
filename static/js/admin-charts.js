@@ -119,17 +119,23 @@ function renderAllCharts(data) {
 }
 
 function filterYearlyData(yearly) {
+  // Data comes as DESC (newest first) from API
+  // We want to filter to last N years, then return in chronological order (oldest first)
   if (!yearly || yearly.length === 0) return [];
-  if (yearRangeLimit === 0) return yearly; // All time
-  return yearly.slice(-yearRangeLimit);
+  
+  // Take first N items (most recent years) if limit is set
+  let filtered = yearRangeLimit === 0 ? yearly : yearly.slice(0, yearRangeLimit);
+  
+  // Reverse to get chronological order: oldest -> newest (left -> right on chart)
+  return filtered.slice().reverse();
 }
 
 function renderPopulationTreasuryChart(data) {
   const ctx = document.getElementById('chart-population-treasury');
   if (!ctx) return;
   
-  // Filter and reverse for most recent on left
-  const yearly = filterYearlyData(data.yearly_stats || []).slice().reverse();
+  // Filter returns chronological order (oldest first, newest last = left to right)
+  const yearly = filterYearlyData(data.yearly_stats || []);
   const labels = yearly.map(y => 'Y' + y.year);
   
   const treasuryData = yearly.map(y => y.treasury_end || y.treasury_start || 0);
@@ -178,8 +184,8 @@ function renderDemographicsChart(data) {
   const ctx = document.getElementById('chart-demographics');
   if (!ctx) return;
   
-  // Filter and reverse for most recent on left
-  const yearly = filterYearlyData(data.yearly_stats || []).slice().reverse();
+  // Filter returns chronological order (oldest first, newest last = left to right)
+  const yearly = filterYearlyData(data.yearly_stats || []);
   const labels = yearly.map(y => 'Y' + y.year);
   
   if (charts['demographics']) charts['demographics'].destroy();
@@ -229,29 +235,39 @@ function renderPopulationTimelineChart(data) {
   const ctx = document.getElementById('chart-population-timeline');
   if (!ctx) return;
   
-  const yearly = data.yearly_stats || [];
-  if (yearly.length === 0) {
+  // yearly_stats comes in DESC order (newest first)
+  const yearlyDesc = data.yearly_stats || [];
+  if (yearlyDesc.length === 0) {
     if (charts['population-timeline']) charts['population-timeline'].destroy();
     return;
   }
   
-  // Calculate cumulative alive population per year
-  // Start with initial population and add births/immigrants, subtract deaths
-  let runningPop = data.current?.initial_population || 50;
+  // Start with current population and calculate backwards
+  // Current population is at the END of the most recent year
+  let runningPop = data.current?.population || 0;
   const popByYear = [];
   
-  yearly.forEach(y => {
-    const births = y.total_births || 0;
-    const deaths = y.total_deaths || 0;
-    const immigrants = y.total_immigrants || 0;
-    runningPop = runningPop + births + immigrants - deaths;
-    popByYear.push({ year: y.year, population: Math.max(0, runningPop) });
+  // Process in DESC order (newest to oldest) to calculate backwards
+  yearlyDesc.forEach((y, idx) => {
+    if (idx === 0) {
+      // Most recent year - population is current
+      popByYear.push({ year: y.year, population: runningPop });
+    } else {
+      // Calculate previous year's end population by reversing the changes
+      // Pop_prev_year = Pop_this_year - births_this_year - immigrants_this_year + deaths_this_year
+      const prevYear = yearlyDesc[idx - 1];
+      const births = prevYear.total_births || 0;
+      const deaths = prevYear.total_deaths || 0;
+      const immigrants = prevYear.total_immigrants || 0;
+      runningPop = runningPop - births - immigrants + deaths;
+      popByYear.push({ year: y.year, population: Math.max(0, runningPop) });
+    }
   });
   
-  // Reverse so most recent is on the left
-  const reversed = popByYear.slice().reverse();
-  const labels = reversed.map(p => 'Y' + p.year);
-  const popData = reversed.map(p => p.population);
+  // popByYear is now in DESC order, reverse to get chronological (oldest first)
+  const chronological = popByYear.slice().reverse();
+  const labels = chronological.map(p => 'Y' + p.year);
+  const popData = chronological.map(p => p.population);
   
   if (charts['population-timeline']) charts['population-timeline'].destroy();
   
@@ -284,7 +300,7 @@ function renderPopulationTimelineChart(data) {
       },
       scales: {
         y: { 
-          beginAtZero: true,
+          beginAtZero: false,
           title: { display: true, text: 'Population' }
         }
       }
