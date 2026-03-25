@@ -81,9 +81,9 @@ function updateTables(data) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${q.year || '-'}</td>
-      <td>${q.quest_type || '-'}</td>
+      <td>${q.type || q.quest_type || '-'}</td>
       <td><span class="status-badge ${q.success ? 'alive' : 'dead'}">${q.success ? 'Success' : 'Failed'}</span></td>
-      <td>${q.gold_reward || 0}</td>
+      <td>${q.gold || q.gold_reward || 0}</td>
     `;
     questsBody.appendChild(tr);
   });
@@ -95,7 +95,7 @@ function updateTables(data) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${e.year || '-'}</td>
-      <td>${e.event_type || '-'}</td>
+      <td>${e.type || e.event_type || '-'}</td>
       <td>${e.affected_count || '-'}</td>
     `;
     eventsBody.appendChild(tr);

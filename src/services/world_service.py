@@ -24,6 +24,7 @@ from src.repositories.villager_repo import (
     load_villagers,
     graveyard_upsert_from_villager,
     graveyard_cleanup_old,
+    graveyard_clear_all,
 )
 from src.repositories.world_repo import (
     load_day,
@@ -399,6 +400,9 @@ def generate_new_world(count: int = 50) -> tuple[int, int]:
         })
 
         clear_yearly_stats()
+
+        # Clear graveyard
+        graveyard_clear_all()
 
         # Reset in-memory event history
         clear_event_history()

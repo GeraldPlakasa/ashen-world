@@ -122,7 +122,8 @@ def api_analytics():
     quest_type_counts = {}
     quest_success_counts = {"success": 0, "failed": 0}
     for q in quest_history:
-        qtype = q.get("quest_type", "unknown")
+        # Quest record uses "type" key, not "quest_type"
+        qtype = q.get("type", q.get("quest_type", "unknown"))
         quest_type_counts[qtype] = quest_type_counts.get(qtype, 0) + 1
         if q.get("success"):
             quest_success_counts["success"] += 1
@@ -133,7 +134,8 @@ def api_analytics():
     event_history = get_event_history()
     event_type_counts = {}
     for e in event_history:
-        etype = e.get("event_type", "unknown")
+        # Event record uses "type" key, not "event_type"
+        etype = e.get("type", e.get("event_type", "unknown"))
         event_type_counts[etype] = event_type_counts.get(etype, 0) + 1
     
     # Users

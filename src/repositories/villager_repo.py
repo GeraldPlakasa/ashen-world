@@ -296,6 +296,13 @@ def graveyard_get_many(ids: list[int]) -> dict[int, GraveyardRecord]:
     return out
 
 
+def graveyard_clear_all() -> None:
+    """Delete all graveyard entries (used on world reset)."""
+    init_db()
+    with db_conn() as conn:
+        conn.execute("DELETE FROM graveyard;")
+
+
 def graveyard_cleanup_old(current_total_day: int, max_years: int) -> int:
     """
     Remove graveyard entries where death occurred more than max_years ago.
