@@ -816,15 +816,4 @@ def maybe_trigger_quest(
     return message, record
 
 
-def clear_quest_state(bank: Bank) -> None:
-    """Reset quest tracking state."""
-    bank["last_quest_year"] = 0
-    bank["quest_day_for_year"] = None
-    bank["quest_triggered_this_year"] = False
-    bank["last_quest_message"] = ""
-    bank["last_quest_day"] = None
-    bank["last_quest_type"] = None
-    bank["last_quest_success"] = None
-    bank["last_quest_name"] = ""
-    bank["last_quest_desc"] = ""
-    bank["quest_history"] = []
+# clear_quest_state removed (unused)

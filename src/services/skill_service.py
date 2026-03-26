@@ -552,12 +552,7 @@ def get_job_from_skills(skills: list[str], available_jobs: list[str]) -> str | N
     return max(job_scores, key=job_scores.get)
 
 
-def get_skill_display(villager: "Villager") -> str:
-    """Get formatted skill display for UI."""
-    skills = parse_skills(villager.get("skills", ""))
-    if not skills:
-        return ""
-    return ", ".join(skills)
+# get_skill_display removed (unused)
 
 
 # ════════════════════════════════════════════════════════════════
@@ -638,15 +633,4 @@ def add_skill_to_villager(villager: "Villager", skill_name: str) -> bool:
     return True
 
 
-def get_learning_display(villager: "Villager") -> str:
-    """Get formatted learning progress display for UI."""
-    progress = get_learning_progress(villager)
-    if not progress:
-        return ""
-    
-    parts = []
-    for skill, count in sorted(progress.items(), key=lambda x: -x[1]):
-        pct = min(100, count)
-        parts.append(f"{skill}: {pct}%")
-    
-    return ", ".join(parts)
+# get_learning_display removed (unused)

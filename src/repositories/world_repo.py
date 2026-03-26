@@ -136,7 +136,4 @@ def _roll_weather_if_needed(current_day: int, payload: dict) -> str:
     payload["next_weather_roll_day"] = day + int(config.WEATHER_CHANGE_DAYS or 5)
     return weather
 
-
-def maybe_roll_weather(current_day: int) -> str:
-    """Read current weather (rolling happens in save_day)."""
-    return load_weather()
+# maybe_roll_weather removed (unused)

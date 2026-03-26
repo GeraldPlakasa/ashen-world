@@ -93,21 +93,5 @@ def get_simulation_logger() -> logging.Logger:
     return get_logger("ashen.simulation")
 
 
-def get_election_logger() -> logging.Logger:
-    """Logger for election events."""
-    return get_logger("ashen.election")
 
-
-def get_quest_logger() -> logging.Logger:
-    """Logger for quest events."""
-    return get_logger("ashen.quest")
-
-
-def get_event_logger() -> logging.Logger:
-    """Logger for world events (plague, famine, etc)."""
-    return get_logger("ashen.event")
-
-
-def get_db_logger() -> logging.Logger:
-    """Logger for database operations."""
-    return get_logger("ashen.db")
+# Removed unused loggers: election, quest, event, db (use get_logger() directly if needed)
