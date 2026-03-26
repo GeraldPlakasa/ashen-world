@@ -19,11 +19,12 @@ def db_conn() -> Generator[sqlite3.Connection, None, None]:
     - WAL improves concurrency for small apps.
     """
     _ensure_data_dir()
-    conn = sqlite3.connect(config.DB_PATH, check_same_thread=False)
+    conn = sqlite3.connect(config.DB_PATH, check_same_thread=False, timeout=30)
     try:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
         conn.execute("PRAGMA journal_mode = WAL;")
+        conn.execute("PRAGMA busy_timeout = 30000;")  # 30s retry on lock
         yield conn
         conn.commit()
     except Exception:

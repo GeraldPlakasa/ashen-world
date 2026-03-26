@@ -433,3 +433,5 @@ def auto_simulation_loop() -> None:
             advance_one_day()
         except Exception as exc:
             logger.exception("Auto-simulation loop error: %s", exc)
+            # Extra sleep on error to avoid rapid-fire retries on persistent lock
+            time.sleep(2)
