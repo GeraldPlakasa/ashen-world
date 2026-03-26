@@ -193,6 +193,21 @@ def init_db():
             """
         )
 
+        # Event history table (persistent, replaces in-memory list)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS event_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                day INTEGER NOT NULL,
+                year INTEGER NOT NULL,
+                details TEXT DEFAULT '',
+                affected_count INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT (datetime('now'))
+            );
+            """
+        )
+
         _ensure_world_defaults(conn)
         _ensure_bank_defaults(conn)
         _ensure_villagers_columns(conn)
@@ -217,6 +232,9 @@ def _ensure_indexes(conn: sqlite3.Connection):
     conn.execute("CREATE INDEX IF NOT EXISTS idx_va_villager ON villager_achievements(villager_id);")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_vv_villager ON villager_votes(villager_id);")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_vv_king ON villager_votes(king_id);")
+    # Event history indexes
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_eh_year ON event_history(year);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_eh_type ON event_history(event_type);")
 
 def _ensure_villagers_columns(conn: sqlite3.Connection):
     existing = {r["name"] for r in conn.execute("PRAGMA table_info(villagers);").fetchall()}

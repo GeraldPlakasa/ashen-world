@@ -42,41 +42,49 @@ EVENT_WEIGHTS = {
     "STORM": 10,        # Negative: natural disaster
 }
 
-# In-memory event history (will be reset on server restart)
-# For persistent storage, this should be moved to database
-_event_history: list[dict] = []
+# Event history now stored in SQLite (persistent across restarts)
+from src.repositories.base import db_conn, init_db
 
 
-def get_event_history() -> list[dict]:
-    """Get the event history list."""
-    return _event_history.copy()
+def get_event_history(limit: int = 200) -> list[dict]:
+    """Get event history from database."""
+    init_db()
+    with db_conn() as conn:
+        rows = conn.execute(
+            "SELECT event_type as type, day, year, details, affected_count, created_at as timestamp "
+            "FROM event_history ORDER BY id DESC LIMIT ?;",
+            (limit,),
+        ).fetchall()
+        return [dict(r) for r in reversed(rows)]
 
 
 def clear_event_history() -> None:
-    """Clear event history and reset yearly tracking."""
-    global _event_history
-    _event_history = []
+    """Clear all event history."""
+    init_db()
+    with db_conn() as conn:
+        conn.execute("DELETE FROM event_history;")
 
 
 def _record_event(event_type: str, day: int, details: str, affected_count: int = 0) -> dict:
-    """Record an event in history."""
-    # Calculate year from total day
+    """Record an event in database."""
     year = ((day - 1) // DAYS_PER_YEAR) + 1
-    
+
     event = {
         "type": event_type,
         "day": day,
         "year": year,
         "details": details,
         "affected_count": affected_count,
-        "timestamp": datetime.utcnow().isoformat(),
     }
-    _event_history.append(event)
-    
-    # Keep only last 100 events
-    if len(_event_history) > 100:
-        _event_history.pop(0)
-    
+
+    init_db()
+    with db_conn() as conn:
+        conn.execute(
+            "INSERT INTO event_history (event_type, day, year, details, affected_count) "
+            "VALUES (?, ?, ?, ?, ?);",
+            (event_type, day, year, details, affected_count),
+        )
+
     return event
 
 

@@ -101,15 +101,19 @@ def save_villagers(rows: list[Villager]) -> None:
             conn.execute(insert_sql, values)
 
 
-def load_villagers() -> list[Villager]:
+def load_villagers(alive_only: bool = False) -> list[Villager]:
     """
-    Load all villagers from SQLite.
+    Load villagers from SQLite.
     Populates relationships, achievements, votes from normalized tables.
+    If alive_only=True, skip dead villagers for faster loading.
     """
     init_db()
 
     with db_conn() as conn:
-        cur = conn.execute("SELECT * FROM villagers;")
+        if alive_only:
+            cur = conn.execute("SELECT * FROM villagers WHERE alive='true';")
+        else:
+            cur = conn.execute("SELECT * FROM villagers;")
         out: list[Villager] = []
 
         # Pre-load all normalized data for efficiency

@@ -29,13 +29,22 @@ def api_state():
     graveyard_index = build_graveyard_index_for(characters)
     buildings_payload = build_building_summary(bank, include_health=True)
 
+    # Only send alive villagers for main state (dead ones in graveyard_index)
+    # Strip heavy fields (action_log, relationships) to reduce payload
+    alive_chars = []
+    for c in characters:
+        if not c.get("alive", True):
+            continue
+        slim = {k: v for k, v in c.items() if k not in ("action_log", "relationships", "kingsVotedFor")}
+        alive_chars.append(slim)
+
     return jsonify({
         "ok": True,
         "message": "Current state",
         "year": year,
         "day": day_in_year,
         "total_day": total_day,
-        "characters": characters,
+        "characters": alive_chars,
         "graveyard_index": graveyard_index,
         "bank_balance": bank.get("balance", 0),
         "tax_rate": bank.get("tax_rate", 0.10),
