@@ -193,7 +193,16 @@ def reassign_job_by_traits(p: Villager) -> str:
             add(j, 1)
 
     if "Curious" in t or "Patient" in t:
-        for j in ["Herbalist", "Druid", "Forester"]:
+        for j in ["Herbalist", "Druid", "Forester", "Wizard", "Sorcerer"]:
+            add(j, 1)
+
+    # High MP suggests magic job reassignment
+    mp = int(p.get("mp", 0) or 0)
+    if mp >= 60:
+        for j in ["Wizard", "Sorcerer", "Cleric", "Druid"]:
+            add(j, 2)
+    elif mp >= 25:
+        for j in ["Cleric", "Priest", "Healer"]:
             add(j, 1)
 
     # Pick weighted

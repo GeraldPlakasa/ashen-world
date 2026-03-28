@@ -594,7 +594,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (pinned.hpEl) {
       pinned.hpEl.textContent = `HP ${textOrDash(
         villager.hp
-      )} / Hunger ${textOrDash(villager.hunger)}`;
+      )} / MP ${textOrDash(villager.mp || 0)}`;
     }
 
     // --- Spouse ---

@@ -123,6 +123,20 @@ QUEST_TYPES = {
         "gear_chance": 0.50,
         "special": "treasure",  # Extra gold bonus
     },
+    "ARCANE": {
+        "name": "Arcane Expedition",
+        "descriptions": [
+            "Seal the {threat} leaking from the rift",
+            "Purify the corrupted {threat} plaguing the land",
+            "Contain the wild {threat} before it destroys the village",
+        ],
+        "threats": ["Mana Storm", "Shadow Rift", "Cursed Nexus", "Void Portal", "Arcane Anomaly", "Corrupted Ley Line"],
+        "stat_focus": "mp",
+        "stat_threshold": 180,
+        "gold_reward": (180, 450),
+        "gear_chance": 0.40,
+        "special": "arcane",
+    },
 }
 
 # Gear rewards for quest success (similar to shop items)
@@ -132,6 +146,7 @@ QUEST_GEAR_T1 = [
     {"type": "Diplomat's Ring", "bonuses": [{"key": "int", "amt": (2, 5)}, {"key": "rep", "amt": (1, 3)}]},
     {"type": "Merchant's Pouch", "bonuses": [{"key": "rep", "amt": (3, 6)}]},
     {"type": "Adventurer's Boots", "bonuses": [{"key": "hp", "amt": (10, 20)}]},
+    {"type": "Mana Gem", "bonuses": [{"key": "mp", "amt": (8, 16)}]},
 ]
 
 QUEST_GEAR_T2 = [
@@ -140,6 +155,7 @@ QUEST_GEAR_T2 = [
     {"type": "Sage's Medallion", "bonuses": [{"key": "int", "amt": (6, 10)}, {"key": "rep", "amt": (2, 5)}]},
     {"type": "Hero's Mantle", "bonuses": [{"key": "hp", "amt": (20, 35)}, {"key": "rep", "amt": (3, 6)}]},
     {"type": "Veteran's Armor", "bonuses": [{"key": "def", "amt": (6, 10)}, {"key": "hp", "amt": (12, 22)}]},
+    {"type": "Spellweaver's Orb", "bonuses": [{"key": "mp", "amt": (15, 28)}, {"key": "int", "amt": (4, 8)}]},
 ]
 
 QUEST_GEAR_T3 = [
@@ -161,6 +177,7 @@ KING_TRAIT_QUEST_WEIGHTS = {
     "Generous": {"DIPLOMACY": 1.5, "TRADE": 1.5, "RESCUE": 2.0},
     "Diligent": {"TRADE": 1.5, "EXPLORATION": 1.5},
     "Protective": {"RESCUE": 2.5, "COMBAT": 1.5},
+    "Curious": {"ARCANE": 2.0, "EXPLORATION": 1.5, "TREASURE_HUNT": 1.5},
 }
 
 # Trait influences on volunteer willingness
@@ -173,7 +190,7 @@ VOLUNTEER_TRAIT_WEIGHTS = {
     "Greedy": {"TRADE": 2.5, "TREASURE_HUNT": 2.5},
     "Ambitious": {"COMBAT": 1.3, "EXPLORATION": 1.5, "DIPLOMACY": 1.3, "TREASURE_HUNT": 1.5},
     "Lazy": {"COMBAT": 0.2, "EXPLORATION": 0.3, "TRADE": 0.5, "DIPLOMACY": 0.5, "RESCUE": 0.3, "TREASURE_HUNT": 0.4},
-    "Curious": {"EXPLORATION": 2.5, "TREASURE_HUNT": 2.0},
+    "Curious": {"EXPLORATION": 2.5, "TREASURE_HUNT": 2.0, "ARCANE": 2.0},
     "Hot-headed": {"COMBAT": 2.0, "RESCUE": 1.5},
     "Protective": {"COMBAT": 1.5, "RESCUE": 2.5},
     "Hunter": {"COMBAT": 2.5, "EXPLORATION": 1.5, "TREASURE_HUNT": 1.5},
@@ -240,6 +257,9 @@ def _generate_quest_description(quest_type: str) -> tuple[str, str]:
     elif quest_type == "TREASURE_HUNT":
         target = random.choice(qt_data["treasures"])
         desc = desc_template.format(treasure=target)
+    elif quest_type == "ARCANE":
+        target = random.choice(qt_data["threats"])
+        desc = desc_template.format(threat=target)
     else:
         desc = desc_template
     
@@ -265,6 +285,8 @@ def _calculate_volunteer_score(v: Villager, quest_type: str) -> float:
         base_score = int(v.get("int", 10) or 10) * 1.5
     elif stat_focus == "def":
         base_score = int(v.get("def", 10) or 10) * 1.5
+    elif stat_focus == "mp":
+        base_score = int(v.get("mp", 0) or 0) * 1.5 + int(v.get("int", 10) or 10) * 0.5
     else:  # rep
         base_score = int(v.get("rep", 0) or 0) + 50
     
@@ -372,6 +394,8 @@ def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank)
             total_primary += int(v.get("int", 10) or 10)
         elif stat_focus == "def":
             total_primary += int(v.get("def", 10) or 10)
+        elif stat_focus == "mp":
+            total_primary += int(v.get("mp", 0) or 0) + int(v.get("int", 10) or 10) * 0.3
         else:  # rep
             total_primary += int(v.get("rep", 0) or 0) + 10
         
@@ -415,6 +439,10 @@ def _calculate_quest_success(party: list[Villager], quest_type: str, bank: Bank)
     elif quest_type == "EXPLORATION":
         library_lvl = get_building_level(bank, "library")
         building_bonus = library_lvl * 1.5
+    elif quest_type == "ARCANE":
+        temple_lvl = get_building_level(bank, "temple")
+        library_lvl = get_building_level(bank, "library")
+        building_bonus = temple_lvl * 2.0 + library_lvl * 1.0
     
     # Level bonus (smaller)
     level_bonus = avg_level * 0.3
@@ -596,6 +624,14 @@ def _apply_quest_results(
     gold_distributed = 0
     gear_rewards = []
     
+    # ARCANE quests drain MP from party members (casting spells)
+    if quest_type == "ARCANE":
+        for v in party:
+            mp = int(v.get("mp", 0) or 0)
+            if mp > 0:
+                mp_cost = min(mp, rand_int(15, 40))
+                v["mp"] = mp - mp_cost
+
     if success:
         # Success: distribute gold, gear, minor injuries
         total_gold = rand_int(gold_min, gold_max)

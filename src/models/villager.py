@@ -22,6 +22,7 @@ Villager = TypedDict(
         "atk": int,
         "def": int,
         "hp": int,
+        "mp": int,
         "hunger": int,
         "traits": str,
         "last_action": str,

@@ -5,6 +5,8 @@ import random
 
 from config import (
     ENEMY_BASE,
+    MAGIC_JOBS,
+    MINOR_MAGIC_JOBS,
 )
 from src.utils.world_utils import (
     rand_int,
@@ -122,6 +124,9 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
 
     Mutates `v` in-place (coins, rep, exp, hp, alive).
     """
+    mp = v.get("mp", 0)
+    job = v.get("job", "")
+
     char_power = (
         v["atk"] * 1.15
         + v["def"]
@@ -130,6 +135,19 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
         + v["rep"] * 0.2
         + 20
     )
+
+    # Magic power: magic jobs channel MP into combat spells
+    if job in MAGIC_JOBS and mp > 0:
+        spell_power = mp * 0.8 + v["int"] * 0.4
+        char_power += spell_power
+        # Spend MP on casting (30-60% of current MP)
+        mp_cost = max(1, int(mp * (0.3 + random.random() * 0.3)))
+        v["mp"] = max(0, mp - mp_cost)
+    elif job in MINOR_MAGIC_JOBS and mp > 0:
+        spell_power = mp * 0.3 + v["int"] * 0.15
+        char_power += spell_power
+        mp_cost = max(1, int(mp * (0.15 + random.random() * 0.15)))
+        v["mp"] = max(0, mp - mp_cost)
 
     if bank is not None:
         lvl_barracks = get_building_level(bank, "barracks")
@@ -168,6 +186,8 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
         
         if cat == "COMBAT":
             char_power *= 1.12  # +12% per combat skill
+        elif cat == "MAGIC":
+            char_power *= 1.15  # +15% per magic skill (spells are powerful)
         elif cat == "SURVIVAL":
             char_power *= 1.05  # +5% survival helps in fights
 

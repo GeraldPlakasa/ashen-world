@@ -38,7 +38,7 @@ class TestQuestTypes:
     @pytest.mark.unit
     def test_quest_stat_focus_valid(self):
         """Quest stat focus should be atk, def, int, or rep."""
-        valid_stats = {"atk", "def", "int", "rep"}
+        valid_stats = {"atk", "def", "int", "rep", "mp"}
         for qt_name, qt_data in QUEST_TYPES.items():
             assert qt_data["stat_focus"] in valid_stats, f"{qt_name} has invalid stat_focus"
 

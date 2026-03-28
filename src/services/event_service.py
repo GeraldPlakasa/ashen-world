@@ -125,8 +125,18 @@ def _apply_plague(characters: list[Villager], bank: Bank | None, current_day: in
         affected += 1
         hp = int(v.get("hp", 100) or 100)
         
-        # Damage: 15-40 HP, reduced by clinic
-        damage = int(rand_int(15, 40) * severity_mod)
+        # Healers/Clerics resist plague better (magical healing)
+        job = v.get("job", "")
+        plague_resist = 1.0
+        if job in ("Cleric", "Healer", "Priest", "Herbalist"):
+            plague_resist = 0.5
+            mp = int(v.get("mp", 0) or 0)
+            if mp > 0:
+                v["mp"] = max(0, mp - rand_int(5, 15))  # Spend MP healing self
+                plague_resist *= 0.7
+
+        # Damage: 15-40 HP, reduced by clinic and magic resistance
+        damage = int(rand_int(15, 40) * severity_mod * plague_resist)
         new_hp = max(0, hp - damage)
         v["hp"] = new_hp
         
@@ -266,6 +276,7 @@ def _apply_invasion(characters: list[Villager], bank: Bank | None, current_day: 
     
     # Military jobs get attack bonuses
     military_jobs = {"Soldier", "Commander", "Guard", "Captain", "Ranger", "Archer", "Scout"}
+    from config import MAGIC_JOBS
     
     for v in alive:
         # 30-50% of villagers affected
@@ -277,8 +288,19 @@ def _apply_invasion(characters: list[Villager], bank: Bank | None, current_day: 
         defense = int(v.get("def", 10) or 10)
         job = v.get("job", "")
         
-        # Military jobs take less damage
-        job_mod = 0.5 if job in military_jobs else 1.0
+        # Military and magic jobs take less damage (they fight back)
+        if job in military_jobs:
+            job_mod = 0.5
+        elif job in MAGIC_JOBS:
+            job_mod = 0.55
+            # Magic users spend MP defending
+            mp = int(v.get("mp", 0) or 0)
+            if mp > 0:
+                mp_cost = min(mp, rand_int(10, 25))
+                v["mp"] = mp - mp_cost
+                job_mod *= 0.7  # Extra protection from spells
+        else:
+            job_mod = 1.0
         
         # Damage: 20-50 HP, reduced by defense and buildings
         base_damage = rand_int(20, 50)
@@ -390,6 +412,10 @@ def _apply_blessing(characters: list[Villager], bank: Bank | None, current_day: 
         heal = int(rand_int(25, 50) * bonus_mod)
         v["hp"] = hp + heal
         
+        # MP restoration from divine blessing
+        mp_gain = int(rand_int(10, 25) * bonus_mod)
+        v["mp"] = int(v.get("mp", 0) or 0) + mp_gain
+
         # Small stat boost
         if random.random() < 0.3:
             stat = random.choice(["atk", "def", "int"])
@@ -398,14 +424,14 @@ def _apply_blessing(characters: list[Villager], bank: Bank | None, current_day: 
             v[stat] = current + boost
             
             if v.get("last_action"):
-                v["last_action"] = f"{v['last_action']} / blessed (+{heal} HP, +{boost} {stat})"
+                v["last_action"] = f"{v['last_action']} / blessed (+{heal} HP, +{mp_gain} MP, +{boost} {stat})"
             else:
-                v["last_action"] = f"blessed (+{heal} HP, +{boost} {stat})"
+                v["last_action"] = f"blessed (+{heal} HP, +{mp_gain} MP, +{boost} {stat})"
         else:
             if v.get("last_action"):
-                v["last_action"] = f"{v['last_action']} / blessed (+{heal} HP)"
+                v["last_action"] = f"{v['last_action']} / blessed (+{heal} HP, +{mp_gain} MP)"
             else:
-                v["last_action"] = f"blessed (+{heal} HP)"
+                v["last_action"] = f"blessed (+{heal} HP, +{mp_gain} MP)"
     
     msg = f"✨ DIVINE BLESSING! All {affected} villagers received healing and blessings!"
     

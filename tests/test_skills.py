@@ -38,7 +38,7 @@ class TestSkillDefinitions:
     @pytest.mark.unit
     def test_all_skills_have_valid_category(self):
         """All skills should have valid categories."""
-        valid = {"COMBAT", "CRAFT", "SOCIAL", "SURVIVAL", "KNOWLEDGE"}
+        valid = {"COMBAT", "CRAFT", "SOCIAL", "SURVIVAL", "KNOWLEDGE", "MAGIC"}
         for name, data in SKILLS.items():
             assert data["category"] in valid, f"Skill {name} has invalid category"
 

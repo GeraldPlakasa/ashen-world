@@ -211,6 +211,64 @@ SKILLS = {
         "job_affinity": ["Scholar", "Advisor", "Scribe", "Priest"],
         "rarity": "common",
     },
+
+    # MAGIC SKILLS
+    "Fireball": {
+        "category": "MAGIC",
+        "description": "Hurls a devastating ball of flame",
+        "stat_bonus": {"mp": 10, "atk": 5},
+        "job_affinity": ["Wizard", "Sorcerer"],
+        "rarity": "uncommon",
+    },
+    "Healing Light": {
+        "category": "MAGIC",
+        "description": "Channels restorative magic to mend wounds",
+        "stat_bonus": {"mp": 8, "hp": 10},
+        "job_affinity": ["Cleric", "Priest", "Healer"],
+        "rarity": "common",
+    },
+    "Arcane Shield": {
+        "category": "MAGIC",
+        "description": "Conjures a protective barrier of pure mana",
+        "stat_bonus": {"mp": 12, "def": 6},
+        "job_affinity": ["Wizard", "Cleric", "Sorcerer"],
+        "rarity": "uncommon",
+    },
+    "Enchantment": {
+        "category": "MAGIC",
+        "description": "Imbues objects with magical properties",
+        "stat_bonus": {"mp": 8, "int": 4},
+        "job_affinity": ["Wizard", "Alchemist", "Druid"],
+        "rarity": "rare",
+    },
+    "War Chant": {
+        "category": "MAGIC",
+        "description": "A powerful song that inspires allies in battle",
+        "stat_bonus": {"mp": 6, "atk": 3, "rep": 3},
+        "job_affinity": ["Bard", "Cleric"],
+        "rarity": "uncommon",
+    },
+    "Mana Surge": {
+        "category": "MAGIC",
+        "description": "Draws deep from the ley lines to restore magical energy",
+        "stat_bonus": {"mp": 20},
+        "job_affinity": ["Wizard", "Sorcerer", "Druid"],
+        "rarity": "rare",
+    },
+    "Shadow Step": {
+        "category": "MAGIC",
+        "description": "Blinks through shadow to evade attacks",
+        "stat_bonus": {"mp": 6, "def": 4},
+        "job_affinity": ["Sorcerer", "Spy", "Ranger"],
+        "rarity": "rare",
+    },
+    "Nature's Wrath": {
+        "category": "MAGIC",
+        "description": "Commands the forces of nature against foes",
+        "stat_bonus": {"mp": 10, "atk": 4},
+        "job_affinity": ["Druid", "Herbalist", "Ranger"],
+        "rarity": "uncommon",
+    },
 }
 
 

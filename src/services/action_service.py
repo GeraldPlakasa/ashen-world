@@ -24,7 +24,7 @@ from src.services.skill_service import (
     add_skill_to_villager, get_learning_progress, add_learning_progress,
     reset_learning_progress,
 )
-from config import CHILD_MAX_AGE
+from config import CHILD_MAX_AGE, MAGIC_JOBS, MINOR_MAGIC_JOBS
 from src.models.villager import Villager
 from src.models.bank import Bank
 from src.models.combat import ShopOffer
@@ -47,6 +47,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         "hangout": 0.4,
         "steal": 0.2,
         "mentor": 0.0,  # Only enabled for age 20+ with skills
+        "meditate": 0.0,  # Only enabled for magic-capable jobs
     }
 
     # Building-based adjustments (village-wide passives)
@@ -208,6 +209,26 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         weights["steal"] += 0.8
         weights["socialize"] += 0.3
 
+    # Magic jobs: prefer study/meditate, less physical work
+    if job in MAGIC_JOBS:
+        weights["meditate"] = 1.5
+        weights["study"] += 1.0
+        weights["train"] *= 0.5
+        weights["work"] *= 0.6
+        weights["hunt"] += 0.4  # magical combat is effective
+        weights["buy_gear"] += 0.3
+        # Low MP triggers meditation urgency
+        mp = villager.get("mp", 0)
+        if mp < 30:
+            weights["meditate"] += 1.5
+            weights["hunt"] *= 0.5
+    elif job in MINOR_MAGIC_JOBS:
+        weights["meditate"] = 0.6
+        weights["study"] += 0.4
+        mp = villager.get("mp", 0)
+        if mp < 15:
+            weights["meditate"] += 0.8
+
     # Skill-based action modifiers
     skills = parse_skills(villager.get("skills", ""))
     for skill_name in skills:
@@ -243,6 +264,13 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         if cat == "KNOWLEDGE":
             weights["study"] += 0.7
             weights["work"] += 0.2
+        
+        # MAGIC skills boost meditate, study, and hunt
+        if cat == "MAGIC":
+            weights["meditate"] += 0.6
+            weights["study"] += 0.4
+            weights["hunt"] += 0.4
+            weights["train"] -= 0.2
 
     # Mentor action: only for age 20+ with skills
     age = villager.get("age", 0)
@@ -346,6 +374,18 @@ def handle_level_up(v: Villager) -> None:
         v["atk"] += rand_int(1, 3)
         v["def"] += rand_int(1, 2)
         v["hp"] += rand_int(3, 6)
+
+        # MP gain on level up based on job
+        lvl_job = v.get("job", "")
+        if lvl_job in MAGIC_JOBS:
+            v["mp"] = v.get("mp", 0) + rand_int(5, 12)
+        elif lvl_job in MINOR_MAGIC_JOBS:
+            v["mp"] = v.get("mp", 0) + rand_int(2, 5)
+        else:
+            # Non-magic jobs gain tiny MP occasionally
+            if random.random() < 0.15:
+                v["mp"] = v.get("mp", 0) + rand_int(1, 2)
+
         leveled = True
 
     # HP gains from leveling - no upper cap
@@ -380,6 +420,11 @@ def create_shop_offer(v: Villager) -> ShopOffer:
          "bonuses": [{"key": "rep", "amt": rand_int(3, 8)}]},
         {"type": "Traveler's Bedroll", "cost": 75 + lvl * 4,
          "bonuses": [{"key": "hp", "amt": rand_int(10, 20)}]},
+        {"type": "Mana Crystal",    "cost": rand_int(30, 80) + lvl * 3,
+         "bonuses": [{"key": "mp", "amt": rand_int(8, 18)}]},
+        {"type": "Spell Scroll",    "cost": rand_int(40, 100) + lvl * 4,
+         "bonuses": [{"key": "mp", "amt": rand_int(5, 12)},
+                     {"key": "int", "amt": rand_int(1, 3)}]},
     ]
 
     t2 = [
@@ -403,7 +448,7 @@ def create_shop_offer(v: Villager) -> ShopOffer:
                      {"key": "atk", "amt": rand_int(2, 4)}]},
         {"type": "Mageweave Robe",     "cost": 170 + lvl * 10,
          "bonuses": [{"key": "int", "amt": rand_int(5, 10)},
-                     {"key": "hp",  "amt": rand_int(10, 22)}]},
+                     {"key": "mp",  "amt": rand_int(12, 25)}]},
         {"type": "Knight's Buckler",   "cost": 190 + lvl * 11,
          "bonuses": [{"key": "def", "amt": rand_int(7, 14)},
                      {"key": "hp",  "amt": rand_int(8, 18)}]},
@@ -437,7 +482,7 @@ def create_shop_offer(v: Villager) -> ShopOffer:
                      {"key": "def", "amt": rand_int(6, 10)}]},
         {"type": "Archmage Focus",     "cost": 580 + lvl * 27,
          "bonuses": [{"key": "int", "amt": rand_int(16, 28)},
-                     {"key": "hp",  "amt": rand_int(20, 40)}]},
+                     {"key": "mp",  "amt": rand_int(25, 50)}]},
         {"type": "Titan's Girdle",     "cost": 540 + lvl * 26,
          "bonuses": [{"key": "hp",  "amt": rand_int(60, 95)},
                      {"key": "def", "amt": rand_int(6, 12)}]},
@@ -569,6 +614,13 @@ def apply_action(
         v["exp"]    += delta_exp
         v["hunger"] += delta_hunger
 
+        # Studying grants small MP to magic-capable jobs
+        study_job = v.get("job", "")
+        if study_job in MAGIC_JOBS:
+            v["mp"] = v.get("mp", 0) + rand_int(3, 8)
+        elif study_job in MINOR_MAGIC_JOBS:
+            v["mp"] = v.get("mp", 0) + rand_int(1, 4)
+
     # -------------------- WORK --------------------
     elif action == "work":
         gross        = rand_int(10, 100)
@@ -644,6 +696,13 @@ def apply_action(
 
         v["hunger"] += hunger_delta
         v["hp"]     += hp_delta
+
+        # Resting also recovers some MP for magic users
+        rest_job = v.get("job", "")
+        if rest_job in MAGIC_JOBS:
+            v["mp"] = v.get("mp", 0) + rand_int(3, 8)
+        elif rest_job in MINOR_MAGIC_JOBS:
+            v["mp"] = v.get("mp", 0) + rand_int(1, 4)
 
     # -------------------- SOCIALIZE --------------------
     elif action == "socialize":
@@ -980,6 +1039,44 @@ def apply_action(
                     v["last_action"] = f"mentor ({'; '.join(action_parts)})"
                 else:
                     v["last_action"] = "mentor (no results)"
+
+    # -------------------- MEDITATE --------------------
+    elif action == "meditate":
+        job = v.get("job", "")
+        mp_regen = rand_int(8, 20)
+        int_gain = rand_int(0, 2)
+        hp_gain = rand_int(1, 4)
+        hunger_delta = rand_int(3, 7)
+        exp_delta = rand_int(2, 5)
+
+        # Magic jobs get much more from meditation
+        if job in MAGIC_JOBS:
+            mp_regen = rand_int(15, 40)
+            int_gain = rand_int(1, 3)
+            exp_delta = rand_int(3, 7)
+        elif job in MINOR_MAGIC_JOBS:
+            mp_regen = rand_int(10, 25)
+
+        # Rain is atmospheric, good for meditation
+        w = (weather or "sunny").strip().lower()
+        if w == "rain":
+            mp_regen = max(1, int(round(mp_regen * 1.15)))
+            int_gain = max(0, int(round(int_gain * 1.10)))
+
+        if bank is not None:
+            lvl_temple = get_building_level(bank, "temple")
+            lvl_library = get_building_level(bank, "library")
+            if lvl_temple > 0:
+                mp_regen = max(1, int(round(mp_regen * (1 + 0.20 * lvl_temple))))
+            if lvl_library > 0:
+                int_gain += rand_int(0, lvl_library)
+
+        v["mp"] = v.get("mp", 0) + mp_regen
+        v["int"] += int_gain
+        v["hp"] += hp_gain
+        v["exp"] += exp_delta
+        v["hunger"] += hunger_delta
+        v["last_action"] = f"meditate (+{mp_regen} MP, +{int_gain} INT)"
 
     # -------------------- HUNT --------------------
     elif action == "hunt":

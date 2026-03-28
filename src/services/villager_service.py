@@ -9,6 +9,8 @@ from config import (
     FAMILY_NAMES,
     JOBS_POOL,
     JOBS_NO_ROYAL,
+    MAGIC_JOBS,
+    MINOR_MAGIC_JOBS,
 )
 from src.utils.world_utils import (
     pick,
@@ -106,6 +108,14 @@ def make_row(taken_names: set[str], jobs_pool: list[str] | None = None, forced_g
         hunger = 0
         coins = 0
 
+    # MP based on job type
+    if job in MAGIC_JOBS:
+        mp = rand_int(80, 200)
+    elif job in MINOR_MAGIC_JOBS:
+        mp = rand_int(20, 60)
+    else:
+        mp = rand_int(0, 15)
+
     full, family = unique_full_name(taken_names)
     traits = ", ".join(random.sample(TRAITS, 2))
 
@@ -124,6 +134,7 @@ def make_row(taken_names: set[str], jobs_pool: list[str] | None = None, forced_g
         "atk": atk,
         "def": defense,
         "hp": hp,
+        "mp": mp,
         "hunger": hunger,
         "traits": traits,
         "last_action": "",

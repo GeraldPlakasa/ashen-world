@@ -29,6 +29,7 @@ def create_default_villager(**overrides: Any) -> Villager:
         "atk": 1,
         "def": 1,
         "hp": 100,
+        "mp": 0,
         "hunger": 0,
         "traits": "",
         "last_action": "",

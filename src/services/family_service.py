@@ -510,10 +510,17 @@ def _assign_job_for_young_adult(p: Villager) -> str:
         for j in ["Merchant", "Trader", "Innkeeper", "Jeweler"]:
             add(j, 2.0)
     if "Empathic" in t or "Generous" in t:
-        for j in ["Healer", "Priest", "Herbalist"]:
+        for j in ["Healer", "Priest", "Herbalist", "Cleric"]:
             add(j, 1.8)
     if "Deceitful" in t:
         add("Spy", 3.0)
+    if "Curious" in t:
+        for j in ["Wizard", "Sorcerer", "Scholar", "Alchemist"]:
+            add(j, 1.8)
+    # High INT makes magic jobs more likely
+    if intel >= 35:
+        for j in ["Wizard", "Sorcerer", "Cleric", "Druid"]:
+            add(j, 2.0)
 
     job = pick_weighted(weights)
     p["job"] = job
@@ -530,6 +537,14 @@ def coming_of_age_phase(characters: list[Villager], current_day: int | None = No
         age = int(c.get("age", 0) or 0)
         if age >= (CHILD_MAX_AGE + 1) and c.get("job") == "Child":
             new_job = _assign_job_for_young_adult(c)
+            # Assign initial MP based on new job
+            from config import MAGIC_JOBS, MINOR_MAGIC_JOBS
+            if new_job in MAGIC_JOBS:
+                c["mp"] = rand_int(60, 120)
+            elif new_job in MINOR_MAGIC_JOBS:
+                c["mp"] = rand_int(15, 40)
+            else:
+                c["mp"] = rand_int(0, 10)
             msg = f"came of age and became {new_job}"
             if current_day is not None:
                 _append_last_action(c, msg)

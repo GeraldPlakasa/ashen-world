@@ -540,7 +540,7 @@ class TestSkillBirthChances:
     @pytest.mark.unit
     def test_all_skills_have_category(self):
         """All skills should have a valid category."""
-        valid_categories = {"COMBAT", "CRAFT", "SOCIAL", "SURVIVAL", "KNOWLEDGE"}
+        valid_categories = {"COMBAT", "CRAFT", "SOCIAL", "SURVIVAL", "KNOWLEDGE", "MAGIC"}
         for name, data in SKILLS.items():
             assert data["category"] in valid_categories
 

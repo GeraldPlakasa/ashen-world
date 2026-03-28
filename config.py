@@ -157,7 +157,13 @@ JOBS = [
     "Butcher", "Baker", "Weaver", "Clerk", "Innkeeper", "Brewer", "Shepherd",
     "Tanner", "Jeweler", "Cartwright", "Cobbler", "Woodcutter", "Courier",
     "Beekeeper", "Falconer", "Stablemaster",
+    "Wizard", "Sorcerer", "Cleric",
 ]
+
+# Jobs that primarily use magic (high MP, spells in combat/quests)
+MAGIC_JOBS = ["Wizard", "Sorcerer", "Bard", "Cleric", "Druid", "Alchemist"]
+# Jobs with minor magic affinity (some MP, occasional spell use)
+MINOR_MAGIC_JOBS = ["Priest", "Healer", "Herbalist", "Scholar"]
 
 ENEMY_BASE = [
     "Wolf", "Boar", "Bandit", "Goblin", "Ogre", "Wraith", "Assassin", "Cultist",
@@ -188,7 +194,7 @@ JOBS_NO_ROYAL = [j for j in JOBS if j not in ("King", "Queen")]
 # Integer columns for SQLite schema and data mapping
 INT_FIELDS = [
     "id", "coins", "age", "int", "rep", "level", "exp",
-    "atk", "def", "hp", "hunger", "gen",
+    "atk", "def", "hp", "mp", "hunger", "gen",
     "immigrantGen", "motherId", "fatherId",
     "kingTerms", "consecutiveTerms", "death_day", "spouseId_at_death",
     "spouseId", "spouseSinceDay",
@@ -199,7 +205,7 @@ INT_FIELDS = [
 FIELDNAMES = [
     "id", "name", "family", "gender", "job",
     "coins", "age", "int", "rep", "level", "exp",
-    "atk", "def", "hp", "hunger", "traits", "last_action",
+    "atk", "def", "hp", "mp", "hunger", "traits", "last_action",
     "action_log",  # relationships moved to villager_relationships table
     "spouseId", "spouseSinceDay", "spouseId_at_death",
     "alive", "origin", "owner", "gen", "immigrantGen",

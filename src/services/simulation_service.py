@@ -5,6 +5,8 @@ import random
 
 from config import (
     JOBS_NO_ROYAL,
+    MAGIC_JOBS,
+    MINOR_MAGIC_JOBS,
 )
 from src.utils.world_utils import (
     clamp,
@@ -106,6 +108,12 @@ def elder_decay_phase(characters: list[Villager], current_day: int = 0) -> int:
         # Apply HP decay
         v["hp"] = max(0, hp - hp_decay)
         
+        # MP decay for elders (magic fades with age)
+        mp = int(v.get("mp", 0) or 0)
+        if mp > 0 and random.random() < stat_decay_chance:
+            mp_decay = rand_int(1, 3)
+            v["mp"] = max(0, mp - mp_decay)
+
         # Stat decay (random which stat decreases)
         if random.random() < stat_decay_chance:
             stat_to_decay = random.choice(["atk", "def", "int"])
@@ -434,6 +442,20 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
 
         stolen = maybe_corrupt_from_bank(v, bank)
         corruption_total += stolen
+
+    # 1.5) Passive MP regeneration (magic jobs regen more)
+    for v in characters:
+        if not v.get("alive", True) or is_child(v):
+            continue
+        job = v.get("job", "")
+        if job in MAGIC_JOBS:
+            v["mp"] = int(v.get("mp", 0) or 0) + rand_int(2, 5)
+        elif job in MINOR_MAGIC_JOBS:
+            v["mp"] = int(v.get("mp", 0) or 0) + rand_int(1, 3)
+        else:
+            # Non-magic: tiny regen (1 MP every ~3 days)
+            if random.random() < 0.33:
+                v["mp"] = int(v.get("mp", 0) or 0) + 1
 
     # 2) World phases (immigrants, spouses)
     characters, _added_count = maybe_add_immigrants(characters, bank)
