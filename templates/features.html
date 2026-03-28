@@ -55,6 +55,7 @@
                     <a class="list-group-item list-group-item-action" href="#actions">Daily Actions</a>
                     <a class="list-group-item list-group-item-action" href="#skills">Skills</a>
                     <a class="list-group-item list-group-item-action" href="#achievements">Achievements</a>
+                    <a class="list-group-item list-group-item-action" href="#magic">Magic System</a>
                     <a class="list-group-item list-group-item-action" href="#combat">Combat</a>
                     <a class="list-group-item list-group-item-action" href="#quests">Quests</a>
                     <a class="list-group-item list-group-item-action" href="#events">World Events</a>
@@ -145,7 +146,7 @@
               <!-- JOBS -->
               <section class="game-card mb-3" id="jobs">
                 <div class="card-body">
-                  <h5 class="mb-3">Jobs (52 Total)</h5>
+                  <h5 class="mb-3">Jobs (55 Total)</h5>
                   <p>Each adult villager is assigned a job that determines their work income and behavior. Children become adults at age 17.</p>
                   
                   <div class="row g-3">
@@ -191,9 +192,19 @@
                     </div>
                     <div class="col-md-4">
                       <div class="feature-box">
+                        <h6>Magic</h6>
+                        <ul>
+                          <li><strong>Primary:</strong> Wizard, Sorcerer, Bard, Cleric, Druid, Alchemist</li>
+                          <li><strong>Minor:</strong> Priest, Healer, Herbalist, Scholar</li>
+                          <li>High MP, use spells in combat/quests</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="feature-box">
                         <h6>Knowledge & Service</h6>
                         <ul>
-                          <li>Healer, Priest, Scholar, Alchemist, Bard, Scribe, Engineer, Druid, Courier, Sailor, Falconer, Stablemaster, Miner</li>
+                          <li>Healer, Priest, Scholar, Scribe, Engineer, Courier, Sailor, Falconer, Stablemaster, Miner</li>
                         </ul>
                       </div>
                     </div>
@@ -232,7 +243,7 @@
               <!-- SKILLS -->
               <section class="game-card mb-3" id="skills">
                 <div class="card-body">
-                  <h5 class="mb-3">Skills (25 Total)</h5>
+                  <h5 class="mb-3">Skills (33 Total)</h5>
                   <p>Skills provide passive bonuses during actions. Acquired at birth (rare) or through mentoring.</p>
                   
                   <div class="row g-3">
@@ -305,6 +316,94 @@
                         </ul>
                       </div>
                     </div>
+
+                    <!-- Magic Skills -->
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Magic Skills</h6>
+                        <ul>
+                          <li><strong>Fireball</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Devastating flame attack (+MP, +ATK)</li>
+                          <li><strong>Healing Light</strong> <span class="badge badge-rarity badge-common">Common</span> - Restorative magic (+MP, +HP)</li>
+                          <li><strong>Arcane Shield</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Protective barrier (+MP, +DEF)</li>
+                          <li><strong>Enchantment</strong> <span class="badge badge-rarity badge-rare">Rare</span> - Imbue objects with power (+MP, +INT)</li>
+                          <li><strong>War Chant</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Inspiring battle song (+MP, +ATK, +REP)</li>
+                          <li><strong>Mana Surge</strong> <span class="badge badge-rarity badge-rare">Rare</span> - Deep mana restoration (+20 MP)</li>
+                          <li><strong>Shadow Step</strong> <span class="badge badge-rarity badge-rare">Rare</span> - Evasive blink (+MP, +DEF)</li>
+                          <li><strong>Nature's Wrath</strong> <span class="badge badge-rarity badge-uncommon">Uncommon</span> - Nature magic attack (+MP, +ATK)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- MAGIC SYSTEM -->
+              <section class="game-card mb-3" id="magic">
+                <div class="card-body">
+                  <h5 class="mb-3">Magic System</h5>
+                  <p>Magic is powered by MP (Magic Points). Some jobs are natural spellcasters with high MP, while others have minor magical ability.</p>
+
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Magic Jobs (High MP: 80-200)</h6>
+                        <ul>
+                          <li><strong>Wizard</strong> - Pure arcane spellcaster</li>
+                          <li><strong>Sorcerer</strong> - Innate magical power</li>
+                          <li><strong>Bard</strong> - Music-based magic</li>
+                          <li><strong>Cleric</strong> - Divine healing magic</li>
+                          <li><strong>Druid</strong> - Nature magic</li>
+                          <li><strong>Alchemist</strong> - Potion-based magic</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Minor Magic Jobs (MP: 20-60)</h6>
+                        <ul>
+                          <li><strong>Priest</strong> - Ritual healing</li>
+                          <li><strong>Healer</strong> - Medical magic</li>
+                          <li><strong>Herbalist</strong> - Herbal enchantments</li>
+                          <li><strong>Scholar</strong> - Arcane knowledge</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>MP Recovery</h6>
+                        <ul>
+                          <li><strong>Meditate</strong> - Primary recovery (+15-40 MP for magic jobs)</li>
+                          <li><strong>Study</strong> - Secondary recovery (+3-8 MP)</li>
+                          <li><strong>Rest</strong> - Minor recovery (+3-8 MP)</li>
+                          <li><strong>Passive</strong> - Daily regen (+2-5 for magic jobs)</li>
+                          <li><strong>Level Up</strong> - Permanent gain (+5-12 MP)</li>
+                          <li><strong>Blessing Event</strong> - All villagers +10-25 MP</li>
+                          <li><strong>Temple/Library</strong> - Buildings boost meditate effect</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>MP Usage</h6>
+                        <ul>
+                          <li><strong>Combat</strong> - Spells drain 30-60% MP, add MP×0.8 + INT×0.4 power</li>
+                          <li><strong>Arcane Quests</strong> - Party members lose 15-40 MP</li>
+                          <li><strong>Invasion Defense</strong> - Magic users spend MP for extra protection</li>
+                          <li><strong>Plague Resistance</strong> - Clerics/Healers spend MP to resist</li>
+                          <li><strong>Elder Decay</strong> - MP gradually fades after age 70</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Magic Gear (Shop)</h6>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                      <span class="stat-pill">Mana Crystal (+MP)</span>
+                      <span class="stat-pill">Spell Scroll (+MP, +INT)</span>
+                      <span class="stat-pill">Mageweave Robe (+INT, +MP)</span>
+                      <span class="stat-pill">Archmage Focus (+INT, +MP)</span>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -338,27 +437,40 @@
               <section class="game-card mb-3" id="combat">
                 <div class="card-body">
                   <h5 class="mb-3">Combat System</h5>
-                  <p>Combat occurs during hunting and invasion events. Outcomes depend on stats and gear.</p>
+                  <p>Combat occurs during hunting and invasion events. Outcomes depend on stats, gear, and magic.</p>
                   
                   <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <div class="feature-box">
                         <h6>Hunting</h6>
                         <ul>
                           <li>Enemy tier scales with villager level</li>
-                          <li>Base damage = ATK - Enemy DEF</li>
-                          <li>Critical hits possible (2x damage)</li>
+                          <li>Power = ATK + DEF + INT + Level</li>
+                          <li>Win probability via logistic curve</li>
                           <li>Rewards: coins, EXP, food</li>
                           <li>Risk: HP loss, possible death</li>
                         </ul>
                       </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                      <div class="feature-box">
+                        <h6>Magic in Combat</h6>
+                        <ul>
+                          <li>Magic jobs channel MP into spell power</li>
+                          <li>Spell power = MP × 0.8 + INT × 0.4</li>
+                          <li>Casting drains 30-60% of current MP</li>
+                          <li>Minor magic jobs: weaker spells (MP × 0.3)</li>
+                          <li>MAGIC skills: +15% combat power each</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
                       <div class="feature-box">
                         <h6>Gear Effects</h6>
                         <ul>
                           <li>Weapon: +ATK bonus</li>
                           <li>Armor: +DEF bonus</li>
+                          <li>Mana Crystal/Spell Scroll: +MP bonus</li>
                           <li>Gear purchased via "Buy Gear" action</li>
                           <li>Blacksmith building improves quality</li>
                         </ul>
@@ -371,7 +483,7 @@
               <!-- QUESTS -->
               <section class="game-card mb-3" id="quests">
                 <div class="card-body">
-                  <h5 class="mb-3">Quest System (6 Types)</h5>
+                  <h5 class="mb-3">Quest System (7 Types)</h5>
                   <p>Quests trigger every 2 years. A party of 2-5 villagers embarks on an adventure.</p>
                   
                   <div class="table-responsive">
@@ -384,6 +496,7 @@
                         <tr><td>Trade Expedition</td><td>Commerce</td><td>Coins, trade goods</td></tr>
                         <tr><td>Rescue Mission</td><td>Mixed</td><td>Rescued villagers, REP</td></tr>
                         <tr><td>Treasure Hunt</td><td>Exploration</td><td>Rare items, gold</td></tr>
+                        <tr><td>Arcane Expedition</td><td>Magic (MP/INT)</td><td>Gold, magic gear, MP drain</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -411,9 +524,9 @@
                       <div class="feature-box">
                         <h6>Negative Events</h6>
                         <ul>
-                          <li><strong>Plague</strong> - HP damage, deaths. Clinic reduces impact.</li>
+                          <li><strong>Plague</strong> - HP damage, deaths. Clinic reduces impact. Clerics/Healers resist 50% better (spend MP).</li>
                           <li><strong>Famine</strong> - Hunger increase. Granary helps.</li>
-                          <li><strong>Invasion</strong> - Combat event. Walls/Barracks defend.</li>
+                          <li><strong>Invasion</strong> - Combat event. Walls/Barracks defend. Magic users cast defensive spells (MP drain).</li>
                           <li><strong>Storm</strong> - Building damage.</li>
                         </ul>
                       </div>
@@ -424,7 +537,7 @@
                         <ul>
                           <li><strong>Festival</strong> - Happiness, relationship boosts.</li>
                           <li><strong>Good Harvest</strong> - Food surplus, coin bonus.</li>
-                          <li><strong>Blessing</strong> - HP restoration for all.</li>
+                          <li><strong>Blessing</strong> - HP and MP restoration for all.</li>
                           <li><strong>Windfall</strong> - Treasury bonus.</li>
                         </ul>
                       </div>
@@ -687,7 +800,7 @@
                       <thead><tr><th>Weather</th><th>Effect</th></tr></thead>
                       <tbody>
                         <tr><td>Sunny</td><td>Normal activities, good harvest bonus</td></tr>
-                        <tr><td>Rain</td><td>Reduced outdoor work, hunting penalty</td></tr>
+                        <tr><td>Rain</td><td>Reduced outdoor work, hunting penalty, +15% study/meditate bonus</td></tr>
                       </tbody>
                     </table>
                   </div>
