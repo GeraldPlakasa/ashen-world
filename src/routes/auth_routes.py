@@ -6,6 +6,7 @@ from werkzeug.security import check_password_hash
 
 from config import ENV_ADMIN_USERNAME, ENV_ADMIN_PASSWORD
 from src.repositories.user_repo import load_users, save_user
+from src.repositories.site_stats_repo import increment_stat
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -45,6 +46,7 @@ def register():
             return render_template("register.html")
 
         save_user(username, email, password)
+        increment_stat("user_registration")
         flash("Account created. You can now log in.", "success")
         return redirect(url_for("auth.login"))
 

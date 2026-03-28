@@ -51,7 +51,7 @@ def get_event_history(limit: int = 200) -> list[dict]:
     init_db()
     with db_conn() as conn:
         rows = conn.execute(
-            "SELECT event_type as type, day, year, details, affected_count, created_at as timestamp "
+            "SELECT event_type as type, day, year, details, affected_count, COALESCE(king_name, '') as king_name, created_at as timestamp "
             "FROM event_history ORDER BY id DESC LIMIT ?;",
             (limit,),
         ).fetchall()
@@ -65,7 +65,7 @@ def clear_event_history() -> None:
         conn.execute("DELETE FROM event_history;")
 
 
-def _record_event(event_type: str, day: int, details: str, affected_count: int = 0) -> dict:
+def _record_event(event_type: str, day: int, details: str, affected_count: int = 0, king_name: str = "") -> dict:
     """Record an event in database."""
     year = ((day - 1) // DAYS_PER_YEAR) + 1
 
@@ -75,14 +75,15 @@ def _record_event(event_type: str, day: int, details: str, affected_count: int =
         "year": year,
         "details": details,
         "affected_count": affected_count,
+        "king_name": king_name,
     }
 
     init_db()
     with db_conn() as conn:
         conn.execute(
-            "INSERT INTO event_history (event_type, day, year, details, affected_count) "
-            "VALUES (?, ?, ?, ?, ?);",
-            (event_type, day, year, details, affected_count),
+            "INSERT INTO event_history (event_type, day, year, details, affected_count, king_name) "
+            "VALUES (?, ?, ?, ?, ?, ?);",
+            (event_type, day, year, details, affected_count, king_name),
         )
 
     return event
@@ -615,7 +616,14 @@ def maybe_trigger_event(
     
     message, affected = handler(characters, bank, current_day)
     
+    # Find current king name
+    king_name = ""
+    for c in characters:
+        if c.get("alive") and c.get("job") == "King":
+            king_name = c.get("name", "Unknown")
+            break
+    
     # Record the event
-    event_record = _record_event(event_type, current_day, message, affected)
+    event_record = _record_event(event_type, current_day, message, affected, king_name=king_name)
     
     return message, event_record

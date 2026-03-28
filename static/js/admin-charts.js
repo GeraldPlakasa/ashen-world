@@ -22,6 +22,34 @@ const COLORS = {
 // Store chart instances for updates
 const charts = {};
 
+// Chart.js plugin: show percentage labels on doughnut/pie charts
+const percentagePlugin = {
+  id: 'percentageLabels',
+  afterDatasetsDraw(chart) {
+    if (chart.config.type !== 'doughnut' && chart.config.type !== 'pie') return;
+    const { ctx } = chart;
+    const dataset = chart.data.datasets[0];
+    if (!dataset) return;
+    const total = dataset.data.reduce((s, v) => s + v, 0);
+    if (total === 0) return;
+    const meta = chart.getDatasetMeta(0);
+    meta.data.forEach((arc, i) => {
+      const val = dataset.data[i];
+      const pct = ((val / total) * 100).toFixed(1);
+      if (parseFloat(pct) < 3) return; // skip tiny slices
+      const { x, y } = arc.tooltipPosition();
+      ctx.save();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pct + '%', x, y);
+      ctx.restore();
+    });
+  }
+};
+Chart.register(percentagePlugin);
+
 // Year range filter (default 20)
 let yearRangeLimit = 20;
 
@@ -53,7 +81,7 @@ async function loadAnalytics() {
 function updateKPIs(data) {
   const c = data.current;
   document.getElementById('kpi-year').textContent = c.year || '-';
-  document.getElementById('kpi-day').textContent = c.day != null ? c.day : '-';
+  document.getElementById('kpi-day').textContent = (c.day != null && c.day !== undefined) ? c.day : '-';
   document.getElementById('kpi-population').textContent = c.population || 0;
   document.getElementById('kpi-dead').textContent = c.dead_count || 0;
   document.getElementById('kpi-treasury').textContent = c.treasury || 0;
@@ -81,6 +109,7 @@ function updateTables(data) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${q.year || '-'}</td>
+      <td>${q.king_name || '-'}</td>
       <td>${q.type || q.quest_type || '-'}</td>
       <td><span class="status-badge ${q.success ? 'alive' : 'dead'}">${q.success ? 'Success' : 'Failed'}</span></td>
       <td>${q.gold || q.gold_reward || 0}</td>
@@ -95,6 +124,7 @@ function updateTables(data) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${e.year || '-'}</td>
+      <td>${e.king_name || e.king || '-'}</td>
       <td>${e.type || e.event_type || '-'}</td>
       <td>${e.affected_count || '-'}</td>
     `;
@@ -257,8 +287,8 @@ function renderPopulationTimelineChart(data) {
   }
   
   // Use population_end directly from DB (accurate snapshot each year)
-  const filtered = filterYearlyData(yearlyDesc);
-  const chronological = filtered.slice().reverse();
+  // filterYearlyData already returns chronological order (oldest first = left)
+  const chronological = filterYearlyData(yearlyDesc);
   const labels = chronological.map(p => 'Y' + p.year);
   const popData = chronological.map(p => p.population_end || 0);
   
@@ -539,6 +569,121 @@ document.addEventListener('DOMContentLoaded', () => {
       yearRangeLimit = parseInt(e.target.value) || 0;
       loadAnalytics();
     });
+  }
+});
+
+// ========================
+// Players Tab
+// ========================
+async function loadPlayerStats() {
+  try {
+    const res = await fetch('/api/player-stats');
+    const data = await res.json();
+    if (!data.ok) return;
+    renderPlayerCharts(data);
+  } catch (err) {
+    console.error('Failed to load player stats:', err);
+  }
+}
+
+function renderPlayerCharts(data) {
+  // KPIs
+  document.getElementById('player-total-users').textContent = data.users?.total || 0;
+  document.getElementById('player-total-chars').textContent = data.player_characters?.total || 0;
+  document.getElementById('player-total-views').textContent = data.site_stats?.totals?.page_view || 0;
+  document.getElementById('player-chars-alive').textContent = data.player_characters?.alive || 0;
+
+  // Page Views Chart
+  const pvCtx = document.getElementById('chart-page-views');
+  if (pvCtx) {
+    const pvData = (data.site_stats?.page_views || []).reverse();
+    if (charts['page-views']) charts['page-views'].destroy();
+    charts['page-views'] = new Chart(pvCtx, {
+      type: 'bar',
+      data: {
+        labels: pvData.map(d => d.stat_date.slice(5)),  // MM-DD
+        datasets: [{ label: 'Views', data: pvData.map(d => d.count), backgroundColor: COLORS.primary }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  // Registrations Chart
+  const regCtx = document.getElementById('chart-registrations');
+  if (regCtx) {
+    const regData = (data.users?.by_date || []);
+    if (charts['registrations']) charts['registrations'].destroy();
+    charts['registrations'] = new Chart(regCtx, {
+      type: 'bar',
+      data: {
+        labels: regData.map(d => d[0].slice(5)),
+        datasets: [{ label: 'Registrations', data: regData.map(d => d[1]), backgroundColor: COLORS.success }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
+    });
+  }
+
+  // Char Creations Chart
+  const ccCtx = document.getElementById('chart-char-creations');
+  if (ccCtx) {
+    const ccData = (data.site_stats?.char_creations || []).reverse();
+    if (charts['char-creations']) charts['char-creations'].destroy();
+    charts['char-creations'] = new Chart(ccCtx, {
+      type: 'bar',
+      data: {
+        labels: ccData.map(d => d.stat_date.slice(5)),
+        datasets: [{ label: 'Characters Created', data: ccData.map(d => d.count), backgroundColor: COLORS.warning }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
+    });
+  }
+
+  // Player Character Status (alive vs dead)
+  const psCtx = document.getElementById('chart-player-status');
+  if (psCtx) {
+    const pc = data.player_characters || {};
+    if (charts['player-status']) charts['player-status'].destroy();
+    charts['player-status'] = new Chart(psCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Alive', 'Dead'],
+        datasets: [{ data: [pc.alive || 0, pc.dead || 0], backgroundColor: [COLORS.success, COLORS.danger] }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+  }
+
+  // Recent users table
+  const usersBody = document.getElementById('recent-users');
+  if (usersBody) {
+    usersBody.innerHTML = '';
+    (data.users?.recent || []).forEach(u => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${u.username}</td><td>${u.created_at || '-'}</td>`;
+      usersBody.appendChild(tr);
+    });
+  }
+}
+
+// Load player stats when Players tab is clicked
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  if (btn.dataset.tab === 'players') {
+    btn.addEventListener('click', () => loadPlayerStats());
   }
 });
 

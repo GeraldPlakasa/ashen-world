@@ -12,6 +12,7 @@ from src.repositories.bank_repo import load_bank
 from src.services.event_service import get_event_history
 from src.services.skill_service import SKILLS
 from src.services.achievement_service import ACHIEVEMENTS
+from src.repositories.site_stats_repo import get_stats_by_type, get_all_stats_summary
 
 api_bp = Blueprint("api", __name__)
 
@@ -206,4 +207,50 @@ def api_analytics():
         },
         "skill_definitions": {name: {"category": data.get("category", ""), "rarity": data.get("rarity", "")} for name, data in SKILLS.items()},
         "achievement_definitions": {aid: {"name": data["name"], "icon": data.get("icon", "🏆")} for aid, data in ACHIEVEMENTS.items()},
+    })
+
+
+@api_bp.route("/api/player-stats", methods=["GET"])
+def api_player_stats():
+    """Player/site statistics for the Players tab."""
+    users = load_users()
+    characters, bank, year, day_in_year, total_day, weather = get_current_state()
+
+    # Users by registration date
+    from collections import Counter
+    reg_dates = Counter()
+    for u in users:
+        created = u.get("created_at", "")
+        if created:
+            date_part = created[:10]  # YYYY-MM-DD
+            reg_dates[date_part] = reg_dates.get(date_part, 0) + 1
+
+    # Player characters
+    player_chars = [c for c in characters if c.get("origin") == "player"]
+    player_alive = [c for c in player_chars if c.get("alive")]
+
+    # Site stats from tracking table
+    page_views = get_stats_by_type("page_view", 30)
+    char_creations = get_stats_by_type("char_creation", 30)
+    registrations = get_stats_by_type("user_registration", 30)
+    stats_summary = get_all_stats_summary()
+
+    return jsonify({
+        "ok": True,
+        "users": {
+            "total": len(users),
+            "by_date": sorted(reg_dates.items()),  # [[date, count], ...]
+            "recent": [{"username": u["username"], "created_at": u.get("created_at", "")} for u in users[:10]],
+        },
+        "player_characters": {
+            "total": len(player_chars),
+            "alive": len(player_alive),
+            "dead": len(player_chars) - len(player_alive),
+        },
+        "site_stats": {
+            "page_views": page_views,
+            "char_creations": char_creations,
+            "registrations": registrations,
+            "totals": stats_summary,
+        },
     })

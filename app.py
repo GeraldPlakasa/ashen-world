@@ -10,8 +10,11 @@ import threading
 
 from flask import Flask
 
+from flask import request as flask_request
+
 from config import AUTO_SIM_ENABLED, ENV_FLASK_SECRET_KEY
 from src.utils.logger import get_logger
+from src.repositories.site_stats_repo import increment_stat
 from src.services.world_service import (
     auto_simulation_loop,
     advance_one_day,
@@ -39,6 +42,18 @@ app.secret_key = ENV_FLASK_SECRET_KEY
 
 # Register all route blueprints
 register_blueprints(app)
+
+
+@app.before_request
+def track_page_view():
+    """Track page views (skip static files and API calls)."""
+    path = flask_request.path
+    if path.startswith("/static") or path.startswith("/api/"):
+        return
+    try:
+        increment_stat("page_view")
+    except Exception:
+        pass
 
 # ---------------------------------------------------------------------------
 #  Background simulation

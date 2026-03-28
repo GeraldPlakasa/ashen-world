@@ -10,7 +10,7 @@ def load_users() -> list[User]:
     init_db()
     with db_conn() as conn:
         cur = conn.execute(
-            "SELECT username, email, password_hash FROM users ORDER BY created_at DESC;"
+            "SELECT username, email, password_hash, created_at FROM users ORDER BY created_at DESC;"
         )
         return [dict(r) for r in cur.fetchall()]
 

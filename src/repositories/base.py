@@ -208,11 +208,25 @@ def init_db():
             """
         )
 
+        # Site statistics tracking (page views, char creations, etc.)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS site_stats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                stat_type TEXT NOT NULL,
+                stat_date TEXT NOT NULL,
+                count INTEGER DEFAULT 0,
+                UNIQUE(stat_type, stat_date)
+            );
+            """
+        )
+
         _ensure_world_defaults(conn)
         _ensure_bank_defaults(conn)
         _ensure_villagers_columns(conn)
         _ensure_yearly_columns(conn)
         _ensure_graveyard_columns(conn)
+        _ensure_event_history_columns(conn)
         _ensure_indexes(conn)
 
 
@@ -235,6 +249,8 @@ def _ensure_indexes(conn: sqlite3.Connection):
     # Event history indexes
     conn.execute("CREATE INDEX IF NOT EXISTS idx_eh_year ON event_history(year);")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_eh_type ON event_history(event_type);")
+    # Site stats indexes
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ss_type_date ON site_stats(stat_type, stat_date);")
 
 def _ensure_villagers_columns(conn: sqlite3.Connection):
     existing = {r["name"] for r in conn.execute("PRAGMA table_info(villagers);").fetchall()}
@@ -327,6 +343,15 @@ def _ensure_yearly_columns(conn: sqlite3.Connection):
     for col, ddl in desired.items():
         if col not in existing:
             conn.execute(f"ALTER TABLE yearly_stats ADD COLUMN {ddl};")
+
+def _ensure_event_history_columns(conn: sqlite3.Connection):
+    existing = {r["name"] for r in conn.execute("PRAGMA table_info(event_history);").fetchall()}
+    desired = {
+        "king_name": "king_name TEXT DEFAULT ''",
+    }
+    for col, ddl in desired.items():
+        if col not in existing:
+            conn.execute(f"ALTER TABLE event_history ADD COLUMN {ddl};")
 
 def _ensure_graveyard_columns(conn: sqlite3.Connection):
     existing = {r["name"] for r in conn.execute("PRAGMA table_info(graveyard);").fetchall()}

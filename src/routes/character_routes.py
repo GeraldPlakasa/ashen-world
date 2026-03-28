@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from config import TRAITS
 from src.services.world_service import get_current_state
 from src.services.character_service import create_player_character
+from src.repositories.site_stats_repo import increment_stat
 
 character_bp = Blueprint("character", __name__)
 
@@ -100,5 +101,6 @@ def create_character():
                 form_gender=gender,
             )
 
+    increment_stat("char_creation")
     flash(f"Created new character: {result} (Player).", "success")
     return redirect(url_for("main.landing"))
