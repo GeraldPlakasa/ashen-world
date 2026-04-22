@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import json
 import sqlite3
+import threading
 from contextlib import contextmanager
 from typing import Generator
 
@@ -11,34 +12,102 @@ import config
 def _ensure_data_dir():
     os.makedirs(config.DATA_DIR, exist_ok=True)
 
+
+# ---------------------------------------------------------------------------
+#  Connection pooling: one persistent connection per thread
+# ---------------------------------------------------------------------------
+
+_local = threading.local()
+
+def _get_persistent_conn() -> sqlite3.Connection:
+    """
+    Return a persistent SQLite connection for the current thread.
+    Reuses the same connection across calls instead of open/close every time.
+    """
+    conn = getattr(_local, "conn", None)
+    db_path = getattr(_local, "db_path", None)
+
+    # Reconnect if path changed (e.g. tests monkeypatch config.DB_PATH)
+    if conn is not None and db_path == config.DB_PATH:
+        try:
+            conn.execute("SELECT 1")
+            return conn
+        except (sqlite3.ProgrammingError, sqlite3.OperationalError):
+            # Connection is closed or broken — recreate
+            pass
+
+    _ensure_data_dir()
+    conn = sqlite3.connect(config.DB_PATH, check_same_thread=False, timeout=30)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON;")
+    conn.execute("PRAGMA journal_mode = WAL;")
+    conn.execute("PRAGMA busy_timeout = 30000;")
+    _local.conn = conn
+    _local.db_path = config.DB_PATH
+    return conn
+
+
+def close_thread_conn() -> None:
+    """Close the persistent connection for the current thread (for cleanup/tests)."""
+    conn = getattr(_local, "conn", None)
+    if conn is not None:
+        try:
+            conn.close()
+        except Exception:
+            pass
+        _local.conn = None
+        _local.db_path = None
+
+
 @contextmanager
 def db_conn() -> Generator[sqlite3.Connection, None, None]:
     """
     Context manager for SQLite connection.
-    - check_same_thread=False helps if you read/write from a background thread.
-    - WAL improves concurrency for small apps.
+    Reuses a thread-local persistent connection for performance.
     """
-    _ensure_data_dir()
-    conn = sqlite3.connect(config.DB_PATH, check_same_thread=False, timeout=30)
+    conn = _get_persistent_conn()
     try:
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON;")
-        conn.execute("PRAGMA journal_mode = WAL;")
-        conn.execute("PRAGMA busy_timeout = 30000;")  # 30s retry on lock
         yield conn
         conn.commit()
     except Exception:
         conn.rollback()
         raise
-    finally:
-        conn.close()
 
 
-def init_db():
+# ---------------------------------------------------------------------------
+#  Schema initialization (cached — runs once per DB path)
+# ---------------------------------------------------------------------------
+
+_init_done_for: str | None = None
+_init_lock = threading.Lock()
+
+
+def reset_init_cache() -> None:
+    """Reset the init_db cache so it re-runs on next call. Used by tests."""
+    global _init_done_for
+    with _init_lock:
+        _init_done_for = None
+    close_thread_conn()
+
+
+def init_db(force: bool = False):
     """
     Create tables if they don't exist.
-    Call this once at app startup (or before first use).
+    Cached: only runs once per DB path unless force=True or reset_init_cache() is called.
     """
+    global _init_done_for
+    if not force and _init_done_for == config.DB_PATH:
+        return
+    with _init_lock:
+        # Double-check inside the lock
+        if not force and _init_done_for == config.DB_PATH:
+            return
+        _init_db_impl()
+        _init_done_for = config.DB_PATH
+
+
+def _init_db_impl():
+    """Actual schema creation logic (called once by init_db)."""
     with db_conn() as conn:
         conn.execute(
             """

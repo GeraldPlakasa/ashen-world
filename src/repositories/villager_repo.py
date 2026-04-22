@@ -1,27 +1,40 @@
 from __future__ import annotations
 
 import json
-from typing import Dict, Any
 
 import config
 from src.repositories.base import db_conn, init_db
 from src.models.villager import Villager
 from src.models.graveyard import GraveyardRecord
-from src.repositories import relationship_repo, achievement_repo, vote_repo
+
+def _parse_json_list(raw, cast=str) -> list:
+    """Parse a value that may be a list or JSON string into a list."""
+    if isinstance(raw, list):
+        return raw
+    if isinstance(raw, str) and raw.strip():
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return parsed
+        except (json.JSONDecodeError, ValueError):
+            pass
+    if raw is None:
+        return []
+    return []
+
 
 def save_villagers(rows: list[Villager]) -> None:
     """
     Persist all villagers to SQLite.
-    Also syncs normalized tables (relationships, achievements, votes).
+    Relationships, achievements, and votes are stored as JSON columns in
+    the villagers table for fast bulk save (~800 rows). The normalized
+    tables are NOT updated here — they remain as a queryable index and
+    are kept in sync separately when needed.
     """
     init_db()
 
     with db_conn() as conn:
-        conn.execute("DELETE FROM villagers;")  # simplest "replace all" behavior
-        # Clear normalized tables for full sync
-        conn.execute("DELETE FROM villager_relationships;")
-        conn.execute("DELETE FROM villager_achievements;")
-        conn.execute("DELETE FROM villager_votes;")
+        conn.execute("DELETE FROM villagers;")
 
         if not rows:
             return
@@ -29,69 +42,36 @@ def save_villagers(rows: list[Villager]) -> None:
         columns = list(config.FIELDNAMES)
         placeholders = ", ".join(["?"] * len(columns))
         col_list = ", ".join(columns)
-
         insert_sql = f"INSERT INTO villagers ({col_list}) VALUES ({placeholders});"
 
         for r in rows:
             r2 = dict(r)
-            vid = int(r2.get("id", 0) or 0)
 
             # Store boolean alive as TEXT "true"/"false"
             r2["alive"] = "true" if r2.get("alive", True) else "false"
 
-            # childrenIds still stored as JSON in villagers table
+            # Serialize complex fields to JSON
             r2["childrenIds"] = json.dumps(r2.get("childrenIds", []), ensure_ascii=False)
 
-            # Save relationships to normalized table
+            # Relationships: dict -> JSON string
             rels = r2.get("relationships", {})
             if not isinstance(rels, dict):
                 rels = {}
-            for other_id, score in rels.items():
-                try:
-                    conn.execute(
-                        "INSERT INTO villager_relationships (villager_id, other_id, score) VALUES (?, ?, ?)",
-                        (vid, int(other_id), int(score)),
-                    )
-                except (ValueError, TypeError):
-                    pass
+            r2["relationships"] = json.dumps(rels, ensure_ascii=False)
 
-            # Save achievements to normalized table
+            # Achievements: list or JSON string -> JSON string
             achs = r2.get("achievements", "[]")
-            if isinstance(achs, str):
-                try:
-                    achs = json.loads(achs) if achs else []
-                except json.JSONDecodeError:
-                    achs = []
-            elif isinstance(achs, list):
-                pass  # already a list
-            else:
-                achs = []
-            for ach_id in (achs or []):
-                if ach_id:
-                    conn.execute(
-                        "INSERT INTO villager_achievements (villager_id, achievement_id) VALUES (?, ?)",
-                        (vid, str(ach_id)),
-                    )
+            if isinstance(achs, list):
+                r2["achievements"] = json.dumps(achs, ensure_ascii=False)
+            elif not isinstance(achs, str):
+                r2["achievements"] = "[]"
 
-            # Save votes to normalized table
+            # Votes: list or JSON string -> JSON string
             votes = r2.get("kingsVotedFor", "[]")
-            if isinstance(votes, str):
-                try:
-                    votes = json.loads(votes) if votes else []
-                except json.JSONDecodeError:
-                    votes = []
-            elif isinstance(votes, list):
-                pass  # already a list
-            else:
-                votes = []
-            for king_id in (votes or []):
-                try:
-                    conn.execute(
-                        "INSERT INTO villager_votes (villager_id, king_id) VALUES (?, ?)",
-                        (vid, int(king_id)),
-                    )
-                except (ValueError, TypeError):
-                    pass
+            if isinstance(votes, list):
+                r2["kingsVotedFor"] = json.dumps(votes, ensure_ascii=False)
+            elif not isinstance(votes, str):
+                r2["kingsVotedFor"] = "[]"
 
             r2.setdefault("last_action", "")
             r2.setdefault("owner", "")
@@ -104,7 +84,8 @@ def save_villagers(rows: list[Villager]) -> None:
 def load_villagers(alive_only: bool = False) -> list[Villager]:
     """
     Load villagers from SQLite.
-    Populates relationships, achievements, votes from normalized tables.
+    Relationships, achievements, and votes are read from JSON columns
+    in the villagers table (fast: no joins, no 456K-row reads).
     If alive_only=True, skip dead villagers for faster loading.
     """
     init_db()
@@ -116,36 +97,8 @@ def load_villagers(alive_only: bool = False) -> list[Villager]:
             cur = conn.execute("SELECT * FROM villagers;")
         out: list[Villager] = []
 
-        # Pre-load all normalized data for efficiency
-        rel_rows = conn.execute("SELECT villager_id, other_id, score FROM villager_relationships").fetchall()
-        ach_rows = conn.execute("SELECT villager_id, achievement_id FROM villager_achievements").fetchall()
-        vote_rows = conn.execute("SELECT villager_id, king_id FROM villager_votes").fetchall()
-
-        # Build lookup dicts
-        rels_by_vid: dict[int, dict[str, int]] = {}
-        for r in rel_rows:
-            vid = r["villager_id"]
-            if vid not in rels_by_vid:
-                rels_by_vid[vid] = {}
-            rels_by_vid[vid][str(r["other_id"])] = r["score"]
-
-        achs_by_vid: dict[int, list[str]] = {}
-        for r in ach_rows:
-            vid = r["villager_id"]
-            if vid not in achs_by_vid:
-                achs_by_vid[vid] = []
-            achs_by_vid[vid].append(r["achievement_id"])
-
-        votes_by_vid: dict[int, list[int]] = {}
-        for r in vote_rows:
-            vid = r["villager_id"]
-            if vid not in votes_by_vid:
-                votes_by_vid[vid] = []
-            votes_by_vid[vid].append(r["king_id"])
-
         for row in cur.fetchall():
             r2 = dict(row)
-            vid = int(r2.get("id", 0) or 0)
 
             for key in config.INT_FIELDS:
                 val = r2.get(key)
@@ -161,10 +114,24 @@ def load_villagers(alive_only: bool = False) -> list[Villager]:
             except Exception:
                 r2["childrenIds"] = []
 
-            # Load from normalized tables (columns dropped from villagers table)
-            r2["relationships"] = rels_by_vid.get(vid, {})
-            r2["achievements"] = json.dumps(achs_by_vid.get(vid, []))
-            r2["kingsVotedFor"] = json.dumps(votes_by_vid.get(vid, []))
+            # Relationships: JSON string -> dict
+            rels_raw = r2.get("relationships", "{}")
+            if isinstance(rels_raw, str) and rels_raw.strip():
+                try:
+                    rels = json.loads(rels_raw)
+                    r2["relationships"] = rels if isinstance(rels, dict) else {}
+                except Exception:
+                    r2["relationships"] = {}
+            elif isinstance(rels_raw, dict):
+                pass  # already a dict
+            else:
+                r2["relationships"] = {}
+
+            # Achievements & votes stay as JSON strings (consumers parse as needed)
+            if r2.get("achievements") is None:
+                r2["achievements"] = "[]"
+            if r2.get("kingsVotedFor") is None:
+                r2["kingsVotedFor"] = "[]"
 
             if r2.get("last_action") is None:
                 r2["last_action"] = ""

@@ -175,10 +175,16 @@ def test_db_connection(test_db_path: str, monkeypatch: pytest.MonkeyPatch) -> Ge
 
     monkeypatch.setattr(config, "DB_PATH", test_db_path)
 
+    # Reset cached state so init_db() re-runs with the new path
+    repo_base.reset_init_cache()
+
     # Initialize the test database
     repo_base.init_db()
 
     yield test_db_path
+
+    # Clean up persistent connection for this thread
+    repo_base.close_thread_conn()
 
 
 @pytest.fixture

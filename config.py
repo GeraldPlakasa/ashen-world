@@ -206,13 +206,13 @@ FIELDNAMES = [
     "id", "name", "family", "gender", "job",
     "coins", "age", "int", "rep", "level", "exp",
     "atk", "def", "hp", "mp", "hunger", "traits", "last_action",
-    "action_log",  # relationships moved to villager_relationships table
+    "action_log", "relationships", "achievements", "kingsVotedFor",
     "spouseId", "spouseSinceDay", "spouseId_at_death",
     "alive", "origin", "owner", "gen", "immigrantGen",
     "motherId", "fatherId", "childrenIds", "kingTerms", "consecutiveTerms",
     "death_day", "huntWins", "huntWinsYear", "questWins",
     "born_day", "last_birth_day",
-    "skills",  # achievements/kingsVotedFor moved to normalized tables
+    "skills",
 ]
 
 USERS_FIELDNAMES = ["username", "email", "password_hash"]
