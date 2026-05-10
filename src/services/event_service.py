@@ -40,6 +40,8 @@ EVENT_WEIGHTS = {
     "BLESSING": 15,
     "WINDFALL": 12,     # Positive: treasure discovery
     "STORM": 10,        # Negative: natural disaster
+    "ANCIENT_TOMB": 1,  # Very rare: explorers unearth 1-2 artifacts (Phase 7)
+    "TRADE_CARAVAN": 2, # Rare: a wandering merchant offers an artifact (Phase 7)
 }
 
 # Event history now stored in SQLite (persistent across restarts)
@@ -564,6 +566,226 @@ def _apply_storm(characters: list[Villager], bank: Bank | None, current_day: int
     return msg, affected
 
 
+def _apply_ancient_tomb(characters: list[Villager], bank: Bank | None, current_day: int) -> tuple[str, int]:
+    """
+    ANCIENT_TOMB event (Phase 7): explorers stumble upon a sealed tomb.
+    1-3 of the most-respected alive villagers each take home a non-legendary
+    artifact. Library boosts the count by interpreting the runes.
+    """
+    alive = [c for c in characters if c.get("alive", True) and not _is_child_safe(c)]
+    if not alive:
+        return "An old tomb was uncovered, but no one came forth to claim its contents.", 0
+
+    # Library helps the village identify and recover more items, but the
+    # tomb stays a stingy patron — at most a couple of artifacts.
+    library_level = get_building_level(bank, "library") if bank else 0
+    base_min, base_max = 1, 1
+    if library_level >= 2:
+        base_max = 2
+    if library_level >= 3:
+        base_min = 1
+
+    count = rand_int(base_min, base_max)
+    # Pick top-rep recipients (ties broken by random order).
+    pool = sorted(alive, key=lambda c: (int(c.get("rep", 0) or 0), random.random()), reverse=True)
+    recipients = pool[:count]
+    if not recipients:
+        return "An old tomb was uncovered, but no one came forth to claim its contents.", 0
+
+    try:
+        from src.services import artifact_service
+        from src.repositories import artifact_repo
+        from src.services.chronicle_service import _safe_record, _yd, _actor
+    except Exception:
+        return "An old tomb was uncovered, but its contents slipped away.", 0
+
+    # Tomb rarity: lots of dust and pottery, only rarely a true relic.
+    tomb_rarity_weights = {"common": 0.55, "uncommon": 0.30, "rare": 0.13, "legendary": 0.02}
+
+    awarded_names = []
+    for v in recipients:
+        rarity = artifact_service._pick_weighted(tomb_rarity_weights)
+        candidates = [t for t in artifact_service.list_templates() if t.get("rarity") == rarity]
+        if not candidates:
+            candidates = artifact_service.list_templates()
+        if not candidates:
+            continue
+        template = random.choice(candidates)
+        recipient_id = int(v.get("id", 0) or 0)
+        if recipient_id <= 0:
+            continue
+        try:
+            artifact_id = artifact_repo.create_artifact(
+                slug=template["slug"],
+                owner_id=recipient_id,
+                acquired_day=int(current_day or 0),
+                acquired_via="event:ancient_tomb",
+                forged_history=[
+                    {
+                        "owner_id": recipient_id,
+                        "owner_name": (v.get("name") or "").strip(),
+                        "day": int(current_day or 0),
+                        "event": "acquired",
+                        "via": "claimed from an ancient tomb",
+                    }
+                ],
+            )
+        except Exception:
+            continue
+        equipped = artifact_service.auto_equip_if_better(v, artifact_id, template)
+        awarded_names.append(v.get("name", "?"))
+
+        # Per-find chronicle entry — important when legendary, otherwise modest.
+        try:
+            year, _ = _yd(current_day)
+            r_name = template.get("name", "an artifact")
+            r_rar = template.get("rarity", "common")
+            headline = f"{v.get('name','?')} draws the {r_name} from the tomb"
+            body = f"Out of the dust, the {r_name} found a new bearer."
+            if equipped:
+                body = f"{body} They wear it now."
+            importance = 5 if r_rar == "legendary" else 4 if r_rar == "rare" else 3
+            _safe_record(
+                day=current_day,
+                year=year,
+                category="magic",
+                headline=headline,
+                body=body,
+                actors=[_actor(v)],
+                importance=importance,
+            )
+        except Exception:
+            pass
+
+        # Action log on the recipient.
+        v["last_action"] = f"unearthed the {template.get('name','an artifact')} from the tomb"
+
+    if not awarded_names:
+        return "A tomb was opened, but the seals proved too treacherous.", 0
+
+    msg = f"⚱️ ANCIENT TOMB! {len(awarded_names)} villagers claimed relics: {', '.join(awarded_names[:3])}{'…' if len(awarded_names) > 3 else ''}"
+    return msg, len(awarded_names)
+
+
+def _apply_trade_caravan(characters: list[Villager], bank: Bank | None, current_day: int) -> tuple[str, int]:
+    """
+    TRADE_CARAVAN event (Phase 7): a merchant arrives bearing an artifact.
+    The reigning King may spend treasury to acquire it. If there's no King
+    or the treasury is too lean, the caravan moves on.
+
+    Cost / rarity tiers:
+        common:    300 coins
+        uncommon:  900 coins
+        rare:    2,500 coins
+        legendary: 8,000 coins (very rarely offered)
+    """
+    if bank is None:
+        return "A merchant caravan arrived but found no one to deal with.", 0
+
+    # Find the reigning King.
+    king = next(
+        (c for c in characters
+         if c.get("alive", True) and c.get("job") == "King"),
+        None,
+    )
+
+    treasury = int(bank.get("balance", 0) or 0)
+
+    # Roll the offered artifact's rarity (legendary very rare).
+    try:
+        from src.services import artifact_service
+        from src.repositories import artifact_repo
+        from src.services.chronicle_service import _safe_record, _yd, _actor
+    except Exception:
+        return "A merchant caravan passed through, but the trade fell apart.", 0
+
+    rarity_weights = {"common": 0.65, "uncommon": 0.27, "rare": 0.07, "legendary": 0.01}
+    rarity = artifact_service._pick_weighted(rarity_weights)
+    cost = {"common": 600, "uncommon": 1800, "rare": 5000, "legendary": 15000}.get(rarity, 600)
+
+    # Market reduces price.
+    market_level = get_building_level(bank, "market") if bank else 0
+    if market_level > 0:
+        cost = int(cost * max(0.7, 1.0 - 0.1 * market_level))
+
+    if king is None:
+        msg = (
+            f"⚖️ TRADE CARAVAN: a merchant offered a {rarity} artifact for {cost} coins, "
+            f"but the village had no King to seal the deal."
+        )
+        return msg, 0
+
+    if treasury < cost:
+        msg = (
+            f"⚖️ TRADE CARAVAN: a merchant offered a {rarity} artifact for {cost} coins, "
+            f"but the treasury was too lean ({treasury}). The King turned them away."
+        )
+        return msg, 0
+
+    candidates = [t for t in artifact_service.list_templates()
+                  if t.get("rarity") == rarity
+                  and (t.get("binding") or "none") != "soulbound"]
+    if not candidates:
+        return f"A merchant offered a {rarity} artifact, but couldn't agree on terms.", 0
+    template = random.choice(candidates)
+
+    bank["balance"] = treasury - cost
+
+    king_id = int(king.get("id", 0) or 0)
+    artifact_id = artifact_repo.create_artifact(
+        slug=template["slug"],
+        owner_id=king_id,
+        acquired_day=int(current_day or 0),
+        acquired_via=f"trade_caravan:{rarity}",
+        forged_history=[
+            {
+                "owner_id": king_id,
+                "owner_name": (king.get("name") or "").strip(),
+                "day": int(current_day or 0),
+                "event": "acquired",
+                "via": f"purchased from a trade caravan for {cost} coins",
+            }
+        ],
+    )
+    equipped = artifact_service.auto_equip_if_better(king, artifact_id, template)
+
+    # Chronicle entry.
+    try:
+        year, _ = _yd(current_day)
+        body_pieces = [
+            f"A merchant caravan rolled into the village. King {king.get('name','?')} "
+            f"paid {cost} coins from the treasury and took the {template.get('name')}."
+        ]
+        if equipped:
+            body_pieces.append("They wear it now.")
+        importance = 5 if rarity == "legendary" else 4 if rarity == "rare" else 3
+        _safe_record(
+            day=current_day,
+            year=year,
+            category="economy",
+            headline=f"King {king.get('name','?')} buys the {template.get('name','artifact')}",
+            body=" ".join(body_pieces),
+            actors=[_actor(king)],
+            importance=importance,
+        )
+    except Exception:
+        pass
+
+    msg = (
+        f"⚖️ TRADE CARAVAN: King {king.get('name','?')} purchased the "
+        f"{template.get('name','artifact')} ({rarity}) for {cost} coins."
+    )
+    return msg, 1
+
+
+def _is_child_safe(c: dict) -> bool:
+    try:
+        from config import CHILD_MAX_AGE
+        return int(c.get("age", 0) or 0) <= CHILD_MAX_AGE
+    except Exception:
+        return False
+
+
 def _get_current_year(current_day: int) -> int:
     """Calculate the current year from total day (1-indexed)."""
     return ((current_day - 1) // DAYS_PER_YEAR) + 1
@@ -614,11 +836,26 @@ def maybe_trigger_event(
     # Check if event already triggered this year
     if bank.get("event_triggered_this_year", False):
         return None, None
-    
+
     # Check if today is the event day
     if day_in_year != event_day_for_year:
         return None, None
-    
+
+    # DB-level guard: check if an event was already recorded for this year
+    # (protects against duplicate sim processes, e.g. Flask debug reloader)
+    try:
+        init_db()
+        with db_conn() as conn:
+            existing = conn.execute(
+                "SELECT COUNT(*) FROM event_history WHERE year = ?;",
+                (current_year,),
+            ).fetchone()[0]
+            if existing > 0:
+                bank["event_triggered_this_year"] = True
+                return None, None
+    except Exception:
+        pass  # DB unavailable (e.g. unit tests) — fall through to in-memory guard
+
     # Today is the event day! Trigger the event
     bank["event_triggered_this_year"] = True
     
@@ -634,6 +871,8 @@ def maybe_trigger_event(
         "BLESSING": _apply_blessing,
         "WINDFALL": _apply_windfall,
         "STORM": _apply_storm,
+        "ANCIENT_TOMB": _apply_ancient_tomb,
+        "TRADE_CARAVAN": _apply_trade_caravan,
     }
     
     handler = event_handlers.get(event_type)

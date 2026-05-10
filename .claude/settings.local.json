@@ -4,7 +4,17 @@
       "Bash(find:*)",
       "Bash(pip install:*)",
       "Bash(pytest:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nadd pytest testing infrastructure\n\n- Add pytest.ini configuration with unit/integration markers\n- Add requirements-dev.txt with test dependencies\n- Add shared fixtures in tests/conftest.py\n- Add 181 tests covering world_utils, buildings, storage, villagers, and app\n- Add CLAUDE.md project documentation\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nupdate README.md and CLAUDE.md for current project state\n\n- Add full project structure tree with tests directory\n- Add testing section with commands, coverage table, and markers\n- Add configuration table, API endpoints table, database schema\n- Add common development tasks guide to CLAUDE.md\n- Remove outdated references \\(no tests, CSV compatibility\\)\n- Add weather system and family tree to feature list\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(ls -la \"C:\\\\Users\\\\mk.gerald.plakasa\\\\Downloads\\\\Berkas Gerald\\\\game\\\\village\\\\ashen-world\\\\templates\"\" 2>/dev/null || echo \"No templates dir \")",
+      "Bash(ls -la \"C:\\\\Users\\\\mk.gerald.plakasa\\\\Downloads\\\\Berkas Gerald\\\\game\\\\village\\\\ashen-world\\\\static\"\" 2>/dev/null || echo \"No static dir \")",
+      "Bash(python -m pytest:*)",
+      "Bash(python:*)",
+      "Bash(git commit:*)",
+      "Bash(powershell:*)",
+      "Bash(git stash *)"
     ]
   }
 }

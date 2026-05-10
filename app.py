@@ -61,13 +61,22 @@ def track_page_view():
 
 with app.app_context():
     """
-    Start background auto-simulation thread at startup (beware debug reloader).
+    Start background auto-simulation thread at startup.
+    In debug mode Flask's reloader spawns TWO processes — the parent (stat-watcher)
+    and the child (WERKZEUG_RUN_MAIN=true).  We only start the sim thread in the
+    child to avoid running two competing simulation loops against the same database.
     """
+    import os
+    is_reloader_child = os.environ.get("WERKZEUG_RUN_MAIN") == "true"
+    is_non_debug = not app.debug
+
     logger.info("Ashen World starting up...")
-    if AUTO_SIM_ENABLED:
+    if AUTO_SIM_ENABLED and (is_reloader_child or is_non_debug):
         t = threading.Thread(target=auto_simulation_loop, daemon=True)
         t.start()
         logger.info("Auto-simulation thread started")
+    elif AUTO_SIM_ENABLED:
+        logger.info("Skipping auto-sim in reloader parent process")
 
 # ---------------------------------------------------------------------------
 #  Main entry point

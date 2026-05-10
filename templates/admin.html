@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
   <style>
     .chart-card { background: var(--aw-bg-card); border: 1px solid var(--aw-border); border-radius: 8px; padding: 16px; height: 100%; }
@@ -123,25 +124,11 @@
             </div>
             <div class="row g-3 mb-3">
               <!-- Population Over Time -->
-              <div class="col-12 col-lg-8">
+              <div class="col-12">
                 <div class="chart-card">
                   <div class="chart-title">Population & Treasury Over Time</div>
                   <div class="chart-container-lg">
                     <canvas id="chart-population-treasury"></canvas>
-                  </div>
-                </div>
-              </div>
-              <!-- Quick Stats -->
-              <div class="col-12 col-lg-4">
-                <div class="chart-card">
-                  <div class="chart-title">Quick Stats</div>
-                  <div class="stat-grid" id="quick-stats">
-                    <div class="stat-item"><div class="stat-value" id="stat-births">-</div><div class="stat-label">Total Births</div></div>
-                    <div class="stat-item"><div class="stat-value" id="stat-deaths">-</div><div class="stat-label">Total Deaths</div></div>
-                    <div class="stat-item"><div class="stat-value" id="stat-immigrants">-</div><div class="stat-label">Immigrants</div></div>
-                    <div class="stat-item"><div class="stat-value" id="stat-quests">-</div><div class="stat-label">Quests</div></div>
-                    <div class="stat-item"><div class="stat-value" id="stat-events">-</div><div class="stat-label">Events</div></div>
-                    <div class="stat-item"><div class="stat-value" id="stat-years">-</div><div class="stat-label">Years</div></div>
                   </div>
                 </div>
               </div>

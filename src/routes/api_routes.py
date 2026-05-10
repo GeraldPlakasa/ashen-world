@@ -49,8 +49,16 @@ def api_state():
         "buildings": buildings_payload,
         "last_election_year": bank.get("last_election_year"),
         "last_election_message": bank.get("last_election_message", ""),
-        "last_event_message": bank.get("last_event_message", ""),
-        "last_event_day": bank.get("last_event_day"),
+        # Festivals are filtered out of "recent news" — they're fluff and
+        # crowd out signal events. They still appear in the chronicle.
+        "last_event_message": (
+            "" if "FESTIVAL" in (bank.get("last_event_message", "") or "").upper()
+            else bank.get("last_event_message", "")
+        ),
+        "last_event_day": (
+            None if "FESTIVAL" in (bank.get("last_event_message", "") or "").upper()
+            else bank.get("last_event_day")
+        ),
         "last_quest_message": bank.get("last_quest_message", ""),
         "last_quest_day": bank.get("last_quest_day"),
         "last_quest_success": bank.get("last_quest_success"),
@@ -203,11 +211,23 @@ def api_analytics():
         "events": {
             "total": len(event_history),
             "by_type": event_type_counts,
-            "history": event_history[-10:],  # Last 10 events
+            "history": event_history,
         },
         "skill_definitions": {name: {"category": data.get("category", ""), "rarity": data.get("rarity", "")} for name, data in SKILLS.items()},
         "achievement_definitions": {aid: {"name": data["name"], "icon": data.get("icon", "🏆")} for aid, data in ACHIEVEMENTS.items()},
     })
+
+
+@api_bp.route("/api/character/<int:char_id>", methods=["GET"])
+def api_character_detail(char_id: int):
+    """Return enriched character data (relationships, family, achievements) for any villager."""
+    from src.services.character_service import get_character_detail
+
+    characters, _bank, _year, _day, _total, _weather = get_current_state()
+    data = get_character_detail(char_id, characters)
+    if data is None:
+        return jsonify({"error": "Character not found"}), 404
+    return jsonify(data)
 
 
 @api_bp.route("/api/player-stats", methods=["GET"])

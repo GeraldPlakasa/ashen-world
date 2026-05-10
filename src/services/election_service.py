@@ -368,4 +368,19 @@ def hold_election(characters: list[Villager], current_day: int | None = None, em
 
     sync_queen_to_king_spouse(characters, current_day=current_day)
 
+    # Chronicle the election
+    try:
+        from src.services.chronicle_service import record_election
+        record_election(
+            winner=winner,
+            prev_king=prev_king if (prev_king and prev_king is not winner) else None,
+            votes=int(win_votes),
+            total_alive=int(total_alive),
+            day=int(current_day or 1),
+            emergency=bool(emergency),
+            term_limited=bool(term_limited_only),
+        )
+    except Exception:
+        pass
+
     return winner, msg

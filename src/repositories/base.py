@@ -290,6 +290,42 @@ def _init_db_impl():
             """
         )
 
+        # Chronicle: narrative event log (in-world Town Crier)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS chronicle_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                day INTEGER NOT NULL,
+                year INTEGER NOT NULL,
+                category TEXT NOT NULL,
+                headline TEXT NOT NULL,
+                body TEXT DEFAULT '',
+                actors TEXT DEFAULT '[]',
+                importance INTEGER DEFAULT 1,
+                created_at TEXT DEFAULT (datetime('now'))
+            );
+            """
+        )
+
+        # Magical artifacts: instances of items that persist and pass to heirs.
+        # Templates live in config.ARTIFACT_TEMPLATES; this table tracks the
+        # actual artifacts in the world (one row per item instance).
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS artifacts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                slug TEXT NOT NULL,
+                owner_id INTEGER DEFAULT 0,
+                acquired_day INTEGER DEFAULT 0,
+                acquired_via TEXT DEFAULT '',
+                forged_history TEXT DEFAULT '[]',
+                condition INTEGER DEFAULT 100,
+                destroyed INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT (datetime('now'))
+            );
+            """
+        )
+
         _ensure_world_defaults(conn)
         _ensure_bank_defaults(conn)
         _ensure_villagers_columns(conn)
@@ -320,6 +356,15 @@ def _ensure_indexes(conn: sqlite3.Connection):
     conn.execute("CREATE INDEX IF NOT EXISTS idx_eh_type ON event_history(event_type);")
     # Site stats indexes
     conn.execute("CREATE INDEX IF NOT EXISTS idx_ss_type_date ON site_stats(stat_type, stat_date);")
+    # Chronicle indexes
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ce_day ON chronicle_events(day DESC);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ce_year ON chronicle_events(year);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ce_category ON chronicle_events(category);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ce_importance_day ON chronicle_events(importance DESC, day DESC);")
+    # Artifact indexes
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_artifacts_owner ON artifacts(owner_id);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_artifacts_slug ON artifacts(slug);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_artifacts_destroyed ON artifacts(destroyed);")
 
 def _ensure_villagers_columns(conn: sqlite3.Connection):
     existing = {r["name"] for r in conn.execute("PRAGMA table_info(villagers);").fetchall()}

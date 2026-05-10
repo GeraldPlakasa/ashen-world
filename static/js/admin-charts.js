@@ -87,18 +87,6 @@ function updateKPIs(data) {
   document.getElementById('kpi-treasury').textContent = c.treasury || 0;
   document.getElementById('kpi-users').textContent = c.total_users || 0;
   
-  // Quick stats
-  const yearly = data.yearly_stats || [];
-  const totalBirths = yearly.reduce((s, y) => s + (y.total_births || 0), 0);
-  const totalDeaths = yearly.reduce((s, y) => s + (y.total_deaths || 0), 0);
-  const totalImmigrants = yearly.reduce((s, y) => s + (y.total_immigrants || 0), 0);
-  
-  document.getElementById('stat-births').textContent = totalBirths;
-  document.getElementById('stat-deaths').textContent = totalDeaths;
-  document.getElementById('stat-immigrants').textContent = totalImmigrants;
-  document.getElementById('stat-quests').textContent = data.quests?.total || 0;
-  document.getElementById('stat-events').textContent = data.events?.total || 0;
-  document.getElementById('stat-years').textContent = yearly.length;
 }
 
 function updateTables(data) {
@@ -174,7 +162,33 @@ function renderPopulationTreasuryChart(data) {
   const treasuryData = yearly.map(y => y.treasury_end || y.treasury_start || 0);
   
   if (charts['population-treasury']) charts['population-treasury'].destroy();
-  
+
+  // Detect king changes for vertical annotation lines
+  const kingChangeAnnotations = {};
+  for (let i = 1; i < yearly.length; i++) {
+    const prevKing = yearly[i - 1].king_name || '';
+    const currKing = yearly[i].king_name || '';
+    if (currKing && prevKing !== currKing) {
+      kingChangeAnnotations['king-' + i] = {
+        type: 'line',
+        xMin: i,
+        xMax: i,
+        borderColor: 'rgba(255, 215, 0, 0.6)',
+        borderWidth: 2,
+        borderDash: [4, 4],
+        label: {
+          display: true,
+          content: '♔ ' + currKing,
+          position: 'start',
+          backgroundColor: 'rgba(255, 215, 0, 0.15)',
+          color: 'rgba(255, 215, 0, 0.9)',
+          font: { size: 10 },
+          padding: 3
+        }
+      };
+    }
+  }
+
   charts['population-treasury'] = new Chart(ctx, {
     type: 'line',
     data: {
@@ -214,6 +228,9 @@ function renderPopulationTreasuryChart(data) {
               return `${labels[idx]} — King: ${kingNames[idx]}`;
             }
           }
+        },
+        annotation: {
+          annotations: kingChangeAnnotations
         }
       },
       scales: {

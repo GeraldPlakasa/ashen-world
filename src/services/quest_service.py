@@ -602,6 +602,136 @@ def _increment_quest_wins(v: Villager) -> int:
     return current + 1
 
 
+def _award_quest_artifact(
+    quest_type: str,
+    recipient: "Villager | None",
+    margin: float,
+    current_day: int,
+) -> None:
+    """
+    Phase 7 quest reward hook.
+
+    ARCANE quest success: guaranteed legendary tome (the headline reward).
+    Other quests: small chance for a non-legendary artifact, weighted toward
+    the quest type. Better margin -> better odds.
+    """
+    if recipient is None or not recipient.get("alive", True):
+        return
+
+    from src.services import artifact_service
+    from src.repositories import artifact_repo
+    from src.services.chronicle_service import _safe_record, _yd, _actor
+
+    template = None
+
+    if quest_type == "ARCANE":
+        # Guaranteed legendary tome on ARCANE success — flagship of the quest.
+        legendary_tomes = [t for t in artifact_service.list_templates()
+                           if t.get("rarity") == "legendary" and t.get("slot") == "tome"]
+        if legendary_tomes:
+            template = random.choice(legendary_tomes)
+        else:
+            # Fall back to any legendary if no tomes exist in the catalog.
+            legendaries = [t for t in artifact_service.list_templates()
+                           if t.get("rarity") == "legendary"]
+            if legendaries:
+                template = random.choice(legendaries)
+    else:
+        # Other quests: small base chance, scales lightly with margin (caps ~12%).
+        chance = min(0.12, 0.04 + max(0.0, margin) * 1.0)
+        if random.random() >= chance:
+            return
+
+        # Quest-type → preferred slots (story flavor).
+        slot_pref = {
+            "COMBAT":        {"weapon": 0.55, "armor": 0.30, "ring": 0.10, "amulet": 0.05},
+            "DIPLOMACY":     {"amulet": 0.55, "ring": 0.30, "tome": 0.10, "armor": 0.05},
+            "EXPLORATION":   {"ring": 0.40, "amulet": 0.25, "weapon": 0.20, "armor": 0.15},
+            "TREASURE_HUNT": {"ring": 0.40, "amulet": 0.30, "weapon": 0.20, "armor": 0.10},
+            "TRADE":         {"ring": 0.40, "amulet": 0.40, "armor": 0.20},
+            "RESCUE":        {"armor": 0.50, "weapon": 0.30, "amulet": 0.20},
+        }.get(quest_type, {"weapon": 0.40, "armor": 0.30, "ring": 0.15, "amulet": 0.10, "tome": 0.05})
+
+        slot = artifact_service._pick_weighted(slot_pref)
+
+        # Rarity weights — quests skew toward common; rare is exceptional.
+        rarity_weights = {"common": 0.65, "uncommon": 0.30, "rare": 0.05}
+        rarity = artifact_service._pick_weighted(rarity_weights)
+
+        candidates = [t for t in artifact_service.list_templates()
+                      if t.get("slot") == slot and t.get("rarity") == rarity]
+        if not candidates:
+            # Loosen: drop slot constraint.
+            candidates = [t for t in artifact_service.list_templates()
+                          if t.get("rarity") == rarity]
+        if not candidates:
+            return
+        template = random.choice(candidates)
+
+    if not template:
+        return
+
+    recipient_id = int(recipient.get("id", 0) or 0)
+    if recipient_id <= 0:
+        return
+
+    artifact_id = artifact_repo.create_artifact(
+        slug=template["slug"],
+        owner_id=recipient_id,
+        acquired_day=int(current_day or 0),
+        acquired_via=f"quest:{quest_type}",
+        forged_history=[
+            {
+                "owner_id": recipient_id,
+                "owner_name": (recipient.get("name") or "").strip(),
+                "day": int(current_day or 0),
+                "event": "acquired",
+                "via": f"quest reward ({quest_type.lower()})",
+            }
+        ],
+    )
+
+    equipped = artifact_service.auto_equip_if_better(recipient, artifact_id, template)
+
+    # Chronicle entry — ARCANE legendaries get the highest importance.
+    try:
+        year, _ = _yd(current_day)
+        rarity = template.get("rarity", "common")
+        name = template.get("name", "an artifact")
+        rec_name = recipient.get("name", "?")
+        rec_family = recipient.get("family", "")
+
+        if quest_type == "ARCANE":
+            headline = f"{rec_name} returns from ARCANE bearing the {name}"
+            body = (
+                f"The expedition's eldest tome opened to {rec_name} of the "
+                f"{rec_family or 'unknown'} family. The {name} is theirs to keep."
+            )
+            importance = 5
+        else:
+            headline = f"{rec_name} claims the {name} from the quest"
+            body = (
+                f"Among the spoils of the {quest_type.lower()} expedition, "
+                f"{rec_name} took home the {name}."
+            )
+            importance = 4 if rarity == "rare" else 3
+
+        if equipped:
+            body = f"{body} They wear it now."
+
+        _safe_record(
+            day=current_day,
+            year=year,
+            category="magic" if quest_type == "ARCANE" else "world",
+            headline=headline,
+            body=body,
+            actors=[_actor(recipient)],
+            importance=importance,
+        )
+    except Exception:
+        pass
+
+
 def _apply_quest_results(
     party: list[Villager],
     quest_type: str,
@@ -657,9 +787,18 @@ def _apply_quest_results(
         
         party_sorted = sorted(party, key=lambda v: int(v.get(stat_focus_key, 0) or 0), reverse=True)
         
+        # Phase 7: artifact drop on quest success.
+        # ARCANE wins are guaranteed legendary — that's the headline reward.
+        # Other quests have a small margin-scaled chance, weighted by quest type.
+        try:
+            _award_quest_artifact(quest_type, party_sorted[0] if party_sorted else None,
+                                  margin, current_day)
+        except Exception:
+            pass  # never break the sim loop
+
         for i, v in enumerate(party):
             v["coins"] = int(v.get("coins", 0) or 0) + gold_per_member
-            
+
             # Increment quest wins
             quest_wins = _increment_quest_wins(v)
             

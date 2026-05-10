@@ -427,7 +427,7 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
 
         action = choose_action(v, bank, weather=weather_today)
         v["last_action"] = action
-        apply_action(v, action, bank, characters, weather=weather_today)
+        apply_action(v, action, bank, characters, weather=weather_today, current_day=current_day)
 
         hp_loss = apply_starvation_damage(v, bank)
 

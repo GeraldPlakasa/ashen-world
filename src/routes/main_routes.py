@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, session
 from src.services.world_service import get_current_state
 from src.services.character_service import get_pinned_character_data
 from src.services.building_service import build_building_summary
+from src.repositories.chronicle_repo import list_top_recent
 
 main_bp = Blueprint("main", __name__)
 
@@ -33,6 +34,11 @@ def landing():
     last_election_message = village_bank.get("last_election_message", "")
     last_event_message = village_bank.get("last_event_message", "")
     last_event_day = village_bank.get("last_event_day")
+    # Hide festival headlines from the Recent News widget — they crowd out the
+    # signal events (plague, famine, invasion). Festivals still chronicle.
+    if last_event_message and "FESTIVAL" in last_event_message.upper():
+        last_event_message = ""
+        last_event_day = None
     last_quest_message = village_bank.get("last_quest_message", "")
     last_quest_day = village_bank.get("last_quest_day")
     last_quest_success = village_bank.get("last_quest_success")
@@ -44,7 +50,14 @@ def landing():
 
     pinned_data = get_pinned_character_data(username, characters)
 
+    try:
+        chronicle_headlines = list_top_recent(limit=5, min_importance=3)
+    except Exception:
+        chronicle_headlines = []
+
     pinned_character = pinned_data["character"] if pinned_data else None
+    # Equipped artifacts now render via /api/character/<id> on the JS side
+    # so they update for whichever villager the user inspects, not just the player.
     pinned_actions = pinned_data["actions"] if pinned_data else []
     pinned_rel_bonds = pinned_data["rel_bonds"] if pinned_data else []
     pinned_rel_conflicts = pinned_data["rel_conflicts"] if pinned_data else []
@@ -88,6 +101,7 @@ def landing():
         pinned_father=pinned_father,
         pinned_children=pinned_children,
         weather_today=weather,
+        chronicle_headlines=chronicle_headlines,
     )
 
 

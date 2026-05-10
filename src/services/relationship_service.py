@@ -367,6 +367,11 @@ def spouse_daily_phase(characters: list[Villager], current_day: int) -> int:
             _set_spouses(a, best_b, current_day)
             _append_last_action(a, f"married {best_b['name']}")
             _append_last_action(best_b, f"married {a['name']}")
+            try:
+                from src.services.chronicle_service import record_marriage
+                record_marriage(a, best_b, day=int(current_day or 1))
+            except Exception:
+                pass
 
     # Late import to avoid circular dependency
     from src.services.family_service import birth_daily_phase
@@ -530,4 +535,12 @@ def king_assassination_phase(characters: list[Villager], bank: Bank | None = Non
     _append_last_action(king, f"assassinated {target.get('name','an enemy')}")
 
     sync_queen_to_king_spouse(characters, current_day=current_day)
+
+    # Chronicle the assassination
+    try:
+        from src.services.chronicle_service import record_assassination
+        record_assassination(king, target, day=int(current_day or 1))
+    except Exception:
+        pass
+
     return True

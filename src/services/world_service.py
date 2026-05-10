@@ -168,6 +168,13 @@ def advance_one_day() -> tuple:
             champions = compute_year_champions(characters)
             finalize_year(old_year, champions=champions)
 
+            # Prune chronicle once per year (drop importance 1-2 events older than 3 years)
+            try:
+                from src.repositories.chronicle_repo import prune_low_importance
+                prune_low_importance(new_year, keep_years=3)
+            except Exception:
+                pass
+
             # One in-world year passed -> everyone ages by +1
             for v in characters:
                 if v.get("alive", True):
@@ -204,8 +211,11 @@ def advance_one_day() -> tuple:
         if births_today > 0:
             logger.debug("Births today: %d", births_today)
 
+        # Identify villagers who died today (for chronicle)
+        new_deaths_today: list[dict] = []
         for v in characters:
             if not v.get("alive", True) or v.get("hp", 0) <= 0:
+                was_alive_at_start = int(v.get("id", 0) or 0) in before_alive_ids
                 v["alive"] = False
                 if v.get("hp", 0) < 0:
                     v["hp"] = 0
@@ -216,6 +226,26 @@ def advance_one_day() -> tuple:
                     dd = 0
                 if dd <= 0:
                     v["death_day"] = new_total_day
+
+                if was_alive_at_start and int(v.get("death_day", 0) or 0) == new_total_day:
+                    new_deaths_today.append(v)
+
+        # Chronicle deaths (best-effort)
+        try:
+            from src.services.chronicle_service import record_death
+            for v in new_deaths_today:
+                cause = (v.get("last_action") or "").strip() or "unknown causes"
+                record_death(v, cause, day=new_total_day)
+        except Exception:
+            pass
+
+        # Chronicle world event + immigrant arrivals
+        try:
+            from src.services.chronicle_service import record_world_event
+            if event_message:
+                record_world_event(event_message, day=new_total_day)
+        except Exception:
+            pass
 
         settle_inheritance_phase(characters, bank, current_day=new_total_day)
 
@@ -317,6 +347,14 @@ def advance_one_day() -> tuple:
         immigrants_today = len(after_ids - before_ids)
         deaths_today = len(before_alive_ids - after_alive_ids)
 
+        # Chronicle: immigrant arrivals
+        if immigrants_today > 0:
+            try:
+                from src.services.chronicle_service import record_immigrant_wave
+                record_immigrant_wave(immigrants_today, day=new_total_day)
+            except Exception:
+                pass
+
         final_king = next((v for v in characters if v.get("job") == "King" and v.get("alive", True)), None)
         king_id = int(final_king.get("id", 0) or 0) if final_king else None
         king_name = final_king.get("name") if final_king else None
@@ -409,6 +447,21 @@ def generate_new_world(count: int = 50) -> tuple[int, int]:
 
         # Reset in-memory event history
         clear_event_history()
+
+        # Clear chronicle
+        try:
+            from src.repositories.chronicle_repo import clear_chronicle
+            clear_chronicle()
+        except Exception:
+            pass
+
+        # Clear all artifacts (instances + lineage). Templates are config and
+        # remain. Equip-slot fields on the new villagers default to 0.
+        try:
+            from src.repositories import artifact_repo
+            artifact_repo.clear_artifacts()
+        except Exception:
+            pass
 
         # Reset weather to default
         payload = load_world_payload()

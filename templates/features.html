@@ -23,6 +23,7 @@
     .badge-common { background: #6b7280; }
     .badge-uncommon { background: #22c55e; }
     .badge-rare { background: #8b5cf6; }
+    .badge-legendary { background: linear-gradient(90deg,#f59e0b,#d97706); color: #1a1003; font-weight: 600; }
     .stat-pill { display: inline-block; background: var(--aw-bg-dark); padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 2px; }
   </style>
 </head>
@@ -57,6 +58,7 @@
                     <a class="list-group-item list-group-item-action" href="#achievements">Achievements</a>
                     <a class="list-group-item list-group-item-action" href="#magic">Magic System</a>
                     <a class="list-group-item list-group-item-action" href="#combat">Combat</a>
+                    <a class="list-group-item list-group-item-action" href="#artifacts">Magical Artifacts</a>
                     <a class="list-group-item list-group-item-action" href="#quests">Quests</a>
                     <a class="list-group-item list-group-item-action" href="#events">World Events</a>
                     <a class="list-group-item list-group-item-action" href="#relationships">Relationships</a>
@@ -234,6 +236,7 @@
                         <tr><td><strong>Steal</strong></td><td>Risk/reward coins</td><td>Deceitful trait</td></tr>
                         <tr><td><strong>Meditate</strong></td><td>Restore MP, +INT</td><td>Magic job (Wizard, Sorcerer, Cleric, Bard), low MP</td></tr>
                         <tr><td><strong>Mentor</strong></td><td>Teach skill to children</td><td>Age 20+, has skills, Wise/Patient/Diligent traits</td></tr>
+                        <tr><td><strong>Forge Artifact</strong></td><td>Spend 600–1000g treasury → 60% chance to forge a common/uncommon artifact (40% wasted)</td><td>Strict: see Artifacts section for the full checklist (job, INT 50, Level 15, Age 25, HP 70, building level, skill, 1-year cooldown)</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -480,6 +483,159 @@
                 </div>
               </section>
 
+              <!-- MAGICAL ARTIFACTS -->
+              <section class="game-card mb-3" id="artifacts">
+                <div class="card-body">
+                  <h5 class="mb-3">Magical Artifacts &amp; Inheritance</h5>
+                  <p>
+                    Rare items with stat bonuses that persist after death and pass to heirs. Each artifact
+                    accumulates a lineage — a chronicle of past owners — so an old sword in Year 30 carries
+                    the names of the four kings who carried it.
+                  </p>
+
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Where They Come From</h6>
+                        <ul>
+                          <li><strong>Combat drops</strong> — <code>0.1%</code> common · <code>0.7%</code> elite · <code>8%</code> legendary kills. Rarity heavily weighted toward common; legendary items are vanishingly rare.</li>
+                          <li><strong>Quest rewards</strong> — ARCANE success = guaranteed legendary tome. Other quests up to ~12% chance, weighted by quest type and party margin.</li>
+                          <li><strong>Ancient Tomb event</strong> — very rare world event; awards 1–2 artifacts to top-rep villagers (Library can bump the count).</li>
+                          <li><strong>Forge action</strong> — only high-INT crafters who clear a strict checklist can attempt one (see prerequisites below).</li>
+                          <li><strong>Trade Caravan event</strong> — rare; merchant offers an artifact at steep treasury cost (600 / 1800 / 5000 / 15000g).</li>
+                          <li>Equip slots: weapon, armor, ring, amulet, tome — auto-equip if empty or upgrade by rarity.</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Stat Application</h6>
+                        <ul>
+                          <li><code>effective_stats(v)</code> = base stats + sum of equipped artifact mods</li>
+                          <li>Used by combat resolution; base stats stay untouched</li>
+                          <li>+HP mods give a small combat-power bonus (mirrors enemy HP-power term)</li>
+                          <li>Effective MP drives spell power; only the base MP pool is spent</li>
+                          <li>Effective DEF mitigates incoming damage</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Forge Action — Full Prerequisite Checklist</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 12px; margin-bottom: 8px;">
+                      Forging an artifact is a major undertaking. Every condition below must hold,
+                      and even when it does, ~40% of attempts produce nothing (materials lost):
+                    </p>
+                    <ul style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 0;">
+                      <li><strong>Job:</strong> Blacksmith, Wizard, or Sorcerer</li>
+                      <li><strong>INT ≥ 50</strong>, <strong>Level ≥ 15</strong>, <strong>Age ≥ 25</strong></li>
+                      <li><strong>HP ≥ 70</strong>, <strong>Hunger ≤ 60</strong> — must be in good physical shape</li>
+                      <li><strong>Treasury ≥ 800g</strong>; cost per attempt is 600–1000g (more for INT≥80)</li>
+                      <li><strong>Building:</strong> Blacksmith ≥ Lvl 1 (smiths) or Library ≥ Lvl 2 (mages)</li>
+                      <li><strong>Skill:</strong> at least one CRAFT or KNOWLEDGE skill (smiths) / MAGIC or KNOWLEDGE skill (mages)</li>
+                      <li><strong>Cooldown:</strong> 365 days (one full year) since the villager's last forge</li>
+                      <li><strong>Output:</strong> 80% common / 18% uncommon / 2% rare. INT ≥ 80 shifts to 55/40/5. Never legendary, never soulbound.</li>
+                      <li>Smiths produce weapons & armor; mages also produce rings & tomes.</li>
+                    </ul>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Inheritance Flow (Settle on Death)</h6>
+                    <ol style="padding-left: 18px; color: var(--aw-text-muted); font-size: 13px; margin-bottom: 0;">
+                      <li><strong>Soulbound items</strong> are destroyed with the owner — chronicled as a loss.</li>
+                      <li>Otherwise, an heir is chosen in order:
+                        <em>oldest living child</em> →
+                        <em>surviving spouse</em> →
+                        <em>oldest living sibling</em>.</li>
+                      <li>If no heir exists, the artifact is liquidated to the treasury for a rarity-scaled payout
+                          (50 / 150 / 500 / 2000 coins for common / uncommon / rare / legendary).</li>
+                      <li>Each transfer appends an entry to the artifact's <code>forged_history</code> — its
+                          permanent chronicle of past owners.</li>
+                      <li>The chronicle records the inheritance event; legendary transfers run at importance 4.</li>
+                    </ol>
+                  </div>
+
+                  <h6 class="mt-3 mb-2">
+                    Starter Highlights
+                    <span style="font-size: 11px; color: var(--aw-text-muted); font-weight: 400;">
+                      — 45 total artifacts; see <a href="/artifacts" style="color: var(--aw-accent);">/artifacts</a> for the full catalog
+                    </span>
+                  </h6>
+                  <div class="table-responsive">
+                    <table class="table feature-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Slot</th>
+                          <th>Rarity</th>
+                          <th>Mods</th>
+                          <th>Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Iron Blade</td>
+                          <td>weapon</td>
+                          <td><span class="badge badge-rarity badge-common">common</span></td>
+                          <td><span class="stat-pill">+2 ATK</span></td>
+                          <td>Workmanlike steel — abundant.</td>
+                        </tr>
+                        <tr>
+                          <td>Ember Sword</td>
+                          <td>weapon</td>
+                          <td><span class="badge badge-rarity badge-rare">rare</span></td>
+                          <td><span class="stat-pill">+5 ATK</span><span class="stat-pill">+2 MP</span></td>
+                          <td>Forged in the kiln of the first Wizard.</td>
+                        </tr>
+                        <tr>
+                          <td>Stoneskin Cuirass</td>
+                          <td>armor</td>
+                          <td><span class="badge badge-rarity badge-uncommon">uncommon</span></td>
+                          <td><span class="stat-pill">+4 DEF</span><span class="stat-pill">+20 HP</span></td>
+                          <td>Plate that has turned aside a hundred blows.</td>
+                        </tr>
+                        <tr>
+                          <td>Acolyte Robes</td>
+                          <td>armor</td>
+                          <td><span class="badge badge-rarity badge-common">common</span></td>
+                          <td><span class="stat-pill">+5 MP</span></td>
+                          <td>Woven by initiates of the Tower.</td>
+                        </tr>
+                        <tr>
+                          <td>Ring of Ember</td>
+                          <td>ring</td>
+                          <td><span class="badge badge-rarity badge-rare">rare</span></td>
+                          <td><span class="stat-pill">+20 MP</span></td>
+                          <td>A coal that never cools.</td>
+                        </tr>
+                        <tr>
+                          <td>Tome of First Words</td>
+                          <td>tome</td>
+                          <td><span class="badge badge-rarity badge-legendary">legendary</span></td>
+                          <td><span class="stat-pill">+10 INT</span><span class="stat-pill">+30 MP</span></td>
+                          <td>The earliest spells — written before names had shape.</td>
+                        </tr>
+                        <tr>
+                          <td>Amulet of Kingsblood</td>
+                          <td>amulet</td>
+                          <td><span class="badge badge-rarity badge-legendary">legendary</span></td>
+                          <td><span class="stat-pill">+15 REP</span></td>
+                          <td>Worn only by those who have held the crown.</td>
+                        </tr>
+                        <tr>
+                          <td>The Ashen Crown</td>
+                          <td>amulet</td>
+                          <td><span class="badge badge-rarity badge-legendary">legendary</span></td>
+                          <td><span class="stat-pill">+25 REP</span></td>
+                          <td><strong>Soulbound.</strong> Dies with its bearer — story bait.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+
               <!-- QUESTS -->
               <section class="game-card mb-3" id="quests">
                 <div class="card-body">
@@ -516,9 +672,9 @@
               <!-- EVENTS -->
               <section class="game-card mb-3" id="events">
                 <div class="card-body">
-                  <h5 class="mb-3">World Events (8 Types)</h5>
+                  <h5 class="mb-3">World Events (10 Types)</h5>
                   <p>Random events occur once per year, affecting the entire village.</p>
-                  
+
                   <div class="row g-3">
                     <div class="col-md-6">
                       <div class="feature-box">
@@ -539,6 +695,8 @@
                           <li><strong>Good Harvest</strong> - Food surplus, coin bonus.</li>
                           <li><strong>Blessing</strong> - HP and MP restoration for all.</li>
                           <li><strong>Windfall</strong> - Treasury bonus.</li>
+                          <li><strong>Ancient Tomb</strong> - Rare. 1–3 top-rep villagers each take home an artifact (Library boosts count).</li>
+                          <li><strong>Trade Caravan</strong> - Rare. King may spend treasury to acquire an artifact (Market reduces price).</li>
                         </ul>
                       </div>
                     </div>

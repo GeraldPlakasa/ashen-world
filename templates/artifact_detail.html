@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Ashen World • {{ template.name or 'Artifact' }}</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    .arti-hero {
+      background: var(--aw-bg-card);
+      border: 1px solid var(--aw-border);
+      border-left: 5px solid var(--aw-border);
+      border-radius: 12px;
+      padding: 20px 22px;
+    }
+    .arti-hero.rarity-common    { border-left-color: #6b7280; }
+    .arti-hero.rarity-uncommon  { border-left-color: #22c55e; }
+    .arti-hero.rarity-rare      { border-left-color: #8b5cf6; }
+    .arti-hero.rarity-legendary { border-left-color: #f59e0b; }
+    .arti-badge {
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #fff;
+    }
+    .arti-badge.rarity-common    { background: #6b7280; }
+    .arti-badge.rarity-uncommon  { background: #22c55e; }
+    .arti-badge.rarity-rare      { background: #8b5cf6; }
+    .arti-badge.rarity-legendary { background: linear-gradient(90deg,#f59e0b,#d97706); color: #1a1003; }
+    .arti-mod-pill {
+      display: inline-block;
+      background: var(--aw-bg-dark);
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--aw-text);
+      margin-right: 4px;
+    }
+    .arti-flavor {
+      color: var(--aw-text-muted);
+      font-size: 14px;
+      font-style: italic;
+      margin-top: 12px;
+      padding-left: 12px;
+      border-left: 2px solid var(--aw-border);
+    }
+    .lineage-item {
+      display: flex;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--aw-border);
+    }
+    .lineage-item:last-child { border-bottom: none; }
+    .lineage-marker {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--aw-bg-dark);
+      color: var(--aw-text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .lineage-event-acquired   .lineage-marker { background: #22c55e22; color: #22c55e; }
+    .lineage-event-inherited  .lineage-marker { background: #4a90c222; color: #4a90c2; }
+    .lineage-event-destroyed  .lineage-marker { background: #d0524a22; color: #d0524a; }
+    .lineage-event-liquidated .lineage-marker { background: #c9a22722; color: #c9a227; }
+    .lineage-content {
+      flex: 1;
+      font-size: 13px;
+      color: var(--aw-text);
+      line-height: 1.5;
+    }
+    .lineage-meta {
+      font-size: 11px;
+      color: var(--aw-text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+
+<body class="game-theme">
+  <div class="aw-layout">
+    {% include '_sidebar.html' %}
+
+    <div class="aw-main-shell">
+      <div class="page-shell">
+        <header class="aw-header d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex flex-column">
+            <span class="header-title">{{ template.name or artifact.slug }}</span>
+            <span class="header-subtitle">
+              <a href="{{ url_for('artifact.artifacts') }}" style="color: var(--aw-text-muted); text-decoration: none;">← All artifacts</a>
+            </span>
+          </div>
+        </header>
+
+        <main class="aw-main">
+          {% set rarity = template.rarity or 'common' %}
+
+          <section class="arti-hero rarity-{{ rarity }} mb-3">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+              <span class="arti-badge rarity-{{ rarity }}">{{ rarity }}</span>
+              <span style="color: var(--aw-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;">
+                {{ template.slot or 'unknown slot' }}
+              </span>
+              {% if template.binding == 'soulbound' %}
+                <span style="color: var(--aw-warning); font-size: 11px; font-weight: 600; text-transform: uppercase;">
+                  · soulbound
+                </span>
+              {% endif %}
+            </div>
+
+            {% if template.stat_mods %}
+              <div style="margin: 8px 0;">
+                {% for stat, val in template.stat_mods.items() %}
+                  <span class="arti-mod-pill">+{{ val }} {{ stat|upper }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if template.flavor %}
+              <div class="arti-flavor">{{ template.flavor }}</div>
+            {% endif %}
+
+            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--aw-border); font-size: 13px;">
+              {% if owner.id and owner.id > 0 %}
+                Currently held by <strong>{{ owner.name }}</strong>{% if owner.family %} of the {{ owner.family }} family{% endif %}
+                {% if owner.alive == false %}
+                  <span style="color: var(--aw-dead);">(deceased — awaiting settlement)</span>
+                {% endif %}
+              {% else %}
+                <em>Unclaimed.</em>
+              {% endif %}
+            </div>
+          </section>
+
+          <section class="game-card mb-3">
+            <div class="card-body">
+              <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">
+                Lineage ({{ history|length }} entr{{ 'y' if history|length == 1 else 'ies' }})
+              </div>
+
+              {% if history %}
+                {% for h in history %}
+                  {% set ev = h.event or 'note' %}
+                  <div class="lineage-item lineage-event-{{ ev }}">
+                    <div class="lineage-marker">
+                      {% if ev == 'acquired' %}+
+                      {% elif ev == 'inherited' %}↪
+                      {% elif ev == 'destroyed_with_owner' %}†
+                      {% elif ev == 'liquidated' %}$
+                      {% else %}·{% endif %}
+                    </div>
+                    <div class="lineage-content">
+                      {% if ev == 'acquired' %}
+                        <strong>{{ h.owner.name }}</strong> took it up.
+                        {% if h.via %}<span style="color: var(--aw-text-muted);"> {{ h.via }}.</span>{% endif %}
+                      {% elif ev == 'inherited' %}
+                        Passed from <strong>{{ h.owner.name }}</strong>
+                        {% if h.recipient %}to <strong>{{ h.recipient.name }}</strong>{% endif %}
+                        {% if h.relation %}<span style="color: var(--aw-text-muted);"> ({{ h.relation }})</span>{% endif %}.
+                      {% elif ev == 'destroyed_with_owner' %}
+                        Destroyed at the death of <strong>{{ h.owner.name }}</strong>.
+                      {% elif ev == 'liquidated' %}
+                        Liquidated from <strong>{{ h.owner.name }}</strong>'s estate
+                        {% if h.gold %}for <strong>{{ h.gold }}</strong> coins{% endif %}.
+                      {% else %}
+                        <strong>{{ ev }}</strong> by {{ h.owner.name if h.owner else '?' }}.
+                      {% endif %}
+                      <div class="lineage-meta">
+                        Day {{ h.day }} · Year {{ ((h.day - 1) // 90) + 1 if h.day else '?' }}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div style="color: var(--aw-text-muted); font-size: 13px; padding: 12px 0;">
+                  This artifact has no recorded history yet.
+                </div>
+              {% endif %}
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

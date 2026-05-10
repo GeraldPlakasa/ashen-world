@@ -308,6 +308,13 @@ body {
   box-shadow: inset 3px 0 0 #3b82f6;
 }
 
+/* Player character row highlight */
+.aw-row-player { background: rgba(99,102,241,0.08) !important; border-left: 3px solid rgba(99,102,241,0.6); }
+.aw-row-player:hover { background: rgba(99,102,241,0.14) !important; }
+
+/* Selected row (clicked in table) */
+.aw-row-selected { outline: 2px solid rgba(99,102,241,0.5); outline-offset: -2px; background: rgba(99,102,241,0.12) !important; }
+
 /* Dead villager styling */
 .aw-row-dead { background: rgba(239,68,68,0.04) !important; }
 .aw-row-dead:hover { background: rgba(239,68,68,0.08) !important; }

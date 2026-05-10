@@ -193,7 +193,7 @@
               <select class="filter-select" id="sortBy">
                 <option value="name-asc">Name (A-Z)</option>
                 <option value="name-desc">Name (Z-A)</option>
-                <option value="wealth-desc">Wealth (High → Low)</option>
+                <option value="wealth-desc" selected>Wealth (High → Low)</option>
                 <option value="wealth-asc">Wealth (Low → High)</option>
                 <option value="alive-desc">Living Members (Most)</option>
                 <option value="alive-asc">Living Members (Least)</option>
@@ -455,7 +455,7 @@
     
     resetBtn.addEventListener('click', function() {
       searchBox.value = '';
-      sortSelect.value = 'name-asc';
+      sortSelect.value = 'wealth-desc';
       filterSelect.value = 'all';
       applyFilters();
     });

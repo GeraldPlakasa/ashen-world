@@ -48,6 +48,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         "steal": 0.2,
         "mentor": 0.0,  # Only enabled for age 20+ with skills
         "meditate": 0.0,  # Only enabled for magic-capable jobs
+        "forge_artifact": 0.0,  # Only enabled for high-INT Blacksmith/Wizard/Sorcerer with treasury funds (Phase 7)
     }
 
     # Building-based adjustments (village-wide passives)
@@ -345,6 +346,25 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
     if coins < 60:
         weights["buy_gear"] -= 0.4
 
+    # Forge artifact: heavily gated. The full eligibility check lives in
+    # artifact_service.can_forge() — we don't even surface the action unless
+    # every prerequisite is met. See can_forge() for the parameter list.
+    try:
+        from src.services.artifact_service import can_forge
+        eligible, _reason = can_forge(villager, bank, current_day=None)
+        if eligible:
+            v_int = int(villager.get("int", 0) or 0)
+            base = 0.30  # modest weight — forging is special, not routine
+            if v_int >= 70:
+                base += 0.20
+            if job == "Blacksmith":
+                base += 0.08 * (get_building_level(bank, "blacksmith") if bank else 0)
+            if job in ("Wizard", "Sorcerer"):
+                base += 0.08 * (get_building_level(bank, "library") if bank else 0)
+            weights["forge_artifact"] = base
+    except Exception:
+        pass
+
     # Avoid negative or near-zero weights
     for k in list(weights.keys()):
         if weights[k] < 0.05:
@@ -525,6 +545,7 @@ def apply_action(
     bank: Bank | None = None,
     all_characters: list[Villager] | None = None,
     weather: str | None = None,
+    current_day: int | None = None,
 ) -> None:
     """
     Apply the chosen action to the villager (stats, hunger, coins, EXP).
@@ -1078,6 +1099,110 @@ def apply_action(
         v["hunger"] += hunger_delta
         v["last_action"] = f"meditate (+{mp_regen} MP, +{int_gain} INT)"
 
+    # -------------------- FORGE ARTIFACT (Phase 7) --------------------
+    elif action == "forge_artifact":
+        from src.services import artifact_service
+        from src.repositories import artifact_repo
+        from src.repositories.world_repo import load_day
+        from src.services.chronicle_service import _safe_record, _yd, _actor
+
+        day_for_drop = current_day if current_day is not None else load_day()
+
+        # Defense in depth: re-check eligibility (the action weight is 0.05 floor
+        # so non-eligible villagers can rarely still pick this; we punt them).
+        eligible, reason = artifact_service.can_forge(v, bank, current_day=day_for_drop)
+        if not eligible:
+            v["hp"] += rand_int(1, 3)
+            v["hunger"] += rand_int(2, 4)
+            v["last_action"] = f"considered forging but couldn't ({reason})"
+        else:
+            # Cost scales with INT (more skilled smiths use rarer materials).
+            cost = rand_int(artifact_service.FORGE_BASE_COST_MIN,
+                            artifact_service.FORGE_BASE_COST_MAX)
+            v_int = int(v.get("int", 0) or 0)
+            if v_int >= 80:
+                cost += rand_int(150, 350)
+            bank["balance"] = max(0, int(bank.get("balance", 0) or 0) - cost)
+            v["last_forge_day"] = int(day_for_drop or 0)
+            v["hunger"] += rand_int(10, 20)
+
+            # Random failure even when fully eligible — forging is hard.
+            if random.random() < artifact_service.FORGE_FAILURE_CHANCE:
+                v["exp"] = int(v.get("exp", 0) or 0) + rand_int(4, 8)
+                v["last_action"] = (
+                    f"forge attempt failed — materials wasted ({cost}g treasury)"
+                )
+            else:
+                # Rarity weights skew strongly toward common; rare is exceptional.
+                if v_int >= 80:
+                    roll_weights = {"common": 0.55, "uncommon": 0.40, "rare": 0.05}
+                else:
+                    roll_weights = {"common": 0.80, "uncommon": 0.18, "rare": 0.02}
+
+                rarity = artifact_service._pick_weighted(roll_weights)
+
+                if v.get("job", "") == "Blacksmith":
+                    slot_pool = ["weapon", "armor"]
+                else:
+                    slot_pool = ["weapon", "armor", "ring", "tome"]
+
+                candidates = [t for t in artifact_service.list_templates()
+                              if t.get("rarity") == rarity and t.get("slot") in slot_pool
+                              and (t.get("binding") or "none") != "soulbound"]
+                if not candidates:
+                    candidates = [t for t in artifact_service.list_templates()
+                                  if t.get("rarity") == rarity
+                                  and (t.get("binding") or "none") != "soulbound"]
+
+                if not candidates:
+                    v["last_action"] = (
+                        f"forge produced no fitting design ({cost}g spent)"
+                    )
+                else:
+                    template = random.choice(candidates)
+                    artifact_id = artifact_repo.create_artifact(
+                        slug=template["slug"],
+                        owner_id=int(v.get("id", 0) or 0),
+                        acquired_day=int(day_for_drop or 0),
+                        acquired_via=f"forge:{v.get('job','')}",
+                        forged_history=[
+                            {
+                                "owner_id": int(v.get("id", 0) or 0),
+                                "owner_name": (v.get("name") or "").strip(),
+                                "day": int(day_for_drop or 0),
+                                "event": "acquired",
+                                "via": f"forged at the {v.get('job','craft').lower()}'s bench",
+                            }
+                        ],
+                    )
+                    artifact_service.auto_equip_if_better(v, artifact_id, template)
+                    v["int"] = v_int + rand_int(1, 2)
+                    v["exp"] = int(v.get("exp", 0) or 0) + rand_int(12, 24)
+                    v["last_action"] = (
+                        f"forged the {template.get('name','artifact')} ({cost}g treasury)"
+                    )
+
+                    # Chronicle entry — importance scales with rarity.
+                    try:
+                        year, _ = _yd(int(day_for_drop or 0))
+                        rar = template.get("rarity", "common")
+                        importance = 4 if rar == "rare" else 3 if rar == "uncommon" else 2
+                        _safe_record(
+                            day=int(day_for_drop or 0),
+                            year=year,
+                            category="economy",
+                            headline=f"{v.get('name','?')} forges the {template.get('name','artifact')}",
+                            body=(
+                                f"{v.get('name','?')} of the {v.get('family','unknown')} family "
+                                f"shaped a new {template.get('slot','tool')} at the cost of {cost} coins "
+                                f"from the treasury."
+                            ),
+                            actors=[_actor(v)],
+                            importance=importance,
+                        )
+                    except Exception:
+                        pass
+
     # -------------------- HUNT --------------------
     elif action == "hunt":
         enemy  = create_enemy_for(v)
@@ -1087,6 +1212,28 @@ def apply_action(
         if won_hunt:
             v["huntWins"] = int(v.get("huntWins", 0) or 0) + 1
             v["huntWinsYear"] = int(v.get("huntWinsYear", 0) or 0) + 1
+
+            # Phase 2: artifact drop on kill (live killers only — drops on a
+            # post-mortem victory go nowhere because the corpse can't carry it).
+            if v.get("alive", True):
+                try:
+                    from src.services.artifact_service import drop_for_kill
+                    from src.services.chronicle_service import record_artifact_drop
+                    from src.repositories.world_repo import load_day
+
+                    day_for_drop = current_day if current_day is not None else load_day()
+                    drop = drop_for_kill(v, enemy, day_for_drop)
+                    if drop:
+                        record_artifact_drop(
+                            killer=v,
+                            enemy=enemy,
+                            template=drop["template"],
+                            equipped=drop["equipped"],
+                            day=int(day_for_drop),
+                        )
+                except Exception:
+                    # Drops are decorative — never break the sim loop.
+                    pass
 
         if combat["outcome"] == "WIN":
             hunger_delta = -rand_int(5, 14)

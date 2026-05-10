@@ -70,6 +70,15 @@ def settle_inheritance_phase(characters: list[Villager], bank: Bank | None, curr
         if deceased.get("estate_settled", False):
             continue
 
+        # Phase 4: settle magical artifacts before coins.
+        # Soulbound -> destroyed, else passes to oldest child/spouse/sibling,
+        # else liquidated to treasury.
+        try:
+            from src.services.artifact_service import settle_artifact_inheritance
+            settle_artifact_inheritance(deceased, characters, bank, int(current_day))
+        except Exception:
+            pass  # never break the sim loop
+
         estate = _safe_int(deceased.get("coins", 0), 0)
         if estate <= 0:
             deceased["estate_settled"] = True
@@ -391,7 +400,12 @@ def birth_daily_phase(characters: list[Villager], current_day: int) -> int:
             child = _spawn_child(characters, mom, dad, current_day)
             characters.append(child)
             births_count += 1
-    
+            try:
+                from src.services.chronicle_service import record_birth
+                record_birth(child, mom, dad, day=int(current_day or 1))
+            except Exception:
+                pass
+
     return births_count
 
 def child_daily_phase(characters: list[Villager], current_day: int) -> None:

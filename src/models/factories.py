@@ -58,6 +58,12 @@ def create_default_villager(**overrides: Any) -> Villager:
         "kingsVotedFor": "[]",
         "skills": "",
         "skill_learning": "{}",
+        "equip_weapon": 0,
+        "equip_armor": 0,
+        "equip_ring": 0,
+        "equip_amulet": 0,
+        "equip_tome": 0,
+        "last_forge_day": 0,
     }
     base.update(overrides)  # type: ignore[typeddict-item]
     return base

@@ -51,6 +51,12 @@ Villager = TypedDict(
         "questWins": int,
         "achievements": str,  # JSON list of achievement IDs
         "kingsVotedFor": str,  # JSON list of king IDs voted for
+        "equip_weapon": int,  # artifact instance id (0 = empty)
+        "equip_armor": int,
+        "equip_ring": int,
+        "equip_amulet": int,
+        "equip_tome": int,
+        "last_forge_day": int,  # cooldown anchor for forge_artifact action
     },
     total=False,
 )

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Ashen World • Chronicle</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    .chronicle-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    .chronicle-filters select {
+      padding: 8px 12px;
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      background: var(--aw-bg-card);
+      color: var(--aw-text);
+      font-size: 13px;
+    }
+    .chron-event {
+      background: var(--aw-bg-card);
+      border: 1px solid var(--aw-border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      border-left: 4px solid var(--aw-border);
+      transition: box-shadow 0.15s;
+    }
+    .chron-event:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .chron-event.cat-royal      { border-left-color: #c9a227; }
+    .chron-event.cat-family     { border-left-color: #4a90c2; }
+    .chron-event.cat-combat     { border-left-color: #b54040; }
+    .chron-event.cat-magic      { border-left-color: #8e57c0; }
+    .chron-event.cat-economy    { border-left-color: #4a9c66; }
+    .chron-event.cat-scandal    { border-left-color: #c25a8e; }
+    .chron-event.cat-disaster   { border-left-color: #d0524a; }
+    .chron-event.cat-world      { border-left-color: #6b8aa0; }
+    .chron-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+    .chron-headline {
+      font-weight: 600;
+      color: var(--aw-text);
+      font-size: 15px;
+    }
+    .chron-meta {
+      font-size: 11px;
+      color: var(--aw-text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .chron-cat-badge {
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #fff;
+    }
+    .chron-cat-badge.royal     { background: #c9a227; }
+    .chron-cat-badge.family    { background: #4a90c2; }
+    .chron-cat-badge.combat    { background: #b54040; }
+    .chron-cat-badge.magic     { background: #8e57c0; }
+    .chron-cat-badge.economy   { background: #4a9c66; }
+    .chron-cat-badge.scandal   { background: #c25a8e; }
+    .chron-cat-badge.disaster  { background: #d0524a; }
+    .chron-cat-badge.world     { background: #6b8aa0; }
+    .chron-imp {
+      font-size: 11px;
+      color: var(--aw-warning);
+      letter-spacing: 1px;
+    }
+    .chron-body {
+      font-size: 14px;
+      color: var(--aw-text-muted);
+      line-height: 1.55;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--aw-text-muted);
+    }
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    .pager {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+
+<body class="game-theme">
+  <div class="aw-layout">
+    {% include '_sidebar.html' %}
+
+    <div class="aw-main-shell">
+      <div class="page-shell">
+        <header class="aw-header d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex flex-column">
+            <span class="header-title">Chronicle</span>
+            <span class="header-subtitle">
+              The Town Crier's record · Year {{ year }}, Day {{ day }}
+              {% if total %} · {{ total }} entr{{ 'y' if total == 1 else 'ies' }}{% endif %}
+            </span>
+          </div>
+          {% if username %}
+          <div style="color: var(--aw-text-muted); font-size: 13px;">
+            Reading as <strong style="color: var(--aw-text);">{{ username }}</strong>
+          </div>
+          {% endif %}
+        </header>
+
+        <main class="aw-main">
+          <form method="get" action="{{ url_for('chronicle.chronicle') }}" class="chronicle-filters">
+            <select name="category">
+              <option value="">All categories</option>
+              {% for c in all_categories %}
+                <option value="{{ c }}" {% if c == category %}selected{% endif %}>{{ c | capitalize }}</option>
+              {% endfor %}
+            </select>
+            <select name="year">
+              <option value="">All years</option>
+              {% for y in all_years %}
+                <option value="{{ y }}" {% if y == year_filter %}selected{% endif %}>Year {{ y }}</option>
+              {% endfor %}
+            </select>
+            <select name="min_importance">
+              <option value="1" {% if min_importance == 1 %}selected{% endif %}>Everything</option>
+              <option value="2" {% if min_importance == 2 %}selected{% endif %}>Routine and above</option>
+              <option value="3" {% if min_importance == 3 %}selected{% endif %}>Notable and above</option>
+              <option value="4" {% if min_importance == 4 %}selected{% endif %}>Major and above</option>
+              <option value="5" {% if min_importance == 5 %}selected{% endif %}>Legendary only</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-light">Apply</button>
+            {% if category or year_filter or min_importance > 1 %}
+              <a href="{{ url_for('chronicle.chronicle') }}" class="btn btn-sm btn-link" style="color: var(--aw-text-muted);">Clear</a>
+            {% endif %}
+          </form>
+
+          {% if not events %}
+            <div class="empty-state">
+              <div class="empty-state-icon">📜</div>
+              <div>The Chronicle is silent.</div>
+              <div style="font-size: 12px; margin-top: 8px;">Events will appear here as the village's story unfolds.</div>
+            </div>
+          {% else %}
+            {% for e in events %}
+              {% set y = e.year %}
+              {% set d = ((e.day - 1) % 90) %}
+              <article class="chron-event cat-{{ e.category }}">
+                <div class="chron-head">
+                  <span class="chron-cat-badge {{ e.category }}">{{ e.category }}</span>
+                  <span class="chron-meta">Year {{ y }} · Day {{ d }}</span>
+                  {% if e.importance >= 4 %}
+                    <span class="chron-imp" title="Importance {{ e.importance }}/5">{{ '★' * e.importance }}</span>
+                  {% endif %}
+                </div>
+                <div class="chron-headline">{{ e.headline }}</div>
+                {% if e.body %}<div class="chron-body">{{ e.body }}</div>{% endif %}
+              </article>
+            {% endfor %}
+
+            <div class="pager">
+              {% if page > 1 %}
+                <a class="btn btn-sm btn-outline-light"
+                   href="{{ url_for('chronicle.chronicle', page=page-1, category=category or '', year=year_filter or '', min_importance=min_importance) }}">‹ Newer</a>
+              {% endif %}
+              {% if has_more %}
+                <a class="btn btn-sm btn-outline-light"
+                   href="{{ url_for('chronicle.chronicle', page=page+1, category=category or '', year=year_filter or '', min_importance=min_importance) }}">Older ›</a>
+              {% endif %}
+            </div>
+          {% endif %}
+        </main>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

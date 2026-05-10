@@ -135,206 +135,43 @@
           </section>
           {% endif %}
 
-          {% if pinned_character %}
-          <!-- Hero Card (Pinned Character) -->
-          <section class="hero-card mb-3 {% if pinned_character.job == 'King' %}is-king{% endif %} {% if not pinned_character.alive %}is-dead{% endif %}">
-            <div class="card-body" style="padding: 20px;">
-              <div class="row g-3">
-                <!-- Left: Avatar + Info -->
-                <div class="col-12 col-lg-4">
-                  <div class="d-flex gap-3">
-                    <div class="hero-avatar">
-                      {{ 'F' if pinned_character.gender == 'Female' else 'M' }}
-                      {% if pinned_character.job == 'King' %}
-                        <span class="hero-avatar-badge king">♔</span>
-                      {% elif pinned_character.origin == 'player' %}
-                        <span class="hero-avatar-badge player">★</span>
-                      {% endif %}
-                    </div>
-                    <div>
-                      <h4 class="hero-name">{{ pinned_character.name }}</h4>
-                      <div class="hero-title">{{ pinned_character.job }} · Age {{ pinned_character.age }}</div>
-                      <div class="d-flex gap-2 mt-2">
-                        {% if pinned_character.alive %}
-                          <span class="status-badge alive">Alive</span>
-                        {% else %}
-                          <span class="status-badge dead">Deceased</span>
-                        {% endif %}
-                        {% if pinned_character.origin == 'player' %}
-                          <span class="status-badge player">Player</span>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Center: Stat Bars -->
-                <div class="col-12 col-lg-4">
-                  <div class="stat-bar-group">
-                    {% set hp_pct = ((pinned_character.hp / 100) * 100) | int %}
-                    <div class="stat-bar stat-bar-lg">
-                      <span class="stat-bar-icon">HP</span>
-                      <div class="stat-bar-track">
-                        <div class="stat-bar-fill hp" style="width: {{ hp_pct }}%;"></div>
-                      </div>
-                      <span class="stat-bar-value">{{ pinned_character.hp }}/100</span>
-                    </div>
-
-                    {% set hunger_pct = ((pinned_character.hunger / 100) * 100) | int %}
-                    <div class="stat-bar stat-bar-lg">
-                      <span class="stat-bar-icon">FD</span>
-                      <div class="stat-bar-track">
-                        <div class="stat-bar-fill hunger" style="width: {{ hunger_pct }}%;"></div>
-                      </div>
-                      <span class="stat-bar-value">{{ pinned_character.hunger }}/100</span>
-                    </div>
-
-                    {% set exp_pct = ((pinned_character.exp % 100)) | int %}
-                    <div class="stat-bar stat-bar-lg">
-                      <span class="stat-bar-icon">XP</span>
-                      <div class="stat-bar-track">
-                        <div class="stat-bar-fill exp" style="width: {{ exp_pct }}%;"></div>
-                      </div>
-                      <span class="stat-bar-value">Lv {{ pinned_character.level }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Right: Combat Stats -->
-                <div class="col-12 col-lg-4">
-                  <div class="d-flex flex-wrap gap-2">
-                    <span class="stat-pill atk">ATK {{ pinned_character.atk }}</span>
-                    <span class="stat-pill def">DEF {{ pinned_character.def }}</span>
-                    <span class="stat-pill mp" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa;">MP {{ pinned_character.mp or 0 }}</span>
-                    <span class="stat-pill int">INT {{ pinned_character.int }}</span>
-                    <span class="stat-pill rep">REP {{ pinned_character.rep }}</span>
-                    <span class="stat-pill coins">{{ pinned_character.coins }} coins</span>
-                  </div>
-
-                  {% if pinned_character.last_action %}
-                  <div class="mt-3" style="color: var(--aw-text-muted); font-size: 12px;">
-                    Last: <span class="action-badge {{ pinned_character.last_action.split()[0] | lower }}">{{ pinned_character.last_action }}</span>
-                  </div>
-                  {% endif %}
-                </div>
+          {% if chronicle_headlines %}
+          <!-- Chronicle Headlines (Town Crier) -->
+          <section class="game-card mb-3">
+            <div class="card-body py-3">
+              <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 12px;">
+                <div style="color: var(--aw-text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;">Today's Headlines</div>
+                <a href="{{ url_for('chronicle.chronicle') }}" style="font-size: 11px; color: var(--aw-text-muted); text-decoration: none;">View Chronicle →</a>
               </div>
-
-              <!-- Collapsible Details -->
-              <div class="collapse mt-3" id="heroDetails">
-                <hr style="border-color: var(--aw-border);" />
-                <div class="row g-3" style="font-size: 13px;">
-                  <div class="col-12 col-md-6">
-                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Family</div>
-                    <div class="d-flex flex-column gap-1">
-                      <div>
-                        <span style="color: var(--aw-text-dim);">Spouse:</span>
-                        <span style="color: var(--aw-text);">
-                          {% if pinned_spouse_name %}{{ pinned_spouse_name }}{% if pinned_spouse_alive is none %} (archived){% elif not pinned_spouse_alive %} (dead){% endif %}{% else %}None{% endif %}
-                        </span>
-                      </div>
-                      <div>
-                        <span style="color: var(--aw-text-dim);">Parents:</span>
-                        <span style="color: var(--aw-text);">
-                          {% if pinned_mother %}{{ pinned_mother.name }}{% else %}Unknown{% endif %} & 
-                          {% if pinned_father %}{{ pinned_father.name }}{% else %}Unknown{% endif %}
-                        </span>
-                      </div>
-                      {% if pinned_children and pinned_children|length > 0 %}
-                      <div>
-                        <span style="color: var(--aw-text-dim);">Children:</span>
-                        <span style="color: var(--aw-text);">
-                          {% for ch in pinned_children[:4] %}{{ ch.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if pinned_children|length > 4 %} +{{ pinned_children|length - 4 }}{% endif %}
-                        </span>
-                      </div>
-                      {% endif %}
-                    </div>
-                  </div>
-
-                  <div class="col-12 col-md-6">
-                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Traits</div>
-                    <div style="color: var(--aw-text);">{{ pinned_character.traits }}</div>
-                    
-                    {% if pinned_character.skills %}
-                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; margin-top: 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Skills</div>
-                    <div class="d-flex flex-wrap gap-1">
-                      {% for skill in pinned_character.skills.split(', ') %}
-                      {% if skill %}
-                      <span style="padding: 2px 8px; background: var(--aw-bg-dark); border: 1px solid var(--aw-border); border-radius: 4px; font-size: 11px; color: var(--aw-text);">{{ skill }}</span>
-                      {% endif %}
-                      {% endfor %}
-                    </div>
+              <div class="d-flex flex-column gap-2">
+                {% for h in chronicle_headlines %}
+                {% set hd = ((h.day - 1) % 90) %}
+                <div class="d-flex align-items-start gap-2" style="padding: 8px 0; border-bottom: 1px solid var(--aw-border);">
+                  <span style="min-width: 70px; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #fff;
+                    {% if h.category == 'royal' %}background: #c9a227;
+                    {% elif h.category == 'family' %}background: #4a90c2;
+                    {% elif h.category == 'magic' %}background: #8e57c0;
+                    {% elif h.category == 'scandal' %}background: #c25a8e;
+                    {% elif h.category == 'disaster' %}background: #d0524a;
+                    {% elif h.category == 'combat' %}background: #b54040;
+                    {% elif h.category == 'economy' %}background: #4a9c66;
+                    {% else %}background: #6b8aa0;{% endif %}
+                  ">{{ h.category }}</span>
+                  <span style="min-width: 50px; font-size: 11px; color: var(--aw-text-muted);">Y{{ h.year }}·D{{ hd }}</span>
+                  <span style="flex: 1; font-size: 13px;">
+                    <strong>{{ h.headline }}</strong>
+                    {% if h.body %}
+                      <div style="color: var(--aw-text-muted); font-size: 12px; margin-top: 2px;">{{ h.body[:140] }}{% if h.body|length > 140 %}…{% endif %}</div>
                     {% endif %}
-                  </div>
-
-                  <!-- Achievements -->
-                  <div class="col-12">
-                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">🏆 Achievements</div>
-                    <div class="d-flex flex-wrap gap-2">
-                      {% set achievements_raw = pinned_character.achievements or '[]' %}
-                      {% set achievements = achievements_raw | tojson | safe if achievements_raw is string else achievements_raw %}
-                      {% if 'first_blood' in achievements_raw %}
-                        <span class="achievement-badge" title="First Blood: Win your first combat">⚔️ First Blood</span>
-                      {% endif %}
-                      {% if 'dynasty_founder' in achievements_raw %}
-                        <span class="achievement-badge" title="Dynasty Founder: Have 5+ children">👨‍👩‍👧‍👦 Dynasty Founder</span>
-                      {% endif %}
-                      {% if 'kingmaker' in achievements_raw %}
-                        <span class="achievement-badge" title="Kingmaker: Vote for 3 different winning kings">🗳️ Kingmaker</span>
-                      {% endif %}
-                      {% if 'centurion' in achievements_raw %}
-                        <span class="achievement-badge" title="Centurion: Reach age 100">🎂 Centurion</span>
-                      {% endif %}
-                      {% if 'legendary_hunter' in achievements_raw %}
-                        <span class="achievement-badge" title="Legendary Hunter: Win 50 hunts">🏹 Legendary Hunter</span>
-                      {% endif %}
-                      {% if 'wealthy' in achievements_raw %}
-                        <span class="achievement-badge" title="Wealthy: Accumulate 5000 coins">💰 Wealthy</span>
-                      {% endif %}
-                      {% if 'survivor' in achievements_raw %}
-                        <span class="achievement-badge" title="Survivor: Survive a plague">🛡️ Survivor</span>
-                      {% endif %}
-                      {% if 'elder_statesman' in achievements_raw %}
-                        <span class="achievement-badge" title="Elder Statesman: Become King at age 80+">👑 Elder Statesman</span>
-                      {% endif %}
-                      {% if 'iron_will' in achievements_raw %}
-                        <span class="achievement-badge" title="Iron Will: Survive with HP<10 five times">💪 Iron Will</span>
-                      {% endif %}
-                      {% if achievements_raw == '[]' or not achievements_raw %}
-                        <span style="color: var(--aw-text-dim); font-size: 12px;">No achievements yet</span>
-                      {% endif %}
-                    </div>
-                  </div>
-
-                  {% if pinned_rel_bonds or pinned_rel_conflicts %}
-                  <div class="col-12 col-md-6">
-                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Bonds</div>
-                    {% if pinned_rel_bonds %}
-                      {% for r in pinned_rel_bonds[:3] %}
-                        <div><span style="color: var(--aw-text);">{{ r.name }}</span> <span style="color: var(--aw-alive);">{{ r.label }} ({{ r.score }})</span></div>
-                      {% endfor %}
-                    {% else %}<span style="color: var(--aw-text-dim);">None</span>{% endif %}
-                  </div>
-                  <div class="col-12 col-md-6">
-                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Rivals</div>
-                    {% if pinned_rel_conflicts %}
-                      {% for r in pinned_rel_conflicts[:3] %}
-                        <div><span style="color: var(--aw-text);">{{ r.name }}</span> <span style="color: var(--aw-dead);">{{ r.label }} ({{ r.score }})</span></div>
-                      {% endfor %}
-                    {% else %}<span style="color: var(--aw-text-dim);">None</span>{% endif %}
-                  </div>
-                  {% endif %}
+                  </span>
                 </div>
-              </div>
-
-              <div class="text-center mt-3">
-                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#heroDetails">
-                  <span class="aw-collapse-icon">▾</span> Details
-                </button>
+                {% endfor %}
               </div>
             </div>
           </section>
+          {% endif %}
 
-          {% else %}
+          {% if not pinned_character %}
             {% if session.get('logged_in') %}
             <section class="game-card mb-3" style="border: 1px dashed var(--aw-accent);">
               <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
@@ -431,11 +268,138 @@
             </div>
           </section>
 
+          <!-- Hero Card (dynamic: shows player by default, updates on table row click) -->
+          <section id="hero-card-section" class="hero-card mb-3" style="{% if not pinned_character %}display:none;{% endif %}">
+            <div class="card-body" style="padding: 20px;">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div></div>
+                <button id="hero-back-btn" class="btn btn-sm btn-outline-secondary" style="display:none; font-size: 11px;" title="Back to your character">Back to My Character</button>
+              </div>
+              <div class="row g-3">
+                <!-- Left: Avatar + Info -->
+                <div class="col-12 col-lg-4">
+                  <div class="d-flex gap-3">
+                    <div class="hero-avatar" id="hero-avatar">M</div>
+                    <div>
+                      <h4 class="hero-name" id="hero-name"></h4>
+                      <div class="hero-title" id="hero-title"></div>
+                      <div class="d-flex gap-2 mt-2" id="hero-badges"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Center: Stat Bars -->
+                <div class="col-12 col-lg-4">
+                  <div class="stat-bar-group">
+                    <div class="stat-bar stat-bar-lg">
+                      <span class="stat-bar-icon">HP</span>
+                      <div class="stat-bar-track"><div class="stat-bar-fill hp" id="hero-hp-bar" style="width:0%;"></div></div>
+                      <span class="stat-bar-value" id="hero-hp-val"></span>
+                    </div>
+                    <div class="stat-bar stat-bar-lg">
+                      <span class="stat-bar-icon">FD</span>
+                      <div class="stat-bar-track"><div class="stat-bar-fill hunger" id="hero-hunger-bar" style="width:0%;"></div></div>
+                      <span class="stat-bar-value" id="hero-hunger-val"></span>
+                    </div>
+                    <div class="stat-bar stat-bar-lg">
+                      <span class="stat-bar-icon">XP</span>
+                      <div class="stat-bar-track"><div class="stat-bar-fill exp" id="hero-exp-bar" style="width:0%;"></div></div>
+                      <span class="stat-bar-value" id="hero-exp-val"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right: Combat Stats -->
+                <div class="col-12 col-lg-4">
+                  <div class="d-flex flex-wrap gap-2" id="hero-stats"></div>
+                  <div class="mt-3" style="color: var(--aw-text-muted); font-size: 12px;" id="hero-action-wrap"></div>
+                </div>
+              </div>
+
+              <!-- Traits & Skills row -->
+              <div class="mt-3" id="hero-traits-skills"></div>
+
+              <!-- Equipped Artifacts (rendered by JS for whichever villager is shown) -->
+              <div class="mt-3" id="hero-equipped" style="display: none;">
+                <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                  Equipped Artifacts
+                </div>
+                <div class="d-flex flex-wrap gap-2" id="hero-equipped-slots"></div>
+              </div>
+              <style>
+                .equip-slot {
+                  display: inline-flex;
+                  flex-direction: column;
+                  gap: 2px;
+                  padding: 6px 12px;
+                  border-radius: 8px;
+                  background: var(--aw-bg-dark);
+                  border: 1px solid var(--aw-border);
+                  border-left-width: 3px;
+                  text-decoration: none;
+                  color: inherit;
+                  min-width: 110px;
+                  transition: transform 0.12s, box-shadow 0.12s;
+                }
+                .equip-slot:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.12); color: inherit; text-decoration: none; }
+                .equip-slot-empty { opacity: 0.55; cursor: default; }
+                .equip-slot-empty:hover { transform: none; box-shadow: none; }
+                .equip-slot-rarity-common    { border-left-color: #6b7280; }
+                .equip-slot-rarity-uncommon  { border-left-color: #22c55e; }
+                .equip-slot-rarity-rare      { border-left-color: #8b5cf6; }
+                .equip-slot-rarity-legendary { border-left-color: #f59e0b; box-shadow: 0 0 0 1px #f59e0b22; }
+                .equip-slot-label {
+                  font-size: 9px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.08em;
+                  color: var(--aw-text-muted);
+                }
+                .equip-slot-name {
+                  font-size: 12px;
+                  font-weight: 600;
+                  color: var(--aw-text);
+                }
+                .equip-slot-rarity {
+                  font-size: 9px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.08em;
+                  opacity: 0.7;
+                }
+                .equip-slot-soulbound::after {
+                  content: '†';
+                  position: relative;
+                  margin-left: 4px;
+                  color: var(--aw-warning);
+                  font-weight: 700;
+                }
+              </style>
+
+              <!-- Detail section (family, achievements, relationships) -->
+              <div id="hero-detail" class="mt-3" style="display:none;">
+                <hr style="border-color: var(--aw-border);" />
+                <div class="row g-3" style="font-size: 13px;">
+                  <div class="col-12 col-md-4">
+                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Family</div>
+                    <div id="hero-family" class="d-flex flex-column gap-1"></div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Achievements</div>
+                    <div id="hero-achievements" class="d-flex flex-wrap gap-2"></div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div style="color: var(--aw-text-muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Relationships</div>
+                    <div id="hero-relationships"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <!-- Villagers Table -->
           <section class="game-card">
             <div class="card-body p-0">
               <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 px-3 pt-3 pb-2" style="border-bottom: 1px solid var(--aw-border);">
-                <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Villagers</div>
+                <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Villagers <span style="font-size:10px; opacity:0.6;">(click a row to inspect)</span></div>
 
                 <div class="d-flex align-items-center gap-3">
                   <div class="form-check form-switch small mb-0">
@@ -457,38 +421,26 @@
                       <th data-key="job" class="sortable">Job</th>
                       <th data-key="coins" class="sortable num text-end">Coins</th>
                       <th data-key="age" class="sortable num text-end">Age</th>
-                      <th data-key="int" class="sortable num text-end">INT</th>
-                      <th data-key="rep" class="sortable num text-end">REP</th>
                       <th data-key="level" class="sortable num text-end">LVL</th>
-                      <th data-key="exp" class="sortable num text-end">EXP</th>
-                      <th data-key="atk" class="sortable num text-end">ATK</th>
-                      <th data-key="def" class="sortable num text-end">DEF</th>
                       <th data-key="hp" class="sortable num text-end">HP</th>
-                      <th data-key="mp" class="sortable num text-end">MP</th>
-                      <th data-key="hunger" class="sortable num text-end">Food</th>
                       <th data-key="traits" class="sortable">Traits</th>
+                      <th data-key="skills" class="sortable">Skills</th>
                       <th data-key="last_action" class="sortable">Action</th>
                       <th data-key="status" class="sortable">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for c in characters %}
-                    <tr class="{% if not c.alive %}aw-row-dead{% endif %}">
-                      <td class="{% if not c.alive %}aw-name-dead{% endif %}">{% if c.job == 'King' %}♔ {% endif %}{{ c.name }}</td>
+                    <tr data-cid="{{ c.id }}" class="aw-row-clickable {% if not c.alive %}aw-row-dead{% endif %}{% if pinned_character and c.id == pinned_character.id %} aw-row-player{% endif %}" style="cursor:pointer;">
+                      <td class="{% if not c.alive %}aw-name-dead{% endif %}">{% if c.job == 'King' %}♔ {% endif %}{% if pinned_character and c.id == pinned_character.id %}★ {% endif %}{{ c.name }}</td>
                       <td>{{ c.gender }}</td>
                       <td>{{ c.job }}</td>
                       <td class="text-end">{{ c.coins }}</td>
                       <td class="text-end">{{ c.age }}</td>
-                      <td class="text-end">{{ c.int }}</td>
-                      <td class="text-end">{{ c.rep }}</td>
                       <td class="text-end">{{ c.level }}</td>
-                      <td class="text-end">{{ c.exp }}</td>
-                      <td class="text-end">{{ c.atk }}</td>
-                      <td class="text-end">{{ c.def }}</td>
                       <td class="text-end">{{ c.hp }}</td>
-                      <td class="text-end">{{ c.mp or 0 }}</td>
-                      <td class="text-end">{{ c.hunger }}</td>
                       <td class="aw-traits-cell">{{ c.traits }}</td>
+                      <td class="aw-traits-cell">{{ c.skills or '-' }}</td>
                       <td><span class="action-badge {{ c.last_action.split()[0] | lower if c.last_action else '' }}">{{ c.last_action or '-' }}</span></td>
                       <td>{% if c.alive %}<span class="status-badge alive">Alive</span>{% else %}<span class="status-badge dead">Dead</span>{% endif %}</td>
                     </tr>
@@ -502,6 +454,253 @@
       </div>
     </div>
   </div>
+
+  <!-- Characters data for JS hero card -->
+  <script>
+    const _pinnedId = {{ pinned_character.id | tojson if pinned_character else 'null' }};
+
+    const ACHIEVEMENT_MAP = {
+      dynasty_founder: { name: 'Dynasty Founder', icon: '👨‍👩‍👧‍👦' },
+      kingmaker:       { name: 'Kingmaker',       icon: '🗳️' },
+      centurion:       { name: 'Centurion',       icon: '🎂' },
+      legendary_hunter:{ name: 'Legendary Hunter', icon: '🏹' },
+      wealthy:         { name: 'Wealthy',          icon: '💰' },
+      survivor:        { name: 'Survivor',         icon: '🛡️' },
+      elder_statesman: { name: 'Elder Statesman',  icon: '👑' },
+      iron_will:       { name: 'Iron Will',        icon: '💪' },
+      questmaster:     { name: 'Questmaster',      icon: '⚔️' },
+      first_blood:     { name: 'First Blood',      icon: '🗡️' },
+    };
+
+    const LABEL_COLORS = {
+      love: 'var(--aw-warning, #f59e0b)',
+      bestfriend: 'var(--aw-alive, #22c55e)',
+      friend: 'var(--aw-alive, #22c55e)',
+      enemy: 'var(--aw-dead, #ef4444)',
+      rival: 'var(--aw-dead, #ef4444)',
+    };
+
+    let _detailCache = {};
+
+    function _esc(s) {
+      const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+
+    function _updateBasicCard(c) {
+      const section = document.getElementById('hero-card-section');
+      section.style.display = '';
+      section.className = 'hero-card mb-3' + (c.job === 'King' ? ' is-king' : '') + (!c.alive ? ' is-dead' : '');
+
+      document.getElementById('hero-back-btn').style.display = (_pinnedId && c.id !== _pinnedId) ? '' : 'none';
+
+      let badgeHtml = '';
+      if (c.job === 'King') badgeHtml = '<span class="hero-avatar-badge king">♔</span>';
+      else if (c.origin === 'player') badgeHtml = '<span class="hero-avatar-badge player">★</span>';
+      document.getElementById('hero-avatar').innerHTML = _esc(c.gender === 'Female' ? 'F' : 'M') + badgeHtml;
+
+      document.getElementById('hero-name').textContent = c.name;
+      document.getElementById('hero-title').textContent = c.job + ' · Age ' + c.age + (c.family ? ' · ' + c.family : '');
+
+      let badges = c.alive ? '<span class="status-badge alive">Alive</span>' : '<span class="status-badge dead">Deceased</span>';
+      if (c.origin === 'player') badges += ' <span class="status-badge player">Player</span>';
+      document.getElementById('hero-badges').innerHTML = badges;
+
+      const hp = c.hp || 0, hunger = c.hunger || 0, exp = (c.exp || 0) % 100;
+      document.getElementById('hero-hp-bar').style.width = Math.min(hp, 100) + '%';
+      document.getElementById('hero-hp-val').textContent = hp + '/100';
+      document.getElementById('hero-hunger-bar').style.width = Math.min(hunger, 100) + '%';
+      document.getElementById('hero-hunger-val').textContent = hunger + '/100';
+      document.getElementById('hero-exp-bar').style.width = exp + '%';
+      document.getElementById('hero-exp-val').textContent = 'Lv ' + (c.level || 1);
+
+      document.getElementById('hero-stats').innerHTML =
+        `<span class="stat-pill atk">ATK ${c.atk||0}</span>` +
+        `<span class="stat-pill def">DEF ${c['def']||0}</span>` +
+        `<span class="stat-pill mp" style="background:rgba(139,92,246,0.15);color:#a78bfa;">MP ${c.mp||0}</span>` +
+        `<span class="stat-pill int">INT ${c['int']||0}</span>` +
+        `<span class="stat-pill rep">REP ${c.rep||0}</span>` +
+        `<span class="stat-pill coins">${c.coins||0} coins</span>`;
+
+      const actionWrap = document.getElementById('hero-action-wrap');
+      if (c.last_action) {
+        actionWrap.innerHTML = 'Last: <span class="action-badge ' + _esc(c.last_action.split(' ')[0].toLowerCase()) + '">' + _esc(c.last_action) + '</span>';
+      } else { actionWrap.innerHTML = ''; }
+
+      let tsHtml = '';
+      if (c.traits) {
+        tsHtml += '<span style="color:var(--aw-text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Traits:</span> ';
+        tsHtml += '<span style="color:var(--aw-text);font-size:13px;">' + _esc(c.traits) + '</span>';
+      }
+      if (c.skills) {
+        if (tsHtml) tsHtml += '<span style="margin:0 12px;color:var(--aw-border);">|</span>';
+        tsHtml += '<span style="color:var(--aw-text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Skills:</span> ';
+        c.skills.split(', ').forEach(function(sk) {
+          if (sk) tsHtml += '<span style="padding:2px 8px;background:var(--aw-bg-dark);border:1px solid var(--aw-border);border-radius:4px;font-size:11px;color:var(--aw-text);margin-left:4px;">' + _esc(sk) + '</span>';
+        });
+      }
+      document.getElementById('hero-traits-skills').innerHTML = tsHtml;
+
+      document.querySelectorAll('#characters-table tbody tr').forEach(function(tr) {
+        tr.classList.toggle('aw-row-selected', parseInt(tr.dataset.cid) === c.id);
+      });
+
+      // Equipped panel: hide on basic-card update — _renderEquipped() will
+      // re-show it once the detail payload arrives.
+      const equippedPanel = document.getElementById('hero-equipped');
+      if (equippedPanel) equippedPanel.style.display = 'none';
+    }
+
+    function _renderEquipped(equipped) {
+      const panel = document.getElementById('hero-equipped');
+      const slots = document.getElementById('hero-equipped-slots');
+      if (!panel || !slots) return;
+
+      if (!Array.isArray(equipped) || equipped.length === 0) {
+        panel.style.display = 'none';
+        return;
+      }
+
+      // Hide the panel entirely if all five slots are empty — keeps the card
+      // tight for the vast majority of villagers who own nothing.
+      const anyFilled = equipped.some(function(s) { return s && s.artifact_id > 0; });
+      if (!anyFilled) {
+        panel.style.display = 'none';
+        return;
+      }
+
+      const html = equipped.map(function(s) {
+        const slotLabel = _esc(s.slot || '');
+        if (!s || !s.artifact_id || !s.name) {
+          return '<div class="equip-slot equip-slot-empty" title="No ' + slotLabel + ' equipped">' +
+                 '<span class="equip-slot-label">' + slotLabel + '</span>' +
+                 '<span class="equip-slot-name" style="color: var(--aw-text-muted); font-style: italic;">empty</span>' +
+                 '</div>';
+        }
+        const rarity = _esc(s.rarity || 'common');
+        const mods = s.stat_mods || {};
+        const modParts = Object.keys(mods).map(function(k) {
+          return '+' + mods[k] + ' ' + k.toUpperCase();
+        });
+        const tooltip = (s.name + ' (' + rarity + ') — ' + modParts.join(', ') +
+                        (s.flavor ? '. ' + s.flavor : '')).trim();
+        const soulCls = s.soulbound ? ' equip-slot-soulbound' : '';
+        return '<a href="/artifacts/' + s.artifact_id + '"' +
+               ' class="equip-slot equip-slot-rarity-' + rarity + soulCls + '"' +
+               ' title="' + _esc(tooltip) + '">' +
+               '<span class="equip-slot-label">' + slotLabel + '</span>' +
+               '<span class="equip-slot-name">' + _esc(s.name) + '</span>' +
+               '<span class="equip-slot-rarity">' + rarity + '</span>' +
+               '</a>';
+      }).join('');
+
+      slots.innerHTML = html;
+      panel.style.display = '';
+    }
+
+    function _renderDetail(data) {
+      const detail = document.getElementById('hero-detail');
+      detail.style.display = '';
+
+      // Family
+      const c = data.character || {};
+      let famHtml = '';
+      famHtml += '<div><span style="color:var(--aw-text-dim);">Spouse:</span> <span style="color:var(--aw-text);">';
+      if (data.spouse_name) {
+        famHtml += _esc(data.spouse_name);
+        if (data.spouse_alive === null) famHtml += ' <span style="opacity:0.5;">(archived)</span>';
+        else if (data.spouse_alive === false) famHtml += ' <span style="opacity:0.5;">(dead)</span>';
+      } else { famHtml += 'None'; }
+      famHtml += '</span></div>';
+
+      famHtml += '<div><span style="color:var(--aw-text-dim);">Parents:</span> <span style="color:var(--aw-text);">';
+      famHtml += (data.mother ? _esc(data.mother.name) : 'Unknown') + ' & ' + (data.father ? _esc(data.father.name) : 'Unknown');
+      famHtml += '</span></div>';
+
+      if (data.children && data.children.length > 0) {
+        famHtml += '<div><span style="color:var(--aw-text-dim);">Children:</span> <span style="color:var(--aw-text);">';
+        const names = data.children.slice(0, 4).map(ch => _esc(ch.name));
+        famHtml += names.join(', ');
+        if (data.children.length > 4) famHtml += ' +' + (data.children.length - 4);
+        famHtml += '</span></div>';
+      }
+      document.getElementById('hero-family').innerHTML = famHtml;
+
+      // Achievements
+      let achHtml = '';
+      let achRaw = c.achievements || '[]';
+      let achList = [];
+      try { achList = typeof achRaw === 'string' ? JSON.parse(achRaw) : achRaw; } catch(e) {}
+      if (achList.length > 0) {
+        achList.forEach(function(aid) {
+          const def = ACHIEVEMENT_MAP[aid];
+          if (def) achHtml += '<span class="achievement-badge" title="' + _esc(def.name) + '">' + def.icon + ' ' + _esc(def.name) + '</span>';
+        });
+      } else {
+        achHtml = '<span style="color:var(--aw-text-dim);font-size:12px;">No achievements yet</span>';
+      }
+      document.getElementById('hero-achievements').innerHTML = achHtml;
+
+      // Relationships
+      let relHtml = '';
+      if (data.rel_bonds && data.rel_bonds.length > 0) {
+        relHtml += '<div style="margin-bottom:6px;">';
+        data.rel_bonds.forEach(function(r) {
+          const col = LABEL_COLORS[r.label] || 'var(--aw-text)';
+          relHtml += '<div><span style="color:var(--aw-text);">' + _esc(r.name) + '</span> <span style="color:' + col + ';">' + _esc(r.label) + ' (' + r.score + ')</span></div>';
+        });
+        relHtml += '</div>';
+      }
+      if (data.rel_conflicts && data.rel_conflicts.length > 0) {
+        data.rel_conflicts.forEach(function(r) {
+          const col = LABEL_COLORS[r.label] || 'var(--aw-text)';
+          relHtml += '<div><span style="color:var(--aw-text);">' + _esc(r.name) + '</span> <span style="color:' + col + ';">' + _esc(r.label) + ' (' + r.score + ')</span></div>';
+        });
+      }
+      if (!relHtml) relHtml = '<span style="color:var(--aw-text-dim);font-size:12px;">No notable relationships</span>';
+      document.getElementById('hero-relationships').innerHTML = relHtml;
+    }
+
+    function showHeroCard(charId) {
+      const section = document.getElementById('hero-card-section');
+      section.style.display = '';
+
+      // Show loading state in detail
+      document.getElementById('hero-detail').style.display = 'none';
+
+      // Fetch enriched data from API
+      fetch('/api/character/' + charId)
+        .then(r => r.json())
+        .then(function(data) {
+          if (data.error) { section.style.display = 'none'; return; }
+          const c = data.character;
+          _updateBasicCard(c);
+          _renderDetail(data);
+          _renderEquipped(data.equipped || []);
+          _detailCache[charId] = data;
+          section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        })
+        .catch(function() {
+          // Fallback: hide detail
+          document.getElementById('hero-detail').style.display = 'none';
+        });
+    }
+
+    // Table row click handler
+    document.querySelectorAll('#characters-table tbody tr[data-cid]').forEach(function(tr) {
+      tr.addEventListener('click', function() {
+        const cid = parseInt(this.dataset.cid);
+        if (cid) showHeroCard(cid);
+      });
+    });
+
+    // Back to player button
+    document.getElementById('hero-back-btn').addEventListener('click', function() {
+      if (_pinnedId) showHeroCard(_pinnedId);
+    });
+
+    // Show player character by default on load
+    if (_pinnedId) showHeroCard(_pinnedId);
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>

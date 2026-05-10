@@ -124,30 +124,42 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
 
     Mutates `v` in-place (coins, rep, exp, hp, alive).
     """
-    mp = v.get("mp", 0)
+    # Phase 3: equipped magical artifacts contribute to power computation.
+    # effective_stats() is a read-only snapshot — base stats are not mutated.
+    from src.services.artifact_service import effective_stats, equip_mods
+    es = effective_stats(v)
+    mods = equip_mods(v)
+
+    mp = es["mp"]
     job = v.get("job", "")
 
     char_power = (
-        v["atk"] * 1.15
-        + v["def"]
-        + v["int"] * 0.6
+        es["atk"] * 1.15
+        + es["def"]
+        + es["int"] * 0.6
         + v["level"] * 12
-        + v["rep"] * 0.2
+        + es["rep"] * 0.2
         + 20
     )
+    # +HP mod from artifacts gives a small power kicker (mirrors enemy hp-power term).
+    if mods.get("hp", 0):
+        char_power += mods["hp"] * 0.15
 
-    # Magic power: magic jobs channel MP into combat spells
+    # Magic power: magic jobs channel MP into combat spells.
+    # Effective MP (incl. tome/ring mods) drives the spell, but we spend
+    # only from the base pool — the artifact's mod stays intact.
+    base_mp = int(v.get("mp", 0) or 0)
     if job in MAGIC_JOBS and mp > 0:
-        spell_power = mp * 0.8 + v["int"] * 0.4
+        spell_power = mp * 0.8 + es["int"] * 0.4
         char_power += spell_power
-        # Spend MP on casting (30-60% of current MP)
+        # Spend MP on casting (30-60% of current effective MP)
         mp_cost = max(1, int(mp * (0.3 + random.random() * 0.3)))
-        v["mp"] = max(0, mp - mp_cost)
+        v["mp"] = max(0, base_mp - mp_cost)
     elif job in MINOR_MAGIC_JOBS and mp > 0:
-        spell_power = mp * 0.3 + v["int"] * 0.15
+        spell_power = mp * 0.3 + es["int"] * 0.15
         char_power += spell_power
         mp_cost = max(1, int(mp * (0.15 + random.random() * 0.15)))
-        v["mp"] = max(0, mp - mp_cost)
+        v["mp"] = max(0, base_mp - mp_cost)
 
     if bank is not None:
         lvl_barracks = get_building_level(bank, "barracks")
@@ -211,7 +223,8 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
 
     win = random.random() < win_prob
 
-    dmg_base = max(0, round(enemy["atk"] * 0.45 - v["def"] * 0.25))
+    # Use effective def so armor/shield artifacts mitigate damage.
+    dmg_base = max(0, round(enemy["atk"] * 0.45 - es["def"] * 0.25))
     dmg_var = round(dmg_base * (0.8 + random.random() * 0.6))
 
     if bank is not None:
