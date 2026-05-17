@@ -148,8 +148,9 @@ class TestLeadershipScore:
         sample_villager["family"] = "DifferentFamily"
         score_without_dynasty = leadership_score(sample_villager, prev_king=sample_king)
 
-        # Dynasty bonus is 1000
-        assert score_with_dynasty - score_without_dynasty == 1000
+        # Dynasty bonus (from config.DYNASTY_BONUS)
+        from config import DYNASTY_BONUS
+        assert score_with_dynasty - score_without_dynasty == DYNASTY_BONUS
 
     @pytest.mark.unit
     def test_positive_trait_bonuses(self, sample_villager):

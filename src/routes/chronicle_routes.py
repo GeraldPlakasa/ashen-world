@@ -30,6 +30,7 @@ def chronicle():
         min_importance = int(request.args.get("min_importance", 1))
     except (TypeError, ValueError):
         min_importance = 1
+    q = (request.args.get("q") or "").strip() or None
 
     try:
         page = max(1, int(request.args.get("page", 1)))
@@ -44,8 +45,11 @@ def chronicle():
         category=category,
         year=year_filter,
         min_importance=min_importance,
+        q=q,
     )
-    total = count_events(category=category, year=year_filter)
+    total = count_events(
+        category=category, year=year_filter, q=q, min_importance=min_importance
+    )
     has_more = (offset + len(events)) < total
 
     return render_template(
@@ -58,6 +62,7 @@ def chronicle():
         category=category,
         year_filter=year_filter,
         min_importance=min_importance,
+        q=q,
         page=page,
         has_more=has_more,
         total=total,

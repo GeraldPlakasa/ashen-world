@@ -195,15 +195,25 @@ def _apply_famine(characters: list[Villager], bank: Bank | None, current_day: in
         else:
             v["last_action"] = f"starving from famine (hunger +{hunger_increase})"
     
-    # Also drain some village coins
+    # Drain coins AND the food stockpile — a famine should empty larders.
+    food_drained = 0
     if bank:
         balance = int(bank.get("balance", 0) or 0)
         drain = int(balance * random.uniform(0.05, 0.15) * severity_mod)
         bank["balance"] = max(0, balance - drain)
-        msg = f"🌾 FAMINE struck! {affected} villagers are starving. Village lost {drain} coins to emergency measures."
+
+        stock = bank.setdefault("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0})
+        food_now = int(stock.get("food", 0) or 0)
+        food_drained = int(food_now * random.uniform(0.30, 0.55) * severity_mod)
+        stock["food"] = max(0, food_now - food_drained)
+
+        msg = (
+            f"🌾 FAMINE struck! {affected} villagers are starving. "
+            f"Village lost {drain} coins and {food_drained} food to emergency measures."
+        )
     else:
         msg = f"🌾 FAMINE struck! {affected} villagers are starving."
-    
+
     return msg, affected
 
 
@@ -230,7 +240,7 @@ def _apply_festival(characters: list[Villager], bank: Bank | None, current_day: 
         # Rep boost: 2-8 points
         rep = int(v.get("rep", 0) or 0)
         rep_boost = int(rand_int(2, 8) * bonus_mod)
-        v["rep"] = clamp(rep + rep_boost, -100, 100)
+        v["rep"] = rep + rep_boost
         
         # Small HP restore (no cap)
         hp = int(v.get("hp", 100) or 100)
@@ -277,7 +287,7 @@ def _apply_invasion(characters: list[Villager], bank: Bank | None, current_day: 
     deaths = 0
     
     # Military jobs get attack bonuses
-    military_jobs = {"Soldier", "Commander", "Guard", "Captain", "Ranger", "Archer", "Scout"}
+    military_jobs = {"Soldier", "Commander", "Guard", "Captain", "Scout"}
     from config import MAGIC_JOBS
     
     for v in alive:
@@ -378,12 +388,21 @@ def _apply_good_harvest(characters: list[Villager], bank: Bank | None, current_d
             else:
                 v["last_action"] = "well fed from good harvest"
     
-    # Village treasury gets bonus
+    # Village treasury and the food stockpile both gain.
+    food_gain = 0
     if bank:
         balance = int(bank.get("balance", 0) or 0)
         gain = int(rand_int(100, 300) * bonus_mod)
         bank["balance"] = balance + gain
-        msg = f"🌻 GOOD HARVEST! Village gained {gain} coins. All {affected} villagers are well fed!"
+
+        stock = bank.setdefault("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0})
+        food_gain = int(rand_int(200, 400) * bonus_mod)
+        stock["food"] = int(stock.get("food", 0) or 0) + food_gain
+
+        msg = (
+            f"🌻 GOOD HARVEST! Village gained {gain} coins and {food_gain} food. "
+            f"All {affected} villagers are well fed!"
+        )
     else:
         msg = f"🌻 GOOD HARVEST! All {affected} villagers are well fed!"
     

@@ -114,6 +114,23 @@
       color: var(--aw-text-muted);
     }
     .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .arti-search {
+      width: 100%;
+      max-width: 420px;
+      padding: 8px 12px;
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      background: var(--aw-bg-card);
+      color: var(--aw-text);
+      font-size: 13px;
+    }
+    .arti-search:focus { outline: none; border-color: var(--aw-accent); }
+    .arti-count {
+      color: var(--aw-text-muted);
+      font-size: 12px;
+      margin-left: 12px;
+    }
+    .hidden-by-search { display: none !important; }
   </style>
 </head>
 
@@ -133,16 +150,23 @@
         <main class="aw-main">
           <section class="game-card mb-3">
             <div class="card-body">
-              <p style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 16px;">
+              <p style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 12px;">
                 Each artifact carries a lineage — a chronicle of every owner who has held it. Click an artifact for its full history.
               </p>
 
               {% if artifacts %}
-                <div class="arti-grid">
+                <div class="d-flex align-items-center mb-3">
+                  <input type="search" id="artifactSearch" class="arti-search"
+                         placeholder="🔍 Search artifact, owner, family, rarity, slot..." autocomplete="off" />
+                  <span class="arti-count" id="artifactCount">{{ artifacts|length }} shown</span>
+                </div>
+                <div class="arti-grid" id="artifactGrid">
                   {% for a in artifacts %}
                     {% set rarity = a.template.rarity or 'common' %}
+                    {% set search_blob = (a.template.name or a.slug or '') ~ ' ' ~ rarity ~ ' ' ~ (a.template.slot or '') ~ ' ' ~ (a.template.flavor or '') ~ ' ' ~ (a.owner.name or '') ~ ' ' ~ (a.owner.family or '') %}
                     <a href="{{ url_for('artifact.artifact_detail', artifact_id=a.id) }}"
-                       class="arti-card rarity-{{ rarity }}">
+                       class="arti-card rarity-{{ rarity }}"
+                       data-search="{{ search_blob | lower }}">
                       <div class="arti-meta">
                         <span class="arti-badge rarity-{{ rarity }}">{{ rarity }}</span>
                         <span class="arti-slot">{{ a.template.slot or '?' }}</span>
@@ -174,6 +198,10 @@
                       </div>
                     </a>
                   {% endfor %}
+                </div>
+                <div id="artifactNoResults" class="empty-state" style="display: none;">
+                  <div class="empty-state-icon">🔎</div>
+                  <div>No artifacts match your search.</div>
                 </div>
               {% else %}
                 <div class="empty-state">
@@ -236,5 +264,40 @@
       </div>
     </div>
   </div>
+
+  <script>
+    (function () {
+      const input = document.getElementById('artifactSearch');
+      const grid  = document.getElementById('artifactGrid');
+      const count = document.getElementById('artifactCount');
+      const noResults = document.getElementById('artifactNoResults');
+      if (!input || !grid) return;
+
+      const cards = Array.from(grid.querySelectorAll('.arti-card'));
+      const total = cards.length;
+
+      function applyFilter() {
+        const q = input.value.trim().toLowerCase();
+        let shown = 0;
+        cards.forEach(c => {
+          const blob = c.getAttribute('data-search') || '';
+          const match = !q || blob.includes(q);
+          c.classList.toggle('hidden-by-search', !match);
+          if (match) shown++;
+        });
+        if (count) {
+          count.textContent = q
+            ? `${shown} of ${total} match`
+            : `${total} shown`;
+        }
+        if (noResults) {
+          noResults.style.display = (q && shown === 0) ? 'block' : 'none';
+          grid.style.display = (q && shown === 0) ? 'none' : 'grid';
+        }
+      }
+
+      input.addEventListener('input', applyFilter);
+    })();
+  </script>
 </body>
 </html>

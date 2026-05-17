@@ -333,6 +333,13 @@ def _init_db_impl():
         _ensure_graveyard_columns(conn)
         _ensure_event_history_columns(conn)
         _ensure_indexes(conn)
+        _migrate_removed_jobs(conn)
+
+
+def _migrate_removed_jobs(conn: sqlite3.Connection):
+    """Re-map jobs that no longer exist in config.JOBS to their closest
+    surviving equivalent. Idempotent. Currently: Archer/Ranger -> Scout."""
+    conn.execute("UPDATE villagers SET job='Scout' WHERE job IN ('Archer','Ranger');")
 
 
 def _ensure_indexes(conn: sqlite3.Connection):
@@ -452,6 +459,25 @@ def _ensure_yearly_columns(conn: sqlite3.Connection):
         "top_hunter_id": "top_hunter_id INTEGER",
         "top_hunter_name": "top_hunter_name TEXT DEFAULT ''",
         "top_hunter_value": "top_hunter_value INTEGER DEFAULT 0",
+
+        # End-of-year stockpile snapshot for the Resources dashboard chart
+        "stock_food_end":  "stock_food_end INTEGER DEFAULT 0",
+        "stock_wood_end":  "stock_wood_end INTEGER DEFAULT 0",
+        "stock_stone_end": "stock_stone_end INTEGER DEFAULT 0",
+        "stock_iron_end":  "stock_iron_end INTEGER DEFAULT 0",
+
+        # Crime & justice counters — populated by justice_service via
+        # bump_yearly_justice(). Surfaces on the Leaderboard and the admin
+        # Justice tab. Cleared per-year via finalize_year (just frozen).
+        # NOTE: `fines_collected` is GOLD (sum of coins moved to treasury).
+        # `fines_count` is the NUMBER of fine verdicts — the count axis lives
+        # alongside exiles/executions, separate from the gold KPI.
+        "crimes_committed": "crimes_committed INTEGER DEFAULT 0",
+        "trials_held":      "trials_held INTEGER DEFAULT 0",
+        "fines_collected":  "fines_collected INTEGER DEFAULT 0",
+        "fines_count":      "fines_count INTEGER DEFAULT 0",
+        "exiles":           "exiles INTEGER DEFAULT 0",
+        "executions":       "executions INTEGER DEFAULT 0",
     }
 
     for col, ddl in desired.items():

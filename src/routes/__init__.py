@@ -12,6 +12,7 @@ from src.routes.stats_routes import stats_bp
 from src.routes.api_routes import api_bp
 from src.routes.chronicle_routes import chronicle_bp
 from src.routes.artifact_routes import artifact_bp
+from src.routes.map_routes import map_bp
 
 
 def register_blueprints(app):
@@ -25,3 +26,4 @@ def register_blueprints(app):
     app.register_blueprint(api_bp)
     app.register_blueprint(chronicle_bp)
     app.register_blueprint(artifact_bp)
+    app.register_blueprint(map_bp)

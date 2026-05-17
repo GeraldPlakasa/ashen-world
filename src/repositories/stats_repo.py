@@ -117,6 +117,25 @@ def update_year_daily(
         )
 
 
+def snapshot_yearly_resources(year: int, food: int, wood: int, stone: int, iron: int) -> None:
+    """Write end-of-year stockpile values into yearly_stats."""
+    init_db()
+    with db_conn() as conn:
+        conn.execute("INSERT OR IGNORE INTO yearly_stats(year) VALUES(?);", (int(year),))
+        conn.execute(
+            """
+            UPDATE yearly_stats
+            SET stock_food_end = ?,
+                stock_wood_end = ?,
+                stock_stone_end = ?,
+                stock_iron_end = ?,
+                updated_at = datetime('now')
+            WHERE year = ?;
+            """,
+            (int(food), int(wood), int(stone), int(iron), int(year)),
+        )
+
+
 def finalize_year(year: int, champions: YearlyChampions | None = None) -> None:
     """
     Finalize a year:
@@ -285,6 +304,48 @@ def increment_emergency_election(year: int) -> None:
             WHERE year = ?;
             """,
             (int(year),),
+        )
+
+
+def bump_yearly_justice(
+    year: int,
+    *,
+    crimes: int = 0,
+    trials: int = 0,
+    fines: int = 0,
+    fines_count: int = 0,
+    exiles: int = 0,
+    executions: int = 0,
+) -> None:
+    """Atomically add crime/justice counts to the current year's row.
+
+    Used by `justice_service` to keep a per-year ledger of trials and outcomes
+    so the leaderboard and admin dashboard can render the reign's footprint.
+    Any subset of counters can be passed; zero-args is a no-op.
+
+    `fines` is gold (sum of coins → treasury); `fines_count` is the number of
+    fine verdicts issued. They are tracked separately so charts that stack
+    verdict counts (exiles / executions / fines_count) aren't dwarfed by the
+    gold axis.
+    """
+    if not any((crimes, trials, fines, fines_count, exiles, executions)):
+        return
+    init_db()
+    with db_conn() as conn:
+        conn.execute("INSERT OR IGNORE INTO yearly_stats(year) VALUES(?);", (int(year),))
+        conn.execute(
+            """
+            UPDATE yearly_stats
+            SET crimes_committed = COALESCE(crimes_committed, 0) + ?,
+                trials_held      = COALESCE(trials_held, 0)      + ?,
+                fines_collected  = COALESCE(fines_collected, 0)  + ?,
+                fines_count      = COALESCE(fines_count, 0)      + ?,
+                exiles           = COALESCE(exiles, 0)           + ?,
+                executions       = COALESCE(executions, 0)       + ?,
+                updated_at = datetime('now')
+            WHERE year = ?;
+            """,
+            (int(crimes), int(trials), int(fines), int(fines_count), int(exiles), int(executions), int(year)),
         )
 
 

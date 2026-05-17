@@ -12,6 +12,7 @@ from src.utils.world_utils import (
 )
 from src.services.relationship_service import (
     sync_queen_to_king_spouse,
+    adjust_relationship,
     MILITARY_JOBS,
     LEARNED_JOBS,
     COMMERCE_JOBS,
@@ -83,6 +84,12 @@ def leadership_score(c: Villager, prev_king: Villager | None = None) -> float:
 def voter_adjustment(v: Villager, c: Villager) -> float:
     """
     How a voter tweaks a candidate's appeal (affinity/alignment).
+
+    Numbers were previously tuny (±1, ±0.5 noise) so the deterministic
+    leadership_score completely dominated and every voter picked the same
+    top-scored candidate — elections were unanimous and other candidates
+    got 0 votes. Affinity/opposition/noise are now scaled up so voters
+    genuinely differ.
     """
     if not v.get("alive", True):
         return 0.0
@@ -91,37 +98,40 @@ def voter_adjustment(v: Villager, c: Villager) -> float:
     vt = get_traits_set(v)
     ct = get_traits_set(c)
 
-    # Shared values
+    # Shared values — each shared trait is meaningful, not decorative.
     for tr in ct:
         if tr in vt:
-            a += 1.0
+            a += 4.0
 
     # Simple oppositions
     if "Generous" in vt and "Greedy" in ct:
-        a -= 1.0
+        a -= 4.0
     if "Greedy" in vt and "Generous" in ct:
-        a -= 1.0
+        a -= 4.0
     if "Cautious" in vt and "Hot-headed" in ct:
-        a -= 1.0
+        a -= 4.0
     if "Wise" in vt and "Reckless" in ct:
-        a -= 1.0
+        a -= 4.0
 
     # Kinship & "guild" vibes
     if v.get("family") and v.get("family") == c.get("family"):
-        a += 1.5
+        a += 8.0
 
     job_v = v.get("job", "")
     if job_v in MILITARY_JOBS and ({"Brave", "Cautious", "Wise"} & ct):
-        a += 0.8
+        a += 3.0
     if job_v in LEARNED_JOBS and ({"Wise", "Patient", "Generous"} & ct):
-        a += 0.8
+        a += 3.0
     if (job_v in COMMERCE_JOBS or job_v in CRAFT_JOBS) and ({"Diligent", "Wise", "Loyal"} & ct):
-        a += 0.6
+        a += 2.5
     if job_v in NATURE_JOBS and ({"Brave", "Empathic", "Wise"} & ct):
-        a += 0.6
+        a += 2.5
 
-    # Tiny random "likeability" noise
-    a += random.random() * 0.5
+    # Per-voter "personal mood" toward this candidate — independent for
+    # each (voter, candidate) pair. The range needs to be wide enough to
+    # overcome the typical 20-30 point leadership_score gap between the
+    # top several candidates, otherwise only the top 1-2 ever win votes.
+    a += random.random() * 25.0
     return a
 
 def reassign_job_by_traits(p: Villager) -> str:
@@ -145,7 +155,7 @@ def reassign_job_by_traits(p: Villager) -> str:
         for j in ["Scholar", "Advisor", "Alchemist", "Priest", "Scribe", "Engineer", "Clerk"]:
             add(j, 2 if j in ("Scholar", "Advisor", "Scribe", "Engineer") else 1)
     if power > 180:
-        for j in ["Soldier", "Guard", "Commander", "Captain", "Ranger", "Archer", "Falconer"]:
+        for j in ["Soldier", "Guard", "Commander", "Captain", "Scout", "Falconer"]:
             add(j, 2 if j in ("Soldier", "Guard") else 1)
     if high_rep:
         for j in ["Noble", "Advisor", "Innkeeper", "Trader"]:
@@ -158,10 +168,10 @@ def reassign_job_by_traits(p: Villager) -> str:
             add(j, 1)
 
     if "Brave" in t:
-        for j in ["Soldier", "Guard", "Ranger", "Archer", "Captain", "Falconer"]:
+        for j in ["Soldier", "Guard", "Scout", "Captain", "Falconer"]:
             add(j, 2 if j in ("Soldier", "Guard") else 1)
     if "Hot-headed" in t:
-        for j in ["Soldier", "Ranger", "Archer", "Bard"]:
+        for j in ["Soldier", "Scout", "Bard"]:
             add(j, 1)
     if "Cautious" in t:
         for j in ["Scout", "Guard", "Forester", "Clerk"]:
@@ -315,32 +325,34 @@ def hold_election(characters: list[Villager], current_day: int | None = None, em
         return None, None
 
     win_votes = top_votes
-    
-    # Calculate percentage from total alive villagers
-    total_alive = len(alive)
-    vote_percentage = (win_votes / total_alive * 100) if total_alive > 0 else 0
+
+    # Calculate percentage against eligible voters (alive adults age >= 16),
+    # not the whole alive population — children can't vote, so including them
+    # made winning supermajorities look artificially weak.
+    total_voters = len(voters)
+    vote_percentage = (win_votes / total_voters * 100) if total_voters > 0 else 0
 
     if term_limited_only:
         msg = (
             f"election: all candidates reached the {KING_MAX_TERMS}-term limit. "
             f"Emergency vote, {winner['name']} chosen with {win_votes} votes "
-            f"({vote_percentage:.0f}% of {total_alive} villagers)."
+            f"({vote_percentage:.0f}% of {total_voters} eligible voters)."
         )
     elif prev_king and prev_king is not winner:
         msg = (
             f"election: {winner['name']} is the new King with {win_votes} votes "
-            f"({vote_percentage:.0f}% of {total_alive} villagers). "
+            f"({vote_percentage:.0f}% of {total_voters} eligible voters). "
             f"Former King {prev_king['name']} steps down."
         )
     elif not prev_king:
         msg = (
             f"election: {winner['name']} is elected King with {win_votes} votes "
-            f"({vote_percentage:.0f}% of {total_alive} villagers)."
+            f"({vote_percentage:.0f}% of {total_voters} eligible voters)."
         )
     else:
         msg = (
             f"election: {winner['name']} remains King with {win_votes} votes "
-            f"({vote_percentage:.0f}% of {total_alive} villagers)."
+            f"({vote_percentage:.0f}% of {total_voters} eligible voters)."
         )
 
     # Apply roles
@@ -368,6 +380,49 @@ def hold_election(characters: list[Villager], current_day: int | None = None, em
 
     sync_queen_to_king_spouse(characters, current_day=current_day)
 
+    # Royal lineage: if this is a new king (not a re-election), retroactively flag
+    # all of the new king's existing descendants as blue-blooded.
+    if prev_king is not winner:
+        try:
+            from src.services.family_service import cascade_blue_blood_from_king
+            cascade_blue_blood_from_king(winner, characters)
+        except Exception:
+            pass  # never break the election flow
+
+        # Militarization decree — small trait-modulated chance the new king
+        # forcibly conscripts civilians into Guard/Scout duty on day one.
+        try:
+            maybe_militarization_decree(winner, characters, current_day or 1)
+        except Exception:
+            pass  # never break the election flow
+
+    # Build runners-up: top 3 non-winning candidates that received at
+    # least one vote — preserved in the chronicle so losers don't vanish
+    # from the historical record.
+    runners_ranked = sorted(
+        [(c, int(votes.get(c["id"], 0) or 0)) for c in candidates if c["id"] != winner["id"]],
+        key=lambda x: -x[1],
+    )
+    runners_up_objs = [(c, n) for c, n in runners_ranked[:3] if n > 0]
+    runners_up = [
+        {
+            "id": int(c.get("id", 0) or 0),
+            "name": c.get("name", "?"),
+            "family": c.get("family", ""),
+            "votes": n,
+        }
+        for c, n in runners_up_objs
+    ]
+
+    # Reset the winner's loss streak — they won, the resentment counter clears.
+    winner["consecutive_losses"] = 0
+
+    # Apply resentment: each runner-up takes a relationship hit toward the
+    # winner (scaled by how badly they lost — close races feel robbed,
+    # one-vote also-rans don't care much). Also bumps their loss streak,
+    # which feeds the coup-attempt phase. See _apply_election_resentment.
+    _apply_election_resentment(winner, runners_up_objs, int(win_votes), int(current_day or 1))
+
     # Chronicle the election
     try:
         from src.services.chronicle_service import record_election
@@ -375,12 +430,164 @@ def hold_election(characters: list[Villager], current_day: int | None = None, em
             winner=winner,
             prev_king=prev_king if (prev_king and prev_king is not winner) else None,
             votes=int(win_votes),
-            total_alive=int(total_alive),
+            total_alive=int(total_voters),
             day=int(current_day or 1),
             emergency=bool(emergency),
             term_limited=bool(term_limited_only),
+            runners_up=runners_up,
         )
     except Exception:
         pass
 
     return winner, msg
+
+
+# ---------------------------------------------------------------------------
+#  Election aftermath — losing-candidate resentment and streak tracking.
+#  Feeds the coup-attempt phase in relationship_service.
+# ---------------------------------------------------------------------------
+
+def _apply_election_resentment(
+    winner: Villager,
+    runners_up_objs: list[tuple[Villager, int]],
+    win_votes: int,
+    current_day: int,
+) -> None:
+    """For each runner-up:
+      - Increment their `consecutive_losses` counter.
+      - Apply a relationship penalty toward the winner, scaled by how
+        bitter the loss was (close races feel robbed; landslide losers
+        barely cared).
+      - At streak ≥ 3, chronicle a "vows revenge" entry so a reader can
+        follow the rivalry that may soon culminate in a coup.
+    Best-effort: any chronicle failure is swallowed."""
+    win_votes = max(1, int(win_votes))
+
+    for loser, n_votes in runners_up_objs:
+        if loser is winner:  # defensive
+            continue
+
+        # Streak bookkeeping
+        prev = int(loser.get("consecutive_losses", 0) or 0)
+        loser["consecutive_losses"] = prev + 1
+        streak = loser["consecutive_losses"]
+
+        # Bitterness scaling: ratio of their votes to the winner's, capped
+        # at 1.0. A loser with ~70% of the winner's tally takes the full
+        # hit; a one-vote also-ran takes a small one.
+        ratio = min(1.0, n_votes / win_votes)
+        base_hit = 10 + int(round(15 * ratio))  # 10..25
+        # Streak amplifies: every prior consecutive loss adds 3.
+        streak_hit = base_hit + 3 * max(0, streak - 1)
+
+        adjust_relationship(loser, winner, -streak_hit)
+        adjust_relationship(winner, loser, -max(2, streak_hit // 4))
+
+        # Reputation bleed for losers — repeated defeat is bad PR.
+        loser["rep"] = int(loser.get("rep", 0) or 0) - max(1, streak)
+
+        # Mark the moment in their action log so the admin table reads it.
+        last = loser.get("last_action") or ""
+        suffix = f"lost election to {winner.get('name','?')} (streak {streak})"
+        loser["last_action"] = (last + " / " if last else "") + suffix
+
+        # Chronicle the brewing rivalry at streak ≥ 3.
+        if streak >= 3:
+            try:
+                from src.services.chronicle_service import record_rivalry_brewing
+                record_rivalry_brewing(loser, winner, streak, day=int(current_day))
+            except Exception:
+                pass
+
+
+# ---------------------------------------------------------------------------
+#  Militarization decree — fires once when a new king takes office.
+# ---------------------------------------------------------------------------
+
+# Jobs that are exempt from conscription: royalty (can't conscript yourself or
+# your queen) and existing military (already serving). Healers and magic users
+# ARE eligible — the king "brooks no excuse."
+_CONSCRIPT_EXEMPT_JOBS = {
+    "King", "Queen",
+    "Soldier", "Guard", "Captain", "Commander", "Scout", "Falconer", "Spy",
+}
+
+
+def _militarization_chance(king: Villager) -> float:
+    """Trait-modulated probability the new king declares conscription.
+    Base is intentionally small; most kings simply don't bother."""
+    t = get_traits_set(king)
+    chance = 0.12  # small base — most kings stay civilian
+    if "Protective" in t: chance += 0.20
+    if "Brave"      in t: chance += 0.20
+    if "Hot-headed" in t: chance += 0.15
+    if "Ambitious"  in t: chance += 0.10
+    if "Stoic"      in t: chance += 0.05
+    if "Generous"   in t: chance -= 0.25
+    if "Empathic"   in t: chance -= 0.20
+    if "Wise"       in t: chance -= 0.15
+    if "Cautious"   in t: chance -= 0.15
+    if "Loyal"      in t: chance -= 0.10
+    return max(0.0, min(0.70, chance))
+
+
+def _conscript_count(king: Villager, eligible_pool: int) -> int:
+    """How many villagers the king drafts. Small numbers; trait-modulated."""
+    t = get_traits_set(king)
+    n = random.randint(2, 4)
+    if "Brave"      in t: n += 1
+    if "Hot-headed" in t: n += 1
+    if "Ambitious"  in t: n += 1
+    return max(1, min(n, eligible_pool))
+
+
+def maybe_militarization_decree(
+    king: Villager,
+    characters: list[Villager],
+    current_day: int,
+) -> list[Villager]:
+    """If the new king rolls for it, conscript civilians into Guard/Scout.
+    Returns the list of conscripted villagers (empty list if no decree fired).
+
+    Fires once per new king (called from `hold_election` only when the winner
+    is not the prior king). Magic users and healers are eligible — the king
+    accepts no excuse, but royalty and existing soldiers are exempt for
+    obvious reasons.
+    """
+    if not king or king.get("job") != "King":
+        return []
+
+    chance = _militarization_chance(king)
+    if random.random() >= chance:
+        return []  # king chooses civilian rule — nothing happens
+
+    # Build eligible pool: alive adults, not royalty, not already military
+    eligible = [
+        v for v in characters
+        if v.get("alive", True)
+        and int(v.get("age", 0) or 0) >= 17
+        and v is not king
+        and (v.get("job") or "") not in _CONSCRIPT_EXEMPT_JOBS
+    ]
+    if not eligible:
+        return []
+
+    n = _conscript_count(king, len(eligible))
+    conscripts = random.sample(eligible, n)
+
+    # Convert: alternate Guard/Scout for a roughly even split
+    for i, v in enumerate(conscripts):
+        v["job"] = "Guard" if i % 2 == 0 else "Scout"
+        last = v.get("last_action") or ""
+        v["last_action"] = (
+            (last + " / " if last else "") + f"conscripted into the {v['job']}"
+        )
+
+    # Chronicle the decree (best-effort)
+    try:
+        from src.services.chronicle_service import record_militarization_decree
+        record_militarization_decree(king, conscripts, int(current_day))
+    except Exception:
+        pass
+
+    return conscripts

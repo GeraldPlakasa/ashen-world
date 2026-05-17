@@ -83,6 +83,13 @@ def download_history_csv():
         "Richest Value",
         "Top Hunter Name",
         "Top Hunter Value",
+        # Crime & Justice — per-year ledger
+        "Crimes Witnessed",
+        "Trials Held",
+        "Fines (count)",
+        "Fines (gold)",
+        "Exiles",
+        "Executions",
     ]
     
     lines = [",".join(headers)]
@@ -119,6 +126,12 @@ def download_history_csv():
             str(y.get("richest_value", 0)),
             esc(y.get("top_hunter_name", "")),
             str(y.get("top_hunter_value", 0)),
+            str(y.get("crimes_committed", 0)),
+            str(y.get("trials_held", 0)),
+            str(y.get("fines_count", 0)),
+            str(y.get("fines_collected", 0)),
+            str(y.get("exiles", 0)),
+            str(y.get("executions", 0)),
         ]
         lines.append(",".join(row))
     

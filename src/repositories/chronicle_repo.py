@@ -56,8 +56,11 @@ def list_events(
     category: str | None = None,
     year: int | None = None,
     min_importance: int = 1,
+    q: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Return chronicle events, newest first, optionally filtered."""
+    """Return chronicle events, newest first, optionally filtered.
+    `q` does a case-insensitive substring match against headline + body.
+    """
     init_db()
     where = ["importance >= ?"]
     params: list[Any] = [int(min_importance)]
@@ -67,6 +70,10 @@ def list_events(
     if year is not None:
         where.append("year = ?")
         params.append(int(year))
+    if q:
+        like = f"%{q.strip()}%"
+        where.append("(headline LIKE ? COLLATE NOCASE OR body LIKE ? COLLATE NOCASE)")
+        params.extend([like, like])
     where_sql = "WHERE " + " AND ".join(where)
     params.extend([int(limit), int(offset)])
     with db_conn() as conn:
@@ -96,17 +103,26 @@ def list_top_recent(limit: int = 5, min_importance: int = 3) -> list[dict[str, A
     return list_events(limit=limit, min_importance=min_importance)
 
 
-def count_events(category: str | None = None, year: int | None = None) -> int:
+def count_events(
+    category: str | None = None,
+    year: int | None = None,
+    q: str | None = None,
+    min_importance: int = 1,
+) -> int:
     init_db()
-    where = []
-    params: list[Any] = []
+    where = ["importance >= ?"]
+    params: list[Any] = [int(min_importance)]
     if category:
         where.append("category = ?")
         params.append(category)
     if year is not None:
         where.append("year = ?")
         params.append(int(year))
-    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+    if q:
+        like = f"%{q.strip()}%"
+        where.append("(headline LIKE ? COLLATE NOCASE OR body LIKE ? COLLATE NOCASE)")
+        params.extend([like, like])
+    where_sql = "WHERE " + " AND ".join(where)
     with db_conn() as conn:
         row = conn.execute(
             f"SELECT COUNT(*) AS c FROM chronicle_events {where_sql};",

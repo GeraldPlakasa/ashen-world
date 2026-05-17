@@ -146,29 +146,36 @@ def building_priority_weights(king: Villager | None) -> dict[str, float]:
         w["market"] = w.get("market", 1.0) + 2
         w["blacksmith"] = w.get("blacksmith", 1.0) + 1
         w["tavern"] = w.get("tavern", 1.0) + 1
+        w["mine"] = w.get("mine", 1.0) + 2          # iron → coin
+        w["smelter"] = w.get("smelter", 1.0) + 1
 
     if "Generous" in t:
         w["clinic"] = w.get("clinic", 1.0) + 2
         w["granary"] = w.get("granary", 1.0) + 2
         w["temple"] = w.get("temple", 1.0) + 1
         w["housing"] = w.get("housing", 1.0) + 1
+        w["farm"] = w.get("farm", 1.0) + 2          # feed the people
 
     if "Wise" in t:
         w["library"] = w.get("library", 1.0) + 2
         w["temple"] = w.get("temple", 1.0) + 1
         w["tax_office"] = w.get("tax_office", 1.0) + 1
+        w["farm"] = w.get("farm", 1.0) + 1          # plan for famine
 
     if "Cautious" in t:
         w["walls"] = w.get("walls", 1.0) + 2
         w["clinic"] = w.get("clinic", 1.0) + 1
         w["tax_office"] = w.get("tax_office", 1.0) + 2
         w["housing"] = w.get("housing", 1.0) + 0.5
+        w["granary"] = w.get("granary", 1.0) + 1
+        w["farm"] = w.get("farm", 1.0) + 1
 
     if "Brave" in t or "Hot-headed" in t:
         w["barracks"] = w.get("barracks", 1.0) + 2
         w["walls"] = w.get("walls", 1.0) + 1
         if "Hot-headed" in t:
             w["tavern"] = w.get("tavern", 1.0) + 2
+        w["smelter"] = w.get("smelter", 1.0) + 1    # iron for weapons
 
     if "Ambitious" in t:
         w["royal_court"] = w.get("royal_court", 1.0) + 3
@@ -176,16 +183,66 @@ def building_priority_weights(king: Villager | None) -> dict[str, float]:
         w["market"] = w.get("market", 1.0) + 1
         w["temple"] = w.get("temple", 1.0) + 1
         w["housing"] = w.get("housing", 1.0) + 1
+        w["mine"] = w.get("mine", 1.0) + 1
+        w["quarry"] = w.get("quarry", 1.0) + 1
+
+    if "Diligent" in t:
+        w["farm"] = w.get("farm", 1.0) + 2
+        w["lumbermill"] = w.get("lumbermill", 1.0) + 2
+        w["quarry"] = w.get("quarry", 1.0) + 1
+        w["mine"] = w.get("mine", 1.0) + 1
 
     if "Loyal" in t:
         w["temple"] = w.get("temple", 1.0) + 1
         w["walls"] = w.get("walls", 1.0) + 1
+        w["farm"] = w.get("farm", 1.0) + 1
+
+    if "Protective" in t:
+        w["walls"] = w.get("walls", 1.0) + 1
+        w["smelter"] = w.get("smelter", 1.0) + 1    # iron → weapons/armor
 
     return w
 
 
 def _find_building(key: str) -> Building | None:
     return next((b for b in BUILDINGS if b["key"] == key), None)
+
+
+def _bank_resources(bank: Bank) -> dict[str, int]:
+    """Get (and initialize) the shared resource stockpile."""
+    stock = bank.setdefault("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0})
+    if not isinstance(stock, dict):
+        stock = {"food": 0, "wood": 0, "stone": 0, "iron": 0}
+        bank["resources"] = stock
+    return stock
+
+
+def construction_resource_cost(key: str, level: int = 1) -> dict[str, int]:
+    """Resource bundle required to build (level=1) or upgrade to a given level.
+    Upgrades scale the base bundle linearly with level (Lv2 = 2x, Lv3 = 3x).
+    """
+    base = _find_building(key)
+    if not base:
+        return {}
+    bundle = base.get("resources") or {}
+    if level <= 1:
+        return dict(bundle)
+    return {r: math.ceil(n * level) for r, n in bundle.items()}
+
+
+def has_resources_for(bank: Bank, bundle: dict[str, int]) -> bool:
+    if not bundle:
+        return True
+    stock = _bank_resources(bank)
+    return all(int(stock.get(r, 0) or 0) >= n for r, n in bundle.items())
+
+
+def spend_resources(bank: Bank, bundle: dict[str, int]) -> None:
+    if not bundle:
+        return
+    stock = _bank_resources(bank)
+    for r, n in bundle.items():
+        stock[r] = int(stock.get(r, 0) or 0) - int(n)
 
 
 def choose_building_to_construct(characters: list[Villager], bank: Bank) -> Building | None:
@@ -205,7 +262,9 @@ def choose_building_to_construct(characters: list[Villager], bank: Bank) -> Buil
     candidates = [
         b
         for b in BUILDINGS
-        if not has_building(b["key"], bank) and balance >= b["cost"]
+        if not has_building(b["key"], bank)
+        and balance >= b["cost"]
+        and has_resources_for(bank, b.get("resources") or {})
     ]
     if not candidates:
         return None
@@ -235,14 +294,23 @@ def maybe_construct_building(
     if balance < cost:
         return bank, None
 
+    bundle = choice.get("resources") or {}
+    if not has_resources_for(bank, bundle):
+        return bank, None
+
     bank["balance"] = balance - cost
+    spend_resources(bank, bundle)
     levels, health = _ensure_building_dicts(bank)
 
     key = choice["key"]
     levels[key] = 1
     health[key] = 100
 
-    event_text = f"Village built {choice['name']} for {cost} coins."
+    if bundle:
+        parts = ", ".join(f"{n} {r}" for r, n in bundle.items())
+        event_text = f"Village built {choice['name']} for {cost} coins and {parts}."
+    else:
+        event_text = f"Village built {choice['name']} for {cost} coins."
     return bank, event_text
 
 
@@ -263,7 +331,7 @@ def upgrade_cost(key: str, bank: Bank) -> int:
 
 
 def can_upgrade_building(key: str, bank: Bank) -> bool:
-    """Return True if the building exists, is below max level, and the treasury can afford it."""
+    """Return True if the building exists, is below max level, and the village can afford it (coin + resources)."""
     if not has_building(key, bank):
         return False
     if not _find_building(key):
@@ -278,7 +346,11 @@ def can_upgrade_building(key: str, bank: Bank) -> bool:
     if cost <= 0:
         return False
 
-    return int(bank.get("balance", 0)) >= cost
+    if int(bank.get("balance", 0)) < cost:
+        return False
+
+    bundle = construction_resource_cost(key, lvl + 1)
+    return has_resources_for(bank, bundle)
 
 
 def choose_building_to_upgrade(characters: list[Villager], bank: Bank) -> str | None:
@@ -306,8 +378,12 @@ def choose_building_to_upgrade(characters: list[Villager], bank: Bank) -> str | 
         if not has_building(key, bank):
             continue
         cost = upgrade_cost(key, bank)
-        if balance >= cost:
-            candidates.append(key)
+        if balance < cost:
+            continue
+        bundle = construction_resource_cost(key, lvl + 1)
+        if not has_resources_for(bank, bundle):
+            continue
+        candidates.append(key)
 
     if not candidates:
         return None
@@ -334,15 +410,24 @@ def upgrade_building(
     if balance < cost:
         return bank, None
 
-    bank["balance"] = balance - cost
     levels, _ = _ensure_building_dicts(bank)
+    next_lvl = int(levels.get(key, 1) or 1) + 1
+    bundle = construction_resource_cost(key, next_lvl)
+    if not has_resources_for(bank, bundle):
+        return bank, None
 
-    new_lvl = int(levels.get(key, 1) or 1) + 1
-    levels[key] = new_lvl
+    bank["balance"] = balance - cost
+    spend_resources(bank, bundle)
+
+    levels[key] = next_lvl
 
     base = _find_building(key)
     name = base["name"] if base else key
-    event_text = f"{name} upgraded to Lv.{new_lvl} (-{cost} coins)."
+    if bundle:
+        parts = ", ".join(f"{n} {r}" for r, n in bundle.items())
+        event_text = f"{name} upgraded to Lv.{next_lvl} (-{cost} coins, {parts})."
+    else:
+        event_text = f"{name} upgraded to Lv.{next_lvl} (-{cost} coins)."
     return bank, event_text
 
 

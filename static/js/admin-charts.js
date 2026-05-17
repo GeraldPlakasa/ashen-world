@@ -86,7 +86,16 @@ function updateKPIs(data) {
   document.getElementById('kpi-dead').textContent = c.dead_count || 0;
   document.getElementById('kpi-treasury').textContent = c.treasury || 0;
   document.getElementById('kpi-users').textContent = c.total_users || 0;
-  
+
+  const r = c.resources || {};
+  const setRes = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = (typeof val === 'number') ? val : 0;
+  };
+  setRes('stockpile-food', r.food);
+  setRes('stockpile-wood', r.wood);
+  setRes('stockpile-stone', r.stone);
+  setRes('stockpile-iron', r.iron);
 }
 
 function updateTables(data) {
@@ -134,6 +143,124 @@ function renderAllCharts(data) {
   renderQuestTypesChart(data);
   renderQuestSuccessChart(data);
   renderEventTypesChart(data);
+  renderResourcesYearlyChart(data);
+  renderProducerHeadcountChart();
+  renderDailyProductionChart();
+  renderHealthCurrentChart();
+  renderHealthImmunityChart();
+  renderJustice(data);
+}
+
+// ---------------------------------------------------------------------------
+//  Justice tab — KPIs, yearly stacked chart, recent verdicts feed
+// ---------------------------------------------------------------------------
+
+function renderJustice(data) {
+  const j = data && data.justice;
+  if (!j) return;
+
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = (val == null) ? 0 : val;
+  };
+  const ty = j.this_year || {};
+  const at = j.all_time  || {};
+  setText('kpi-justice-crimes-year', ty.crimes);
+  setText('kpi-justice-crimes-all',  at.crimes);
+  setText('kpi-justice-trials-year', ty.trials);
+  setText('kpi-justice-trials-all',  at.trials);
+  // KPI shows gold (the spendable number a king cares about),
+  // but the chart below stacks fine COUNTS alongside exile/execution counts.
+  setText('kpi-justice-fines-year',  ty.fines_gold);
+  setText('kpi-justice-fines-all',   at.fines_gold);
+  setText('kpi-justice-fines-count-year', ty.fines_count);
+  setText('kpi-justice-fines-count-all',  at.fines_count);
+  setText('kpi-justice-exiles-year', ty.exiles);
+  setText('kpi-justice-exiles-all',  at.exiles);
+  setText('kpi-justice-execs-year',  ty.executions);
+  setText('kpi-justice-execs-all',   at.executions);
+
+  renderJusticeYearlyChart(j.history || []);
+  renderJusticeFeed(j.recent || []);
+}
+
+function renderJusticeYearlyChart(history) {
+  const canvas = document.getElementById('chart-justice-yearly');
+  if (!canvas) return;
+  // Filter to the same year range as the rest of the dashboard.
+  const sorted = filterYearlyData(history.slice().reverse());
+  const labels = sorted.map(h => 'Yr ' + h.year);
+  // Stack VERDICT COUNTS only — fines/exiles/executions live on the same
+  // count scale. Gold (fines_gold) is reported via the KPI, not here.
+  const fines   = sorted.map(h => h.fines_count || 0);
+  const exiles  = sorted.map(h => h.exiles || 0);
+  const execs   = sorted.map(h => h.executions || 0);
+  const crimes  = sorted.map(h => h.crimes || 0);
+
+  if (window._justiceChart) window._justiceChart.destroy();
+  window._justiceChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Fines',      data: fines,  backgroundColor: 'rgba(234,179,8,0.65)',  stack: 'verdicts' },
+        { label: 'Exiles',     data: exiles, backgroundColor: 'rgba(245,158,11,0.65)', stack: 'verdicts' },
+        { label: 'Executions', data: execs,  backgroundColor: 'rgba(239,68,68,0.75)',  stack: 'verdicts' },
+        {
+          label: 'Crimes Witnessed',
+          data: crimes,
+          type: 'line',
+          borderColor: '#a3a3a3',
+          backgroundColor: 'rgba(163,163,163,0.15)',
+          tension: 0.25,
+          yAxisID: 'y1',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true, ticks: { color: '#999' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: {
+          stacked: true,
+          ticks: { color: '#999', precision: 0 },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          title: { display: true, text: 'Verdicts', color: '#999' },
+          beginAtZero: true,
+        },
+        y1: {
+          position: 'right',
+          ticks: { color: '#999', precision: 0 },
+          grid: { display: false },
+          title: { display: true, text: 'Crimes Witnessed', color: '#999' },
+          beginAtZero: true,
+        },
+      },
+      plugins: { legend: { labels: { color: '#ccc' } } },
+    },
+  });
+}
+
+function renderJusticeFeed(recent) {
+  const feed = document.getElementById('justice-feed');
+  if (!feed) return;
+  if (!recent.length) {
+    feed.innerHTML = '<div style="color: var(--aw-text-muted);">No justice events yet.</div>';
+    return;
+  }
+  feed.innerHTML = recent.map(e => {
+    const imp = parseInt(e.importance || 0, 10);
+    const tag = imp >= 5 ? '☠'
+              : imp >= 4 ? '🏹'
+              : imp >= 3 ? '⚖'
+              :            '·';
+    return `
+      <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 4px;">
+        <div style="font-size: 13px; color: var(--aw-text);">${tag} <strong>${e.headline || ''}</strong></div>
+        <div style="font-size: 12px; color: var(--aw-text-muted); margin-top: 2px;">Year ${e.year || '?'}, Day ${e.day || '?'} — ${e.body || ''}</div>
+      </div>`;
+  }).join('');
 }
 
 function filterYearlyData(yearly) {
@@ -714,3 +841,364 @@ setInterval(() => {
     loadAnalytics();
   }
 }, 30000);
+
+// ============================================================================
+//  RESOURCES TAB
+// ============================================================================
+
+const RESOURCE_COLORS = {
+  food:  '#e0a96d',
+  wood:  '#8b5a3c',
+  stone: '#9aa0a6',
+  iron:  '#a0522d',
+};
+
+function renderResourcesYearlyChart(data) {
+  const ctx = document.getElementById('chart-resources-yearly');
+  if (!ctx) return;
+
+  const yearly = filterYearlyData(data.yearly_stats || []);
+  const labels = yearly.map(r => 'Y' + r.year);
+  const kingNames = yearly.map(r => r.king_name || 'No King');
+  const food  = yearly.map(r => r.stock_food_end  || 0);
+  const wood  = yearly.map(r => r.stock_wood_end  || 0);
+  const stone = yearly.map(r => r.stock_stone_end || 0);
+  const iron  = yearly.map(r => r.stock_iron_end  || 0);
+
+  // King-change vertical annotations — same pattern as Population chart
+  const kingChangeAnnotations = {};
+  for (let i = 1; i < yearly.length; i++) {
+    const prevKing = yearly[i - 1].king_name || '';
+    const currKing = yearly[i].king_name || '';
+    if (currKing && prevKing !== currKing) {
+      kingChangeAnnotations['king-' + i] = {
+        type: 'line',
+        xMin: i,
+        xMax: i,
+        borderColor: 'rgba(255, 215, 0, 0.6)',
+        borderWidth: 2,
+        borderDash: [4, 4],
+        label: {
+          display: true,
+          content: '♔ ' + currKing,
+          position: 'start',
+          backgroundColor: 'rgba(255, 215, 0, 0.15)',
+          color: 'rgba(255, 215, 0, 0.9)',
+          font: { size: 10 },
+          padding: 3,
+        },
+      };
+    }
+  }
+
+  if (charts.resourcesYearly) charts.resourcesYearly.destroy();
+  charts.resourcesYearly = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Food',  data: food,  borderColor: RESOURCE_COLORS.food,  backgroundColor: RESOURCE_COLORS.food  + '33', tension: 0.25, fill: false, pointRadius: 2 },
+        { label: 'Wood',  data: wood,  borderColor: RESOURCE_COLORS.wood,  backgroundColor: RESOURCE_COLORS.wood  + '33', tension: 0.25, fill: false, pointRadius: 2 },
+        { label: 'Stone', data: stone, borderColor: RESOURCE_COLORS.stone, backgroundColor: RESOURCE_COLORS.stone + '33', tension: 0.25, fill: false, pointRadius: 2 },
+        { label: 'Iron',  data: iron,  borderColor: RESOURCE_COLORS.iron,  backgroundColor: RESOURCE_COLORS.iron  + '33', tension: 0.25, fill: false, pointRadius: 2 },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 14 } },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            title: (items) => {
+              if (!items.length) return '';
+              const idx = items[0].dataIndex;
+              return `${labels[idx]} — King: ${kingNames[idx]}`;
+            },
+          },
+        },
+        annotation: {
+          annotations: kingChangeAnnotations,
+        },
+      },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Units in stockpile' } },
+        x: { title: { display: false } },
+      },
+    },
+  });
+}
+
+function renderProducerHeadcountChart() {
+  const ctx = document.getElementById('chart-producer-headcount');
+  if (!ctx) return;
+
+  const rd = window.AW_RESOURCES_DASHBOARD || {};
+  const rows = rd.production_rows || [];
+  const labels = rows.map(r => r.job);
+  const counts = rows.map(r => r.count);
+
+  // Color each bar by its primary resource (parse "per_villager" like "+12 food")
+  const bgColors = rows.map(r => {
+    const m = (r.per_villager || '').match(/(food|wood|stone|iron)/);
+    return m ? RESOURCE_COLORS[m[1]] : COLORS.primary;
+  });
+
+  if (charts.producerHeadcount) charts.producerHeadcount.destroy();
+  charts.producerHeadcount = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Villagers in this job',
+        data: counts,
+        backgroundColor: bgColors,
+        borderWidth: 0,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            afterLabel: (ctx) => {
+              const row = rows[ctx.dataIndex];
+              return row ? 'Output / worker: ' + row.per_villager : '';
+            },
+          },
+        },
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { precision: 0 } },
+      },
+    },
+  });
+}
+
+function renderDailyProductionChart() {
+  const ctx = document.getElementById('chart-daily-production');
+  if (!ctx) return;
+
+  const rd = window.AW_RESOURCES_DASHBOARD || {};
+  const ed = rd.expected_daily || {};
+  const labels = ['Food', 'Wood', 'Stone', 'Iron'];
+  const values = [ed.food || 0, ed.wood || 0, ed.stone || 0, ed.iron || 0];
+  const colors = [RESOURCE_COLORS.food, RESOURCE_COLORS.wood, RESOURCE_COLORS.stone, RESOURCE_COLORS.iron];
+
+  if (charts.dailyProduction) charts.dailyProduction.destroy();
+  charts.dailyProduction = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Units / day (max)',
+        data: values,
+        backgroundColor: colors,
+        borderWidth: 0,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Units / day' } },
+      },
+    },
+  });
+}
+
+// =========================================================================
+//  Health tab charts
+// =========================================================================
+
+function renderHealthCurrentChart() {
+  const ctx = document.getElementById('chart-health-current');
+  if (!ctx) return;
+
+  const hd = window.AW_HEALTH_DASHBOARD || {};
+  const meta = hd.disease_meta || {};
+  const current = hd.current_by_disease || {};
+  const slugs = Object.keys(meta);
+
+  const labels = slugs.map(s => `${meta[s].icon || ''} ${meta[s].name || s}`.trim());
+  const data = slugs.map(s => current[s] || 0);
+  const colors = slugs.map(s => meta[s].color || '#6366f1');
+
+  const totalSick = data.reduce((a, b) => a + b, 0);
+  const healthyCount = Math.max(0, (hd.total_alive || 0) - totalSick);
+
+  if (charts.healthCurrent) charts.healthCurrent.destroy();
+  charts.healthCurrent = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: [...labels, 'Healthy'],
+      datasets: [{
+        data: [...data, healthyCount],
+        backgroundColor: [...colors, '#22c55e'],
+        borderWidth: 0,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.label}: ${ctx.parsed} villagers`,
+          },
+        },
+      },
+      cutout: '55%',
+    },
+  });
+}
+
+// Update the Health-tab KPI text/badge from the latest health dashboard,
+// without rebuilding any HTML. Called from refreshAllCharts().
+function updateHealthKPIs(hd) {
+  if (!hd) return;
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.textContent !== String(val)) {
+      el.textContent = val;
+      el.classList.add('refresh-flash');
+      setTimeout(() => el.classList.remove('refresh-flash'), 700);
+    }
+  };
+  set('kpi-health-sick', hd.total_sick);
+  const sub = document.getElementById('kpi-health-sick-sub');
+  if (sub) sub.textContent = `${hd.sick_pct}% of ${hd.total_alive} alive`;
+  set('kpi-health-healers', (hd.healers || []).length);
+  set('kpi-health-immune', hd.total_immune);
+
+  const status = document.getElementById('kpi-health-status');
+  if (status) {
+    status.textContent = hd.outbreak_status;
+    // Swap status-badge modifier class
+    ['alive', 'damaged', 'dead'].forEach(c => status.classList.remove(c));
+    if (hd.outbreak_class) status.classList.add(hd.outbreak_class);
+  }
+}
+
+// In-page refresh: re-fetch all dashboard data and re-render charts/KPIs
+// WITHOUT a browser reload (so the active tab stays selected).
+async function refreshAllCharts() {
+  const btn = document.getElementById('btn-refresh-charts');
+  const label = btn ? btn.querySelector('.refresh-label') : null;
+  if (btn) {
+    btn.classList.add('is-loading');
+    if (label) label.textContent = 'Refreshing…';
+  }
+
+  try {
+    // 1) Analytics-driven charts (Overview, Population, Quests, Players tabs)
+    await loadAnalytics();
+
+    // 2) Resources + Health dashboards (snapshot endpoint)
+    const res = await fetch('/admin/snapshot.json', { credentials: 'same-origin' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.ok) {
+        if (data.resources) window.AW_RESOURCES_DASHBOARD = data.resources;
+        if (data.health) window.AW_HEALTH_DASHBOARD = data.health;
+        renderProducerHeadcountChart();
+        renderDailyProductionChart();
+        renderHealthCurrentChart();
+        renderHealthImmunityChart();
+        updateHealthKPIs(data.health);
+      }
+    } else {
+      console.warn('Snapshot fetch returned', res.status);
+    }
+  } catch (err) {
+    console.error('Refresh failed:', err);
+  } finally {
+    if (btn) {
+      btn.classList.remove('is-loading');
+      if (label) label.textContent = 'Refresh';
+    }
+  }
+}
+
+// Bind the refresh button once DOM is ready.
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btn-refresh-charts');
+  if (btn) btn.addEventListener('click', refreshAllCharts);
+});
+
+function renderHealthImmunityChart() {
+  const ctx = document.getElementById('chart-health-immunity');
+  if (!ctx) return;
+
+  const hd = window.AW_HEALTH_DASHBOARD || {};
+  const meta = hd.disease_meta || {};
+  const current = hd.current_by_disease || {};
+  const immune = hd.immune_by_disease || {};
+  const totalAlive = Math.max(1, hd.total_alive || 0);
+  const slugs = Object.keys(meta);
+
+  const labels = slugs.map(s => `${meta[s].icon || ''} ${meta[s].name || s}`.trim());
+  const immuneData = slugs.map(s => immune[s] || 0);
+  const sickData = slugs.map(s => current[s] || 0);
+  const susceptibleData = slugs.map((s, i) => Math.max(0, totalAlive - immuneData[i] - sickData[i]));
+  const colors = slugs.map(s => meta[s].color || '#6366f1');
+
+  if (charts.healthImmunity) charts.healthImmunity.destroy();
+  charts.healthImmunity = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Immune',
+          data: immuneData,
+          backgroundColor: '#22c55e',
+          borderWidth: 0,
+          stack: 'pop',
+        },
+        {
+          label: 'Currently Sick',
+          data: sickData,
+          backgroundColor: colors,
+          borderWidth: 0,
+          stack: 'pop',
+        },
+        {
+          label: 'Susceptible',
+          data: susceptibleData,
+          backgroundColor: '#374151',
+          borderWidth: 0,
+          stack: 'pop',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            afterLabel: (ctx) => {
+              const pct = ((ctx.parsed.y / totalAlive) * 100).toFixed(1);
+              return `${pct}% of alive`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, beginAtZero: true, max: totalAlive, title: { display: true, text: 'Villagers' } },
+      },
+    },
+  });
+}

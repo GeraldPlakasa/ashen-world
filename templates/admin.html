@@ -26,6 +26,12 @@
     .mini-table { font-size: 12px; }
     .mini-table th { color: var(--aw-text-muted); font-weight: 500; }
     .mini-table td { color: var(--aw-text); }
+    /* Refresh button spinner */
+    @keyframes aw-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    #btn-refresh-charts.is-loading .refresh-icon { display: inline-block; animation: aw-spin 0.8s linear infinite; }
+    #btn-refresh-charts.is-loading { pointer-events: none; opacity: 0.7; }
+    .refresh-flash { animation: aw-flash 0.6s ease-out; }
+    @keyframes aw-flash { 0% { background-color: rgba(34,197,94,0.25); } 100% { background-color: transparent; } }
   </style>
 </head>
 <body class="game-theme">
@@ -39,10 +45,16 @@
             <span class="header-title">Control Hall</span>
             <span class="header-subtitle">Analytics & World Management</span>
           </div>
-          <form method="POST" class="m-0 d-flex gap-2">
-            <button type="submit" name="op" value="next_day" class="btn btn-outline-light btn-sm">+1 Day</button>
-            <button type="submit" name="op" value="generate" class="btn btn-danger btn-sm">Reset World</button>
-          </form>
+          <div class="m-0 d-flex gap-2 align-items-center">
+            <button type="button" id="btn-refresh-charts" class="btn btn-outline-light btn-sm" title="Re-fetch dashboard data and re-render all charts without leaving this tab.">
+              <span class="refresh-icon" aria-hidden="true">↻</span>
+              <span class="refresh-label">Refresh</span>
+            </button>
+            <form method="POST" class="m-0 d-flex gap-2">
+              <button type="submit" name="op" value="next_day" class="btn btn-outline-light btn-sm">+1 Day</button>
+              <button type="submit" name="op" value="generate" class="btn btn-danger btn-sm">Reset World</button>
+            </form>
+          </div>
         </header>
 
         <main class="aw-main">
@@ -99,6 +111,34 @@
             </div>
           </section>
 
+          <!-- Stockpile -->
+          <section class="row g-3 mb-3">
+            <div class="col-6 col-md-3">
+              <div class="kpi-card" style="border-left: 3px solid #e0a96d;">
+                <div class="kpi-value" id="stockpile-food">0</div>
+                <div class="kpi-label">Food</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="kpi-card" style="border-left: 3px solid #8b5a3c;">
+                <div class="kpi-value" id="stockpile-wood">0</div>
+                <div class="kpi-label">Wood</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="kpi-card" style="border-left: 3px solid #9aa0a6;">
+                <div class="kpi-value" id="stockpile-stone">0</div>
+                <div class="kpi-label">Stone</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="kpi-card" style="border-left: 3px solid #a0522d;">
+                <div class="kpi-value" id="stockpile-iron">0</div>
+                <div class="kpi-label">Iron</div>
+              </div>
+            </div>
+          </section>
+
           <!-- Tab Navigation -->
           <section class="mb-3 d-flex gap-2 flex-wrap">
             <button class="tab-btn active" data-tab="overview">Overview</button>
@@ -107,6 +147,9 @@
             <button class="tab-btn" data-tab="villagers">Villagers</button>
             <button class="tab-btn" data-tab="players">Players</button>
             <button class="tab-btn" data-tab="buildings">Buildings</button>
+            <button class="tab-btn" data-tab="resources">Resources</button>
+            <button class="tab-btn" data-tab="health">Health</button>
+            <button class="tab-btn" data-tab="justice">Justice</button>
           </section>
 
           <!-- Tab: Overview -->
@@ -129,6 +172,15 @@
                   <div class="chart-title">Population & Treasury Over Time</div>
                   <div class="chart-container-lg">
                     <canvas id="chart-population-treasury"></canvas>
+                  </div>
+                </div>
+              </div>
+              <!-- Stockpile by Year -->
+              <div class="col-12">
+                <div class="chart-card">
+                  <div class="chart-title">Stockpile by Year (end-of-year snapshot)</div>
+                  <div class="chart-container-lg">
+                    <canvas id="chart-resources-yearly"></canvas>
                   </div>
                 </div>
               </div>
@@ -523,6 +575,382 @@
             </div>
           </div>
 
+          <!-- Tab: Resources -->
+          <div id="tab-resources" class="tab-content" style="display: none;">
+            {% set rd = resources_dashboard %}
+
+            <!-- Producer headcount chart + per-resource daily production -->
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-lg-7">
+                <div class="chart-card">
+                  <div class="chart-title">Producer Headcount by Job</div>
+                  <div class="chart-container">
+                    <canvas id="chart-producer-headcount"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-5">
+                <div class="chart-card">
+                  <div class="chart-title">Daily Production Max (by resource)</div>
+                  <div class="chart-container">
+                    <canvas id="chart-daily-production"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Food supply status banner -->
+            <div class="game-card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--aw-text-muted);">Food Supply</div>
+                    <div style="font-size: 22px; font-weight: 700;">
+                      ~{{ rd.days_of_supply }} days
+                      <span class="status-badge {{ rd.food_status_class }}" style="margin-left: 8px; font-size: 11px;">{{ rd.food_status }}</span>
+                    </div>
+                    <div style="color: var(--aw-text-muted); font-size: 12px; margin-top: 4px;">
+                      {{ rd.adults_alive }} adults eating {{ rd.effective_food_need }}/day
+                      {% if rd.granary_lvl > 0 %}(Granary Lv{{ rd.granary_lvl }} reduces need by {{ ((1 - rd.granary_mult) * 100) | round(0, 'floor') | int }}%){% endif %}
+                    </div>
+                  </div>
+                  <div style="text-align: right; font-size: 13px;">
+                    <div style="color: var(--aw-text-muted);">Emergency at &lt;{{ rd.emergency_threshold }} food</div>
+                    <div style="color: var(--aw-text-muted); margin-top: 4px;">Daily net: <strong style="color: {% if rd.net_food >= 0 %}var(--aw-alive){% else %}var(--aw-dead){% endif %};">{{ '+' if rd.net_food >= 0 else '' }}{{ rd.net_food }}</strong> food (max)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <!-- Production table -->
+              <div class="col-12 col-lg-7">
+                <div class="game-card">
+                  <div class="card-body">
+                    <div class="chart-title">Producers & Daily Yields</div>
+                    {% if rd.production_rows %}
+                    <div class="table-responsive">
+                      <table class="table feature-table">
+                        <thead>
+                          <tr>
+                            <th>Job</th>
+                            <th class="text-center">Count</th>
+                            <th>Per worker / day</th>
+                            <th>Total / day (max)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for row in rd.production_rows %}
+                          <tr>
+                            <td><strong>{{ row.job }}</strong></td>
+                            <td class="text-center">{{ row.count }}</td>
+                            <td style="color: var(--aw-text-muted);">{{ row.per_villager }}</td>
+                            <td>{{ row.total }}</td>
+                          </tr>
+                          {% endfor %}
+                          <tr style="border-top: 2px solid var(--aw-border);">
+                            <td colspan="3" style="text-align: right;"><strong>Daily production max:</strong></td>
+                            <td>
+                              {% set ed = rd.expected_daily %}
+                              {% set parts = [] %}
+                              {% if ed.get('food', 0) %}{% set _ = parts.append('+' + ed.food|string + ' food') %}{% endif %}
+                              {% if ed.get('wood', 0) %}{% set _ = parts.append('+' + ed.wood|string + ' wood') %}{% endif %}
+                              {% if ed.get('stone', 0) %}{% set _ = parts.append('+' + ed.stone|string + ' stone') %}{% endif %}
+                              {% if ed.get('iron', 0) %}{% set _ = parts.append('+' + ed.iron|string + ' iron') %}{% endif %}
+                              <strong>{{ parts | join(', ') }}</strong>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div style="color: var(--aw-text-muted); font-size: 11px; margin-top: 8px;">
+                      "Max" assumes every producer picks <em>work</em> every day. Real output is typically 50–70% of this because producers also rest, train, study, etc.
+                    </div>
+                    {% else %}
+                    <div style="color: var(--aw-text-muted);">No producer-job villagers alive.</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Trade prices / King imports & exports -->
+              <div class="col-12 col-lg-5">
+                <div class="game-card mb-3">
+                  <div class="card-body">
+                    <div class="chart-title">Trade Prices</div>
+                    <table class="table feature-table">
+                      <thead>
+                        <tr>
+                          <th>Resource</th>
+                          <th style="text-align: right;">Buy (king imports)</th>
+                          <th style="text-align: right;">Sell (king exports)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for r, p in rd.prices.items() %}
+                        <tr>
+                          <td><strong>{{ r | capitalize }}</strong></td>
+                          <td style="text-align: right;">{{ p }}g</td>
+                          <td style="text-align: right;">{{ rd.sell_prices.get(r, 0) }}g</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                    <div style="color: var(--aw-text-muted); font-size: 11px; margin-top: 6px;">
+                      Sell prices are below buy prices — the king cannot arbitrage trade. Exports only fire when stockpile is well above the safety floor.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="game-card">
+                  <div class="card-body">
+                    <div class="chart-title">Recent Foreign Trade</div>
+                    {% if rd.recent_imports %}
+                      <div class="d-flex flex-column gap-2" style="max-height: 340px; overflow-y: auto; padding-right: 6px;">
+                        {% for ev in rd.recent_imports %}
+                        <div style="padding: 8px 0; border-bottom: 1px solid var(--aw-border);">
+                          <div style="font-size: 12px; color: var(--aw-text-muted);">Y{{ ev.year }} · D{{ (ev.day - 1) % 90 }}</div>
+                          <div style="font-size: 13px;"><strong>{{ ev.headline }}</strong></div>
+                          {% if ev.body %}
+                          <div style="color: var(--aw-text-muted); font-size: 12px; margin-top: 2px;">{{ ev.body[:160] }}{% if ev.body|length > 160 %}…{% endif %}</div>
+                          {% endif %}
+                        </div>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <div style="color: var(--aw-text-muted);">No imports yet — the king hasn't ordered any foreign trade.</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Health -->
+          <div id="tab-health" class="tab-content" style="display: none;">
+            {% set hd = health_dashboard %}
+
+            <!-- KPI strip -->
+            <div class="row g-3 mb-3">
+              <div class="col-6 col-md-3">
+                <div class="chart-card">
+                  <div style="color: var(--aw-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Currently Sick</div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--aw-text);" id="kpi-health-sick">{{ hd.total_sick }}</div>
+                  <div style="color: var(--aw-text-muted); font-size: 12px;" id="kpi-health-sick-sub">{{ hd.sick_pct }}% of {{ hd.total_alive }} alive</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="chart-card">
+                  <div style="color: var(--aw-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Healers Active</div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--aw-text);" id="kpi-health-healers">{{ hd.healers|length }}</div>
+                  <div style="color: var(--aw-text-muted); font-size: 12px;">Healer / Cleric / Priest / Herbalist</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="chart-card">
+                  <div style="color: var(--aw-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Immunities Held</div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--aw-text);" id="kpi-health-immune">{{ hd.total_immune }}</div>
+                  <div style="color: var(--aw-text-muted); font-size: 12px;">Total grants across population</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="chart-card">
+                  <div style="color: var(--aw-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Status</div>
+                  <div style="font-size: 22px; font-weight: 700; color: var(--aw-text); text-transform: capitalize;">
+                    <span id="kpi-health-status" class="status-badge {{ hd.outbreak_class }}">{{ hd.outbreak_status }}</span>
+                  </div>
+                  <div style="color: var(--aw-text-muted); font-size: 12px;">Plague present = critical</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts row -->
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-lg-5">
+                <div class="chart-card">
+                  <div class="chart-title">Currently Sick — Breakdown</div>
+                  <div class="chart-container">
+                    <canvas id="chart-health-current"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-7">
+                <div class="chart-card">
+                  <div class="chart-title">Immunity Coverage (alive villagers with each disease cleared)</div>
+                  <div class="chart-container">
+                    <canvas id="chart-health-immunity"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sick villagers table -->
+            <div class="game-card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0">Sick Villagers ({{ hd.sick_villagers|length }})</h6>
+                  <span style="color: var(--aw-text-muted); font-size: 12px;">Sorted by lowest HP first</span>
+                </div>
+                {% if hd.sick_villagers %}
+                <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                  <table class="table mini-table mb-0">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Family</th>
+                        <th>Job</th>
+                        <th class="text-end">Age</th>
+                        <th>Disease</th>
+                        <th class="text-end">Days Sick</th>
+                        <th class="text-end">HP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for s in hd.sick_villagers %}
+                      <tr>
+                        <td>{{ s.name }}</td>
+                        <td style="color: var(--aw-text-muted);">{{ s.family }}</td>
+                        <td>{{ s.job }}</td>
+                        <td class="text-end">{{ s.age }}</td>
+                        <td>{{ s.disease_icon }} {{ s.disease_name }}</td>
+                        <td class="text-end">{{ s.days_sick }}</td>
+                        <td class="text-end {% if s.hp < 30 %}text-danger{% elif s.hp < 60 %}text-warning{% endif %}">{{ s.hp }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% else %}
+                <div style="color: var(--aw-text-muted);">Nobody is sick. The village is healthy.</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Healers roster + Recent events -->
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-lg-5">
+                <div class="game-card h-100">
+                  <div class="card-body">
+                    <h6 class="mb-2">Healer Roster</h6>
+                    {% if hd.healers %}
+                    <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                      <table class="table mini-table mb-0">
+                        <thead>
+                          <tr>
+                            <th>Name</th>
+                            <th>Job</th>
+                            <th class="text-end">INT</th>
+                            <th class="text-end">Lvl</th>
+                            <th class="text-end">Age</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for h in hd.healers %}
+                          <tr>
+                            <td>{{ h.name }}</td>
+                            <td>{{ h.job }}</td>
+                            <td class="text-end">{{ h.int }}</td>
+                            <td class="text-end">{{ h.level }}</td>
+                            <td class="text-end">{{ h.age }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    {% else %}
+                    <div style="color: var(--aw-text-muted);">No healers in the village — disease cures impossible until one emerges.</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-7">
+                <div class="game-card h-100">
+                  <div class="card-body">
+                    <h6 class="mb-2">Recent Health Events</h6>
+                    {% if hd.recent_events %}
+                    <div style="max-height: 320px; overflow-y: auto;">
+                      {% for ev in hd.recent_events %}
+                      <div style="border-bottom: 1px solid var(--aw-border); padding: 6px 0;">
+                        <div style="color: var(--aw-text); font-size: 13px;">{{ ev.headline }}</div>
+                        <div style="color: var(--aw-text-muted); font-size: 11px;">Y{{ ev.year }} D{{ ev.day_in_year }} · {{ ev.category }}</div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="color: var(--aw-text-muted);">No recent health activity logged.</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Justice -->
+          <div id="tab-justice" class="tab-content" style="display: none;">
+            <!-- KPI strip: this-year + all-time -->
+            <div class="row g-3 mb-3">
+              <div class="col-6 col-md-3">
+                <div class="chart-card">
+                  <div style="color: var(--aw-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Crimes (Year)</div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--aw-dead);" id="kpi-justice-crimes-year">0</div>
+                  <div style="color: var(--aw-text-muted); font-size: 12px;" id="kpi-justice-crimes-sub">All-time: <span id="kpi-justice-crimes-all">0</span></div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="chart-card">
+                  <div style="color: var(--aw-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Trials Held</div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--aw-text);" id="kpi-justice-trials-year">0</div>
+                  <div style="color: var(--aw-text-muted); font-size: 12px;">All-time: <span id="kpi-justice-trials-all">0</span></div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="chart-card">
+                  <div style="color: var(--aw-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Fines (Year)</div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--aw-gold);"><span id="kpi-justice-fines-year">0</span>g</div>
+                  <div style="color: var(--aw-text-muted); font-size: 12px;">
+                    <span id="kpi-justice-fines-count-year">0</span> verdicts · all-time:
+                    <span id="kpi-justice-fines-all">0</span>g / <span id="kpi-justice-fines-count-all">0</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="chart-card">
+                  <div style="color: var(--aw-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Severe Verdicts</div>
+                  <div style="font-size: 22px; font-weight: 700; color: var(--aw-text);">
+                    <span style="color: var(--aw-warning);" id="kpi-justice-exiles-year">0</span>🏹
+                    <span style="color: var(--aw-dead); margin-left: 6px;" id="kpi-justice-execs-year">0</span>☠
+                  </div>
+                  <div style="color: var(--aw-text-muted); font-size: 12px;">All-time: <span id="kpi-justice-exiles-all">0</span> exiled · <span id="kpi-justice-execs-all">0</span> executed</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Yearly trend chart -->
+            <div class="row g-3 mb-3">
+              <div class="col-12">
+                <div class="chart-card">
+                  <div class="chart-title">Crime &amp; Verdicts by Year</div>
+                  <div class="chart-container-lg">
+                    <canvas id="chart-justice-yearly"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent verdicts feed -->
+            <div class="game-card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0">Recent Justice Events</h6>
+                  <span style="color: var(--aw-text-muted); font-size: 12px;">Latest entries from the chronicle's justice category</span>
+                </div>
+                <div id="justice-feed" style="max-height: 320px; overflow-y: auto;">
+                  <div style="color: var(--aw-text-muted);">Loading…</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </main>
       </div>
     </div>
@@ -533,6 +961,8 @@
     window.AW_GRAVEYARD = {{ graveyard_index | default({}) | tojson | safe }};
     window.AW_SKILL_DESCRIPTIONS = {{ skill_descriptions | default({}) | tojson | safe }};
     window.AW_ACHIEVEMENT_DESCRIPTIONS = {{ achievement_descriptions | default({}) | tojson | safe }};
+    window.AW_RESOURCES_DASHBOARD = {{ resources_dashboard | tojson | safe }};
+    window.AW_HEALTH_DASHBOARD = {{ health_dashboard | default({}) | tojson | safe }};
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>

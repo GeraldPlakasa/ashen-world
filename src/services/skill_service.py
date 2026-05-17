@@ -39,7 +39,7 @@ SKILLS = {
         "category": "COMBAT",
         "description": "Uncanny precision with ranged weapons",
         "stat_bonus": {"atk": 3, "def": 2},
-        "job_affinity": ["Archer", "Ranger", "Hunter"],
+        "job_affinity": ["Hunter", "Scout", "Guard"],
         "rarity": "common",
     },
     "Bloodrage": {
@@ -143,7 +143,7 @@ SKILLS = {
         "category": "SURVIVAL",
         "description": "Reads the wild like an open book",
         "stat_bonus": {"def": 3, "atk": 2},
-        "job_affinity": ["Hunter", "Ranger", "Scout", "Forester"],
+        "job_affinity": ["Hunter", "Scout", "Forester"],
         "rarity": "common",
     },
     "Herbweaver": {
@@ -164,7 +164,7 @@ SKILLS = {
         "category": "SURVIVAL",
         "description": "Never lost, even in the darkest wild",
         "stat_bonus": {"def": 4, "int": 2},
-        "job_affinity": ["Ranger", "Scout", "Sailor", "Courier"],
+        "job_affinity": ["Scout", "Sailor", "Courier"],
         "rarity": "common",
     },
     "Beastbond": {
@@ -259,14 +259,14 @@ SKILLS = {
         "category": "MAGIC",
         "description": "Blinks through shadow to evade attacks",
         "stat_bonus": {"mp": 6, "def": 4},
-        "job_affinity": ["Sorcerer", "Spy", "Ranger"],
+        "job_affinity": ["Sorcerer", "Spy", "Scout"],
         "rarity": "rare",
     },
     "Nature's Wrath": {
         "category": "MAGIC",
         "description": "Commands the forces of nature against foes",
         "stat_bonus": {"mp": 10, "atk": 4},
-        "job_affinity": ["Druid", "Herbalist", "Ranger"],
+        "job_affinity": ["Druid", "Herbalist", "Hunter"],
         "rarity": "uncommon",
     },
 }

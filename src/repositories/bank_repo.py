@@ -15,6 +15,7 @@ def load_bank() -> Bank:
             return {
                 "tax_rate": 0.10,
                 "balance": 0,
+                "resources": {"food": 0, "wood": 0, "stone": 0, "iron": 0},
                 "building_levels": {},
                 "building_health": {},
                 "last_election_year": None,
@@ -33,6 +34,7 @@ def load_bank() -> Bank:
                 "last_quest_type": None,
                 "last_quest_success": None,
                 "quest_history": [],
+                "pending_crimes": [],
                 "year_stats": {},
                 "yearly_history": [],
             }
@@ -51,6 +53,12 @@ def load_bank() -> Bank:
         if not isinstance(levels, dict): levels = {}
         if not isinstance(health, dict): health = {}
 
+        resources = data.get("resources") or {}
+        if not isinstance(resources, dict):
+            resources = {}
+        for r in ("food", "wood", "stone", "iron"):
+            resources[r] = int(resources.get(r, 0) or 0)
+
         year_stats = data.get("year_stats") or {}
         if not isinstance(year_stats, dict):
             year_stats = {}
@@ -62,6 +70,7 @@ def load_bank() -> Bank:
         return {
             "tax_rate": rate,
             "balance": bal,
+            "resources": resources,
             "building_levels": levels,
             "building_health": health,
             # Election tracking
@@ -84,6 +93,7 @@ def load_bank() -> Bank:
             "last_quest_name": data.get("last_quest_name", ""),
             "last_quest_desc": data.get("last_quest_desc", ""),
             "quest_history": data.get("quest_history", []) if isinstance(data.get("quest_history"), list) else [],
+            "pending_crimes": data.get("pending_crimes", []) if isinstance(data.get("pending_crimes"), list) else [],
             # Stats
             "year_stats": year_stats,
             "yearly_history": yearly_history,
@@ -102,9 +112,18 @@ def save_bank(bank: Bank) -> None:
     if not isinstance(yearly_history, list):
         yearly_history = []
 
+    raw_resources = bank.get("resources") if isinstance(bank.get("resources"), dict) else {}
+    resources = {
+        "food":  int(raw_resources.get("food",  0) or 0),
+        "wood":  int(raw_resources.get("wood",  0) or 0),
+        "stone": int(raw_resources.get("stone", 0) or 0),
+        "iron":  int(raw_resources.get("iron",  0) or 0),
+    }
+
     data = {
         "tax_rate": float(bank.get("tax_rate", 0.10)),
         "balance": int(bank.get("balance", 0)),
+        "resources": resources,
         "building_levels": bank.get("building_levels") if isinstance(bank.get("building_levels"), dict) else {},
         "building_health": bank.get("building_health") if isinstance(bank.get("building_health"), dict) else {},
         # Election tracking
@@ -127,6 +146,7 @@ def save_bank(bank: Bank) -> None:
         "last_quest_name": bank.get("last_quest_name", ""),
         "last_quest_desc": bank.get("last_quest_desc", ""),
         "quest_history": bank.get("quest_history", []) if isinstance(bank.get("quest_history"), list) else [],
+        "pending_crimes": bank.get("pending_crimes", []) if isinstance(bank.get("pending_crimes"), list) else [],
         # Stats
         "year_stats": year_stats,
         "yearly_history": yearly_history,

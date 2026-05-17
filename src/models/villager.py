@@ -57,6 +57,7 @@ Villager = TypedDict(
         "equip_amulet": int,
         "equip_tome": int,
         "last_forge_day": int,  # cooldown anchor for forge_artifact action
+        "blue_blood": int,  # 1 if descended from a king (set at birth or on king coronation)
     },
     total=False,
 )

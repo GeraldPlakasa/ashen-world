@@ -774,9 +774,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const originLabel = c.origin === "player" ? "Player" : "NPC";
 
+      // Disease indicator next to the name (🤧 / 🤒 / ☠️)
+      const diseaseIcons = { cough: "🤧", fever: "🤒", plague: "☠️" };
+      const sickIcon = (c.disease && diseaseIcons[c.disease])
+        ? `<span title="Ill with ${c.disease}" style="margin-left: 4px;">${diseaseIcons[c.disease]}</span>`
+        : "";
+
       html += `
         <tr class="${rowClass}" data-char-id="${c.id}">
-          <td class="${nameClass}">${escapeHtml(c.name)}</td>
+          <td class="${nameClass}">${escapeHtml(c.name)}${sickIcon}</td>
           <td>${escapeHtml(c.gender)}</td>
           <td>${escapeHtml(c.job)}</td>
           <td class="text-end">${c.coins ?? 0}</td>
@@ -977,6 +983,19 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update admin buildings if present
       if (Array.isArray(data.buildings)) {
         renderAdminBuildings(data.buildings);
+      }
+
+      // Update stockpile widgets if present
+      if (data.resources && typeof data.resources === "object") {
+        const r = data.resources;
+        const setIf = (id, val) => {
+          const el = document.getElementById(id);
+          if (el && typeof val === "number") el.textContent = val;
+        };
+        setIf("stockpile-food", r.food);
+        setIf("stockpile-wood", r.wood);
+        setIf("stockpile-stone", r.stone);
+        setIf("stockpile-iron", r.iron);
       }
 
       updateStatus(
@@ -1201,27 +1220,90 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      // Gender + status palette
+      const COLOR_MALE_ALIVE   = { bg: "#1a3a6b", border: "#6aa6ff", font: "#e8efff" };
+      const COLOR_FEMALE_ALIVE = { bg: "#5a1f3a", border: "#f08aaf", font: "#ffe8f0" };
+      const COLOR_DEAD         = { bg: "#2d2d2d", border: "#6b7280", font: "#bfbfbf" };
+      const COLOR_ARCHIVED     = { bg: "#1f1f1f", border: "#555555", font: "#9c9c9c" };
+      const COLOR_UNKNOWN      = { bg: "#1f1f1f", border: "#444444", font: "#9c9c9c" };
+      const ROOT_BORDER        = "#f5b83b";
+      const ROYAL_BORDER       = "#f0c245";
+
+      function colorForNode(n) {
+        const m = n._meta || {};
+        if (m.archived) return { ...COLOR_ARCHIVED };
+        if (!m.alive)   return { ...COLOR_DEAD };
+        if (m.gender === "Male")   return { ...COLOR_MALE_ALIVE };
+        if (m.gender === "Female") return { ...COLOR_FEMALE_ALIVE };
+        return { ...COLOR_UNKNOWN };
+      }
+
       const nodes = (data.nodes || []).map((n) => {
         const out = { ...n };
 
-        // Clean label
         if (typeof out.label === "string") {
           out.label = decodeHtmlEntities(out.label);
         }
 
-        // REMOVE hover tooltip completely:
-        // (Even if backend sends title, we don't want hover content)
         const titleText = out.title ? htmlTitleToMultilineText(out.title) : "";
         out._awTitleText = titleText;
         delete out.title;
 
+        const meta = out._meta || {};
+        const isRoot = out.id === rootId;
+        const isRoyal = meta.blue_blood === true;
+
+        const pal = colorForNode(out);
+        out.color = {
+          background: pal.bg,
+          border: isRoot ? ROOT_BORDER : (isRoyal ? ROYAL_BORDER : pal.border),
+          highlight: { background: pal.bg, border: "#ffffff" },
+        };
+        out.borderWidth = isRoot ? 4 : (isRoyal ? 3 : 1);
+        out.font = { color: pal.font, multi: "html", size: 13, face: "inherit" };
+        out.shape = "box";
+        out.shapeProperties = { borderDashes: meta.archived ? [4, 4] : false };
+        // Save original style so search highlight can be reverted
+        out._origColor = { ...out.color };
+        out._origBorderWidth = out.borderWidth;
+
         return out;
       });
 
-      const edges = (data.edges || []).map((e) => ({ ...e }));
+      const edges = (data.edges || []).map((e) => {
+        const out = { ...e };
+        if (out.dashes) {
+          out.color = { color: "#c77b9b", opacity: 0.7 };
+          out.width = 1;
+        } else {
+          out.color = { color: "#5a6a7a", opacity: 0.8 };
+          out.width = 1.5;
+        }
+        return out;
+      });
 
       nodesDS = new vis.DataSet(nodes);
       edgesDS = new vis.DataSet(edges);
+
+      // ---- Stats strip
+      const stats = data.stats || {};
+      const statsRow = document.getElementById('ft-stats-row');
+      if (statsRow) statsRow.style.display = '';
+      const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? 0; };
+      setText('stat-total',  stats.total);
+      setText('stat-male',   stats.male);
+      setText('stat-female', stats.female);
+      setText('stat-dead',   (stats.dead || 0) + (stats.archived || 0));
+      setText('stat-royal',  stats.royal_blood);
+      setText('stat-kings',  stats.kings);
+
+      const foundersEl = document.getElementById('ft-founders');
+      if (foundersEl) {
+        const fs = (stats.founders || []);
+        foundersEl.innerHTML = fs.length
+          ? `Founders in view: <strong>${fs.map(escapeHtml).join(', ')}</strong>`
+          : '';
+      }
 
       const options = {
         layout: {
@@ -1265,15 +1347,6 @@ document.addEventListener("DOMContentLoaded", () => {
           tooltipDelay: 0,
         },
 
-        groups: {
-          root: { shape: "star" },
-          player: { shape: "box" },
-          npc: { shape: "ellipse" },
-          dead: { shape: "diamond" },
-          archived: { shape: "triangle" },
-          unknown: { shape: "dot" },
-        },
-
         edges: {
           smooth: {
             enabled: true,
@@ -1281,13 +1354,14 @@ document.addEventListener("DOMContentLoaded", () => {
             forceDirection: "vertical",
             roundness: 0.25,
           },
-          font: { size: 10 },
+          font: { size: 10, color: "#9a9a9a" },
         },
 
         nodes: {
           font: { multi: "html" },
           margin: 10,
           widthConstraint: { maximum: 220 },
+          shape: "box",
         },
       };
 
@@ -1297,6 +1371,67 @@ document.addEventListener("DOMContentLoaded", () => {
         network.setOptions({ physics: { enabled: false } });
         network.fit({ animation: true });
       });
+
+      // ---- Filters (hide deceased / royal-only)
+      const hideDeadEl = document.getElementById('ft-hide-dead');
+      const onlyRoyalEl = document.getElementById('ft-only-royal');
+      const HIGHLIGHT_BORDER = "#ffd75e";
+
+      function applyVisibilityFilters() {
+        const hideDead = !!(hideDeadEl && hideDeadEl.checked);
+        const onlyRoyal = !!(onlyRoyalEl && onlyRoyalEl.checked);
+        const updates = nodesDS.get().map(n => {
+          const m = n._meta || {};
+          // Always keep the root visible so the tree has an anchor.
+          const isRoot = n.id === rootId;
+          let hidden = false;
+          if (!isRoot) {
+            if (hideDead && (m.alive === false || m.archived === true)) hidden = true;
+            if (onlyRoyal && !m.blue_blood) hidden = true;
+          }
+          return { id: n.id, hidden };
+        });
+        nodesDS.update(updates);
+      }
+      if (hideDeadEl) hideDeadEl.addEventListener('change', applyVisibilityFilters);
+      if (onlyRoyalEl) onlyRoyalEl.addEventListener('change', applyVisibilityFilters);
+
+      // ---- Search: highlight matching nodes with a bright border + focus first hit
+      const searchEl = document.getElementById('ft-search');
+
+      function applySearchHighlight() {
+        const q = (searchEl?.value || '').trim().toLowerCase();
+        let firstHitId = null;
+        const updates = nodesDS.get().map(n => {
+          const meta = n._meta || {};
+          const blob = `${(meta.name || '').toLowerCase()} ${(meta.family || '').toLowerCase()} ${(meta.job || '').toLowerCase()}`;
+          const isHit = q && blob.includes(q);
+          if (isHit && firstHitId === null) firstHitId = n.id;
+          if (isHit) {
+            return {
+              id: n.id,
+              color: { ...n._origColor, border: HIGHLIGHT_BORDER },
+              borderWidth: 4,
+            };
+          }
+          return {
+            id: n.id,
+            color: { ...n._origColor },
+            borderWidth: n._origBorderWidth,
+          };
+        });
+        nodesDS.update(updates);
+        if (firstHitId !== null && network) {
+          network.focus(firstHitId, { scale: 1.0, animation: { duration: 400 } });
+        }
+      }
+      if (searchEl) {
+        let searchTimer = null;
+        searchEl.addEventListener('input', () => {
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(applySearchHighlight, 120);
+        });
+      }
 
       network.on("selectNode", (params) => {
         const id = params.nodes?.[0];

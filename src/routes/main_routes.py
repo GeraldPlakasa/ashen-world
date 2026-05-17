@@ -30,6 +30,7 @@ def landing():
 
     bank_balance = village_bank.get("balance", 0)
     tax_rate = village_bank.get("tax_rate", 0.10)
+    village_resources = village_bank.get("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0})
     last_election_year = village_bank.get("last_election_year")
     last_election_message = village_bank.get("last_election_message", "")
     last_event_message = village_bank.get("last_event_message", "")
@@ -51,7 +52,14 @@ def landing():
     pinned_data = get_pinned_character_data(username, characters)
 
     try:
-        chronicle_headlines = list_top_recent(limit=5, min_importance=3)
+        # Pull a few extra so we still have ~5 after filtering out weddings.
+        raw_headlines = list_top_recent(limit=12, min_importance=3)
+        # Weddings are noisy (~10+ per year in a healthy village); they stay
+        # in the full Chronicle but don't belong on the landing widget.
+        chronicle_headlines = [
+            h for h in raw_headlines
+            if "are wed" not in (h.get("headline") or "").lower()
+        ][:5]
     except Exception:
         chronicle_headlines = []
 
@@ -81,6 +89,7 @@ def landing():
         pinned_character=pinned_character,
         bank_balance=bank_balance,
         tax_rate=tax_rate,
+        village_resources=village_resources,
         pinned_actions=pinned_actions,
         village_buildings=village_buildings,
         pinned_rel_bonds=pinned_rel_bonds,

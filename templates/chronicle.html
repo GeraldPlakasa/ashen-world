@@ -17,13 +17,27 @@
       margin-bottom: 20px;
       align-items: center;
     }
-    .chronicle-filters select {
+    .chronicle-filters select,
+    .chronicle-filters input[type="search"] {
       padding: 8px 12px;
       border: 1px solid var(--aw-border);
       border-radius: 8px;
       background: var(--aw-bg-card);
       color: var(--aw-text);
       font-size: 13px;
+    }
+    .chronicle-filters input[type="search"] {
+      min-width: 220px;
+    }
+    .chronicle-filters input[type="search"]:focus {
+      outline: none;
+      border-color: var(--aw-accent);
+    }
+    mark.q-hit {
+      background: rgba(245, 158, 11, 0.35);
+      color: inherit;
+      padding: 0 2px;
+      border-radius: 3px;
     }
     .chron-event {
       background: var(--aw-bg-card);
@@ -130,6 +144,8 @@
 
         <main class="aw-main">
           <form method="get" action="{{ url_for('chronicle.chronicle') }}" class="chronicle-filters">
+            <input type="search" name="q" value="{{ q or '' }}"
+                   placeholder="🔍 Search headlines & stories..." autocomplete="off" />
             <select name="category">
               <option value="">All categories</option>
               {% for c in all_categories %}
@@ -150,7 +166,7 @@
               <option value="5" {% if min_importance == 5 %}selected{% endif %}>Legendary only</option>
             </select>
             <button type="submit" class="btn btn-sm btn-outline-light">Apply</button>
-            {% if category or year_filter or min_importance > 1 %}
+            {% if q or category or year_filter or min_importance > 1 %}
               <a href="{{ url_for('chronicle.chronicle') }}" class="btn btn-sm btn-link" style="color: var(--aw-text-muted);">Clear</a>
             {% endif %}
           </form>
@@ -158,8 +174,13 @@
           {% if not events %}
             <div class="empty-state">
               <div class="empty-state-icon">📜</div>
-              <div>The Chronicle is silent.</div>
-              <div style="font-size: 12px; margin-top: 8px;">Events will appear here as the village's story unfolds.</div>
+              {% if q or category or year_filter or min_importance > 1 %}
+                <div>No entries match your filters.</div>
+                <div style="font-size: 12px; margin-top: 8px;">Try a different search term or clear the filters.</div>
+              {% else %}
+                <div>The Chronicle is silent.</div>
+                <div style="font-size: 12px; margin-top: 8px;">Events will appear here as the village's story unfolds.</div>
+              {% endif %}
             </div>
           {% else %}
             {% for e in events %}
@@ -181,11 +202,11 @@
             <div class="pager">
               {% if page > 1 %}
                 <a class="btn btn-sm btn-outline-light"
-                   href="{{ url_for('chronicle.chronicle', page=page-1, category=category or '', year=year_filter or '', min_importance=min_importance) }}">‹ Newer</a>
+                   href="{{ url_for('chronicle.chronicle', page=page-1, q=q or '', category=category or '', year=year_filter or '', min_importance=min_importance) }}">‹ Newer</a>
               {% endif %}
               {% if has_more %}
                 <a class="btn btn-sm btn-outline-light"
-                   href="{{ url_for('chronicle.chronicle', page=page+1, category=category or '', year=year_filter or '', min_importance=min_importance) }}">Older ›</a>
+                   href="{{ url_for('chronicle.chronicle', page=page+1, q=q or '', category=category or '', year=year_filter or '', min_importance=min_importance) }}">Older ›</a>
               {% endif %}
             </div>
           {% endif %}

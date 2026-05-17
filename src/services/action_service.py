@@ -29,7 +29,8 @@ from src.models.villager import Villager
 from src.models.bank import Bank
 from src.models.combat import ShopOffer
 
-def choose_action(villager: Villager, bank: Bank | None = None, weather: str | None = None) -> str:
+def choose_action(villager: Villager, bank: Bank | None = None, weather: str | None = None,
+                  all_characters: list[Villager] | None = None) -> str:
     """
     Decide the villager's action for the day based on traits, job, hunger, coins,
     weather, and building levels.
@@ -45,10 +46,18 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         "hunt": 0.8,
         "socialize": 0.6,
         "hangout": 0.4,
-        "steal": 0.2,
+        "steal": 0.10,
         "mentor": 0.0,  # Only enabled for age 20+ with skills
         "meditate": 0.0,  # Only enabled for magic-capable jobs
         "forge_artifact": 0.0,  # Only enabled for high-INT Blacksmith/Wizard/Sorcerer with treasury funds (Phase 7)
+        "woo": 0.0,           # Only enabled for single adults 18-60 (romance — addresses marriage bottleneck)
+        "visit_tavern": 0.0,  # Only enabled when Tavern Lvl ≥ 1
+        "spar": 0.6,          # Available to any adult; pair training
+        "drill": 0.0,         # Only enabled when Barracks Lvl ≥ 1
+        "heal_sick": 0.0,     # Only enabled for Healer/Cleric/Herbalist/Priest when sick villagers exist
+        # Crime/patrol actions are added below only when gating passes — they
+        # are deliberately absent from the default pool so floor logic doesn't
+        # dilute everyone's denominator. See "Crime gating" block.
     }
 
     # Building-based adjustments (village-wide passives)
@@ -70,6 +79,8 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         if lvl_barracks > 0:
             weights["train"] += 0.3 * lvl_barracks
             weights["hunt"]  += 0.2 * lvl_barracks
+            weights["drill"] = 0.5 + 0.3 * lvl_barracks  # gate: requires Barracks
+            weights["spar"]  += 0.2 * lvl_barracks       # barracks encourages sparring
 
         if lvl_granary > 0:
             weights["train"] += 0.1 * lvl_granary
@@ -83,6 +94,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
             weights["rest"] += 0.2 * lvl_tavern
             weights["hangout"] += 0.3 * lvl_tavern
             weights["socialize"] += 0.1 * lvl_tavern
+            weights["visit_tavern"] = 0.5 + 0.3 * lvl_tavern  # gate: requires Tavern
 
         if lvl_temple > 0:
             weights["study"] += 0.1 * lvl_temple
@@ -103,7 +115,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
             weights["steal"] -= 0.2
         if t == "Greedy":
             weights["work"] += 0.8
-            weights["steal"] += 0.5
+            weights["steal"] += 0.30
         if t in ("Generous", "Empathic"):
             weights["buy_food"] += 0.4
             weights["socialize"] += 0.4
@@ -126,9 +138,9 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
             weights["train"] += 0.4
             weights["hunt"] += 0.4
             weights["buy_gear"] += 0.2
-            weights["steal"] += 0.3
+            weights["steal"] += 0.20
         if t == "Deceitful":
-            weights["steal"] += 0.9
+            weights["steal"] += 0.50
             weights["socialize"] -= 0.3
         if t == "Stoic":
             weights["rest"] -= 0.3
@@ -173,13 +185,13 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         if t == "Fearless":
             weights["hunt"] += 0.8
             weights["train"] += 0.6
-            weights["steal"] += 0.3
+            weights["steal"] += 0.15
         if t == "Veteran":
             weights["hunt"] += 0.6
             weights["train"] += 0.4
             weights["buy_gear"] += 0.2
 
-    if job in ["Soldier", "Commander", "Guard", "Archer", "Ranger", "Captain"]:
+    if job in ["Soldier", "Commander", "Guard", "Captain", "Scout"]:
         weights["train"] += 1.0
         weights["hunt"] += 0.5
         weights["buy_gear"] += 0.6
@@ -207,7 +219,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         weights["hunt"] *= 0.15
         weights["train"] *= 0.7
     if job in ["Spy"]:
-        weights["steal"] += 0.8
+        weights["steal"] += 0.40
         weights["socialize"] += 0.3
 
     # Magic jobs: prefer study/meditate, less physical work
@@ -229,6 +241,106 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         mp = villager.get("mp", 0)
         if mp < 15:
             weights["meditate"] += 0.8
+
+    # Heal-sick (Healer/Cleric/Herbalist/Priest only, when there are sick patients)
+    from config import HEALER_JOBS as _HEALER_JOBS
+    if job in _HEALER_JOBS and all_characters:
+        try:
+            from src.services.disease_service import is_sick as _is_sick
+            sick_count = sum(1 for o in all_characters if o is not villager and _is_sick(o) and o.get("alive", True))
+        except Exception:
+            sick_count = 0
+        if sick_count > 0:
+            # Strong base weight when there's even one patient; ramp with caseload
+            weights["heal_sick"] = 1.5 + min(2.5, sick_count * 0.15)
+            # Healers naturally suppress hunting and stealing when called to duty
+            weights["hunt"]  *= 0.6
+            weights["steal"] *= 0.4
+
+    # ---- Crime gating (assault / murder) ----------------------------------
+    # Only consider these for non-royal adults. Trait-driven; low rep amplifies;
+    # high rep + Empathic/Loyal traits suppress.
+    age_now = int(villager.get("age", 0) or 0)
+    rep_now = int(villager.get("rep", 0) or 0)
+    is_royal = job in ("King", "Queen")
+    if age_now >= 17 and not is_royal:
+        # Count alive guards for deterrence (used by both crimes)
+        guard_count = 0
+        if all_characters:
+            try:
+                from config import GUARD_JOBS as _GUARD_JOBS
+                guard_count = sum(
+                    1 for o in all_characters
+                    if o.get("alive", True) and o.get("job") in _GUARD_JOBS
+                )
+            except Exception:
+                guard_count = 0
+
+        # ----- Assault -----
+        # Tuned so that even a Hot-headed villager only commits assault a few
+        # times a year — not weekly. Requires real provocation (low rep) or
+        # multiple aggressive traits stacking.
+        a_base = 0.02
+        for t in traits:
+            if t == "Hot-headed":  a_base += 0.18
+            if t == "Reckless":    a_base += 0.15
+            if t == "Deceitful":   a_base += 0.08
+            if t == "Greedy":      a_base += 0.04
+            if t == "Empathic":    a_base -= 0.30
+            if t == "Cautious":    a_base -= 0.25
+            if t == "Loyal":       a_base -= 0.15
+            if t == "Wise":        a_base -= 0.10
+        if rep_now < -5:   a_base += 0.10
+        if rep_now < -15:  a_base += 0.15
+        if rep_now > 10:   a_base -= 0.20
+        # Guard deterrence — strong drop when watched
+        if guard_count >= 2:
+            a_base *= 0.6
+        if guard_count >= 5:
+            a_base *= 0.5
+        # High threshold: only profiles with real motive land in the action pool.
+        if a_base > 0.18:
+            weights["assault"] = a_base
+
+        # ----- Murder ----- (very rare; needs an extreme profile)
+        m_base = 0.0
+        # Personality core
+        if "Deceitful" in traits and "Hot-headed" in traits:
+            m_base = 0.025
+        elif "Reckless" in traits and rep_now < -10:
+            m_base = 0.015
+        if rep_now < -20:
+            m_base += 0.04
+        # Predator profile: killers tend to have hunt wins
+        if int(villager.get("huntWins", 0) or 0) >= 5:
+            m_base += 0.02
+        if "Empathic" in traits or "Loyal" in traits or "Wise" in traits:
+            m_base *= 0.25
+        if guard_count >= 3:
+            m_base *= 0.4
+        # Tight cap so murder stays a true outlier event
+        m_base = min(0.08, max(0.0, m_base))
+        if m_base > 0.04:
+            weights["murder"] = m_base
+
+    # ---- Patrol gating (Guard jobs) ---------------------------------------
+    # Patrol competes with the guard's training/hunting bias — keep base modest
+    # so guards split their time across duties rather than patrolling daily.
+    from config import GUARD_JOBS as _GUARD_JOBS_FOR_PATROL
+    if job in _GUARD_JOBS_FOR_PATROL and age_now >= 17:
+        p_base = 0.5
+        for t in traits:
+            if t in ("Loyal", "Diligent"):  p_base += 0.20
+            if t == "Brave":                p_base += 0.15
+            if t == "Protective":           p_base += 0.15
+            if t == "Strict":               p_base += 0.10
+            if t == "Lazy":                 p_base -= 0.30
+            if t == "Cautious":             p_base -= 0.05
+        # Hungry guards prefer food/rest over patrolling
+        if int(villager.get("hunger", 0) or 0) > 70:
+            p_base *= 0.4
+        if p_base > 0.0:
+            weights["patrol"] = p_base
 
     # Skill-based action modifiers
     skills = parse_skills(villager.get("skills", ""))
@@ -273,8 +385,77 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
             weights["hunt"] += 0.4
             weights["train"] -= 0.2
 
-    # Mentor action: only for age 20+ with skills
+    # Spar action: trait/job tweaks (base weight enabled for any adult)
     age = villager.get("age", 0)
+    if age >= 17:
+        for t in traits:
+            if t == "Brave":      weights["spar"] += 0.5
+            if t == "Diligent":   weights["spar"] += 0.4
+            if t == "Hot-headed": weights["spar"] += 0.4
+            if t == "Patient":    weights["spar"] += 0.2
+            if t == "Protective": weights["spar"] += 0.3
+            if t == "Stoic":      weights["spar"] += 0.3   # disciplined training fits Stoic
+            if t == "Lazy":       weights["spar"] -= 0.4
+            if t == "Cautious":   weights["spar"] -= 0.2
+        if job in ["Soldier", "Guard", "Captain", "Commander", "Scout", "Spy", "Hunter"]:
+            weights["spar"] += 0.6
+    else:
+        weights["spar"] = 0.0  # children don't spar (they have child_daily_phase)
+
+    # Drill: gated by Barracks (already set above); trait/job tweaks
+    if weights.get("drill", 0) > 0 and age >= 17:
+        for t in traits:
+            if t == "Diligent":   weights["drill"] += 0.6
+            if t == "Brave":      weights["drill"] += 0.4
+            if t == "Patient":    weights["drill"] += 0.3
+            if t == "Stoic":      weights["drill"] += 0.3
+            if t == "Strict":     weights["drill"] += 0.2
+            if t == "Lazy":       weights["drill"] -= 0.4
+        if job in ["Soldier", "Guard", "Captain", "Commander", "Scout"]:
+            weights["drill"] += 0.8
+    elif age < 17:
+        weights["drill"] = 0.0
+
+    # Visit Tavern: gated by Tavern building (already set above); trait/job tweaks
+    if weights.get("visit_tavern", 0) > 0:
+        if villager.get("coins", 0) < 5:
+            weights["visit_tavern"] = 0.0  # need at least 5 coins for a drink
+        else:
+            for t in traits:
+                if t in ("Empathic", "Generous", "Naive"): weights["visit_tavern"] += 0.4
+                if t == "Loyal":                            weights["visit_tavern"] += 0.3
+                if t == "Curious":                          weights["visit_tavern"] += 0.3
+                if t == "Lazy":                             weights["visit_tavern"] += 0.2
+                if t == "Stoic":                            weights["visit_tavern"] -= 0.3
+                if t == "Strict":                           weights["visit_tavern"] -= 0.2
+            if job in ("Bard", "Innkeeper", "Brewer"):
+                weights["visit_tavern"] += 0.5
+
+    # Woo: only for single adults 18-60 (addresses marriage bottleneck)
+    spouse_id = int(villager.get("spouseId", 0) or 0)
+    if spouse_id == 0 and 18 <= age <= 60 and villager.get("job") not in ("Child",):
+        weights["woo"] = 0.5
+        for t in traits:
+            if t in ("Empathic", "Patient"):  weights["woo"] += 0.5
+            if t in ("Generous", "Loyal"):    weights["woo"] += 0.3
+            if t == "Brave":                  weights["woo"] += 0.2
+            if t == "Curious":                weights["woo"] += 0.2
+            if t == "Naive":                  weights["woo"] += 0.2
+            if t == "Lazy":                   weights["woo"] -= 0.3
+            if t == "Stoic":                  weights["woo"] -= 0.3
+            if t == "Deceitful":              weights["woo"] -= 0.3
+        if job in ("Bard", "Noble"):
+            weights["woo"] += 0.4
+        # Tavern + Royal Court give a small boost
+        if bank is not None:
+            lvl_tavern_w = get_building_level(bank, "tavern")
+            lvl_court_w  = get_building_level(bank, "royal_court")
+            if lvl_tavern_w > 0:
+                weights["woo"] += 0.2 * lvl_tavern_w
+            if lvl_court_w > 0:
+                weights["woo"] += 0.1 * lvl_court_w
+
+    # Mentor action: only for age 20+ with skills
     if age >= 20 and skills:
         weights["mentor"] = 0.5  # Base weight for mentoring
         
@@ -316,8 +497,47 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
     hunger = villager.get("hunger", 50)
     coins = villager.get("coins", 0)
 
-    if hunger >= 70 and coins >= 10:
+    # Producer jobs (Farmer/Hunter/Miner/Woodcutter/etc.) should keep working
+    # even when hungry — their work is what stocks the village. Otherwise a
+    # village-wide famine triggers a feedback loop where producers stop producing.
+    from config import JOB_RESOURCE_YIELD
+    is_producer = villager.get("job", "") in JOB_RESOURCE_YIELD
+
+    if hunger >= 70 and coins >= 10 and not is_producer:
         return "buy_food"
+
+    if is_producer:
+        # Baseline: producers always lean toward work — their job is the
+        # village's food/material supply, not a hobby.
+        weights["work"] += 0.8
+
+        # Stockpile-pressure scaling. When the town's food stockpile is low,
+        # producers drop social/leisure actions and crank work up. Without
+        # this, the village can spiral in early game before the first
+        # Granary or trade imports stabilize supply.
+        # Emergency threshold (1000) aligns with the king's emergency-import
+        # trigger so producers and the crown react at the same signal.
+        if bank is not None:
+            try:
+                stock = bank.get("resources") or {}
+                food_stock = int(stock.get("food", 0) or 0)
+                if food_stock < 1000:
+                    # Emergency mode — everyone in the producer roster works.
+                    weights["work"] += 1.5
+                    weights["socialize"] *= 0.4
+                    weights["hangout"] *= 0.4
+                    weights["visit_tavern"] *= 0.3
+                    weights["study"] *= 0.6
+                elif food_stock < 1500:
+                    # Cautious mode — work bias, mild leisure dampening.
+                    weights["work"] += 0.6
+                    weights["hangout"] *= 0.7
+            except Exception:
+                pass
+
+        # Hungry producer: still bias toward work, not buy_food.
+        if hunger >= 70:
+            weights["work"] += 1.5
 
     if hunger > 70:
         weights["rest"] += 0.6
@@ -333,7 +553,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
     if coins < 20:
         weights["work"] += 0.8
         weights["buy_food"] -= 0.3
-        weights["steal"] += 0.4
+        weights["steal"] += 0.20
     elif coins > 150:
         weights["buy_food"] += 0.4
         weights["steal"] -= 0.2
@@ -687,10 +907,63 @@ def apply_action(
         v["exp"]    += exp_delta
         v["hunger"] += hunger_delta
 
-        if tax > 0:
-            v["last_action"] = (
-                f"work (earned {net} coins, paid {tax} coins in tax)"
+        # Resource production: jobs like Farmer/Miner/Woodcutter deposit raw materials
+        # into the shared town stockpile in addition to their coin income.
+        produced: dict[str, int] = {}
+        if bank is not None:
+            from config import JOB_RESOURCE_YIELD, PRODUCTION_BUILDING_BONUS
+            job = v.get("job", "")
+            yield_table = JOB_RESOURCE_YIELD.get(job, {})
+            if yield_table:
+                stock = bank.setdefault("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0})
+                level_mult = 1.0 + 0.10 * max(0, int(v.get("level", 1)) - 1)
+                weather_mult = 1.0
+                if (weather or "sunny").lower() == "rain" and job == "Farmer":
+                    weather_mult = 0.5
+
+                # Production-building bonus: each specialized building gives
+                # +25/50/75% (per level) to specific jobs that work in it.
+                building_mult = 1.0
+                for b_key, job_bonus in PRODUCTION_BUILDING_BONUS.items():
+                    if job in job_bonus:
+                        lvl = get_building_level(bank, b_key)
+                        if lvl > 0:
+                            building_mult += job_bonus[job] * lvl
+
+                total_mult = level_mult * weather_mult * building_mult
+                for res, amt in yield_table.items():
+                    gain = max(1, int(round(amt * total_mult)))
+                    stock[res] = int(stock.get(res, 0)) + gain
+                    produced[res] = gain
+
+        # --- Blacksmith iron consumption ---
+        # Blacksmith no longer mines iron; instead, each work tick consumes
+        # 1 iron from the town stockpile and forges it into goods sold for
+        # bonus coin. Smelter level amplifies the conversion. This gives
+        # iron a recurring sink so it stops piling up.
+        forged_coin = 0
+        forged_iron = 0
+        if bank is not None and v.get("job") == "Blacksmith":
+            stock = bank.setdefault(
+                "resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0}
             )
+            iron_have = int(stock.get("iron", 0) or 0)
+            if iron_have > 0:
+                forged_iron = 1
+                stock["iron"] = iron_have - 1
+                smelter_lvl = get_building_level(bank, "smelter")
+                forged_coin = rand_int(8, 16) + smelter_lvl * rand_int(3, 6)
+                v["coins"] += forged_coin
+
+        if tax > 0 or produced or forged_iron > 0:
+            parts = [f"earned {net} coins"]
+            if tax > 0:
+                parts.append(f"paid {tax} coins in tax")
+            if produced:
+                parts.append("produced " + ", ".join(f"+{n} {r}" for r, n in produced.items()))
+            if forged_iron > 0:
+                parts.append(f"forged {forged_iron} iron (+{forged_coin} coins)")
+            v["last_action"] = "work (" + ", ".join(parts) + ")"
 
     # -------------------- REST --------------------
     elif action == "rest":
@@ -757,6 +1030,15 @@ def apply_action(
                 adjust_relationship(v, other, delta)
                 adjust_relationship(other, v, delta)
 
+                # Disease transmission: bilateral attempt between the pair.
+                try:
+                    from src.services.disease_service import try_transmit
+                    day_for_inf = current_day if current_day is not None else 0
+                    try_transmit(v, other, day_for_inf, "contact")
+                    try_transmit(other, v, day_for_inf, "contact")
+                except Exception:
+                    pass
+
                 v["hunger"] += rand_int(2, 6)
                 v["exp"] += rand_int(1, 3)
 
@@ -813,6 +1095,14 @@ def apply_action(
                             1, int(round(hunger_delta * (1 - 0.04 * lvl_granary)))
                         )
 
+                # Disease transmission across the whole group (and v).
+                try:
+                    from src.services.disease_service import try_transmit
+                    day_for_inf = current_day if current_day is not None else 0
+                except Exception:
+                    try_transmit = None
+                    day_for_inf = 0
+
                 for other in group:
                     if random.random() < 0.92:
                         delta = rand_int(3, 10)
@@ -822,6 +1112,10 @@ def apply_action(
                     adjust_relationship(v, other, delta)
                     adjust_relationship(other, v, delta)
 
+                    if try_transmit is not None:
+                        try_transmit(v, other, day_for_inf, "contact")
+                        try_transmit(other, v, day_for_inf, "contact")
+
                     if delta > 0:
                         total_delta_pos += delta
 
@@ -829,11 +1123,7 @@ def apply_action(
                 v["hp"] += hp_delta
 
                 v["exp"] += rand_int(2, 5) + total_delta_pos // 6
-                v["rep"] = clamp(
-                    v.get("rep", 0) + total_delta_pos // 4 + extra_rep,
-                    -100,
-                    100,
-                )
+                v["rep"] = v.get("rep", 0) + total_delta_pos // 4 + extra_rep
 
                 names_preview = ", ".join(o["name"] for o in group[:3])
                 if len(group) > 3:
@@ -852,7 +1142,7 @@ def apply_action(
             v["coins"] += gross
             v["exp"] += rand_int(1, 3)
             v["hunger"] += rand_int(5, 10)
-            v["rep"] = clamp(v.get("rep", 0) - rand_int(1, 4), -100, 100)
+            v["rep"] = v.get("rep", 0) - rand_int(1, 4)
             v["last_action"] = (
                 f"steal (no target, did work instead, earned {gross} coins)"
             )
@@ -868,7 +1158,7 @@ def apply_action(
                 v["coins"] += gross
                 v["exp"] += rand_int(1, 3)
                 v["hunger"] += rand_int(5, 10)
-                v["rep"] = clamp(v.get("rep", 0) - rand_int(1, 4), -100, 100)
+                v["rep"] = v.get("rep", 0) - rand_int(1, 4)
                 v["last_action"] = (
                     f"steal (no rich target, worked instead, earned {gross} coins)"
                 )
@@ -878,7 +1168,7 @@ def apply_action(
 
                 if max_steal <= 0:
                     v["hunger"] += rand_int(2, 5)
-                    v["rep"] = clamp(v.get("rep", 0) - rand_int(2, 6), -100, 100)
+                    v["rep"] = v.get("rep", 0) - rand_int(2, 6)
                     v["last_action"] = (
                         f"steal (failed, no coins from {target['name']})"
                     )
@@ -890,7 +1180,7 @@ def apply_action(
                     adjust_relationship(v, target, delta)
                     adjust_relationship(target, v, delta)
 
-                    v["rep"] = clamp(v.get("rep", 0) - rand_int(4, 10), -100, 100)
+                    v["rep"] = v.get("rep", 0) - rand_int(4, 10)
 
                     v["hunger"] += rand_int(3, 8)
                     v["exp"] += rand_int(2, 4)
@@ -899,6 +1189,192 @@ def apply_action(
                         f"steal from {target['name']} "
                         f"(+{max_steal} coins, {delta} relation)"
                     )
+
+                    # Witness roll: may upgrade this into a pending theft case.
+                    try:
+                        from src.services.justice_service import maybe_witness_and_record
+                        maybe_witness_and_record(
+                            bank=bank,
+                            criminal=v,
+                            victim=target,
+                            crime_type="theft",
+                            characters=all_characters,
+                            current_day=int(current_day or 0),
+                        )
+                    except Exception:
+                        pass
+
+    # -------------------- ASSAULT --------------------
+    elif action == "assault":
+        candidates = []
+        if all_characters:
+            candidates = [
+                o for o in all_characters
+                if o.get("id") != v.get("id")
+                and o.get("alive", True)
+                and int(o.get("age", 0) or 0) >= 12
+                and o.get("job") != "Child"
+            ]
+        if not candidates:
+            v["last_action"] = "assault (no target found, brooded instead)"
+            v["hunger"] += rand_int(2, 5)
+        else:
+            # Prefer a rival — lowest relationship score
+            try:
+                from src.services.relationship_service import get_relationship_score
+                def _rival_score(o):
+                    return get_relationship_score(v, int(o.get("id", 0) or 0))
+                target = min(candidates, key=_rival_score)
+            except Exception:
+                target = random.choice(candidates)
+
+            atk = int(v.get("atk", 1) or 1)
+            df  = int(target.get("def", 1) or 1)
+            base_damage = max(5, atk - df // 2) + rand_int(4, 12)
+            target["hp"] = int(target.get("hp", 0) or 0) - base_damage
+
+            # Big relationship hit both ways
+            delta = -rand_int(35, 60)
+            adjust_relationship(v, target, delta)
+            adjust_relationship(target, v, delta)
+
+            v["rep"] = int(v.get("rep", 0) or 0) - rand_int(6, 12)
+            v["exp"] += rand_int(2, 5)
+            v["hunger"] += rand_int(5, 9)
+
+            killed = False
+            if target.get("hp", 0) <= 0 and target.get("alive", True):
+                target["alive"] = False
+                target["hp"] = 0
+                target["death_day"] = int(current_day or 0)
+                target["last_action"] = f"killed in assault by {v.get('name','?')}"
+                killed = True
+                try:
+                    from src.services.chronicle_service import record_death
+                    record_death(target, cause=f"assault by {v.get('name','?')}", day=int(current_day or 0))
+                except Exception:
+                    pass
+
+            v["last_action"] = (
+                f"assault {target['name']} (-{base_damage} HP, {delta} relation"
+                + (", killed" if killed else "") + ")"
+            )
+
+            # If the assault was lethal, upgrade the witnessed crime to murder.
+            crime_label = "murder" if killed else "assault"
+            try:
+                from src.services.justice_service import maybe_witness_and_record
+                maybe_witness_and_record(
+                    bank=bank,
+                    criminal=v,
+                    victim=target,
+                    crime_type=crime_label,
+                    characters=all_characters,
+                    current_day=int(current_day or 0),
+                )
+            except Exception:
+                pass
+
+    # -------------------- MURDER --------------------
+    elif action == "murder":
+        candidates = []
+        if all_characters:
+            candidates = [
+                o for o in all_characters
+                if o.get("id") != v.get("id")
+                and o.get("alive", True)
+                and int(o.get("age", 0) or 0) >= 12
+                and o.get("job") != "Child"
+            ]
+        if not candidates:
+            v["last_action"] = "murder (no target found, brooded instead)"
+            v["hunger"] += rand_int(2, 5)
+        else:
+            # Cold killers target their deepest rival.
+            try:
+                from src.services.relationship_service import get_relationship_score
+                def _hate_score(o):
+                    return get_relationship_score(v, int(o.get("id", 0) or 0))
+                target = min(candidates, key=_hate_score)
+            except Exception:
+                target = random.choice(candidates)
+
+            atk = int(v.get("atk", 1) or 1)
+            df  = int(target.get("def", 1) or 1)
+            # Premeditated — lethal damage.
+            damage = max(20, atk * 2 - df) + rand_int(10, 25)
+            target["hp"] = int(target.get("hp", 0) or 0) - damage
+
+            delta = -rand_int(80, 100)
+            adjust_relationship(v, target, delta)
+            adjust_relationship(target, v, delta)
+
+            v["rep"] = int(v.get("rep", 0) or 0) - rand_int(15, 25)
+            v["exp"] += rand_int(3, 6)
+            v["hunger"] += rand_int(6, 12)
+
+            killed = False
+            if target.get("hp", 0) <= 0 and target.get("alive", True):
+                target["alive"] = False
+                target["hp"] = 0
+                target["death_day"] = int(current_day or 0)
+                target["last_action"] = f"murdered by {v.get('name','?')}"
+                killed = True
+                try:
+                    from src.services.chronicle_service import record_death
+                    record_death(target, cause=f"murdered by {v.get('name','?')}", day=int(current_day or 0))
+                except Exception:
+                    pass
+
+            v["last_action"] = (
+                f"murder attempt on {target['name']} (-{damage} HP"
+                + (", killed" if killed else ", survived") + ")"
+            )
+
+            # Crime category is murder if lethal, assault if the victim survived.
+            crime_label = "murder" if killed else "assault"
+            try:
+                from src.services.justice_service import maybe_witness_and_record
+                maybe_witness_and_record(
+                    bank=bank,
+                    criminal=v,
+                    victim=target,
+                    crime_type=crime_label,
+                    characters=all_characters,
+                    current_day=int(current_day or 0),
+                )
+            except Exception:
+                pass
+
+    # -------------------- PATROL --------------------
+    elif action == "patrol":
+        # Guards on duty: light training + rep gain. Their presence has already
+        # been counted by witness_chance via `_alive_guards`; setting
+        # last_action to start with "patrol" promotes them into the patroller
+        # bucket used by `_patrollers_today`.
+        atk_gain = rand_int(0, 1)
+        def_gain = rand_int(1, 2)
+        rep_gain = rand_int(1, 2)
+        exp_gain = rand_int(2, 4)
+        hunger_gain = rand_int(4, 8)
+
+        if bank is not None:
+            lvl_walls = get_building_level(bank, "walls")
+            lvl_barracks = get_building_level(bank, "barracks")
+            if lvl_walls > 0:
+                def_gain += 1
+            if lvl_barracks > 0:
+                atk_gain += 1
+                exp_gain += lvl_barracks
+
+        v["atk"] += atk_gain
+        v["def"] += def_gain
+        v["rep"] = int(v.get("rep", 0) or 0) + rep_gain
+        v["exp"] += exp_gain
+        v["hunger"] += hunger_gain
+        v["last_action"] = (
+            f"patrol the streets (+{def_gain} DEF, +{rep_gain} REP)"
+        )
 
     # -------------------- BUY FOOD --------------------
     elif action == "buy_food":
@@ -1041,7 +1517,7 @@ def apply_action(
                     adjust_relationship(child, v, rel_gain)
                 
                 # Mentor rewards
-                v["rep"] = clamp(v.get("rep", 0) + rand_int(1, 3), -100, 100)
+                v["rep"] = v.get("rep", 0) + rand_int(1, 3)
                 v["exp"] += rand_int(2, 5)
                 v["int"] += rand_int(0, 1)  # Small int boost from teaching
                 v["hunger"] += rand_int(3, 7)
@@ -1098,6 +1574,53 @@ def apply_action(
         v["exp"] += exp_delta
         v["hunger"] += hunger_delta
         v["last_action"] = f"meditate (+{mp_regen} MP, +{int_gain} INT)"
+
+    # -------------------- HEAL SICK (Healer/Cleric/Herbalist/Priest) --------
+    elif action == "heal_sick":
+        from src.services.disease_service import (
+            find_sick_in_circle, cure_chance, cure as cure_patient, is_sick,
+        )
+        from config import DISEASES, HEALER_JOBS
+        from src.repositories.world_repo import load_day
+
+        day_for_heal = current_day if current_day is not None else load_day()
+
+        if v.get("job") not in HEALER_JOBS:
+            v["hunger"] += rand_int(1, 3)
+            v["last_action"] = "considered healing but not a healer"
+        else:
+            patients = find_sick_in_circle(v, all_characters or [], limit=1)
+            if not patients:
+                v["hunger"] += rand_int(1, 3)
+                v["hp"] += rand_int(0, 2)
+                v["last_action"] = "looked for the sick (none found)"
+            else:
+                patient = patients[0]
+                disease = (patient.get("disease") or "").strip()
+                p = cure_chance(patient, v, bank)
+                roll = random.random()
+                v["hunger"] += rand_int(3, 7)
+                v["exp"] += rand_int(2, 5)
+                if roll < p:
+                    cure_patient(patient, v, day_for_heal)
+                    # Reward the healer
+                    v["rep"] = int(v.get("rep", 0) or 0) + rand_int(2, 5)
+                    coin_tip = rand_int(2, 8)
+                    v["coins"] = int(v.get("coins", 0) or 0) + coin_tip
+                    illness_name = DISEASES.get(disease, {}).get("name", disease) if disease else "illness"
+                    v["last_action"] = f"cured {patient.get('name','?')} of {illness_name.lower()} (+{coin_tip}g tip)"
+                    # Annotate patient too
+                    last = patient.get("last_action") or ""
+                    patient["last_action"] = (last + " / " if last else "") + f"cured by {v.get('name','a healer')}"
+                    # Chronicle
+                    try:
+                        from src.services.chronicle_service import record_disease_cure
+                        record_disease_cure(v, patient, disease, day=int(day_for_heal))
+                    except Exception:
+                        pass
+                else:
+                    illness_name = DISEASES.get(disease, {}).get("name", disease) if disease else "illness"
+                    v["last_action"] = f"tended to {patient.get('name','?')} ({illness_name.lower()}, no cure yet)"
 
     # -------------------- FORGE ARTIFACT (Phase 7) --------------------
     elif action == "forge_artifact":
@@ -1203,6 +1726,284 @@ def apply_action(
                     except Exception:
                         pass
 
+    # -------------------- SPAR --------------------
+    elif action == "spar":
+        v_id = v.get("id")
+        v_age = int(v.get("age", 0) or 0)
+        military_jobs = ["Soldier", "Guard", "Captain", "Commander", "Scout", "Hunter", "Spy"]
+
+        candidates = []
+        if all_characters:
+            candidates = [
+                o for o in all_characters
+                if o.get("id") != v_id
+                and o.get("alive", True)
+                and int(o.get("age", 0) or 0) >= 17
+                and int(o.get("hp", 0) or 0) >= 30
+            ]
+
+        if not candidates:
+            v["atk"] += rand_int(0, 1)
+            v["def"] += rand_int(0, 1)
+            v["hp"]  -= rand_int(0, 2)
+            v["hunger"] += rand_int(4, 8)
+            v["exp"] += rand_int(1, 3)
+            v["last_action"] = "spar (no partner — solo drills)"
+            if v.get("hp", 0) <= 0 and v.get("alive", True):
+                v["alive"] = False
+                v["hp"] = 0
+                v["death_day"] = int(current_day or 0)
+                v["last_action"] = "died from solo spar drills (training accident)"
+                try:
+                    from src.services.chronicle_service import record_death
+                    record_death(v, cause="training accident", day=int(current_day or 0))
+                except Exception:
+                    pass
+        else:
+            def spar_score(o):
+                age_close = -abs(int(o.get("age", 0) or 0) - v_age)
+                mil_bonus = 5 if o.get("job") in military_jobs else 0
+                return age_close + mil_bonus + random.random() * 2
+            partner = max(candidates, key=spar_score)
+
+            atk_gain = rand_int(1, 2)
+            def_gain = rand_int(1, 2)
+            exp_gain = rand_int(2, 4)
+            hp_loss = rand_int(1, 4)
+            hunger_gain = rand_int(5, 10)
+
+            if bank is not None:
+                lvl_b = get_building_level(bank, "barracks")
+                if lvl_b > 0:
+                    atk_gain += lvl_b // 2
+                    def_gain += lvl_b // 2
+                    exp_gain += lvl_b
+
+            v["atk"] += atk_gain
+            v["def"] += def_gain
+            v["exp"] += exp_gain
+            v["hp"]  -= hp_loss
+            v["hunger"] += hunger_gain
+
+            partner["atk"] = int(partner.get("atk", 0) or 0) + atk_gain
+            partner["def"] = int(partner.get("def", 0) or 0) + def_gain
+            partner["exp"] = int(partner.get("exp", 0) or 0) + exp_gain
+            partner["hp"]  = int(partner.get("hp", 0) or 0) - hp_loss
+            partner["hunger"] = int(partner.get("hunger", 0) or 0) + hunger_gain
+
+            rel_delta = rand_int(3, 8)
+            adjust_relationship(v, partner, rel_delta)
+            adjust_relationship(partner, v, rel_delta)
+
+            v["last_action"] = (
+                f"spar with {partner['name']} "
+                f"(+{atk_gain} ATK, +{def_gain} DEF, +{rel_delta} relation)"
+            )
+
+            # Training accidents — either partner can die from accumulated damage.
+            partner_name = partner.get("name", "a sparring partner")
+            v_name = v.get("name", "a sparring partner")
+            day_for_death = int(current_day or 0)
+            try:
+                from src.services.chronicle_service import record_death
+            except Exception:
+                record_death = None
+
+            if v.get("hp", 0) <= 0 and v.get("alive", True):
+                v["alive"] = False
+                v["hp"] = 0
+                v["death_day"] = day_for_death
+                v["last_action"] = f"died from spar with {partner_name} (training accident)"
+                if record_death is not None:
+                    try:
+                        record_death(v, cause=f"sparring accident with {partner_name}", day=day_for_death)
+                    except Exception:
+                        pass
+
+            if partner.get("hp", 0) <= 0 and partner.get("alive", True):
+                partner["alive"] = False
+                partner["hp"] = 0
+                partner["death_day"] = day_for_death
+                partner["last_action"] = f"died from spar with {v_name} (training accident)"
+                if record_death is not None:
+                    try:
+                        record_death(partner, cause=f"sparring accident with {v_name}", day=day_for_death)
+                    except Exception:
+                        pass
+
+    # -------------------- DRILL --------------------
+    elif action == "drill":
+        lvl_b = get_building_level(bank, "barracks") if bank is not None else 0
+        if lvl_b <= 0:
+            v["atk"] += rand_int(1, 2)
+            v["def"] += rand_int(1, 2)
+            v["hunger"] += rand_int(6, 10)
+            v["exp"] += rand_int(2, 4)
+            v["last_action"] = "drill (no barracks — basic training)"
+        else:
+            base = 1 + lvl_b
+            atk_gain = base + rand_int(0, 1)
+            def_gain = base + rand_int(0, 1)
+            exp_gain = rand_int(3, 6) + lvl_b * 2
+            hp_gain = lvl_b
+            hunger_gain = rand_int(8, 14)
+
+            if bank is not None:
+                lvl_smith = get_building_level(bank, "blacksmith")
+                if lvl_smith > 0:
+                    atk_gain += 1
+
+            skill_bonus = get_train_bonus(v)
+            atk_gain = max(1, int(round(atk_gain * skill_bonus["atk_mult"])))
+            def_gain = max(1, int(round(def_gain * skill_bonus["def_mult"])))
+            exp_gain = max(1, int(round(exp_gain * skill_bonus["exp_mult"])))
+
+            v["atk"] += atk_gain
+            v["def"] += def_gain
+            v["hp"]  += hp_gain
+            v["exp"] += exp_gain
+            v["hunger"] += hunger_gain
+
+            v["last_action"] = (
+                f"drill at barracks Lvl {lvl_b} "
+                f"(+{atk_gain} ATK, +{def_gain} DEF)"
+            )
+
+    # -------------------- VISIT TAVERN --------------------
+    elif action == "visit_tavern":
+        lvl_t = get_building_level(bank, "tavern") if bank is not None else 0
+        coins_have = int(v.get("coins", 0) or 0)
+        cost = rand_int(5, 10)
+
+        if coins_have < cost or lvl_t <= 0:
+            v["last_action"] = "visit tavern (couldn't afford it)"
+        else:
+            v["coins"] -= cost
+            v_gender = v.get("gender")
+            v_single = int(v.get("spouseId", 0) or 0) == 0
+            v_family = v.get("family")
+
+            candidates = []
+            if all_characters:
+                candidates = [
+                    o for o in all_characters
+                    if o.get("id") != v.get("id")
+                    and o.get("alive", True)
+                    and int(o.get("age", 0) or 0) >= 17
+                ]
+
+            # If villager is single, bias toward M-F unmarried adults
+            if v_single and candidates:
+                mf_singles = [
+                    o for o in candidates
+                    if int(o.get("spouseId", 0) or 0) == 0
+                    and o.get("gender") in ("Male", "Female")
+                    and o.get("gender") != v_gender
+                    and 18 <= int(o.get("age", 0) or 0) <= 60
+                    and o.get("family") != v_family
+                ]
+                if mf_singles and random.random() < 0.7:
+                    candidates = mf_singles
+
+            if not candidates:
+                v["hunger"] -= rand_int(2, 5)
+                v["hp"] += rand_int(1, 3)
+                v["last_action"] = f"visit tavern (no company, -{cost} coins)"
+            else:
+                random.shuffle(candidates)
+                group = candidates[:rand_int(1, 3)]
+                total_gain = 0
+                for other in group:
+                    delta = rand_int(2, 5) + lvl_t
+                    adjust_relationship(v, other, delta)
+                    adjust_relationship(other, v, delta)
+                    total_gain += delta
+
+                v["hunger"] -= rand_int(3, 6)
+                v["hp"] += rand_int(1, 4)
+                v["exp"] += rand_int(1, 2)
+                v["rep"] = v.get("rep", 0) + rand_int(0, lvl_t)
+
+                names = ", ".join(o.get("name", "?") for o in group[:2])
+                if len(group) > 2:
+                    names += f" + {len(group) - 2}"
+                v["last_action"] = (
+                    f"visit tavern with {names} "
+                    f"(-{cost} coins, +{total_gain} relation)"
+                )
+
+    # -------------------- WOO --------------------
+    elif action == "woo":
+        from src.services.relationship_service import get_relationship_score
+
+        if not all_characters or int(v.get("spouseId", 0) or 0) != 0:
+            v["hunger"] += rand_int(1, 3)
+            v["last_action"] = "woo (no one available)"
+        else:
+            v_id = v.get("id")
+            v_gender = v.get("gender")
+            v_family = v.get("family")
+            candidates = [
+                o for o in all_characters
+                if o.get("id") != v_id
+                and o.get("alive", True)
+                and int(o.get("spouseId", 0) or 0) == 0
+                and o.get("gender") in ("Male", "Female")
+                and o.get("gender") != v_gender
+                and 18 <= int(o.get("age", 0) or 0) <= 60
+                and o.get("family") != v_family
+            ]
+            if not candidates:
+                v["hunger"] += rand_int(2, 4)
+                v["last_action"] = "woo (found no one suitable)"
+            else:
+                # Prefer targets in the "stuck zone" 30-84 — no point wooing already-proposable pairs
+                def woo_score(o):
+                    s1 = get_relationship_score(v, o["id"])
+                    s2 = get_relationship_score(o, v_id)
+                    mutual = min(s1, s2)
+                    if mutual >= 85:
+                        return -1000  # already proposable
+                    return mutual + random.random() * 5
+                partner = max(candidates, key=woo_score)
+
+                base = rand_int(5, 12)
+                traits_set = {t.strip() for t in (v.get("traits", "") or "").split(",") if t.strip()}
+                if "Empathic" in traits_set or "Patient" in traits_set:
+                    base += 2
+                if "Generous" in traits_set:
+                    base += 1
+                if "Deceitful" in traits_set:
+                    base -= 2
+
+                atmosphere = 0
+                if bank is not None:
+                    atmosphere += get_building_level(bank, "tavern")
+                    atmosphere += get_building_level(bank, "royal_court") // 2
+
+                sk_bonus = get_socialize_bonus(v)
+                base = max(1, int(round(base * sk_bonus["relation_mult"])))
+
+                delta = base + atmosphere
+                if random.random() < 0.10:
+                    delta = -rand_int(1, 3)
+
+                adjust_relationship(v, partner, delta)
+                adjust_relationship(partner, v, delta)
+
+                v["hunger"] += rand_int(3, 6)
+                v["exp"] += rand_int(1, 2)
+                if delta > 0:
+                    v["rep"] = v.get("rep", 0) + 1
+
+                label = relationship_label(v, partner)
+                sign = "+" if delta > 0 else ""
+                tail = f" → {label}" if label and delta > 0 else ""
+                v["last_action"] = (
+                    f"woo {partner['name']} "
+                    f"({sign}{delta} relation{tail})"
+                )
+
     # -------------------- HUNT --------------------
     elif action == "hunt":
         enemy  = create_enemy_for(v)
@@ -1245,11 +2046,25 @@ def apply_action(
 
             v["hunger"] += hunger_delta
 
+            # Meat/hides from the kill go into the town stockpile.
+            meat_gain = 0
+            if bank is not None:
+                from config import HUNT_FOOD_PER_KILL
+                tier_mult = {"common": 1, "elite": 2, "legendary": 3}.get(
+                    str(enemy.get("tier", "common")).lower(), 1
+                )
+                meat_gain = HUNT_FOOD_PER_KILL * tier_mult
+                stock = bank.setdefault("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0})
+                stock["food"] = int(stock.get("food", 0)) + meat_gain
+
             tax_paid = combat.get("taxPaid", 0)
+            extras = []
             if tax_paid > 0:
-                v["last_action"] = f"hunt (WIN vs {enemy['tier']} {enemy['name']}, paid {tax_paid} tax)"
-            else:
-                v["last_action"] = f"hunt (WIN vs {enemy['tier']} {enemy['name']})"
+                extras.append(f"paid {tax_paid} tax")
+            if meat_gain > 0:
+                extras.append(f"+{meat_gain} food")
+            tail = f", {', '.join(extras)}" if extras else ""
+            v["last_action"] = f"hunt (WIN vs {enemy['tier']} {enemy['name']}{tail})"
 
             if not v.get("alive", True) or v.get("hp", 0) <= 0:
                 v["alive"] = False
@@ -1277,6 +2092,7 @@ def apply_action(
 
     v["hunger"] = clamp(v["hunger"], 0, 100)
     # HP has no upper cap - can grow unlimited
-    v["rep"] = clamp(int(v.get("rep", 0) or 0), -100, 100)
+    # rep has no cap either - can grow unbounded for fame, fall unbounded for disgrace
+    v["rep"] = int(v.get("rep", 0) or 0)
 
     handle_level_up(v)

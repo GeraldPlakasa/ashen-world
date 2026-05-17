@@ -61,11 +61,15 @@
                     <a class="list-group-item list-group-item-action" href="#artifacts">Magical Artifacts</a>
                     <a class="list-group-item list-group-item-action" href="#quests">Quests</a>
                     <a class="list-group-item list-group-item-action" href="#events">World Events</a>
+                    <a class="list-group-item list-group-item-action" href="#diseases">Diseases</a>
+                    <a class="list-group-item list-group-item-action" href="#justice">Crime &amp; Justice</a>
                     <a class="list-group-item list-group-item-action" href="#relationships">Relationships</a>
                     <a class="list-group-item list-group-item-action" href="#family">Family</a>
                     <a class="list-group-item list-group-item-action" href="#family-tree">Family Tree</a>
                     <a class="list-group-item list-group-item-action" href="#elections">Elections</a>
+                    <a class="list-group-item list-group-item-action" href="#king">The King</a>
                     <a class="list-group-item list-group-item-action" href="#economy">Economy</a>
+                    <a class="list-group-item list-group-item-action" href="#resources">Resources</a>
                     <a class="list-group-item list-group-item-action" href="#buildings">Buildings</a>
                     <a class="list-group-item list-group-item-action" href="#weather">Weather</a>
                     <a class="list-group-item list-group-item-action" href="#traits">Traits</a>
@@ -99,10 +103,13 @@
                       <div class="feature-box">
                         <h6>Daily Cycle</h6>
                         <ul>
-                          <li>Each villager chooses an action</li>
+                          <li>Each villager chooses an action (producers deposit resources)</li>
                           <li>Actions resolve (combat, work, social)</li>
-                          <li>Births, deaths, marriages processed</li>
-                          <li>World events may trigger</li>
+                          <li>Village eats from the stockpile (adults' hunger drops)</li>
+                          <li>King may import resources from outside if stockpile is low</li>
+                          <li>Buildings constructed, upgraded, decayed, repaired</li>
+                          <li>Births (throttled by food supply), deaths, marriages processed</li>
+                          <li>World events may trigger; chronicle records narrative</li>
                         </ul>
                       </div>
                     </div>
@@ -125,10 +132,10 @@
                         <tr><td>ATK</td><td>1-100+</td><td>Combat damage, hunting success</td></tr>
                         <tr><td>DEF</td><td>1-100+</td><td>Damage reduction</td></tr>
                         <tr><td>INT</td><td>1-100+</td><td>Study bonus, election influence, spell power</td></tr>
-                        <tr><td>REP</td><td>0-100+</td><td>Reputation, leadership score</td></tr>
+                        <tr><td>REP</td><td>Unbounded (±)</td><td>Reputation. Grows from social wins, falls from theft/corruption. Used in leadership score (×0.9), combat power (×0.2), quest scoring, marriage ranking.</td></tr>
                         <tr><td>Level</td><td>1-100</td><td>Overall progression</td></tr>
                         <tr><td>Coins</td><td>0-∞</td><td>Currency for purchases</td></tr>
-                        <tr><td>Hunger</td><td>0-100</td><td>Food need. Death possible at 100.</td></tr>
+                        <tr><td>Hunger</td><td>0-100</td><td>Food need. Bumped by daily actions (work, study, hunt). Reduced ~11/day when fed from the village stockpile (Granary boosts). Death possible at 100.</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -141,6 +148,27 @@
                       <span class="stat-pill">Born - Child of villagers</span>
                       <span class="stat-pill">Immigrant - Joined later</span>
                     </div>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Elder Decay (Age 70+)</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 6px;">
+                      A daily phase applies graduated aging effects to villagers past 70. HP attrition, occasional stat decay (random one of ATK/DEF/INT loses 1-2), MP fade for magic users, and a small chance of "passed away peacefully" each day.
+                    </p>
+                    <div class="table-responsive">
+                      <table class="table feature-table">
+                        <thead><tr><th>Age band</th><th>HP/day</th><th>Stat decay chance</th><th>Daily death chance (≈ yearly)</th></tr></thead>
+                        <tbody>
+                          <tr><td><strong>70-79</strong></td><td>1 HP loss with 40% chance/day (else 0)</td><td>1%</td><td>0.025% (~0.9% per year)</td></tr>
+                          <tr><td>80-89</td><td>1-2</td><td>5%</td><td>0.2% (~7%/yr)</td></tr>
+                          <tr><td>90-99</td><td>1-3</td><td>10%</td><td>0.5% (~17%/yr)</td></tr>
+                          <tr><td>100+</td><td>2-5</td><td>15%</td><td>1.0% (~30%/yr)</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p style="color: var(--aw-text-muted); font-size: 12px; margin-top: 6px; margin-bottom: 0;">
+                      The 70-79 band was deliberately softened (was double these values) because too many villagers were dying "peacefully" right at the threshold before ever reaching real old age. Now they get a livable decade before the wear-and-tear gets serious at 80+.
+                    </p>
                   </div>
                 </div>
               </section>
@@ -164,7 +192,7 @@
                       <div class="feature-box">
                         <h6>Military</h6>
                         <ul>
-                          <li>Soldier, Scout, Guard, Spy, Archer, Ranger</li>
+                          <li>Soldier, Scout, Guard, Spy, Captain, Commander, Falconer</li>
                         </ul>
                       </div>
                     </div>
@@ -224,7 +252,7 @@
                     <table class="table feature-table">
                       <thead><tr><th>Action</th><th>Effect</th><th>Priority When</th></tr></thead>
                       <tbody>
-                        <tr><td><strong>Work</strong></td><td>Earn coins (job-based)</td><td>Low coins</td></tr>
+                        <tr><td><strong>Work</strong></td><td>Earn coins (job-based). Producer jobs (Farmer/Miner/Woodcutter/etc.) also deposit resources to the village stockpile — see <a href="#resources">Resources</a>.</td><td>Low coins; always for producer jobs (work +0.8 baseline, +1.5 when stockpile is in emergency)</td></tr>
                         <tr><td><strong>Train</strong></td><td>+ATK, +DEF, +EXP</td><td>Brave trait, military job</td></tr>
                         <tr><td><strong>Study</strong></td><td>+INT, +EXP</td><td>Wise trait, learned job</td></tr>
                         <tr><td><strong>Hunt</strong></td><td>Combat for coins/food</td><td>Brave, hungry, hunter job</td></tr>
@@ -233,10 +261,18 @@
                         <tr><td><strong>Buy Food</strong></td><td>Reduce hunger (-10 coins)</td><td>High hunger, has coins</td></tr>
                         <tr><td><strong>Buy Gear</strong></td><td>+ATK or +DEF</td><td>Has excess coins</td></tr>
                         <tr><td><strong>Hangout</strong></td><td>Small social gains</td><td>Default fallback</td></tr>
-                        <tr><td><strong>Steal</strong></td><td>Risk/reward coins</td><td>Deceitful trait</td></tr>
+                        <tr><td><strong>Steal</strong></td><td>Pickpocket a wealthier villager (+5-30 coins). Witnessed thefts become pending court cases — see <a href="#justice">Crime &amp; Justice</a>.</td><td>Deceitful trait (strong), Greedy/Hot-headed; low coins; rare for guards</td></tr>
+                        <tr><td><strong>Assault</strong></td><td>Attack a rival villager. Damage scales with ATK; lethal blows are upgraded to a murder charge. Big REP &amp; relationship loss.</td><td>Hot-headed + Reckless / Deceitful; very low REP; deterred by Guard presence</td></tr>
+                        <tr><td><strong>Murder</strong></td><td>Premeditated killing of the villager's deepest rival. High lethal damage. Always risks witness → trial.</td><td>Rare. Requires (Deceitful + Hot-headed) or Reckless + REP &lt; -10; further pressure from REP &lt; -20, huntWins ≥ 5</td></tr>
+                        <tr><td><strong>Patrol</strong></td><td>Walk the streets: +1-2 DEF, +1-2 REP, +EXP. Acts as a deterrent — patrollers increase the same-day witness chance for any crime committed elsewhere in the village.</td><td>Guard / Captain / Soldier / Commander only; Loyal / Diligent / Brave / Protective traits boost; hungry guards skip duty</td></tr>
                         <tr><td><strong>Meditate</strong></td><td>Restore MP, +INT</td><td>Magic job (Wizard, Sorcerer, Cleric, Bard), low MP</td></tr>
                         <tr><td><strong>Mentor</strong></td><td>Teach skill to children</td><td>Age 20+, has skills, Wise/Patient/Diligent traits</td></tr>
+                        <tr><td><strong>Heal Sick</strong></td><td>Find a sick villager (spouse → family → anyone) and attempt a cure. Cure chance = disease base + INT/25·10% (cap +40%) + Clinic ×8%/lvl + Temple ×5%/lvl (Cleric/Priest). Success: clears disease, grants immunity, healer earns +REP and a 2–8g tip. Failure: tends but no cure.</td><td>Job ∈ {Healer, Cleric, Herbalist, Priest}; only fires if a sick villager exists. See <a href="#diseases">Diseases</a>.</td></tr>
                         <tr><td><strong>Forge Artifact</strong></td><td>Spend 600–1000g treasury → 60% chance to forge a common/uncommon artifact (40% wasted)</td><td>Strict: see Artifacts section for the full checklist (job, INT 50, Level 15, Age 25, HP 70, building level, skill, 1-year cooldown)</td></tr>
+                        <tr><td><strong>Spar</strong></td><td>Pair training: both partners gain +1-2 ATK, +1-2 DEF, +EXP, +3-8 mutual relation; lose 1-4 HP</td><td>Adults 17+; Brave/Diligent/Hot-headed traits, military jobs; Barracks adds bonus</td></tr>
+                        <tr><td><strong>Drill</strong></td><td>Solo intensive training: +2 to +5 ATK/DEF scaled by Barracks level; +HP boost at Lvl 3</td><td>Requires Barracks ≥ Lvl 1; Diligent/Brave/Patient traits, military jobs</td></tr>
+                        <tr><td><strong>Visit Tavern</strong></td><td>Spend 5-10 coins for drinks with 1-3 villagers; +2-5 mutual relation each (M-F bias if villager is single); +REP for being a regular</td><td>Requires Tavern ≥ Lvl 1, ≥5 coins; Empathic/Generous/Curious traits, Bard/Innkeeper/Brewer jobs</td></tr>
+                        <tr><td><strong>Woo</strong></td><td>Targeted courtship of an opposite-gender single. Picks the best non-proposable target (score below 85) and bumps mutual relation by +5-12. 10% chance of awkward rejection (-1 to -3).</td><td>Single adults age 18-60; Empathic/Patient/Generous traits boost effect; Bard/Noble jobs preferred; Tavern + Royal Court add atmosphere bonus</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -414,7 +450,7 @@
               <!-- ACHIEVEMENTS -->
               <section class="game-card mb-3" id="achievements">
                 <div class="card-body">
-                  <h5 class="mb-3">Achievements (9 Total)</h5>
+                  <h5 class="mb-3">Achievements (10 Total)</h5>
                   <p>Achievements are permanent milestones that grant rewards when earned.</p>
                   
                   <div class="table-responsive">
@@ -422,14 +458,15 @@
                       <thead><tr><th>Achievement</th><th>Requirement</th><th>Reward</th></tr></thead>
                       <tbody>
                         <tr><td>Dynasty Founder</td><td>Have 5+ children</td><td>+15 REP, "Patriarch" trait</td></tr>
-                        <tr><td>Kingmaker</td><td>Vote for 5 winning kings</td><td>+10 INT</td></tr>
+                        <tr><td>Kingmaker</td><td>Vote for 5 different winning kings</td><td>+10 INT</td></tr>
                         <tr><td>Centurion</td><td>Reach age 100</td><td>+50 HP, "Immortal" trait</td></tr>
-                        <tr><td>Legendary Hunter</td><td>Win 500 hunts</td><td>+25 ATK, "Hunter" trait</td></tr>
-                        <tr><td>Wealthy</td><td>Accumulate 10,000 coins</td><td>+1,000 coins bonus</td></tr>
-                        <tr><td>Survivor</td><td>Survive 3 world events</td><td>+20 DEF</td></tr>
-                        <tr><td>Elder Statesman</td><td>Serve 3 terms as King</td><td>+30 REP, "Legendary" trait</td></tr>
-                        <tr><td>Iron Will</td><td>Survive 5 days at HP < 20</td><td>+15 HP, +10 DEF</td></tr>
-                        <tr><td>Questmaster</td><td>Complete 10 quests</td><td>+20 REP, quest bonuses</td></tr>
+                        <tr><td>Legendary Hunter</td><td>Win 500 hunts (lifetime)</td><td>+25 ATK, "Hunter" trait</td></tr>
+                        <tr><td>Wealthy</td><td>Hold 10,000+ coins at once</td><td>+1,000 coins bonus</td></tr>
+                        <tr><td>Survivor</td><td>Survive a plague event</td><td>+10 DEF</td></tr>
+                        <tr><td>Elder Statesman</td><td>Become King at age 80+</td><td>+20 REP, "Wise" trait</td></tr>
+                        <tr><td>Iron Will</td><td>Survive combat with HP &lt; 80 five times</td><td>+15 DEF, "Resilient" trait</td></tr>
+                        <tr><td>Questmaster</td><td>Complete 5 successful quests</td><td>+10 ATK, "Veteran" trait</td></tr>
+                        <tr><td>Royal Blood</td><td>Male descendant of a king (granted at birth, or retroactively when a parent is crowned). Daughters do not inherit.</td><td>+20 REP</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -440,42 +477,55 @@
               <section class="game-card mb-3" id="combat">
                 <div class="card-body">
                   <h5 class="mb-3">Combat System</h5>
-                  <p>Combat occurs during hunting and invasion events. Outcomes depend on stats, gear, and magic.</p>
-                  
+                  <p>Combat occurs during hunting, quests, invasions, and assassinations. Outcomes depend on effective stats (base + equipped artifact mods), gear, magic, and a logistic win curve.</p>
+
                   <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Character Power Formula</h6>
+                        <ul>
+                          <li><code>power = ATK×1.15 + DEF + INT×0.6 + level×12 + REP×0.2 + 20</code></li>
+                          <li><strong>+HP mod from artifacts:</strong> ×0.15 added to power (mirrors enemy HP-power term)</li>
+                          <li><strong>Magic jobs:</strong> add <code>spell_power = MP×0.8 + INT×0.4</code> on top, spends 30-60% of effective MP</li>
+                          <li><strong>Minor magic jobs:</strong> add <code>MP×0.3 + INT×0.15</code>, spends 15-30% MP</li>
+                          <li><strong>MAGIC-tagged skills:</strong> +15% combat power per skill (stacks)</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
                       <div class="feature-box">
                         <h6>Hunting</h6>
                         <ul>
-                          <li>Enemy tier scales with villager level</li>
-                          <li>Power = ATK + DEF + INT + Level</li>
-                          <li>Win probability via logistic curve</li>
-                          <li>Rewards: coins, EXP, food</li>
-                          <li>Risk: HP loss, possible death</li>
+                          <li><strong>Enemy tier</strong> scales with villager level (weak / standard / elite / legendary)</li>
+                          <li><strong>Win probability</strong> via logistic curve on <code>(char_power - enemy_power)</code></li>
+                          <li><strong>Win rewards:</strong> coins, EXP, food (hunger reduction), small REP gain</li>
+                          <li><strong>Loss risk:</strong> HP damage scaled by margin; HP ≤ 0 = death</li>
+                          <li><strong>Scratch damage on win:</strong> ~20% of damage variance even when victorious</li>
+                          <li><strong>Artifact drop chance:</strong> 0.1% common · 0.7% elite · 8% legendary kills</li>
                         </ul>
                       </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <div class="feature-box">
-                        <h6>Magic in Combat</h6>
+                        <h6>Building Bonuses</h6>
                         <ul>
-                          <li>Magic jobs channel MP into spell power</li>
-                          <li>Spell power = MP × 0.8 + INT × 0.4</li>
-                          <li>Casting drains 30-60% of current MP</li>
-                          <li>Minor magic jobs: weaker spells (MP × 0.3)</li>
-                          <li>MAGIC skills: +15% combat power each</li>
+                          <li><strong>Temple Lvl N:</strong> +N REP gain on hunt wins</li>
+                          <li><strong>Barracks Lvl N:</strong> EXP × (1 + 0.10×N)</li>
+                          <li><strong>Market Lvl N:</strong> coin reward × (1 + 0.05×N)</li>
+                          <li><strong>Walls Lvl N:</strong> reduces casualties during invasion events</li>
+                          <li><strong>Clinic Lvl N:</strong> raises plague survival, faster post-combat HP recovery</li>
                         </ul>
                       </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <div class="feature-box">
-                        <h6>Gear Effects</h6>
+                        <h6>Gear & Artifacts</h6>
                         <ul>
-                          <li>Weapon: +ATK bonus</li>
-                          <li>Armor: +DEF bonus</li>
-                          <li>Mana Crystal/Spell Scroll: +MP bonus</li>
-                          <li>Gear purchased via "Buy Gear" action</li>
-                          <li>Blacksmith building improves quality</li>
+                          <li><strong>Equip slots:</strong> weapon, armor, ring, amulet, tome</li>
+                          <li><strong>Auto-equip</strong> on artifact pickup if slot empty or strictly higher rarity</li>
+                          <li><strong>effective_stats</strong> = base + sum of equipped mods (base stays untouched)</li>
+                          <li><strong>Bought gear</strong> (Buy Gear action): +ATK or +DEF directly on base stats</li>
+                          <li><strong>Soulbound items</strong> destroyed when owner dies (chronicled)</li>
                         </ul>
                       </div>
                     </div>
@@ -681,7 +731,7 @@
                         <h6>Negative Events</h6>
                         <ul>
                           <li><strong>Plague</strong> - HP damage, deaths. Clinic reduces impact. Clerics/Healers resist 50% better (spend MP).</li>
-                          <li><strong>Famine</strong> - Hunger increase. Granary helps.</li>
+                          <li><strong>Famine</strong> - Hunger spikes village-wide, drains <strong>30–55% of the food stockpile</strong>, and bleeds some treasury. Granary mitigates all three.</li>
                           <li><strong>Invasion</strong> - Combat event. Walls/Barracks defend. Magic users cast defensive spells (MP drain).</li>
                           <li><strong>Storm</strong> - Building damage.</li>
                         </ul>
@@ -692,7 +742,7 @@
                         <h6>Positive Events</h6>
                         <ul>
                           <li><strong>Festival</strong> - Happiness, relationship boosts.</li>
-                          <li><strong>Good Harvest</strong> - Food surplus, coin bonus.</li>
+                          <li><strong>Good Harvest</strong> - Reduces hunger, gains <strong>+200–400 food into the stockpile</strong> (×Granary/Market bonus), and adds coin bonus to the treasury. Nature jobs earn extra coin.</li>
                           <li><strong>Blessing</strong> - HP and MP restoration for all.</li>
                           <li><strong>Windfall</strong> - Treasury bonus.</li>
                           <li><strong>Ancient Tomb</strong> - Rare. 1–3 top-rep villagers each take home an artifact (Library boosts count).</li>
@@ -704,32 +754,190 @@
                 </div>
               </section>
 
+              <!-- DISEASES -->
+              <section class="game-card mb-3" id="diseases">
+                <div class="card-body">
+                  <h5 class="mb-3">Diseases &amp; Healers</h5>
+                  <p>Persistent per-villager illness, separate from the yearly Plague event. Diseases spread via daily contact (work, socialize, spouse cohabitation), drain HP each day, and can kill if untreated. Recovery grants <strong>permanent immunity</strong> to that specific disease.</p>
+
+                  <div class="feature-box mt-3">
+                    <h6>Disease Catalog (3 tiers)</h6>
+                    <div class="table-responsive">
+                      <table class="table feature-table">
+                        <thead><tr><th>Disease</th><th>Spread</th><th>Duration</th><th>HP/day</th><th>Lethal</th><th>Base cure</th></tr></thead>
+                        <tbody>
+                          <tr><td>🤧 Persistent Cough</td><td>30% contact / 45% spouse</td><td>6 days</td><td>1–3</td><td>0%</td><td>55%</td></tr>
+                          <tr><td>🤒 Fever</td><td>20% / 35%</td><td>10 days</td><td>3–6</td><td>1.2%/day past midpoint</td><td>40%</td></tr>
+                          <tr><td>☠️ Plague Boils</td><td>12% / 20%</td><td>14 days</td><td>5–9</td><td>4.5%/day past midpoint</td><td>25%</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p class="mt-2" style="color: var(--aw-text-muted); font-size: 13px;">
+                      Recovery rolls each day after onset (cough 20% / fever 12% / plague 6%, +20% after full duration). Clinic adds a passive +4%/level to natural recovery for everyone.
+                    </p>
+                  </div>
+
+                  <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Ambient Infection</h6>
+                        <ul>
+                          <li>Each alive villager has a <strong>0.25% chance per day</strong> to catch something from outside (immigrants, traders, bad water).</li>
+                          <li>Pool weights: <strong>cough 65% / fever 27% / plague 8%</strong>.</li>
+                          <li>Already-immune villagers can't be re-infected with the same disease.</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Healers (Cure)</h6>
+                        <ul>
+                          <li>Healer jobs: <strong>Healer, Cleric, Herbalist, Priest</strong>.</li>
+                          <li>Use the <em>Heal Sick</em> action — they prefer spouse → family → anyone sick.</li>
+                          <li>Cure chance = disease base + (INT/25 × 10%, cap +40%) + Clinic ×8%/lvl. Clerics &amp; Priests get +5%/lvl of Temple.</li>
+                          <li>On success: patient gains immunity to that disease; healer earns +REP and a 2–8g tip.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- CRIME & JUSTICE -->
+              <section class="game-card mb-3" id="justice">
+                <div class="card-body">
+                  <h5 class="mb-3">Crime &amp; Justice</h5>
+                  <p>Villagers can commit <strong>theft</strong>, <strong>assault</strong>, or <strong>murder</strong>. Witnessed crimes become pending court cases on the village docket; if there is a sitting King, he rules on each case once per day. Verdicts and reports appear in the Chronicle under the <strong>justice</strong> category.</p>
+
+                  <div class="feature-box mt-3">
+                    <h6>Crime Catalog</h6>
+                    <div class="table-responsive">
+                      <table class="table feature-table">
+                        <thead><tr><th>Crime</th><th>Severity</th><th>Base witness</th><th>Fine</th><th>Notes</th></tr></thead>
+                        <tbody>
+                          <tr><td>Theft (Steal)</td><td>1 (petty)</td><td>10%</td><td>30g</td><td>Most common. Rep -4 to -10. Mutual relationship -20 to -40.</td></tr>
+                          <tr><td>Assault</td><td>2 (serious)</td><td>25%</td><td>60g</td><td>Deals real HP damage. Lethal assaults are escalated to a murder charge.</td></tr>
+                          <tr><td>Murder</td><td>4 (grave)</td><td>40%</td><td>150g</td><td>Premeditated. Targets the deepest rival. Survivors of murder attempts → assault charge.</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p class="mt-2" style="color: var(--aw-text-muted); font-size: 13px;">
+                      Witness chance += <strong>+4%</strong> per alive Guard and <strong>+10%</strong> per Guard who chose Patrol today (max 95%). Each Guard's daily patrol acts as a multiplier on the village's law-enforcement coverage.
+                    </p>
+                  </div>
+
+                  <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>How a crime becomes a trial</h6>
+                        <ol>
+                          <li>A villager commits Steal / Assault / Murder via the daily action loop.</li>
+                          <li>A witness check rolls — modulated by alive Guards and same-day Patrollers.</li>
+                          <li>If witnessed: case added to <code>bank.pending_crimes</code>; a "X accused of..." chronicle entry is published.</li>
+                          <li>Later in the same tick (after the King-assassination phase), the King issues verdicts on every pending case at once.</li>
+                          <li>No sitting King → the docket carries forward until an election seats one.</li>
+                        </ol>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Guard Jobs &amp; Deterrence</h6>
+                        <ul>
+                          <li>Recognized law enforcement: <strong>Guard, Captain, Soldier, Commander</strong>.</li>
+                          <li>Each alive Guard reduces the assault weight in villagers' action choices (×0.6 at ≥2 guards, ×0.5 at ≥5).</li>
+                          <li>At ≥3 guards, murder weight ×0.4 — strong deterrent for would-be killers.</li>
+                          <li>Patrol action: +1-2 DEF / +1-2 REP / +EXP. Bonuses scale with City Walls and Barracks levels.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Yearly Ledger</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 13px;">Every witnessed crime and every verdict increments a per-year counter (<code>crimes_committed</code>, <code>trials_held</code>, <code>fines_collected</code>, <code>exiles</code>, <code>executions</code>). These power three surfaces:</p>
+                    <ul>
+                      <li><strong>Leaderboard / Past Reigns:</strong> each archived year now shows its crimes-witnessed count and a "Justice" line summarizing fines / exiles / executions.</li>
+                      <li><strong>Admin → Justice tab:</strong> KPI strip (this year + all-time), a stacked yearly chart of verdict mix overlayed with a crimes-witnessed line, plus a live feed of the latest <code>justice</code>-category chronicle entries.</li>
+                      <li><strong>Chronicle:</strong> all crimes and verdicts appear under the <code>justice</code> category — filterable on the Chronicle page.</li>
+                    </ul>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Verdict Logic — what the King decides</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 13px;">Base verdict weights are <em>severity-driven</em> and then shifted by the King's traits and the defendant's prior record (recidivism).</p>
+                    <div class="table-responsive">
+                      <table class="table feature-table">
+                        <thead><tr><th>Crime</th><th>Fine</th><th>Exile</th><th>Execution</th></tr></thead>
+                        <tbody>
+                          <tr><td>Theft (first offense)</td><td><strong>88%</strong></td><td>10%</td><td>2%</td></tr>
+                          <tr><td>Assault (first offense)</td><td><strong>60%</strong></td><td>30%</td><td>10%</td></tr>
+                          <tr><td>Murder (first offense)</td><td>15%</td><td><strong>50%</strong></td><td>35%</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p class="mt-2" style="color: var(--aw-text-muted); font-size: 13px;">
+                      <strong>Recidivism:</strong> each prior conviction shifts +12% from <em>fine</em> → <em>exile</em>. At 3+ priors, mass bleeds from <em>exile</em> → <em>execution</em>. A 4-time petty thief is more likely to be exiled than fined.
+                    </p>
+                  </div>
+
+                  <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>King Trait Effects</h6>
+                        <ul>
+                          <li><strong>Greedy:</strong> +20% fine — the treasury wins</li>
+                          <li><strong>Empathic / Generous:</strong> +15% fine, -8% exile, -7% execution</li>
+                          <li><strong>Strict:</strong> +7% exile, +3% execution</li>
+                          <li><strong>Cruel / Reckless / Hot-headed:</strong> +10% execution</li>
+                          <li><strong>Wise / Patient:</strong> +8% fine — measured justice</li>
+                          <li><strong>Cautious:</strong> +10% fine — avoids extreme verdicts</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Verdict Outcomes</h6>
+                        <ul>
+                          <li><strong>Fine:</strong> coins transferred from criminal → treasury (whatever they can pay). REP -5.</li>
+                          <li><strong>Exile:</strong> villager removed from the village (alive=False, distinct cause). REP -10. Family tree still records them.</li>
+                          <li><strong>Execution:</strong> public death by the King's order. REP -15. Chronicle importance 5.</li>
+                          <li>Each verdict stamps the criminal's <code>crime_record</code> — used by future trials for recidivism scaling.</li>
+                          <li>If the criminal died before trial, the case is marked <em>died_before_trial</em> and quietly closed.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               <!-- RELATIONSHIPS -->
               <section class="game-card mb-3" id="relationships">
                 <div class="card-body">
                   <h5 class="mb-3">Relationships</h5>
-                  <p>Villagers form bonds through daily interactions. Relationships range from -100 (enemies) to +100 (best friends).</p>
-                  
+                  <p>Villagers form bonds through daily interactions. Per-pair relationship score is clamped to <strong>-100 to +120</strong> (slight overhead for very strong bonds). Different from <em>REP</em>, which is now uncapped.</p>
+
                   <div class="table-responsive">
                     <table class="table feature-table">
                       <thead><tr><th>Score Range</th><th>Label</th><th>Effects</th></tr></thead>
                       <tbody>
-                        <tr><td>80+</td><td>Best Friend / Love</td><td>Marriage eligible, cooperation bonus</td></tr>
-                        <tr><td>50-79</td><td>Friend</td><td>Positive interactions</td></tr>
-                        <tr><td>0-49</td><td>Acquaintance</td><td>Neutral</td></tr>
-                        <tr><td>-49 to -1</td><td>Rival</td><td>Competition, minor conflicts</td></tr>
-                        <tr><td>-100 to -50</td><td>Enemy</td><td>Active hostility</td></tr>
+                        <tr><td>≥ 80 (M-F pair only)</td><td>Love</td><td>Marriage candidate (needs 85+ for proposal)</td></tr>
+                        <tr><td>≥ 65</td><td>Best Friend</td><td>Cooperation bonus, hangout target</td></tr>
+                        <tr><td>≥ 30</td><td>Friend</td><td>Positive interactions, defends in trouble</td></tr>
+                        <tr><td>-29 to 29</td><td>(no label)</td><td>Neutral acquaintance</td></tr>
+                        <tr><td>≤ -30</td><td>Rival</td><td>Competition, may steal from</td></tr>
+                        <tr><td>≤ -60</td><td>Enemy</td><td>Active hostility, assassination target if king is corrupt</td></tr>
                       </tbody>
                     </table>
                   </div>
-                  
+
                   <div class="feature-box mt-3">
                     <h6>Relationship Factors</h6>
                     <ul>
-                      <li>Same family: +20 base bonus</li>
-                      <li>Same job guild: +10 bonus</li>
-                      <li>Socializing together: +5 to +15 per interaction</li>
-                      <li>Stealing from someone: -20 penalty</li>
+                      <li><strong>Same family:</strong> +20 base bonus</li>
+                      <li><strong>Same job guild:</strong> +10 bonus</li>
+                      <li><strong>Socializing / hangout:</strong> +1 to +15 per interaction (depends on traits)</li>
+                      <li><strong>Stealing from someone:</strong> -20 to -40 mutual penalty</li>
+                      <li><strong>Spouse daily decay:</strong> never decays — score holds unless events change it</li>
                     </ul>
                   </div>
                 </div>
@@ -739,27 +947,60 @@
               <section class="game-card mb-3" id="family">
                 <div class="card-body">
                   <h5 class="mb-3">Family System</h5>
-                  
+
                   <div class="row g-3">
                     <div class="col-md-6">
                       <div class="feature-box">
-                        <h6>Marriage</h6>
+                        <h6>Marriage — Eligibility</h6>
                         <ul>
-                          <li>Requires: Both adults (17+), opposite gender</li>
-                          <li>Both unmarried, relationship 60+</li>
-                          <li>Not family members</li>
-                          <li>Spouse takes partner's family name</li>
+                          <li><strong>Age:</strong> both partners 18-60</li>
+                          <li><strong>Gender:</strong> Male-Female pairs only</li>
+                          <li><strong>Not same family:</strong> different family names required</li>
+                          <li><strong>Both unmarried</strong> and alive</li>
+                          <li><strong>Mutual love score ≥ 85</strong> (relationship label "love" requires score ≥ 80 in M-F pair; raised threshold of 85 enforces stronger bond before proposal)</li>
+                          <li><strong>Singles ranked</strong> by age desc, then rep desc — older/famous propose first</li>
                         </ul>
                       </div>
                     </div>
                     <div class="col-md-6">
                       <div class="feature-box">
-                        <h6>Children</h6>
+                        <h6>Marriage — Probability</h6>
                         <ul>
-                          <li>Birth chance based on couple age/health</li>
-                          <li>Child inherits parents' family name</li>
-                          <li>Stats partially inherited (with variance)</li>
-                          <li>Rare chance to inherit skills</li>
+                          <li><strong>Base proposal chance:</strong> 15% / day once eligible</li>
+                          <li><strong>Scales up to 35%</strong> for very high love score (+0.5% per point above 100)</li>
+                          <li><strong>Spouse becomes Queen</strong> automatically if marrying the King</li>
+                          <li><strong>Divorce:</strong> ~0.0005% / day (≈0.18% / year). Caps at 0.03% / day even at deeply broken relationships.</li>
+                          <li>Marriage records appear in the Chronicle (importance 3)</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Children — Birth Rules</h6>
+                        <ul>
+                          <li><strong>Mother age:</strong> 18-50</li>
+                          <li><strong>Father age:</strong> 18-75</li>
+                          <li><strong>Cooldown:</strong> 45 days after a previous birth (per parent)</li>
+                          <li><strong>Base chance:</strong> 0.6% / day per couple</li>
+                          <li><strong>Love bonus:</strong> +0.2% if love ≥ 100, +0.1% if 80-99, -0.1% otherwise</li>
+                          <li><strong>Couple decay:</strong> ×0.55 per existing shared child (5th kid is rare)</li>
+                          <li><strong>Family decay:</strong> ×0.85 per child already born to the dad's family</li>
+                          <li><strong>Food-pressure throttle:</strong> ×0.6 at &lt;7 days supply, ×0.3 at &lt;4 days, ×0.1 at &lt;2 days. Hungry villages stop growing.</li>
+                          <li><strong>Hard cap:</strong> 3% / day</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Children — Inheritance at Birth</h6>
+                        <ul>
+                          <li><strong>Family name:</strong> father's family</li>
+                          <li><strong>Stats:</strong> averaged from parents × ratio + small base roll
+                            (~12% for ATK/DEF, ~14% for INT) + ±1-2 noise</li>
+                          <li><strong>Traits:</strong> 1 from each parent + 8% chance of one random mutation</li>
+                          <li><strong>Skills:</strong> rare birth roll, parent skills bias the chance (see Skill section)</li>
+                          <li><strong>Royal Blood:</strong> +1 flag and +20 REP only for <strong>male children</strong> of a royal parent or the reigning King (Salic-style male-line succession — daughters do not inherit the title)</li>
+                          <li><strong>Generation (gen):</strong> max(mom.gen, dad.gen) + 1</li>
                         </ul>
                       </div>
                     </div>
@@ -767,20 +1008,29 @@
                       <div class="feature-box">
                         <h6>Childhood (Age 0-16)</h6>
                         <ul>
-                          <li>Job: "Child" (no work income)</li>
-                          <li>Cannot marry or vote</li>
-                          <li>Protected from dangerous quests</li>
-                          <li>At 17: assigned adult job</li>
+                          <li>Job: "Child" — no work income, no hunger drain, no stockpile food consumption</li>
+                          <li>Cannot marry, vote, or be recruited for quests</li>
+                          <li>Daily actions: train, study, rest, hangout, socialize</li>
+                          <li><strong>At age 17 — Coming of Age</strong> job assignment priority:
+                            <ol style="margin-bottom: 0;">
+                              <li>Strong skill affinity: 75% chance to follow it.</li>
+                              <li><strong>Parent's trade (apprenticeship):</strong> 55% chance if father is a producer (Farmer/Miner/etc.), 35% otherwise. Falls back to mother's job if father lacks one.</li>
+                              <li><strong>Stats + traits</strong> weighted random — producer jobs get +1.5 baseline weight so the village's producer ratio doesn't drift over generations.</li>
+                            </ol>
+                          </li>
+                          <li>New adult MP: 60-120 (magic job), 15-40 (minor magic), 0-10 (other)</li>
                         </ul>
                       </div>
                     </div>
                     <div class="col-md-6">
                       <div class="feature-box">
-                        <h6>Inheritance</h6>
+                        <h6>Inheritance on Death</h6>
                         <ul>
-                          <li>On death: coins go to spouse or children</li>
-                          <li>If no heirs: coins go to treasury</li>
-                          <li>Family name persists through children</li>
+                          <li><strong>Coins:</strong> oldest living child(ren) → surviving spouse → adult kin (same family, age 17+) → treasury</li>
+                          <li><strong>Equally distributed</strong> with remainder to first heirs</li>
+                          <li><strong>Artifacts:</strong> see "Magical Artifacts" — soulbound items destroyed; others to oldest child / spouse / sibling, then liquidated</li>
+                          <li><strong>Family name persists</strong> through children</li>
+                          <li><strong>Royal Blood persists</strong> in descendants — once granted, it cascades down the line</li>
                         </ul>
                       </div>
                     </div>
@@ -825,50 +1075,202 @@
               <section class="game-card mb-3" id="elections">
                 <div class="card-body">
                   <h5 class="mb-3">Elections & Leadership</h5>
-                  
+
                   <div class="row g-3">
                     <div class="col-md-6">
                       <div class="feature-box">
-                        <h6>Regular Elections</h6>
+                        <h6>Schedule &amp; Eligibility</h6>
                         <ul>
-                          <li>Every 5 years</li>
-                          <li>All adults can vote</li>
-                          <li>Leadership score = REP + INT + traits</li>
-                          <li>Winner becomes King</li>
+                          <li><strong>Frequency:</strong> every 5 game years (450 sim-days)</li>
+                          <li><strong>Voters:</strong> all alive villagers age 16+</li>
+                          <li><strong>Candidates:</strong> alive males age 18+ (falls back to all adults if no males)</li>
+                          <li><strong>Term limit:</strong> max 3 <em>consecutive</em> terms per villager (lifetime king count is uncapped)</li>
+                          <li>If everyone is term-limited, the candidate with fewest consecutive terms is chosen</li>
+                          <li><strong>Win percentage</strong> is computed against eligible voters (alive adults 16+), not the whole population — so the number matches the ballot box.</li>
                         </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Leadership Score Formula</h6>
+                        <ul>
+                          <li><code>INT × 1.2</code> + <code>REP × 0.9</code> + <code>level × 2.0</code> + <code>ATK × 0.4</code> + <code>DEF × 0.5</code></li>
+                          <li><strong>Age shaping:</strong> +5 for ages 22-55, -8 for &gt;55, -12 for 18-21, -1000 for &lt;18</li>
+                          <li><strong>Trait bonuses:</strong> Wise +14, Loyal/Generous +8, Brave/Empathic/Diligent +6, Patient +5, Ambitious +3, Cautious +2</li>
+                          <li><strong>Trait penalties:</strong> Deceitful -12, Greedy/Lazy -10, Hot-headed -8, Reckless -6</li>
+                          <li><strong>Dynasty bonus:</strong> +30 if same family as previous King (was 1000 — so dominant it forced unanimous re-elections)</li>
+                          <li><strong>Voter affinity per (voter, candidate) pair:</strong> shared traits <strong>+4 each</strong>, opposing traits <strong>−4 each</strong>, same family <strong>+8</strong>, job/trait loyalty <strong>+2.5 to +3</strong>, plus a per-voter "mood" <strong>0–25</strong> random — wide enough that the top 3-4 candidates genuinely split the vote.</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Tie-Breaking (in order)</h6>
+                        <ol style="padding-left: 18px; margin-bottom: 0;">
+                          <li>Higher leadership score</li>
+                          <li>Higher REP</li>
+                          <li>Higher INT</li>
+                          <li>Higher level</li>
+                          <li>Closeness to age 35 (older wins on ties)</li>
+                          <li>Coin flip</li>
+                        </ol>
                       </div>
                     </div>
                     <div class="col-md-6">
                       <div class="feature-box">
                         <h6>Emergency Elections</h6>
                         <ul>
-                          <li>Triggered when King dies</li>
-                          <li>Immediate vote among survivors</li>
-                          <li>No term limit for emergency</li>
+                          <li>Triggered the same day the King dies</li>
+                          <li>Same scoring + voting; <strong>does not</strong> count toward consecutive-term limit</li>
+                          <li>Logged with importance 5 in the Chronicle (importance 4 if king died of natural causes)</li>
                         </ul>
                       </div>
                     </div>
                     <div class="col-md-6">
                       <div class="feature-box">
-                        <h6>King Benefits</h6>
+                        <h6>Royal Blood Cascade</h6>
                         <ul>
-                          <li>Sets tax policy (trait-based)</li>
-                          <li>Influences quest selection</li>
-                          <li>Queen consort (spouse) assigned</li>
-                          <li>Protected from certain risks</li>
+                          <li>The moment a <em>new</em> king is crowned (not on re-election), the cascade walks <strong>only the male descendants</strong>: sons, grandsons through sons, and so on — flagged <code>blue_blood = 1</code></li>
+                          <li>Daughters do not receive the flag and their own children are skipped entirely — royal lineage is strictly male-line (Salic-style succession)</li>
+                          <li>Each newly-flagged descendant earns the Royal Blood achievement and +20 REP</li>
+                          <li>The king himself is <strong>not</strong> flagged — only the line below them</li>
+                          <li>Future <em>male</em> children born while the parent is reigning King also inherit it</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Election Aftermath — Runners-Up &amp; Resentment</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 6px;">
+                      Losing candidates don't vanish from history. The top 3 non-winners with at least 1 vote are recorded in the chronicle entry as <em>"Other contenders: X of the Y family (N votes); …"</em>, and accrue real consequences for the loser.
+                    </p>
+                    <ul>
+                      <li><strong>Streak tracking:</strong> each loss increments <code>consecutive_losses</code> on the villager. Winning resets it to 0.</li>
+                      <li><strong>Resentment hit:</strong> losing candidate's relationship with the winner drops by <code>10 + 15·(their_votes / winner_votes) + 3·prior_streak</code> — close races feel robbed, repeat losers compound. A smaller reciprocal hit (¼ size) goes winner → loser.</li>
+                      <li><strong>REP bleed:</strong> losers lose <code>−streak</code> REP per defeat (publicly bad PR).</li>
+                      <li><strong>Action log:</strong> <em>"lost election to X (streak N)"</em> appears in their <code>last_action</code> field so the admin table reads the political moment.</li>
+                      <li><strong>Public rivalry brewing:</strong> at streak ≥ 3, a chronicle entry under <em>royal</em> appears with importance scaling 3 / 4 / 5 by streak length — flavour text in the spirit of "next time, by other means."</li>
+                    </ul>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Rival Coup (Streak ≥ 2)</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 6px;">
+                      A perennial runner-up may stop playing the ballot game and reach for the dagger. Runs daily after <em>king_assassination_phase</em>; a successful coup kills the king and triggers an emergency election the next tick.
+                    </p>
+                    <ul>
+                      <li><strong>Eligibility:</strong> alive adult (age 18+), not King/Queen, <code>consecutive_losses ≥ 2</code>. <em>No</em> hard relationship gate — election noise scatters grudges across many former kings, so the streak itself is the anchor; current relationship just sweetens the chance.</li>
+                      <li><strong>Per-day base chance:</strong> <code>0.5% + 0.5%·(streak − 1) + 0.1%·(grudge/10)</code>, clamped to 4% max.</li>
+                      <li><strong>Trait modifiers:</strong> Ambitious <strong>+1.0%</strong>, Hot-headed <strong>+0.8%</strong>, Deceitful <strong>+0.6%</strong>, Brave +0.3%; Loyal −0.8%, Cautious −0.5%, Empathic −0.4%, Generous −0.3%.</li>
+                      <li><strong>Defences:</strong> each Barracks level <strong>−0.2%</strong>, each Walls level <strong>−0.1%</strong>.</li>
+                      <li><strong>Target:</strong> the most-motivated rival (longest streak, then deepest grudge against the current king).</li>
+                      <li><strong>On success:</strong> king dies (<em>"slain in a coup"</em>), rival's streak resets to 0, rival takes <strong>−25 REP</strong>, and the chronicle logs a <em>scandal</em>-category entry (importance 5) explicitly referencing the streak so a reader can follow the build-up to the act.</li>
+                    </ul>
+                  </div>
+
+                  <p style="color: var(--aw-text-muted); font-size: 12px; margin-top: 8px;">
+                    What a sitting king actually <em>does</em> — taxes, spending, trade, decrees, corruption, assassination risk — is consolidated in the next section, <a href="#king">The King — Powers &amp; Duties</a>.
+                  </p>
+                </div>
+              </section>
+
+              <!-- THE KING -->
+              <section class="game-card mb-3" id="king">
+                <div class="card-body">
+                  <h5 class="mb-3">The King — Powers &amp; Duties</h5>
+                  <p>Everything a sitting King can do, decide, or risk. How a King is chosen lives in <a href="#elections">Elections</a>; this section is about the throne after coronation.</p>
+
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Standing Powers (Every Reign)</h6>
+                        <ul>
+                          <li><strong>Sets tax policy</strong> — daily rate modulated by dominant traits (see formulas below).</li>
+                          <li><strong>Issues quests</strong> every 3 years (<code>QUEST_INTERVAL_YEARS</code>); king's traits influence quest type.</li>
+                          <li><strong>Construction &amp; upgrades</strong> — automatically authorised when treasury + stockpile have enough; choice biased by traits.</li>
+                          <li><strong>Repairs</strong> — when a building drops below 60% health.</li>
+                          <li><strong>Foreign trade</strong> — imports food/materials when stockpile is low; exports surplus for coin. See full tables below.</li>
+                          <li><strong>Spouse becomes Queen</strong> automatically; lineage cascades to male descendants (Royal Blood).</li>
                         </ul>
                       </div>
                     </div>
                     <div class="col-md-6">
                       <div class="feature-box">
-                        <h6>Term Limits</h6>
+                        <h6>Behaviour &amp; Risks</h6>
                         <ul>
-                          <li>Max 3 terms per villager</li>
-                          <li>After 3rd term: ineligible</li>
-                          <li>Encourages dynasty diversity</li>
+                          <li><strong>Corruption</strong> — Greedy/Deceitful kings siphon treasury daily (costs 3–10 REP per theft).</li>
+                          <li><strong>Treasury floor</strong> — never spends imports below 300g (safety reserve).</li>
+                          <li><strong>Assassination</strong> — chance scales with REP loss + count of relationship-enemies.</li>
+                          <li><strong>Term limit</strong> — max 3 <em>consecutive</em> terms; lifetime king count is uncapped.</li>
+                          <li><strong>Job on dethronement</strong> — kings who lose their last election are reassigned a regular job by traits + stats.</li>
+                          <li><strong>Death</strong> — natural or assassinated triggers an emergency election the same day.</li>
                         </ul>
                       </div>
                     </div>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Tax Policy</h6>
+                    <ul>
+                      <li>Base rate: <strong>10%</strong>; King traits modify ±8% total.</li>
+                      <li>Tax Office: <strong>+1% per level</strong>; Treasury: <strong>+0.5% per level</strong>.</li>
+                    </ul>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                      <span class="stat-pill">Greedy: +8%</span>
+                      <span class="stat-pill">Ambitious: +3%</span>
+                      <span class="stat-pill">Cautious: +2%</span>
+                      <span class="stat-pill">Hot-headed: +1%</span>
+                      <span class="stat-pill">Generous: −4%</span>
+                      <span class="stat-pill">Wise: −2%</span>
+                      <span class="stat-pill">Loyal: −2%</span>
+                    </div>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Foreign Trade — IMPORTS</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 6px;">
+                      When the stockpile runs low, the king may spend treasury coins to import resources from outside the village. Driven by traits, gated by a treasury floor of 300g.
+                    </p>
+                    <ul>
+                      <li><strong>Buy prices per unit:</strong> food = 1g, wood = 2g, stone = 3g, iron = 6g.</li>
+                      <li><strong>Food emergency &lt; 1000:</strong> any king imports automatically to refill toward ~1500.</li>
+                      <li><strong>Soft trigger</strong> (food &lt; 5 days supply or material &lt; threshold): trait-modulated chance.</li>
+                      <li><strong>Trait modifiers (food):</strong> Generous/Empathic +35%, Cautious +25%, Wise +15%, Loyal +10%, Greedy −35%, Reckless −15%.</li>
+                      <li><strong>Trait modifiers (materials):</strong> Ambitious +30%, Diligent +20%, Protective +15% (stone/iron), Wise +10%, Greedy −25%.</li>
+                    </ul>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Foreign Trade — EXPORTS</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 6px;">
+                      When a resource is well above its safety floor, the king may sell the surplus to outside merchants for coin. Sell prices are below buy prices (no arbitrage). The king never sells food below the export floor of 3000.
+                    </p>
+                    <ul>
+                      <li><strong>Sell prices per unit:</strong> food = 1g, wood = 1g, stone = 2g, iron = 4g.</li>
+                      <li><strong>Export floors</strong> (must EXCEED to sell): food 3000, wood 250, stone 200, iron 40.</li>
+                      <li><strong>Order sizes:</strong> 400 food / 100 wood / 70 stone / 30 iron per transaction. Bounded so a single sale never drops below the floor.</li>
+                      <li><strong>Food sell-chance (base 20%):</strong> Greedy +45%, Ambitious +20%, Deceitful +15%, Generous/Empathic −30%, Cautious −30%, Loyal −15%, Wise −5%.</li>
+                      <li><strong>Material sell-chance (base 25%):</strong> Greedy +40%, Deceitful +15%, Ambitious +10%, Diligent −10%, Cautious −15%, Protective −20% (stone/iron).</li>
+                    </ul>
+                    <p style="color: var(--aw-text-muted); font-size: 12px; margin-top: 6px; margin-bottom: 0;">
+                      All imports &amp; exports are chronicled under the <em>economy</em> category — visible in the admin Resources tab.
+                    </p>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Militarization Decree (One-Shot, On Taking Office)</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 6px;">
+                      Each newly-crowned king (not re-elections) decides once whether the village needs a stronger garrison. If they choose "yes," they immediately conscript a handful of civilian adults into <strong>Guard</strong> or <strong>Scout</strong> duty — no opt-out, regardless of the conscript's current job. If they choose "no," nothing happens and the matter is closed for their entire reign.
+                    </p>
+                    <ul>
+                      <li><strong>Base chance:</strong> 12% — deliberately low so most kings stay civilian.</li>
+                      <li><strong>Trait modifiers:</strong> Protective +20%, Brave +20%, Hot-headed +15%, Ambitious +10%, Stoic +5%; Generous −25%, Empathic −20%, Wise −15%, Cautious −15%, Loyal −10%. Clamped to [0%, 70%].</li>
+                      <li><strong>Conscript count:</strong> 2–4 base, +1 each for Brave / Hot-headed / Ambitious. Capped by the eligible pool.</li>
+                      <li><strong>Exempt:</strong> King, Queen, and anyone already serving (Soldier/Guard/Captain/Commander/Scout/Falconer/Spy). Healers and magic users are <em>not</em> exempt — the king "brooks no excuse."</li>
+                      <li><strong>Conversion split:</strong> roughly even Guard/Scout assignment. Drafted villagers carry "conscripted into the Guard/Scout" in their last_action.</li>
+                      <li>Logged in the Chronicle under <em>royal</em> with importance 4. Only fires once per reign — re-elections don't trigger it.</li>
+                    </ul>
                   </div>
                 </div>
               </section>
@@ -895,26 +1297,96 @@
                         <h6>Tax System</h6>
                         <ul>
                           <li>Base rate: 10%</li>
-                          <li>King traits modify rate (±8%)</li>
+                          <li>King traits modify rate (±8%) — see <a href="#king">The King</a> for the full trait table.</li>
                           <li>Tax Office building: +1% per level</li>
                           <li>Treasury building: +0.5% per level</li>
                         </ul>
                       </div>
                     </div>
-                    <div class="col-12">
+                  </div>
+                  <p style="color: var(--aw-text-muted); font-size: 12px; margin-top: 8px; margin-bottom: 0;">
+                    King-side levers — tax-rate trait modifiers, construction priorities, foreign trade, corruption, treasury floor — are documented in <a href="#king">The King — Powers &amp; Duties</a>.
+                  </p>
+                </div>
+              </section>
+
+              <!-- RESOURCES -->
+              <section class="game-card mb-3" id="resources">
+                <div class="card-body">
+                  <h5 class="mb-3">Resources (Shared Stockpile)</h5>
+                  <p>The village maintains a single shared stockpile of raw materials alongside its coin treasury. Producer jobs deposit into it daily; construction draws from it; and adults eat from it daily, lowering their hunger.</p>
+
+                  <div class="row g-3">
+                    <div class="col-md-6">
                       <div class="feature-box">
-                        <h6>King Trait Effects on Tax</h6>
-                        <div class="d-flex flex-wrap gap-2 mt-2">
-                          <span class="stat-pill">Greedy: +8%</span>
-                          <span class="stat-pill">Ambitious: +3%</span>
-                          <span class="stat-pill">Cautious: +2%</span>
-                          <span class="stat-pill">Hot-headed: +1%</span>
-                          <span class="stat-pill">Generous: -4%</span>
-                          <span class="stat-pill">Wise: -2%</span>
-                          <span class="stat-pill">Loyal: -2%</span>
-                        </div>
+                        <h6>The Four Resources</h6>
+                        <ul>
+                          <li><strong>Food</strong> — eaten every day. Stockpile feeds adults directly: hunger drops ~11/day when fed (Granary boosts).</li>
+                          <li><strong>Wood</strong> — primary building material for civic structures.</li>
+                          <li><strong>Stone</strong> — needed by walls, temples, treasuries, heavy structures.</li>
+                          <li><strong>Iron</strong> — scarce, needed by Barracks, Walls, Blacksmith, Royal Court, Treasury, and every Production building. Also <strong>consumed continuously by Blacksmiths</strong> — see the producer-jobs table below.</li>
+                        </ul>
                       </div>
                     </div>
+                    <div class="col-md-6">
+                      <div class="feature-box">
+                        <h6>Daily Food Consumption</h6>
+                        <ul>
+                          <li>Each adult eats <strong>1 food/day</strong>. Children eat <strong>0</strong> — they're fed implicitly by their family.</li>
+                          <li>Granary (Lv ≥ 1) reduces total need to <strong>×0.75</strong> AND adds +2 hunger reduction per level when fed.</li>
+                          <li>Stockpile meets demand → adults lose ~11 hunger/day. Stockpile short → fed-ratio scaling + a deficit hunger penalty.</li>
+                          <li>Birth rate auto-throttles when food is low (×0.6 at &lt;7 days supply, ×0.3 at &lt;4, ×0.1 at &lt;2 days).</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Producer Jobs (work action → stockpile)</h6>
+                    <div class="table-responsive">
+                      <table class="table feature-table">
+                        <thead><tr><th>Job</th><th>Per-day yield (base)</th></tr></thead>
+                        <tbody>
+                          <tr><td>Farmer</td><td>+12 food (×0.5 in rain)</td></tr>
+                          <tr><td>Fisher</td><td>+8 food</td></tr>
+                          <tr><td>Hunter</td><td>+5 food (+ tier-scaled food on hunt-kill: 3/6/9 for common/elite/legendary)</td></tr>
+                          <tr><td>Shepherd</td><td>+5 food</td></tr>
+                          <tr><td>Baker / Butcher</td><td>+3 food</td></tr>
+                          <tr><td>Cook / Beekeeper</td><td>+2 food</td></tr>
+                          <tr><td>Woodcutter</td><td>+6 wood</td></tr>
+                          <tr><td>Forester</td><td>+4 wood</td></tr>
+                          <tr><td>Carpenter</td><td>+2 wood</td></tr>
+                          <tr><td>Mason</td><td>+6 stone</td></tr>
+                          <tr><td>Miner</td><td>+5 stone, +1 iron</td></tr>
+                          <tr><td>Blacksmith</td><td><em>consumer</em> — burns 1 iron per work for <strong>+rand(8–16) coin</strong> (+rand(3–6)/level of Smelter)</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p class="mt-2" style="color: var(--aw-text-muted); font-size: 13px;">
+                      Yields scale with villager level (+10% per level above 1). Producers still earn coins as usual.
+                      Producer jobs also gain a baseline <strong>work +0.8</strong> action weight; they skip the hungry-→-buy_food rule (their job IS the food source).
+                      <br><strong>Blacksmith is a recurring iron sink:</strong> each work tick converts 1 iron from the stockpile into bonus coin, so iron throughput is gated by Blacksmith count and Smelter level instead of piling up.
+                    </p>
+                  </div>
+
+                  <div class="feature-box mt-3">
+                    <h6>Stockpile Pressure (producers react automatically)</h6>
+                    <ul>
+                      <li><strong>Food &lt; 1000 (Emergency):</strong> all producers get <strong>work +1.5</strong>; leisure (socialize/hangout/tavern/study) heavily dampened.</li>
+                      <li><strong>Food 1000–1500 (Cautious):</strong> producers get <strong>work +0.6</strong>; hangout lightly suppressed.</li>
+                      <li><strong>Food &gt; 1500 (Stable):</strong> normal baseline. Hungry individual producers still get an extra <strong>work +1.5</strong>.</li>
+                    </ul>
+                  </div>
+
+                  <p style="color: var(--aw-text-muted); font-size: 12px; margin-top: 6px;">
+                    Foreign trade — IMPORTS &amp; EXPORTS, prices, trait modifiers, treasury floor — is a king-driven system. See <a href="#king">The King — Powers &amp; Duties</a> for the full tables.
+                  </p>
+
+                  <div class="feature-box mt-3">
+                    <h6>Initial Stockpile (Reset World)</h6>
+                    <p style="color: var(--aw-text-muted); font-size: 13px; margin-bottom: 0;">
+                      Fresh world starts at <strong>1500 food / 200 wood / 100 stone / 0 iron</strong>. Initial population spawns with <strong>45% producer-job bias</strong> (~44 of 98 villagers); children inherit a parent's job ~55% of the time when they come of age (35% for non-producer parents), so the producer ratio doesn't dilute over generations.
+                    </p>
                   </div>
                 </div>
               </section>
@@ -922,28 +1394,37 @@
               <!-- BUILDINGS -->
               <section class="game-card mb-3" id="buildings">
                 <div class="card-body">
-                  <h5 class="mb-3">Buildings (12 Types)</h5>
-                  <p>Buildings are constructed automatically when treasury has enough funds. Max level: 3.</p>
+                  <h5 class="mb-3">Buildings (17 Types)</h5>
+                  <p>Buildings are constructed automatically when both treasury <em>and</em> the resource stockpile have enough materials. Upgrade material cost scales linearly with the target level (Lv 2 = 2x base bundle, Lv 3 = 3x). Max level: 3.</p>
                   
                   <div class="table-responsive">
                     <table class="table feature-table">
-                      <thead><tr><th>Building</th><th>Cost</th><th>Effect</th></tr></thead>
+                      <thead><tr><th>Building</th><th>Coin</th><th>Materials</th><th>Effect</th></tr></thead>
                       <tbody>
-                        <tr><td>Marketplace</td><td>400</td><td>Trade bonuses, buy_food discount</td></tr>
-                        <tr><td>Library</td><td>350</td><td>+INT bonus on study action</td></tr>
-                        <tr><td>Barracks</td><td>450</td><td>+ATK/DEF training bonus, invasion defense</td></tr>
-                        <tr><td>Granary</td><td>300</td><td>Food storage, famine resistance</td></tr>
-                        <tr><td>Clinic</td><td>320</td><td>HP recovery, plague resistance</td></tr>
-                        <tr><td>City Walls</td><td>600</td><td>Invasion defense bonus</td></tr>
-                        <tr><td>Temple</td><td>380</td><td>Blessing frequency, morale</td></tr>
-                        <tr><td>Blacksmith</td><td>300</td><td>Gear quality, repair</td></tr>
-                        <tr><td>Treasury</td><td>500</td><td>Interest on balance, tax bonus</td></tr>
-                        <tr><td>Royal Court</td><td>480</td><td>Election influence, REP bonus</td></tr>
-                        <tr><td>Tax Office</td><td>320</td><td>Tax collection efficiency</td></tr>
-                        <tr><td>Tavern</td><td>240</td><td>Socialization bonus, happiness</td></tr>
+                        <tr><td>Marketplace</td><td>400</td><td>40 wood, 30 stone</td><td>Trade bonuses, buy_food discount</td></tr>
+                        <tr><td>Library</td><td>350</td><td>50 wood, 20 stone</td><td>+INT bonus on study action</td></tr>
+                        <tr><td>Barracks</td><td>450</td><td>30 wood, 50 stone, 15 iron</td><td>+ATK/DEF training bonus, invasion defense</td></tr>
+                        <tr><td>Granary</td><td>300</td><td>60 wood, 20 stone</td><td>Food storage, famine resistance, ×0.75 food need</td></tr>
+                        <tr><td>Clinic</td><td>320</td><td>40 wood, 25 stone, 3 iron</td><td>HP recovery, plague resistance</td></tr>
+                        <tr><td>City Walls</td><td>600</td><td>80 stone, 25 iron</td><td>Invasion defense bonus</td></tr>
+                        <tr><td>Temple</td><td>380</td><td>30 wood, 50 stone, 3 iron</td><td>Blessing frequency, morale</td></tr>
+                        <tr><td>Blacksmith</td><td>300</td><td>20 wood, 35 stone, 18 iron</td><td>Gear quality, repair; <strong>enables Blacksmith iron→coin conversion</strong></td></tr>
+                        <tr><td>Treasury</td><td>500</td><td>60 stone, 12 iron</td><td>Interest on balance, tax bonus</td></tr>
+                        <tr><td>Royal Court</td><td>480</td><td>50 wood, 55 stone, 5 iron</td><td>Election influence, REP bonus</td></tr>
+                        <tr><td>Tax Office</td><td>320</td><td>40 wood, 25 stone, 3 iron</td><td>Tax collection efficiency</td></tr>
+                        <tr><td>Tavern</td><td>240</td><td>50 wood, 10 stone, 2 iron</td><td>Socialization bonus, happiness</td></tr>
+                        <tr style="border-top: 2px solid var(--aw-border);"><td colspan="4" style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 10px;">Production Buildings (boost yields per level)</td></tr>
+                        <tr><td>Farm</td><td>280</td><td>50 wood, 10 stone, 2 iron</td><td>Farmer +25% / Shepherd +20% / Beekeeper +15% per level</td></tr>
+                        <tr><td>Lumbermill</td><td>260</td><td>80 wood, 2 iron</td><td>Woodcutter +30% / Forester +20% / Carpenter +15% per level</td></tr>
+                        <tr><td>Quarry</td><td>320</td><td>30 wood, 25 stone, 3 iron</td><td>Mason +30% / Miner +15% per level</td></tr>
+                        <tr><td>Mine</td><td>360</td><td>50 wood, 35 stone, 5 iron</td><td>Miner <strong>+20%</strong> per level</td></tr>
+                        <tr><td>Smelter</td><td>340</td><td>30 wood, 45 stone, 5 iron</td><td>Blacksmith conversion <strong>+40%</strong> coin per level</td></tr>
                       </tbody>
                     </table>
                   </div>
+                  <p style="color: var(--aw-text-muted); font-size: 12px; margin-top: 8px;">
+                    <strong>Production-building bonuses</strong> stack with villager level and weather: total yield = base × (1 + 0.10·(level-1)) × weather × (1 + bonus × building_level). A Farmer at level 5 working a Lv 3 Farm produces 12 × 1.4 × 1.0 × 1.75 ≈ <strong>29 food/day</strong> (vs. 12 base).
+                  </p>
                 </div>
               </section>
 

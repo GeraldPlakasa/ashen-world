@@ -18,8 +18,11 @@ class TestChooseAction:
 
     @pytest.mark.unit
     def test_hungry_villager_buys_food_or_hunts(self, sample_villager, sample_bank, seeded_random):
-        """Hungry villagers with coins should buy food, otherwise hunt more."""
+        """Hungry non-producer villagers with coins should buy food, otherwise hunt more."""
         seeded_random(42)
+        # Use a non-producer job: producer jobs (Farmer/Miner/etc.) are exempt
+        # from the hungry-→-buy_food hard rule because their work IS the food source.
+        sample_villager["job"] = "Tailor"
         sample_villager["hunger"] = 80  # Very hungry
         sample_villager["coins"] = 100  # Has coins
         sample_villager["traits"] = ""
@@ -41,6 +44,24 @@ class TestChooseAction:
         assert food_or_hunt_count > 30
 
     @pytest.mark.unit
+    def test_hungry_producer_keeps_working(self, sample_villager, sample_bank, seeded_random):
+        """Hungry producer-job villagers should still choose work — their job
+        is the food/material source, so they shouldn't run off to buy food."""
+        seeded_random(42)
+        sample_villager["job"] = "Farmer"  # producer job
+        sample_villager["hunger"] = 80
+        sample_villager["coins"] = 100
+        sample_villager["traits"] = ""
+
+        work_count = 0
+        for i in range(100):
+            random.seed(i)
+            action = choose_action(sample_villager, sample_bank)
+            if action == "work":
+                work_count += 1
+        assert work_count > 30, f"Hungry Farmer should often pick work; got {work_count}/100"
+
+    @pytest.mark.unit
     def test_low_hp_villager_behavior(self, sample_villager, sample_bank, seeded_random):
         """Low HP villagers actions are governed by other factors like hunger."""
         seeded_random(42)
@@ -55,7 +76,9 @@ class TestChooseAction:
         action = choose_action(sample_villager, sample_bank)
         valid_actions = {
             "train", "study", "work", "rest", "buy_food", "buy_gear",
-            "hunt", "socialize", "hangout", "steal"
+            "hunt", "socialize", "hangout", "steal",
+            "mentor", "meditate", "forge_artifact",
+            "spar", "drill", "visit_tavern", "woo",
         }
         assert action in valid_actions
 
@@ -177,7 +200,9 @@ class TestChooseAction:
         seeded_random(42)
         valid_actions = {
             "train", "study", "work", "rest", "buy_food", "buy_gear",
-            "hunt", "socialize", "hangout", "steal"
+            "hunt", "socialize", "hangout", "steal",
+            "mentor", "meditate", "forge_artifact",
+            "spar", "drill", "visit_tavern", "woo",
         }
 
         for i in range(50):

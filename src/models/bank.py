@@ -8,6 +8,7 @@ from typing import TypedDict
 class Bank(TypedDict, total=False):
     tax_rate: float
     balance: int
+    resources: dict[str, int]
     building_levels: dict[str, int]
     building_health: dict[str, int]
     
@@ -31,6 +32,11 @@ class Bank(TypedDict, total=False):
     last_quest_type: str | None
     last_quest_success: bool | None
     
+    # Crime & justice: list of open cases awaiting trial. Each entry:
+    # {"day": int, "criminal_id": int, "victim_id": int,
+    #  "crime_type": "theft|assault|murder", "witness_id": int}
+    pending_crimes: list
+
     # Stats
     year_stats: dict
     yearly_history: list

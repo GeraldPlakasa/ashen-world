@@ -26,8 +26,10 @@ class TestTraitEffectsOnActions:
 
     @pytest.fixture
     def base_villager(self):
+        # Use a non-producer job so trait effects aren't masked by the
+        # producer-job work bias (Farmers/Miners/etc. lean toward work).
         return {
-            "id": 1, "name": "Test", "age": 25, "job": "Farmer",
+            "id": 1, "name": "Test", "age": 25, "job": "Tailor",
             "atk": 10, "def": 10, "int": 10, "hp": 100, "rep": 10,
             "coins": 50, "hunger": 30, "level": 5, "exp": 0,
             "traits": "", "skills": "", "alive": True,
@@ -87,11 +89,13 @@ class TestTraitEffectsOnActions:
         """Deceitful trait should significantly increase steal weight."""
         random.seed(42)
         base_villager["traits"] = "Deceitful"
-        
+
         actions = [choose_action(base_villager) for _ in range(100)]
         steal_count = actions.count("steal")
-        
-        assert steal_count > 8
+
+        # Threshold tuned to the rebalanced crime weights (steal base 0.10 +
+        # Deceitful +0.50). Still well above the no-trait baseline.
+        assert steal_count > 4
 
     @pytest.mark.unit
     def test_diligent_increases_work_and_train(self, base_villager):
@@ -157,8 +161,10 @@ class TestSkillEffectsOnActions:
 
     @pytest.fixture
     def base_villager(self):
+        # Use a non-producer job so trait effects aren't masked by the
+        # producer-job work bias (Farmers/Miners/etc. lean toward work).
         return {
-            "id": 1, "name": "Test", "age": 25, "job": "Farmer",
+            "id": 1, "name": "Test", "age": 25, "job": "Tailor",
             "atk": 10, "def": 10, "int": 10, "hp": 100, "rep": 10,
             "coins": 50, "hunger": 30, "level": 5, "exp": 0,
             "traits": "", "skills": "", "alive": True,
@@ -272,8 +278,10 @@ class TestWeatherEffects:
 
     @pytest.fixture
     def base_villager(self):
+        # Use a non-producer job so trait effects aren't masked by the
+        # producer-job work bias (Farmers/Miners/etc. lean toward work).
         return {
-            "id": 1, "name": "Test", "age": 25, "job": "Farmer",
+            "id": 1, "name": "Test", "age": 25, "job": "Tailor",
             "atk": 10, "def": 10, "int": 10, "hp": 100, "rep": 10,
             "coins": 50, "hunger": 30, "level": 5, "exp": 0,
             "traits": "", "skills": "", "alive": True,

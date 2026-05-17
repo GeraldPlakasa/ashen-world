@@ -828,7 +828,7 @@ def _apply_quest_results(
             if random.random() < 0.15 and v != party_sorted[0]:
                 stat = stat_focus_key if stat_focus_key in ("atk", "def", "int") else "rep"
                 if stat == "rep":
-                    v["rep"] = clamp(int(v.get("rep", 0) or 0) + rand_int(1, 3), -100, 100)
+                    v["rep"] = int(v.get("rep", 0) or 0) + rand_int(1, 3)
                 else:
                     v[stat] = int(v.get(stat, 10) or 10) + rand_int(1, 2)
     else:

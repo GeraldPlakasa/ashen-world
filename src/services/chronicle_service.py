@@ -55,13 +55,23 @@ def record_election(
     day: int,
     emergency: bool = False,
     term_limited: bool = False,
+    runners_up: list[dict] | None = None,
 ) -> None:
+    """`total_alive` historically meant the whole population; it now carries
+    the count of *eligible voters* (alive adults age 16+) so the percentage
+    matches the on-page tally. Param name kept for backward compatibility.
+
+    `runners_up` is an optional list of {id, name, family, votes} dicts for
+    the non-winning candidates that received at least one vote (top 3 by
+    vote count). They are appended to the body and registered as actors so
+    losing-candidate context is preserved in the chronicle."""
     if not winner:
         return
     year, _ = _yd(day)
     name = winner.get("name", "Unknown")
     family = winner.get("family", "")
-    pct = (votes / total_alive * 100) if total_alive else 0
+    total_voters = total_alive
+    pct = (votes / total_voters * 100) if total_voters else 0
 
     actors = [_actor(winner)]
     if prev_king:
@@ -70,31 +80,31 @@ def record_election(
     if emergency:
         headline = f"Emergency election: {name} crowned"
         body_choices = [
-            f"With the throne suddenly empty, {name} of the {family} family was hastily raised to the crown — {votes} votes ({pct:.0f}% of the village).",
-            f"The village convened in haste. {name} took the crown after winning {votes} of {total_alive} possible votes.",
-            f"An emergency vote saw {name} crowned with {votes} votes — {pct:.0f}% of all living villagers.",
+            f"With the throne suddenly empty, {name} of the {family} family was hastily raised to the crown — {votes} votes ({pct:.0f}% of {total_voters} eligible voters).",
+            f"The village convened in haste. {name} took the crown after winning {votes} of {total_voters} possible votes.",
+            f"An emergency vote saw {name} crowned with {votes} votes — {pct:.0f}% of eligible voters.",
         ]
         importance = 5 if (prev_king and not prev_king.get("alive", True)) else 4
     elif prev_king and prev_king.get("id") != winner.get("id"):
         headline = f"{name} crowned, {prev_king.get('name','the former King')} steps down"
         body_choices = [
-            f"After a contested vote ({votes} of {total_alive}, {pct:.0f}%), {name} ascends — and {prev_king.get('name')} returns to common life.",
+            f"After a contested vote ({votes} of {total_voters}, {pct:.0f}%), {name} ascends — and {prev_king.get('name')} returns to common life.",
             f"The crown changes hands: {name} takes the throne with {votes} votes, while {prev_king.get('name')} steps down.",
-            f"The {family} banner rises — {name} elected King with {votes} of {total_alive} votes.",
+            f"The {family} banner rises — {name} elected King with {votes} of {total_voters} votes.",
         ]
         importance = 4
     elif not prev_king:
         headline = f"{name} elected first King"
         body_choices = [
             f"In the first true vote of the age, {name} of the {family} family takes the crown with {votes} votes ({pct:.0f}%).",
-            f"The throne, long empty, finds its first occupant: {name}, chosen by {votes} of {total_alive} villagers.",
+            f"The throne, long empty, finds its first occupant: {name}, chosen by {votes} of {total_voters} eligible voters.",
         ]
         importance = 5
     else:
         headline = f"{name} re-elected"
         body_choices = [
-            f"The crown stays put. {name} re-elected with {votes} of {total_alive} votes ({pct:.0f}%).",
-            f"Voters reaffirm {name}'s reign — {votes} votes, {pct:.0f}% of the living.",
+            f"The crown stays put. {name} re-elected with {votes} of {total_voters} votes ({pct:.0f}%).",
+            f"Voters reaffirm {name}'s reign — {votes} votes, {pct:.0f}% of eligible voters.",
         ]
         importance = 3
 
@@ -104,12 +114,34 @@ def record_election(
         ]
         importance = max(importance, 4)
 
+    body = random.choice(body_choices)
+
+    # Append runners-up to the body so losing candidates appear in the
+    # historical record. Also push them onto the actors list so the
+    # chronicle UI can link to them.
+    if runners_up:
+        parts = []
+        for r in runners_up:
+            rname = r.get("name", "?")
+            rfam = r.get("family", "")
+            rvotes = int(r.get("votes", 0) or 0)
+            fam_str = f" of the {rfam} family" if rfam else ""
+            parts.append(f"{rname}{fam_str} ({rvotes} votes)")
+            actors.append({
+                "id": int(r.get("id", 0) or 0),
+                "name": rname,
+                "family": rfam,
+            })
+        if parts:
+            label = "Other contender" if len(parts) == 1 else "Other contenders"
+            body += f" {label}: " + "; ".join(parts) + "."
+
     _safe_record(
         day=day,
         year=year,
         category="royal",
         headline=headline,
-        body=random.choice(body_choices),
+        body=body,
         actors=actors,
         importance=importance,
     )
@@ -155,6 +187,88 @@ def record_king_death(king: dict, cause: str, day: int) -> None:
         body=random.choice(body_choices),
         actors=[_actor(king)],
         importance=5,
+    )
+
+
+def record_rivalry_brewing(loser: dict, king: dict, streak: int, day: int) -> None:
+    """A runner-up has lost `streak` consecutive elections and is publicly
+    embittered. Importance scales with streak length so a 3-loss rival is
+    medium-importance and a 5+-loss rival headlines."""
+    if not loser or not king:
+        return
+    year, _ = _yd(day)
+    importance = 3 if streak <= 3 else (4 if streak <= 4 else 5)
+    headline = f"{loser.get('name','?')} loses {streak} elections in a row"
+    fam = loser.get("family", "")
+    fam_str = f" of the {fam} family" if fam else ""
+    body_choices = [
+        f"{loser.get('name','?')}{fam_str} has now placed second in {streak} elections without ever taking the throne. Whispers grow that {loser.get('name','?')} no longer accepts the people's verdict and sees King {king.get('name','?')} as a usurper.",
+        f"For the {streak}th time, {loser.get('name','?')}{fam_str} ran for King and lost — this time to {king.get('name','?')}. Witnesses in the tavern say the words 'next time, by other means' were heard.",
+        f"{loser.get('name','?')}{fam_str} stormed out of the vote count after another loss to King {king.get('name','?')}. {streak} elections, {streak} defeats — the next move may not be a ballot.",
+    ]
+    _safe_record(
+        day=day,
+        year=year,
+        category="royal",
+        headline=headline,
+        body=random.choice(body_choices),
+        actors=[_actor(loser), _actor(king)],
+        importance=importance,
+    )
+
+
+def record_coup(rival: dict, king: dict, streak: int, day: int) -> None:
+    """A losing-streak rival successfully assassinates the reigning king.
+    Highest-importance political event; the chronicle references the
+    rivalry streak so the reader can connect the build-up to the act."""
+    if not rival or not king:
+        return
+    year, _ = _yd(day)
+    headline = f"King {king.get('name','?')} slain — coup by {rival.get('name','?')}"
+    fam = rival.get("family", "")
+    fam_str = f" of the {fam} family" if fam else ""
+    body_choices = [
+        f"After {streak} elections lost to him, {rival.get('name','?')}{fam_str} struck down King {king.get('name','?')} in the dead of night. The throne stands empty; an emergency vote will follow at dawn.",
+        f"The long-rumoured coup arrived. {rival.get('name','?')}{fam_str}, denied the crown {streak} times by the ballot, took it by the blade — King {king.get('name','?')} is dead.",
+        f"Blood on the steps of the royal court. {rival.get('name','?')}{fam_str}, a perennial runner-up ({streak} losses), assassinated King {king.get('name','?')} and vanished into the crowd.",
+    ]
+    _safe_record(
+        day=day,
+        year=year,
+        category="scandal",
+        headline=headline,
+        body=random.choice(body_choices),
+        actors=[_actor(rival), _actor(king)],
+        importance=5,
+    )
+
+
+def record_militarization_decree(king: dict, conscripts: list[dict], day: int) -> None:
+    """King declares a militarization decree on taking office, conscripting
+    civilians into Guard/Scout duty. Records a single chronicle entry naming
+    the king and how many were drafted."""
+    if not king or not conscripts:
+        return
+    year, _ = _yd(day)
+    n = len(conscripts)
+    headline = f"King {king.get('name','?')} decrees conscription"
+    names = ", ".join(c.get("name", "?") for c in conscripts[:4])
+    if n > 4:
+        names += f", and {n - 4} more"
+    body_choices = [
+        f"On taking the crown, King {king.get('name')} declared the village must arm itself — {n} villagers ({names}) were pressed into Guard and Scout duty, with no recourse.",
+        f"King {king.get('name')}'s first decree: militarization. {n} civilians ({names}) traded their trades for spears and watchtowers.",
+        f"The new King {king.get('name')} brooked no debate. {n} villagers ({names}) were conscripted into the watch overnight.",
+    ]
+    actors = [_actor(king)] + [_actor(c) for c in conscripts[:6]]
+    _safe_record(
+        day=day,
+        year=year,
+        category="royal",
+        headline=headline,
+        body=random.choice(body_choices),
+        actors=actors,
+        importance=4,
     )
 
 
@@ -265,6 +379,100 @@ def record_death(victim: dict, cause: str, day: int) -> None:
 # ---------------------------------------------------------------------------
 #  World / disaster
 # ---------------------------------------------------------------------------
+
+def record_trade_import(king: dict, purchases: list, total_cost: int, day: int) -> None:
+    """Record a king's foreign-trade import in the chronicle.
+    purchases: list of (resource, units, cost) tuples.
+    """
+    if not purchases or not king:
+        return
+    year, _ = _yd(day)
+    parts = ", ".join(f"+{u} {r} ({c}g)" for (r, u, c) in purchases)
+    body = (
+        f"King {king.get('name','')} of {king.get('family','')} spent "
+        f"{total_cost}g of village treasury on imports from outside: {parts}."
+    )
+    _safe_record(
+        day=day,
+        year=year,
+        category="economy",
+        headline=f"King {king.get('name','')} orders imports",
+        body=body,
+        actors=[_actor(king)],
+        importance=2,
+    )
+
+
+def record_disease_outbreak(victim: dict, disease: str, day: int) -> None:
+    """Record an individual catching an illness. Low importance (1) — these
+    happen often; raise to 3 only for plague which is dramatic.
+    """
+    if not victim or not disease:
+        return
+    try:
+        from config import DISEASES
+        name = DISEASES.get(disease, {}).get("name", disease)
+    except Exception:
+        name = disease
+    year, _ = _yd(day)
+    importance = 3 if disease == "plague" else (2 if disease == "fever" else 1)
+    _safe_record(
+        day=day,
+        year=year,
+        category="health",
+        headline=f"{victim.get('name','?')} has fallen ill with {name.lower()}",
+        body=f"{victim.get('name','?')} of the {victim.get('family','?')} family was struck down by {name.lower()}.",
+        actors=[_actor(victim)],
+        importance=importance,
+    )
+
+
+def record_disease_cure(healer: dict, patient: dict, disease: str, day: int) -> None:
+    """Record a successful healing — rewards the healer's reputation."""
+    if not healer or not patient:
+        return
+    try:
+        from config import DISEASES
+        name = DISEASES.get(disease, {}).get("name", disease) if disease else "an illness"
+    except Exception:
+        name = disease or "an illness"
+    year, _ = _yd(day)
+    _safe_record(
+        day=day,
+        year=year,
+        category="health",
+        headline=f"{healer.get('name','?')} cured {patient.get('name','?')} of {name.lower()}",
+        body=(
+            f"{healer.get('name','?')} the {healer.get('job','healer')} tended to "
+            f"{patient.get('name','?')} and brought them back from {name.lower()}."
+        ),
+        actors=[_actor(healer), _actor(patient)],
+        importance=2,
+    )
+
+
+def record_trade_export(king: dict, sales: list, total_earned: int, day: int) -> None:
+    """Record a king's surplus-export sale in the chronicle.
+    sales: list of (resource, units, earned) tuples.
+    """
+    if not sales or not king:
+        return
+    year, _ = _yd(day)
+    parts = ", ".join(f"-{u} {r} (+{e}g)" for (r, u, e) in sales)
+    body = (
+        f"King {king.get('name','')} of {king.get('family','')} sold surplus "
+        f"stockpile to outside merchants for {total_earned}g: {parts}."
+    )
+    _safe_record(
+        day=day,
+        year=year,
+        category="economy",
+        headline=f"King {king.get('name','')} sells surplus",
+        body=body,
+        actors=[_actor(king)],
+        importance=2,
+    )
+
 
 def record_world_event(message: str, day: int) -> None:
     if not message:
@@ -527,5 +735,120 @@ def record_quest(quest: dict, day: int) -> None:
         headline=headline,
         body=body,
         actors=[],
+        importance=importance,
+    )
+
+
+# ---------------------------------------------------------------------------
+#  Justice (crime & trial)
+# ---------------------------------------------------------------------------
+
+def record_crime(
+    criminal: dict,
+    victim: dict | None,
+    crime_type: str,
+    witness: dict | None,
+    day: int,
+) -> None:
+    """A crime was witnessed and pending case opened. Records a justice entry
+    so the chronicle shows the report before the trial verdict."""
+    if not criminal:
+        return
+    year, _ = _yd(day)
+    cname = criminal.get("name", "Someone")
+    cfam = criminal.get("family", "")
+    vname = victim.get("name") if victim else None
+    wname = witness.get("name") if witness else None
+
+    if crime_type == "theft":
+        headline = f"{cname} accused of theft"
+        body_choices = [
+            f"{cname} of the {cfam} family was seen rifling through " + (f"{vname}'s belongings" if vname else "the village stores") + ".",
+            f"A theft has been reported against {cname}." + (f" The victim: {vname}." if vname else ""),
+        ]
+        importance = 2
+    elif crime_type == "assault":
+        headline = f"{cname} accused of assault"
+        body_choices = [
+            f"{cname} struck " + (f"{vname}" if vname else "a fellow villager") + " in broad daylight.",
+            f"Blood was drawn — {cname} stands accused of attacking " + (f"{vname}" if vname else "another villager") + ".",
+        ]
+        importance = 3
+    elif crime_type == "murder":
+        headline = f"{cname} accused of murder"
+        body_choices = [
+            f"A killing! " + (f"{vname} was found dead, and {cname} stands accused." if vname else f"{cname} is accused of murder."),
+            f"{cname} of the {cfam} family is charged with the murder of " + (vname or "a villager") + ".",
+        ]
+        importance = 5
+    else:
+        return
+
+    if wname:
+        body_choices = [b + f" {wname} bore witness." for b in body_choices]
+
+    actors = [_actor(criminal)]
+    if victim:
+        actors.append(_actor(victim))
+    if witness:
+        actors.append(_actor(witness))
+
+    _safe_record(
+        day=day,
+        year=year,
+        category="justice",
+        headline=headline,
+        body=random.choice(body_choices),
+        actors=actors,
+        importance=importance,
+    )
+
+
+def record_trial_verdict(
+    king: dict,
+    criminal: dict,
+    victim: dict | None,
+    crime_type: str,
+    verdict: str,
+    outcome: dict,
+    day: int,
+) -> None:
+    """The king ruled on a pending case. Records the verdict."""
+    if not criminal or not king:
+        return
+    year, _ = _yd(day)
+    kname = king.get("name", "the King")
+    cname = criminal.get("name", "the accused")
+    vname = victim.get("name") if victim else None
+    paid = int(outcome.get("amount_paid", 0) or 0)
+
+    if verdict == "fine":
+        headline = f"{cname} fined for {crime_type}"
+        body = f"King {kname} ruled on the {crime_type} case against {cname}. A fine of {paid} coins was levied."
+        importance = 2 if crime_type == "theft" else 3
+    elif verdict == "exile":
+        headline = f"{cname} exiled for {crime_type}"
+        body = f"King {kname} cast {cname} out of the village for {crime_type}. They are never to return."
+        importance = 4
+    elif verdict == "execution":
+        headline = f"{cname} executed for {crime_type}"
+        body = f"By order of King {kname}, {cname} was put to death for {crime_type}."
+        if vname:
+            body += f" Justice for {vname}."
+        importance = 5
+    else:
+        return
+
+    actors = [_actor(king), _actor(criminal)]
+    if victim:
+        actors.append(_actor(victim))
+
+    _safe_record(
+        day=day,
+        year=year,
+        category="justice",
+        headline=headline,
+        body=body,
+        actors=actors,
         importance=importance,
     )

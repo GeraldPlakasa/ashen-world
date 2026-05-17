@@ -146,16 +146,43 @@ def build_family_graph(
             return "player"
         return "npc"
 
+    def _years(p: dict) -> tuple[int | None, int | None]:
+        # Use 90 days/year (matches DAYS_PER_YEAR). Day 1 = Year 1.
+        from config import DAYS_PER_YEAR
+        born_day = safe_int(p.get("born_day"))
+        death_day = safe_int(p.get("death_day"))
+        b = ((born_day - 1) // DAYS_PER_YEAR + 1) if born_day > 0 else None
+        d = ((death_day - 1) // DAYS_PER_YEAR + 1) if death_day > 0 else None
+        return b, d
+
     def node_label(p: dict, pid: int) -> str:
         name = (p.get("name") or f"#{pid}").strip()
         src = p.get("_source")
-        if src == "graveyard":
-            return f"{name}\n(archived)"
+        alive = p.get("alive", True)
+        kingterms = safe_int(p.get("kingTerms"))
+
+        # Prefix royal-blood marker, then a crown for kings/queens past or present.
+        prefix = ""
+        if safe_int(p.get("blue_blood")) > 0:
+            prefix += "\u2727 "
+        if kingterms > 0 or (p.get("job") in ("King", "Queen")):
+            prefix += "\u2654 "
+
+        born_y, died_y = _years(p)
+        if src == "graveyard" or not alive:
+            # Archived or dead \u2014 show lifespan if we have it.
+            if born_y and died_y:
+                return f"{prefix}{name}\n({born_y}\u2013{died_y})"
+            if died_y:
+                return f"{prefix}{name}\n(d. {died_y})"
+            return f"{prefix}{name}\n(deceased)"
+
         job = (p.get("job") or "").strip()
         lvl = safe_int(p.get("level"))
+        age = safe_int(p.get("age"))
         if job:
-            return f"{name}\n{job} \u2022 Lv {lvl}"
-        return f"{name}\nLv {lvl}"
+            return f"{prefix}{name}\n{job} \u2022 Lv {lvl} \u2022 {age}y"
+        return f"{prefix}{name}\nLv {lvl} \u2022 {age}y"
 
     def node_title(p: dict, pid: int) -> str:
         # Tooltip HTML (vis uses "title" as HTML)
@@ -212,11 +239,29 @@ def build_family_graph(
             }
             return
 
+        born_y, died_y = _years(p)
         nodes[pid] = {
             "id": pid,
             "label": node_label(p, pid),
             "group": node_group(p, pid),
             "title": node_title(p, pid),
+            # Extended metadata so the frontend can color/filter/search without
+            # parsing the HTML title.
+            "_meta": {
+                "name": (p.get("name") or f"#{pid}").strip(),
+                "family": (p.get("family") or "").strip(),
+                "gender": (p.get("gender") or "").strip(),
+                "alive": bool(p.get("alive", True)) and p.get("_source") != "graveyard",
+                "archived": p.get("_source") == "graveyard",
+                "blue_blood": safe_int(p.get("blue_blood")) > 0,
+                "king_terms": safe_int(p.get("kingTerms")),
+                "is_king_now": (p.get("job") in ("King", "Queen")) and p.get("alive", True),
+                "job": (p.get("job") or "").strip(),
+                "level": safe_int(p.get("level")),
+                "age": safe_int(p.get("age")),
+                "born_year": born_y,
+                "died_year": died_y,
+            },
         }
 
     def add_edge(fr: int, to: int, kind: str):
@@ -304,9 +349,35 @@ def build_family_graph(
                 down_seen.add(ch_id)
                 down_q.append((ch_id, d + 1))
 
+    # ---- Tree-wide summary stats
+    node_list = list(nodes.values())
+    alive_count = sum(1 for n in node_list if n.get("_meta", {}).get("alive"))
+    dead_count = sum(1 for n in node_list if not n.get("_meta", {}).get("alive") and not n.get("_meta", {}).get("archived"))
+    archived_count = sum(1 for n in node_list if n.get("_meta", {}).get("archived"))
+    royal_blood_count = sum(1 for n in node_list if n.get("_meta", {}).get("blue_blood"))
+    king_count = sum(1 for n in node_list if n.get("_meta", {}).get("king_terms", 0) > 0)
+    male_count = sum(1 for n in node_list if n.get("_meta", {}).get("gender") == "Male")
+    female_count = sum(1 for n in node_list if n.get("_meta", {}).get("gender") == "Female")
+
+    # Founders: nodes in the graph whose parents are NOT in the graph.
+    in_graph = set(nodes.keys())
+    founders: list[str] = []
+    for n in node_list:
+        pid = n["id"]
+        p = get_person(pid)
+        if not p:
+            continue
+        mom = safe_int(p.get("motherId"))
+        dad = safe_int(p.get("fatherId"))
+        if (mom <= 0 or mom not in in_graph) and (dad <= 0 or dad not in in_graph):
+            founders.append(n.get("_meta", {}).get("name") or f"#{pid}")
+
+    # Approx generations: highest in-graph ancestor depth from root + 1
+    generations = max(1, up_depth + down_depth + 1)
+
     return {
         "root_id": root_id,
-        "nodes": list(nodes.values()),
+        "nodes": node_list,
         "edges": list(edges.values()),
         "meta": {
             "up_depth": up_depth,
@@ -314,6 +385,18 @@ def build_family_graph(
             "max_nodes": max_nodes,
             "live_count": len(live_by_id),
             "graph_nodes": len(nodes),
+        },
+        "stats": {
+            "total": len(node_list),
+            "alive": alive_count,
+            "dead": dead_count,
+            "archived": archived_count,
+            "male": male_count,
+            "female": female_count,
+            "royal_blood": royal_blood_count,
+            "kings": king_count,
+            "founders": founders[:6],
+            "generations_visible": generations,
         },
     }
 

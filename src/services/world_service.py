@@ -39,11 +39,16 @@ from src.repositories.stats_repo import (
     ensure_year_row,
     update_year_daily,
     finalize_year,
+    snapshot_yearly_resources,
     clear_yearly_stats,
 )
 from src.services.villager_service import generate_characters
 from src.services.simulation_service import simulate_one_day
 from src.services.election_service import hold_election
+from src.services.trade_service import (
+    maybe_king_imports_resources,
+    maybe_king_exports_resources,
+)
 from src.services.building_service import (
     update_tax_policy,
     maybe_construct_building,
@@ -168,6 +173,19 @@ def advance_one_day() -> tuple:
             champions = compute_year_champions(characters)
             finalize_year(old_year, champions=champions)
 
+            # Snapshot end-of-year stockpile for the Resources dashboard chart
+            try:
+                rstock = (bank.get("resources") or {})
+                snapshot_yearly_resources(
+                    old_year,
+                    int(rstock.get("food", 0) or 0),
+                    int(rstock.get("wood", 0) or 0),
+                    int(rstock.get("stone", 0) or 0),
+                    int(rstock.get("iron", 0) or 0),
+                )
+            except Exception as e:
+                logger.warning("Yearly resource snapshot failed: %s", e)
+
             # Prune chronicle once per year (drop importance 1-2 events older than 3 years)
             try:
                 from src.repositories.chronicle_repo import prune_low_importance
@@ -211,7 +229,11 @@ def advance_one_day() -> tuple:
         if births_today > 0:
             logger.debug("Births today: %d", births_today)
 
-        # Identify villagers who died today (for chronicle)
+        # Identify villagers who died today (for chronicle). If anyone reaches
+        # this pass with HP <= 0 but their last_action doesn't explain why,
+        # annotate it as "died after: <prior action>" — this is a safety net
+        # so future HP-drain bugs are always visible in the death cause.
+        _DEATH_WORDS = ("died", "killed", "dead", "succumbed", "passed away", "murdered", "slain", "perished")
         new_deaths_today: list[dict] = []
         for v in characters:
             if not v.get("alive", True) or v.get("hp", 0) <= 0:
@@ -227,7 +249,15 @@ def advance_one_day() -> tuple:
                 if dd <= 0:
                     v["death_day"] = new_total_day
 
+                # If the last_action doesn't reference death, prefix it so the
+                # cause is at least visible (the actual action that preceded
+                # the death gets preserved as context).
+                last = (v.get("last_action") or "").strip()
                 if was_alive_at_start and int(v.get("death_day", 0) or 0) == new_total_day:
+                    if not last:
+                        v["last_action"] = "died of unknown causes"
+                    elif not any(w in last.lower() for w in _DEATH_WORDS):
+                        v["last_action"] = f"died after: {last}"
                     new_deaths_today.append(v)
 
         # Chronicle deaths (best-effort)
@@ -288,6 +318,23 @@ def advance_one_day() -> tuple:
         # -------------------------------------------------------------------
         #  Buildings + treasury interest
         # -------------------------------------------------------------------
+        # King may import resources from outside if the stockpile is low and
+        # the treasury has surplus. Done BEFORE construction so freshly bought
+        # materials can immediately be spent on the same day's building.
+        try:
+            maybe_king_imports_resources(characters, bank, new_total_day)
+        except Exception as e:
+            logger.warning("King-import phase failed: %s", e)
+
+        # King may also export surplus stockpile back to outside merchants
+        # for treasury coins. Independent decision from imports (different
+        # trigger thresholds) — in practice a king won't do both same day
+        # because the floors don't overlap.
+        try:
+            maybe_king_exports_resources(characters, bank, new_total_day)
+        except Exception as e:
+            logger.warning("King-export phase failed: %s", e)
+
         bank, build_event = maybe_construct_building(characters, bank, new_total_day)
         bank, upgrade_event = maybe_upgrade_building(characters, bank, new_total_day)
         bank, decay_events = decay_buildings(bank, new_total_day)
@@ -399,7 +446,7 @@ def advance_one_day() -> tuple:
     return True, msg, year, day_in_year, new_total_day
 
 
-def generate_new_world(count: int = 50) -> tuple[int, int]:
+def generate_new_world(count: int = 100) -> tuple[int, int]:
     """
     Reset the world: generate a fresh population, reset day to 1,
     clear bank and stats.
@@ -415,9 +462,13 @@ def generate_new_world(count: int = 50) -> tuple[int, int]:
         save_day(1)
 
         # Reset village bank (including new event tracking fields)
+        # Initial stockpile: ~5–7 days of food for a 100-villager start so the
+        # village isn't already in famine on day 1; some wood/stone to bootstrap
+        # the first cheap building. Iron is rare from the start (Miners earn it).
         save_bank({
             "tax_rate": 0.10,
             "balance": 0,
+            "resources": {"food": 1500, "wood": 200, "stone": 100, "iron": 0},
             "building_levels": {},
             "building_health": {},
             "last_election_year": None,

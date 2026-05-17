@@ -64,6 +64,10 @@ def create_default_villager(**overrides: Any) -> Villager:
         "equip_amulet": 0,
         "equip_tome": 0,
         "last_forge_day": 0,
+        "disease": "",
+        "disease_day": 0,
+        "immunities": "[]",
+        "crime_record": "[]",
     }
     base.update(overrides)  # type: ignore[typeddict-item]
     return base
@@ -74,6 +78,7 @@ def create_default_bank(**overrides: Any) -> Bank:
     base: Bank = {
         "tax_rate": 0.10,
         "balance": 0,
+        "resources": {"food": 0, "wood": 0, "stone": 0, "iron": 0},
         "building_levels": {},
         "building_health": {},
         "last_election_year": None,

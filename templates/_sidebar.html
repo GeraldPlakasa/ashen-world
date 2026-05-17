@@ -13,6 +13,12 @@
         <span class="aw-nav-link-label">Kingdom</span>
       </a>
     </li>
+    <li>
+      <a href="{{ url_for('map.map_view') }}" class="aw-nav-link {% if active_page == 'map' %}aw-nav-link-active{% endif %}">
+        <span class="aw-nav-link-icon">⊞</span>
+        <span class="aw-nav-link-label">Map</span>
+      </a>
+    </li>
     {% if session.get('is_admin') %}
     <li>
       <a href="{{ url_for('admin.admin') }}" class="aw-nav-link {% if active_page == 'admin' %}aw-nav-link-active{% endif %}">

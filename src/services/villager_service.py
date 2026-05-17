@@ -9,6 +9,7 @@ from config import (
     FAMILY_NAMES,
     JOBS_POOL,
     JOBS_NO_ROYAL,
+    JOB_RESOURCE_YIELD,
     MAGIC_JOBS,
     MINOR_MAGIC_JOBS,
 )
@@ -86,7 +87,9 @@ def make_row(taken_names: set[str], jobs_pool: list[str] | None = None, forced_g
     atk = rand_int(5, 120)
     defense = rand_int(5, 120)
     hp = rand_int(60, 220)
-    hunger = rand_int(0, 100)
+    # Start hunger modest — villagers spawned at 0..100 were triggering the
+    # hungry-→-buy_food rule on day 1 before they could even pick a job action.
+    hunger = rand_int(0, 30)
     rep = rand_int(-100, 100)
     level = 1
     exp = 0
@@ -102,6 +105,10 @@ def make_row(taken_names: set[str], jobs_pool: list[str] | None = None, forced_g
 
     if forced_job in ("King", "Queen"):
         age = max(age, 18)
+    elif forced_job is not None and forced_job != "Child":
+        # Any forced non-child job needs an adult age, otherwise the age check
+        # below would overwrite it back to "Child".
+        age = max(age, 17)
 
     if age <= 16 and forced_job is None:
         job = "Child"
@@ -118,6 +125,15 @@ def make_row(taken_names: set[str], jobs_pool: list[str] | None = None, forced_g
 
     full, family = unique_full_name(taken_names)
     traits = ", ".join(random.sample(TRAITS, 2))
+
+    # Founder King/Queen at world gen count as having served their current term,
+    # so they show up in "Past Kings" stats, and they start with royal blood so
+    # the cascade-to-descendants logic seeds the royal line correctly. Without
+    # this the founders were invisible to lineage stats and their kids got 0
+    # blue_blood unless one parent later married into another royal line.
+    is_founder_royal = forced_job in ("King", "Queen")
+    initial_king_terms = 1 if is_founder_royal else 0
+    initial_blue_blood = 1 if is_founder_royal else 0
 
     return {
         "id": id_,
@@ -152,12 +168,18 @@ def make_row(taken_names: set[str], jobs_pool: list[str] | None = None, forced_g
         "spouseId": 0,
         "spouseSinceDay": 0,
         "spouseId_at_death": 0,
+        "kingTerms": initial_king_terms,
+        "consecutiveTerms": initial_king_terms,
         "huntWins": 0,
         "huntWinsYear": 0,
         "born_day": 0,
         "last_birth_day": 0,
         "achievements": "[]",
         "kingsVotedFor": "[]",
+        "blue_blood": initial_blue_blood,
+        "disease": "",
+        "disease_day": 0,
+        "immunities": "[]",
     }
 
 def generate_characters(n: int = 50) -> list[Villager]:
@@ -192,8 +214,30 @@ def generate_characters(n: int = 50) -> list[Villager]:
     # Ensure Queen title matches rule (Queen = King's spouse)
     sync_queen_to_king_spouse(characters, current_day=0)
 
+    # Force a healthy ratio of producer jobs in the INITIAL spawn so the
+    # village can feed itself from day 1. Uniform sampling from ~55 jobs gives
+    # only ~3 farmers / 100 villagers, which can't keep pace with consumption.
+    # Daily immigrants are unaffected — they're still uniformly sampled.
     remaining = n - len(characters)
-    for _ in range(remaining):
-        characters.append(make_row(taken_names, jobs_pool=JOBS_NO_ROYAL))
+    producer_quota_targets: list[str] = []
+    food_weighting = {
+        "Farmer": 8, "Fisher": 5, "Hunter": 5, "Shepherd": 4,
+        "Baker": 3, "Butcher": 3, "Cook": 2, "Beekeeper": 2,
+        "Woodcutter": 5, "Forester": 3, "Carpenter": 2,
+        "Mason": 3, "Miner": 4, "Blacksmith": 2,
+    }
+    target_producer_count = int(remaining * 0.45)
+    total_weight = max(1, sum(food_weighting.values()))
+    for job, w in food_weighting.items():
+        slots = max(1, int(round(w / total_weight * target_producer_count)))
+        producer_quota_targets.extend([job] * slots)
+    producer_quota_targets = producer_quota_targets[:target_producer_count]
+    random.shuffle(producer_quota_targets)
+
+    for i in range(remaining):
+        forced = producer_quota_targets[i] if i < len(producer_quota_targets) else None
+        characters.append(
+            make_row(taken_names, jobs_pool=JOBS_NO_ROYAL, forced_job=forced)
+        )
 
     return characters

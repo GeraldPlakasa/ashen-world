@@ -7,6 +7,9 @@ from config import (
     JOBS_NO_ROYAL,
     MAGIC_JOBS,
     MINOR_MAGIC_JOBS,
+    FOOD_PER_ADULT_PER_DAY,
+    FOOD_PER_CHILD_PER_DAY,
+    GRANARY_CONSUMPTION_MULT,
 )
 from src.utils.world_utils import (
     clamp,
@@ -32,6 +35,7 @@ from src.services.relationship_service import (
     spouse_daily_phase,
     maybe_corrupt_from_bank,
     king_assassination_phase,
+    rival_coup_phase,
 )
 from src.services.event_service import (
     maybe_trigger_event,
@@ -57,38 +61,42 @@ from src.models.bank import Bank
 def elder_decay_phase(characters: list[Villager], current_day: int = 0) -> int:
     """
     Apply daily decay for elderly villagers (70+).
-    
-    - Age 70-79: HP decay 0-1, 2% stat decay chance, ~1.8% yearly death
+
+    - Age 70-79: 40% chance of 1 HP loss/day, 1% stat decay chance, ~0.9% yearly death
     - Age 80-89: HP decay 1-2, 5% stat decay chance, ~7% yearly death
     - Age 90-99: HP decay 1-3, 10% stat decay chance, ~17% yearly death
     - Age 100+: HP decay 2-5, 15% stat decay chance, ~30% yearly death
-    
+
     Returns number of natural deaths from old age.
     """
     natural_deaths = 0
-    
+
     for v in characters:
         if not v.get("alive", True):
             continue
-        
+
         age = int(v.get("age", 0) or 0)
         if age < 70:
             continue
-        
+
         hp = int(v.get("hp", 100) or 100)
         atk = int(v.get("atk", 10) or 10)
         def_stat = int(v.get("def", 10) or 10)
         int_stat = int(v.get("int", 10) or 10)
-        
+
         hp_decay = 0
         stat_decay_chance = 0.0
         death_chance = 0.0
-        
+
         if 70 <= age < 80:
-            # Early elder: very gentle decay
-            hp_decay = rand_int(0, 1)
-            stat_decay_chance = 0.02  # 2% chance per day
-            death_chance = 0.0005  # 0.05% per day (~1.8% per year)
+            # Early elder: very gentle decay. Reduced from prior tuning where
+            # too many villagers died "peacefully" in their early 70s before
+            # ever reaching real old age. HP loss is now probabilistic (40%
+            # of days lose 1 HP, else 0) instead of every day, and the stat
+            # decay chance is halved.
+            hp_decay = 1 if random.random() < 0.40 else 0
+            stat_decay_chance = 0.01  # 1% chance per day (was 2%)
+            death_chance = 0.00025  # ~0.9% per year (was ~1.8%)
         elif 80 <= age < 90:
             # Old: mild decay
             hp_decay = rand_int(1, 2)
@@ -146,13 +154,13 @@ def elder_decay_phase(characters: list[Villager], current_day: int = 0) -> int:
 def maybe_add_immigrants(characters: list[Villager], bank: Bank) -> tuple[list[Villager], int]:
     """
     Daily chance for 1-2 immigrants to arrive.
-    Base 3% chance, tavern increases by 2% per level.
+    Base 1.5% chance, tavern increases by 1% per level.
     """
     tavern_lvl = get_building_level(bank, "tavern")
 
     # Lower base chance for controlled population growth
-    base_chance = 0.03 + 0.02 * tavern_lvl  # 3% base, +2% per tavern level
-    chance = max(0.02, min(0.15, base_chance))  # 2-15% range
+    base_chance = 0.015 + 0.01 * tavern_lvl  # 1.5% base, +1% per tavern level
+    chance = max(0.01, min(0.08, base_chance))  # 1-8% range
 
     if random.random() >= chance:
         return characters, 0
@@ -373,9 +381,12 @@ def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -
             heir_kind = "sibling"
 
         if not heir:
-            # No heir found - demote dead player so user can create new character
+            # No heir found - demote dead player so user can create new character.
+            # Preserve the actual death cause (e.g. "dead (starvation -8 HP)")
+            # and append the lineage-end note instead of overwriting it.
             _demote_to_npc(parent)
-            parent["last_action"] = f"lineage ended (no heirs)"
+            death_cause = parent.get("last_action") or "dead"
+            parent["last_action"] = f"{death_cause} / lineage ended (no heirs)"
             continue
 
         parent_name = parent.get("name", "Unknown")
@@ -395,6 +406,58 @@ def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -
             heir["last_action"] = note
 
 
+def consume_food_phase(characters: list[Villager], bank: Bank) -> dict[str, int]:
+    """Drain the town's food stockpile and feed the adult population.
+
+    When supply meets demand, each adult eats and their hunger drops. When
+    supply falls short, eating is rationed proportionally AND a deficit
+    hunger penalty is added on top — so a low stockpile both fails to feed
+    AND actively raises hunger toward starvation.
+    """
+    if not isinstance(bank, dict):
+        return {"need": 0, "available": 0, "fed": 0, "deficit": 0}
+
+    stock = bank.setdefault("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0})
+
+    adults = sum(1 for v in characters if v.get("alive") and not is_child(v))
+    kids = sum(1 for v in characters if v.get("alive") and is_child(v))
+    need = adults * FOOD_PER_ADULT_PER_DAY + kids * FOOD_PER_CHILD_PER_DAY
+
+    if get_building_level(bank, "granary") > 0:
+        need = max(1, int(round(need * GRANARY_CONSUMPTION_MULT)))
+
+    available = int(stock.get("food", 0) or 0)
+    fed = min(available, need)
+    stock["food"] = available - fed
+
+    # Per-adult hunger reduction when fed. Calibrated so it roughly cancels
+    # the typical daily hunger gain from "work" (+6-12), keeping a working
+    # population at hunger equilibrium when food is plentiful. Granary boosts
+    # this further (better distribution to the table).
+    base_reduction = 11
+    granary_lvl = get_building_level(bank, "granary")
+    if granary_lvl > 0:
+        base_reduction += 2 * granary_lvl
+
+    fed_ratio = (fed / need) if need > 0 else 1.0
+    hunger_reduction = int(round(base_reduction * fed_ratio))
+
+    deficit = max(0, need - available)
+    deficit_ratio = (deficit / need) if need > 0 else 0.0
+    hunger_penalty = int(round(20 * deficit_ratio))
+
+    for v in characters:
+        if not v.get("alive") or is_child(v):
+            continue
+        h = int(v.get("hunger", 0) or 0)
+        h = max(0, h - hunger_reduction)
+        if hunger_penalty > 0:
+            h = min(100, h + hunger_penalty)
+        v["hunger"] = h
+
+    return {"need": need, "available": available, "fed": fed, "deficit": deficit}
+
+
 def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 0) -> tuple[list[Villager], Bank, int, str | None, int, str | None]:
     """
     Simulate actions for one day for each villager in the list.
@@ -410,12 +473,24 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     corruption_total = 0
 
     # 1) Daily individual phase
-    for v in characters:
+    # Process guards first so patrollers boost witness chance for any crimes
+    # committed by other villagers later in the same tick.
+    _GUARD_PRIORITY = {"Guard", "Captain", "Soldier", "Commander"}
+    ordered = sorted(
+        characters,
+        key=lambda x: 0 if x.get("job") in _GUARD_PRIORITY else 1,
+    )
+    _DEATH_WORDS = ("died", "killed", "dead", "succumbed", "passed away", "murdered", "slain", "perished")
+    for v in ordered:
         if v.get("hp", 0) <= 0 or not v.get("alive", True):
             v["hp"] = 0
             v["alive"] = False
-            if not v.get("last_action"):
-                v["last_action"] = "dead"
+            last = (v.get("last_action") or "").strip()
+            if not last:
+                v["last_action"] = "dead of unknown causes"
+            elif not any(w in last.lower() for w in _DEATH_WORDS):
+                # Action ran but didn't annotate death — preserve context
+                v["last_action"] = f"died after: {last}"
             continue
 
         v["last_action"] = ""
@@ -425,7 +500,7 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
             v["hunger"] = 0
             continue
 
-        action = choose_action(v, bank, weather=weather_today)
+        action = choose_action(v, bank, weather=weather_today, all_characters=characters)
         v["last_action"] = action
         apply_action(v, action, bank, characters, weather=weather_today, current_day=current_day)
 
@@ -442,6 +517,21 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
 
         stolen = maybe_corrupt_from_bank(v, bank)
         corruption_total += stolen
+
+    # 1.35) Disease progression — HP drain, lethality rolls, recovery,
+    # ambient new infections. Runs before food consumption so a starving
+    # villager who also has plague can compound damage on the same day.
+    try:
+        from src.services.disease_service import daily_disease_phase
+        daily_disease_phase(characters, bank, current_day)
+    except Exception:
+        pass
+
+    # 1.4) Town-wide food consumption from the shared stockpile.
+    # Runs after the action loop so a Farmer's daily harvest is on the shelf
+    # before the village eats. Shortages bump hunger across the population,
+    # which the next day's starvation pass will translate into HP loss.
+    consume_food_phase(characters, bank)
 
     # 1.5) Passive MP regeneration (magic jobs regen more)
     for v in characters:
@@ -460,10 +550,19 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     # 2) World phases (immigrants, spouses)
     characters, _added_count = maybe_add_immigrants(characters, bank)
     child_daily_phase(characters, current_day=current_day)
-    births_count = spouse_daily_phase(characters, current_day=current_day)
+    births_count = spouse_daily_phase(characters, current_day=current_day, bank=bank)
 
-    # 3) King assassination phase
+    # 3) King assassination phase (king kills enemies + rivals may coup the king)
     king_assassination_phase(characters, bank=bank, current_day=current_day)
+    rival_coup_phase(characters, bank=bank, current_day=current_day)
+
+    # 3.25) Crime & justice — the King rules on any pending cases today.
+    # No-ops when there are no pending cases or no sitting King.
+    try:
+        from src.services.justice_service import crime_trial_phase
+        crime_trial_phase(characters, bank, current_day)
+    except Exception:
+        pass
 
     # 3.5) Player inheritance
     player_inheritance_phase(characters, current_day=current_day)

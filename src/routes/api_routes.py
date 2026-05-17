@@ -46,6 +46,7 @@ def api_state():
         "graveyard_index": graveyard_index,
         "bank_balance": bank.get("balance", 0),
         "tax_rate": bank.get("tax_rate", 0.10),
+        "resources": bank.get("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0}),
         "buildings": buildings_payload,
         "last_election_year": bank.get("last_election_year"),
         "last_election_message": bank.get("last_election_message", ""),
@@ -190,6 +191,7 @@ def api_analytics():
             "dead_count": len(dead_chars),
             "treasury": bank.get("balance", 0),
             "tax_rate": bank.get("tax_rate", 0.10),
+            "resources": bank.get("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0}),
             "total_users": len(users),
         },
         "yearly_stats": yearly_stats,
@@ -215,7 +217,81 @@ def api_analytics():
         },
         "skill_definitions": {name: {"category": data.get("category", ""), "rarity": data.get("rarity", "")} for name, data in SKILLS.items()},
         "achievement_definitions": {aid: {"name": data["name"], "icon": data.get("icon", "🏆")} for aid, data in ACHIEVEMENTS.items()},
+        "justice": _build_justice_payload(yearly_stats, year),
     })
+
+
+def _build_justice_payload(yearly_stats: list[dict], current_year: int) -> dict:
+    """Aggregate crime / verdict counters for the admin Justice tab.
+
+    - `this_year` reads the live (un-finalized) row for the current year.
+    - `history` returns all finalized rows trimmed to the counters we render.
+    - `recent` pulls the latest few `justice`-category chronicle entries so
+      the dashboard can show a verdict feed without a second API call.
+    """
+    try:
+        from src.repositories.chronicle_repo import list_events
+        recent = list_events(limit=15, category="justice", min_importance=1)
+    except Exception:
+        recent = []
+
+    by_year = {int(r.get("year", 0) or 0): r for r in yearly_stats if r.get("year")}
+    this_year_row = by_year.get(int(current_year)) or {}
+
+    history = [
+        {
+            "year": int(r.get("year", 0) or 0),
+            "crimes": int(r.get("crimes_committed", 0) or 0),
+            "trials": int(r.get("trials_held", 0) or 0),
+            # `fines_count` = number of fine verdicts (count axis).
+            # `fines_gold`  = gold collected from those fines (currency axis).
+            "fines_count": int(r.get("fines_count", 0) or 0),
+            "fines_gold":  int(r.get("fines_collected", 0) or 0),
+            "exiles": int(r.get("exiles", 0) or 0),
+            "executions": int(r.get("executions", 0) or 0),
+            "king": r.get("king_name") or "",
+        }
+        for r in yearly_stats
+    ]
+    history.sort(key=lambda x: x["year"])
+
+    total_crimes = sum(h["crimes"] for h in history) + int(this_year_row.get("crimes_committed", 0) or 0)
+    total_trials = sum(h["trials"] for h in history) + int(this_year_row.get("trials_held", 0) or 0)
+    total_fines_count = sum(h["fines_count"] for h in history) + int(this_year_row.get("fines_count", 0) or 0)
+    total_fines_gold  = sum(h["fines_gold"]  for h in history) + int(this_year_row.get("fines_collected", 0) or 0)
+    total_exiles = sum(h["exiles"] for h in history) + int(this_year_row.get("exiles", 0) or 0)
+    total_execs  = sum(h["executions"] for h in history) + int(this_year_row.get("executions", 0) or 0)
+
+    return {
+        "this_year": {
+            "year": int(current_year),
+            "crimes": int(this_year_row.get("crimes_committed", 0) or 0),
+            "trials": int(this_year_row.get("trials_held", 0) or 0),
+            "fines_count": int(this_year_row.get("fines_count", 0) or 0),
+            "fines_gold":  int(this_year_row.get("fines_collected", 0) or 0),
+            "exiles": int(this_year_row.get("exiles", 0) or 0),
+            "executions": int(this_year_row.get("executions", 0) or 0),
+        },
+        "all_time": {
+            "crimes": total_crimes,
+            "trials": total_trials,
+            "fines_count": total_fines_count,
+            "fines_gold":  total_fines_gold,
+            "exiles": total_exiles,
+            "executions": total_execs,
+        },
+        "history": history,
+        "recent": [
+            {
+                "day": e.get("day"),
+                "year": e.get("year"),
+                "headline": e.get("headline"),
+                "body": e.get("body"),
+                "importance": e.get("importance"),
+            }
+            for e in recent
+        ],
+    }
 
 
 @api_bp.route("/api/character/<int:char_id>", methods=["GET"])

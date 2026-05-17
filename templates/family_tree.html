@@ -18,6 +18,48 @@
       background: var(--aw-bg-dark);
       border-color: var(--aw-border) !important;
     }
+    .lineage-stat {
+      background: var(--aw-bg-dark);
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .lineage-stat .val { font-size: 18px; font-weight: 700; color: var(--aw-text); }
+    .lineage-stat .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--aw-text-muted); margin-top: 2px; }
+    .lineage-stat.male   .val { color: #6aa6ff; }
+    .lineage-stat.female .val { color: #f08aaf; }
+    .lineage-stat.royal  .val { color: #f0c245; }
+    .lineage-stat.kings  .val { color: #c9a227; }
+    .lineage-stat.dead   .val { color: var(--aw-dead); }
+    .lineage-search {
+      width: 100%;
+      max-width: 320px;
+      padding: 8px 12px;
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      background: var(--aw-bg-card);
+      color: var(--aw-text);
+      font-size: 13px;
+    }
+    .lineage-search:focus { outline: none; border-color: var(--aw-accent); }
+    .lineage-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--aw-text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .lineage-toggle input { margin: 0; }
+    .lineage-founders {
+      font-size: 12px;
+      color: var(--aw-text-muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+    .lineage-founders strong { color: var(--aw-text); }
   </style>
 </head>
 
@@ -50,31 +92,52 @@
           {% endif %}
           {% endwith %}
 
+          <!-- Stats strip -->
+          <section class="row g-2 mb-3" id="ft-stats-row" style="display: none;">
+            <div class="col-6 col-md-2"><div class="lineage-stat"><div class="val" id="stat-total">0</div><div class="lbl">Total</div></div></div>
+            <div class="col-6 col-md-2"><div class="lineage-stat male"><div class="val" id="stat-male">0</div><div class="lbl">Male</div></div></div>
+            <div class="col-6 col-md-2"><div class="lineage-stat female"><div class="val" id="stat-female">0</div><div class="lbl">Female</div></div></div>
+            <div class="col-6 col-md-2"><div class="lineage-stat dead"><div class="val" id="stat-dead">0</div><div class="lbl">Dead / Archived</div></div></div>
+            <div class="col-6 col-md-2"><div class="lineage-stat royal"><div class="val" id="stat-royal">0</div><div class="lbl">✧ Royal Blood</div></div></div>
+            <div class="col-6 col-md-2"><div class="lineage-stat kings"><div class="val" id="stat-kings">0</div><div class="lbl">♔ Past Kings</div></div></div>
+          </section>
+
           <section class="game-card">
             <div class="card-body">
               <!-- Controls -->
               <div class="row g-2 align-items-end mb-3">
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-auto">
                   <label class="form-label" style="font-size: 11px;">Ancestors (up)</label>
-                  <input id="ft-up" type="number" class="form-control form-control-sm" min="0" max="10" value="6" />
+                  <input id="ft-up" type="number" class="form-control form-control-sm" min="0" max="10" value="6" style="width: 80px;" />
                 </div>
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-auto">
                   <label class="form-label" style="font-size: 11px;">Descendants (down)</label>
-                  <input id="ft-down" type="number" class="form-control form-control-sm" min="0" max="10" value="6" />
+                  <input id="ft-down" type="number" class="form-control form-control-sm" min="0" max="10" value="6" style="width: 80px;" />
                 </div>
                 <div class="col-12 col-md-auto">
                   <button id="ft-reload" class="btn btn-sm btn-outline-light">Reload</button>
-                  <button id="ft-fit" class="btn btn-sm btn-outline-secondary">Fit View</button>
+                  <button id="ft-fit" class="btn btn-sm btn-outline-secondary">Fit</button>
                 </div>
-                <div class="col-12 col-md text-md-end">
-                  <span id="ft-status" style="color: var(--aw-text-muted); font-size: 13px;">Ready.</span>
+                <div class="col-12 col-md">
+                  <input type="search" id="ft-search" class="lineage-search"
+                         placeholder="🔍 Find by name in this tree..." autocomplete="off" />
+                </div>
+                <div class="col-12 col-md-auto d-flex gap-3 flex-wrap">
+                  <label class="lineage-toggle"><input type="checkbox" id="ft-hide-dead" /> Hide deceased</label>
+                  <label class="lineage-toggle"><input type="checkbox" id="ft-only-royal" /> Royal blood only</label>
                 </div>
               </div>
+
+              <div id="ft-founders" class="lineage-founders mb-2"></div>
 
               <div class="row g-3">
                 <!-- Graph -->
                 <div class="col-12 col-lg-9">
-                  <div id="family-tree" class="border rounded-3" style="height: 65vh;"></div>
+                  <div id="family-tree" class="border rounded-3" style="height: 70vh;"></div>
+                  <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span id="ft-status" style="color: var(--aw-text-muted); font-size: 12px;">Ready.</span>
+                    <span style="color: var(--aw-text-dim); font-size: 11px;">Drag to pan · scroll to zoom · click a node</span>
+                  </div>
                 </div>
 
                 <!-- Info Panel -->
@@ -89,26 +152,31 @@
                       <div style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Legend</div>
                       <div class="d-flex flex-column gap-2" style="font-size: 12px;">
                         <div class="d-flex align-items-center gap-2">
-                          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--aw-accent);"></span>
-                          <span style="color: var(--aw-text);">Root (Your character)</span>
+                          <span style="width: 12px; height: 12px; border-radius: 3px; background: #6aa6ff;"></span>
+                          <span style="color: var(--aw-text);">Male (alive)</span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--aw-alive);"></span>
-                          <span style="color: var(--aw-text);">Alive</span>
+                          <span style="width: 12px; height: 12px; border-radius: 3px; background: #f08aaf;"></span>
+                          <span style="color: var(--aw-text);">Female (alive)</span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--aw-dead);"></span>
-                          <span style="color: var(--aw-text);">Dead</span>
+                          <span style="width: 12px; height: 12px; border-radius: 3px; background: #6b7280;"></span>
+                          <span style="color: var(--aw-text);">Deceased</span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--aw-text-dim);"></span>
+                          <span style="width: 12px; height: 12px; border-radius: 3px; background: #3a3a3a; border: 1px dashed #888;"></span>
                           <span style="color: var(--aw-text);">Archived</span>
                         </div>
+                        <div class="d-flex align-items-center gap-2">
+                          <span style="width: 12px; height: 12px; border-radius: 3px; background: transparent; border: 2px solid #f0c245;"></span>
+                          <span style="color: var(--aw-text);">✧ Royal Blood</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                          <span style="width: 12px; height: 12px; border-radius: 3px; background: transparent; border: 2px solid var(--aw-accent);"></span>
+                          <span style="color: var(--aw-text);">Root</span>
+                        </div>
+                        <div style="font-size: 11px; color: var(--aw-text-muted); margin-top: 4px;">♔ = was a king · ✧ = royal-blood line</div>
                       </div>
-
-                      <hr style="border-color: var(--aw-border);" />
-
-                      <div style="color: var(--aw-text-dim); font-size: 11px;">Drag to pan, scroll to zoom</div>
                     </div>
                   </div>
                 </div>

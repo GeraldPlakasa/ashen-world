@@ -47,7 +47,9 @@ _next_villager_id = 0
 
 ELECTION_INTERVAL_YEARS = 5      # hold election every 5 game years
 KING_MAX_TERMS = 3               # max consecutive terms for one villager as King
-DYNASTY_BONUS = 1000             # extra leadership if same family as previous King
+DYNASTY_BONUS = 30               # extra leadership if same family as previous King
+                                  # (was 1000 — so dominant it guaranteed unanimous
+                                  # votes for the dynasty candidate every time)
 
 QUEST_INTERVAL_YEARS = 3         # King issues quests every 3 years
 
@@ -151,7 +153,7 @@ FAMILY_NAMES = [
 JOBS = [
     "King", "Queen", "Commander", "Soldier", "Scout", "Captain", "Guard", "Spy",
     "Advisor", "Merchant", "Blacksmith", "Healer", "Priest", "Hunter", "Farmer",
-    "Alchemist", "Bard", "Scholar", "Ranger", "Miner", "Archer", "Sailor",
+    "Alchemist", "Bard", "Scholar", "Miner", "Sailor",
     "Noble", "Carpenter", "Mason", "Fisher", "Tailor", "Cook", "Herbalist",
     "Scribe", "Engineer", "Trader", "Druid", "Glassblower", "Potter", "Forester",
     "Butcher", "Baker", "Weaver", "Clerk", "Innkeeper", "Brewer", "Shepherd",
@@ -174,19 +176,152 @@ ENEMY_BASE = [
 ]
 
 BUILDINGS = [
-    {"key": "market",      "name": "Marketplace", "cost": 400},
-    {"key": "library",     "name": "Library",     "cost": 350},
-    {"key": "barracks",    "name": "Barracks",    "cost": 450},
-    {"key": "granary",     "name": "Granary",     "cost": 300},
-    {"key": "clinic",      "name": "Clinic",      "cost": 320},
-    {"key": "walls",       "name": "City Walls",  "cost": 600},
-    {"key": "temple",      "name": "Temple",      "cost": 380},
-    {"key": "blacksmith",  "name": "Blacksmith",  "cost": 300},
-    {"key": "treasury",    "name": "Treasury",    "cost": 500},
-    {"key": "royal_court", "name": "Royal Court", "cost": 480},
-    {"key": "tax_office",  "name": "Tax Office",  "cost": 320},
-    {"key": "tavern",      "name": "Tavern",      "cost": 240},
+    # Rebalanced: heaviest stone-eaters trimmed; small iron requirements added to
+    # several civilian buildings so iron has demand beyond just walls/barracks.
+    # Military / industrial iron costs bumped to soak up the iron stockpile
+    # that accumulates once Blacksmiths and Miners hit higher levels.
+    {"key": "market",      "name": "Marketplace", "cost": 400, "resources": {"wood": 40, "stone": 30}},
+    {"key": "library",     "name": "Library",     "cost": 350, "resources": {"wood": 50, "stone": 20}},
+    {"key": "barracks",    "name": "Barracks",    "cost": 450, "resources": {"wood": 30, "stone": 50, "iron": 15}},
+    {"key": "granary",     "name": "Granary",     "cost": 300, "resources": {"wood": 60, "stone": 20}},
+    {"key": "clinic",      "name": "Clinic",      "cost": 320, "resources": {"wood": 40, "stone": 25, "iron": 3}},
+    {"key": "walls",       "name": "City Walls",  "cost": 600, "resources": {"stone": 80,  "iron": 25}},
+    {"key": "temple",      "name": "Temple",      "cost": 380, "resources": {"wood": 30, "stone": 50, "iron": 3}},
+    {"key": "blacksmith",  "name": "Blacksmith",  "cost": 300, "resources": {"wood": 20, "stone": 35, "iron": 18}},
+    {"key": "treasury",    "name": "Treasury",    "cost": 500, "resources": {"stone": 60, "iron": 12}},
+    {"key": "royal_court", "name": "Royal Court", "cost": 480, "resources": {"wood": 50, "stone": 55, "iron": 5}},
+    {"key": "tax_office",  "name": "Tax Office",  "cost": 320, "resources": {"wood": 40, "stone": 25, "iron": 3}},
+    {"key": "tavern",      "name": "Tavern",      "cost": 240, "resources": {"wood": 50, "stone": 10, "iron": 2}},
+    # --- Production buildings (boost specific producer-job yields) ---
+    {"key": "farm",        "name": "Farm",        "cost": 280, "resources": {"wood": 50, "stone": 10, "iron": 2}},
+    {"key": "lumbermill",  "name": "Lumbermill",  "cost": 260, "resources": {"wood": 80, "iron": 2}},
+    {"key": "quarry",      "name": "Quarry",      "cost": 320, "resources": {"wood": 30, "stone": 25, "iron": 3}},
+    {"key": "mine",        "name": "Mine",        "cost": 360, "resources": {"wood": 50, "stone": 35, "iron": 5}},
+    {"key": "smelter",     "name": "Smelter",     "cost": 340, "resources": {"wood": 30, "stone": 45, "iron": 5}},
 ]
+
+# Village map layout — hand-picked positions for the top-down map view.
+# Viewport: 1000 x 600 SVG. Each entry: x, y are top-left of the building rect.
+# Buildings are grouped roughly into zones: production (outskirts),
+# civic plaza (center), defense (perimeter), residential (mid-ring).
+MAP_VIEWBOX = (1000, 600)
+MAP_LAYOUT = {
+    # zone: production (top-left)
+    "farm":        {"x":  60, "y":  50, "w": 120, "h": 80,  "icon": "🌾", "tint": "#7a8a3f", "zone": "production"},
+    "lumbermill":  {"x":  60, "y": 160, "w": 110, "h": 70,  "icon": "🌲", "tint": "#5a6b3a", "zone": "production"},
+    # zone: defense (top-right and walls)
+    "barracks":    {"x": 800, "y":  50, "w": 130, "h": 80,  "icon": "⚔",  "tint": "#a04848", "zone": "defense"},
+    "walls":       {"x": 460, "y":  20, "w": 110, "h": 30,  "icon": "🛡", "tint": "#7a7a7a", "zone": "defense"},
+    # zone: mining cluster (right edge)
+    "quarry":      {"x": 820, "y": 160, "w": 110, "h": 70,  "icon": "⛏",  "tint": "#7a6e5a", "zone": "production"},
+    "mine":        {"x": 820, "y": 250, "w": 110, "h": 70,  "icon": "⛏",  "tint": "#6b5a48", "zone": "production"},
+    "smelter":     {"x": 820, "y": 340, "w": 110, "h": 70,  "icon": "🔥", "tint": "#a06a3a", "zone": "production"},
+    # zone: civic plaza (center)
+    "royal_court": {"x": 430, "y": 230, "w": 160, "h": 90,  "icon": "♔",  "tint": "#c9a227", "zone": "civic"},
+    "market":      {"x": 290, "y": 260, "w": 110, "h": 70,  "icon": "₪",  "tint": "#4a9c66", "zone": "civic"},
+    "treasury":    {"x": 620, "y": 250, "w": 110, "h": 70,  "icon": "◆",  "tint": "#a0892e", "zone": "civic"},
+    "tax_office":  {"x": 620, "y": 340, "w": 100, "h": 60,  "icon": "§",  "tint": "#7a7244", "zone": "civic"},
+    # zone: knowledge (left-center)
+    "library":     {"x":  60, "y": 270, "w": 110, "h": 70,  "icon": "📚", "tint": "#6a5fa8", "zone": "knowledge"},
+    "temple":      {"x":  60, "y": 380, "w": 110, "h": 75,  "icon": "✦",  "tint": "#8e57c0", "zone": "knowledge"},
+    # zone: living (bottom mid)
+    "housing":     {"x": 200, "y": 380, "w": 100, "h": 65,  "icon": "⌂",  "tint": "#8a7050", "zone": "living"},
+    "clinic":      {"x": 200, "y": 470, "w": 110, "h": 65,  "icon": "✚",  "tint": "#c25a8e", "zone": "living"},
+    "granary":     {"x": 320, "y": 380, "w": 110, "h": 65,  "icon": "▦",  "tint": "#a0853c", "zone": "living"},
+    "tavern":      {"x": 460, "y": 470, "w": 110, "h": 65,  "icon": "♨",  "tint": "#a06a3a", "zone": "living"},
+    "blacksmith":  {"x": 600, "y": 470, "w": 110, "h": 65,  "icon": "⚒",  "tint": "#7a5040", "zone": "production"},
+}
+
+# Production buildings: each boosts the yield of specific producer jobs.
+# Format: building_key -> {job_name: yield_multiplier_per_level}
+# At level 1: +25% (multiplier 1.25), level 2: +50%, level 3: +75%.
+PRODUCTION_BUILDING_BONUS = {
+    "farm":       {"Farmer": 0.25, "Shepherd": 0.20, "Beekeeper": 0.15},
+    "lumbermill": {"Woodcutter": 0.30, "Forester": 0.20, "Carpenter": 0.15},
+    "quarry":     {"Mason": 0.30, "Miner": 0.15},
+    # Mine boost trimmed (was 0.30) so iron doesn't snowball with high-level
+    # Miners. Blacksmith bonus removed here — Blacksmith no longer produces
+    # raw iron; see BLACKSMITH_IRON_CONSUMPTION below.
+    "mine":       {"Miner": 0.20},
+    # Smelter now boosts only the Blacksmith conversion (iron → coin); the
+    # old Miner +10% double-dipped on raw iron output.
+    "smelter":    {"Blacksmith": 0.40},
+}
+
+# --- Resources (shared town stockpile) ---
+RESOURCE_TYPES = ["food", "wood", "stone", "iron"]
+
+# Per "work" action: raw resource output by job (before level/skill/weather scaling).
+# Jobs not listed here produce only coin income, as before.
+# Yields are tuned for a 50-villager population where ~1 of each producer job exists:
+# avg daily food production should roughly equal adult consumption to keep
+# the economy sustainable without trivializing famine events.
+JOB_RESOURCE_YIELD = {
+    "Farmer":     {"food": 12},   # rain halves this in apply_action
+    "Hunter":     {"food": 5},    # plus tier-scaled hunt food on kill
+    "Fisher":     {"food": 8},
+    "Shepherd":   {"food": 5},
+    "Baker":      {"food": 3},
+    "Butcher":    {"food": 3},
+    "Cook":       {"food": 2},
+    "Beekeeper":  {"food": 2},
+    "Woodcutter": {"wood": 6},
+    "Forester":   {"wood": 4},
+    "Carpenter":  {"wood": 2},
+    # Stone production boosted: prior ratio (4:1) couldn't keep up with the
+    # 10:1 stone-vs-iron building demand, leaving stone permanently stuck
+    # while iron accumulated. Mason 6 + Miner stone 5 (was 4).
+    "Mason":      {"stone": 6},
+    # Miner is now the sole raw-iron producer (Blacksmith was removed: it
+    # used to double iron supply with no offsetting sink, so iron piled up).
+    # Stone bumped 4 -> 5 so total mining throughput is roughly preserved.
+    "Miner":      {"stone": 5, "iron": 1},
+    # Blacksmith no longer mines iron — it CONSUMES iron in apply_action's
+    # "work" branch to forge tools/weapons for coin. See action_service.py.
+}
+
+# Daily town-wide food consumption
+FOOD_PER_ADULT_PER_DAY = 1
+# Children are fed implicitly by their families; the town stockpile doesn't
+# pay for them separately. Set >0 to make a population of dependents more punishing.
+FOOD_PER_CHILD_PER_DAY = 0
+# Granary lvl ≥ 1 multiplies total food need by this (more efficient storage/distribution)
+GRANARY_CONSUMPTION_MULT = 0.75
+# Food earned per hunt victory: common=1x, elite=2x, legendary=3x of this base
+HUNT_FOOD_PER_KILL = 3
+
+# --- Foreign Trade (King imports resources from outside) ---
+# Coin price the village pays per unit when the king imports a resource.
+# Food is cheapest (abundant from neighbors), iron is the most expensive.
+TRADE_PRICES = {"food": 1, "wood": 2, "stone": 3, "iron": 6}
+# Treasury safety floor — the king will never spend below this amount on imports.
+TRADE_TREASURY_FLOOR = 300
+# Per-purchase order sizes (units bought when the king decides to import).
+TRADE_ORDER_SIZE = {"food": 200, "wood": 60, "stone": 40, "iron": 15}
+# Stockpile thresholds that trigger an import. Food is population-scaled at
+# runtime; the integer here is a fallback if the population is unknown.
+TRADE_LOW_STOCK = {"food": 400, "wood": 50, "stone": 30, "iron": 10}
+# Hard "emergency" threshold: any food stockpile below this absolute value
+# triggers an import regardless of king's trait. With ~75 adults consuming
+# 75/day, 1000 = ~13 days buffer — generous but the king should be acting
+# proactively, not waiting for the village to starve.
+TRADE_EMERGENCY_FOOD_STOCK = 1000
+# Target stockpile after an emergency import — the king buys enough to reach
+# this level (treasury and floor permitting).
+TRADE_EMERGENCY_FOOD_TARGET = 1500
+
+# ----- EXPORT (king sells surplus stockpile back to treasury) -----
+# Sell prices are deliberately below TRADE_PRICES (buy-back loss) so the
+# village can't arbitrage trade. Realistic: outside merchants pay less than
+# they charge. Roughly 50–65% of buy price.
+TRADE_SELL_PRICES = {"food": 1, "wood": 1, "stone": 2, "iron": 4}
+# Stockpile must EXCEED this floor before the king will consider exporting.
+# Food floor is intentionally high: never sell food unless we have weeks
+# of supply on hand.
+TRADE_EXPORT_FLOOR = {"food": 3000, "wood": 250, "stone": 200, "iron": 40}
+# Per-export order sizes — small to medium so a single decision doesn't
+# wipe the stockpile. Iron export bumped (was 20) so surplus clears faster.
+TRADE_EXPORT_SIZE = {"food": 400, "wood": 100, "stone": 70, "iron": 30}
 
 JOBS_POOL = JOBS
 JOBS_NO_ROYAL = [j for j in JOBS if j not in ("King", "Queen")]
@@ -624,6 +759,12 @@ INT_FIELDS = [
     "huntWins", "huntWinsYear", "questWins",
     "equip_weapon", "equip_armor", "equip_ring", "equip_amulet", "equip_tome",
     "last_forge_day",
+    "blue_blood",
+    "disease_day",
+    # Election politics: how many consecutive elections this villager has
+    # placed in the top-3 runners-up without winning. Resets on a win.
+    # Drives resentment toward the king and the coup-attempt chance.
+    "consecutive_losses",
 ]
 
 FIELDNAMES = [
@@ -639,6 +780,113 @@ FIELDNAMES = [
     "skills",
     "equip_weapon", "equip_armor", "equip_ring", "equip_amulet", "equip_tome",
     "last_forge_day",
+    "blue_blood",
+    # Disease MVP
+    "disease", "disease_day", "immunities",
+    # Election politics (see INT_FIELDS for description)
+    "consecutive_losses",
+    # Crime & justice: JSON list of past crimes by this villager. Each entry:
+    # {"day": int, "type": "theft|assault|murder", "victim_id": int,
+    #  "verdict": "fine|exile|execution"|null, "verdict_day": int|null}
+    "crime_record",
 ]
 
 USERS_FIELDNAMES = ["username", "email", "password_hash"]
+
+# ============================================================================
+#  DISEASE / ILLNESS SYSTEM
+# ============================================================================
+# Persistent per-villager disease state. Each disease has its own transmission
+# rate (chance to infect a contact), duration, daily HP drain, and lethality.
+# Healer jobs (Healer/Cleric/Herbalist/Priest) can cure with a base chance
+# scaled by INT and the Clinic/Temple building levels.
+
+DISEASES = {
+    "cough": {
+        "name":               "Persistent Cough",
+        "transmission_rate":  0.30,   # per close-contact interaction
+        "spouse_transmission": 0.45,  # higher between spouses sharing a home
+        "duration_days":      6,
+        "daily_hp_loss":      (1, 3),
+        "lethal_chance":      0.000,  # cough doesn't kill on its own
+        "recover_chance":     0.20,   # daily spontaneous recovery
+        "cure_chance_base":   0.55,   # base chance per healer attempt
+        "icon":               "🤧",
+    },
+    "fever": {
+        "name":               "Fever",
+        "transmission_rate":  0.20,
+        "spouse_transmission": 0.35,
+        "duration_days":      10,
+        "daily_hp_loss":      (3, 6),
+        "lethal_chance":      0.012,
+        "recover_chance":     0.12,
+        "cure_chance_base":   0.40,
+        "icon":               "🤒",
+    },
+    "plague": {
+        "name":               "Plague Boils",
+        "transmission_rate":  0.12,
+        "spouse_transmission": 0.20,
+        "duration_days":      14,
+        "daily_hp_loss":      (5, 9),
+        "lethal_chance":      0.045,
+        "recover_chance":     0.06,
+        "cure_chance_base":   0.25,
+        "icon":               "☠️",
+    },
+}
+
+# Baseline chance per alive villager per day of catching an illness from
+# outside (immigrants, traveling merchants, contaminated water).
+DISEASE_AMBIENT_CHANCE = 0.0025
+# Bias of which disease an ambient case is — same order as DISEASES, weight list
+DISEASE_AMBIENT_WEIGHTS = {"cough": 0.65, "fever": 0.27, "plague": 0.08}
+
+# Healer jobs (who can use the `heal_sick` action)
+HEALER_JOBS = {"Healer", "Cleric", "Herbalist", "Priest"}
+
+# ============================================================================
+#  CRIME & JUSTICE SYSTEM
+# ============================================================================
+# Villagers can commit crimes (theft / assault / murder). Guards on patrol may
+# witness in-progress crimes and create a pending case on the bank. Once per
+# day, if any cases are open and there is a sitting King, a trial phase runs
+# and the king issues a verdict per case (fine / exile / execution), modulated
+# by the king's traits and the crime severity. Outcomes are written to the
+# chronicle under the new `justice` category.
+
+# Jobs that can perform the patrol action and act as witnesses with elevated
+# detection chance.
+GUARD_JOBS = {"Guard", "Captain", "Soldier", "Commander"}
+
+# Per-crime severity scoring used by verdict logic. Higher = harsher.
+CRIME_SEVERITY = {
+    "theft":   1,
+    "assault": 2,
+    "murder":  4,
+}
+
+# Base witness chance for an in-progress crime when there is at least one
+# Guard alive. Scales upward with the number of guards on duty and with
+# patrol coverage (any Guard who took the patrol action today).
+CRIME_BASE_WITNESS_CHANCE = {
+    "theft":   0.10,
+    "assault": 0.25,
+    "murder":  0.40,
+}
+CRIME_WITNESS_PER_GUARD     = 0.04   # +chance per alive guard in the village
+CRIME_WITNESS_PER_PATROLLER = 0.10   # +chance per guard who patrolled today
+
+# Fine amounts (coins) collected from criminal -> treasury on a `fine` verdict.
+# If the criminal can't pay, the shortfall is forgiven (no debt accounting).
+CRIME_FINE_AMOUNT = {
+    "theft":   30,
+    "assault": 60,
+    "murder":  150,
+}
+
+# Cooldown (days) after a `fine` verdict — used as a soft barrier so the same
+# villager doesn't immediately re-offend the same day. Trial phase respects
+# this via the `crime_record` timestamps.
+CRIME_REPEAT_COOLDOWN_DAYS = 30

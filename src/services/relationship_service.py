@@ -19,8 +19,8 @@ from src.models.bank import Bank
 
 # Rough job groups for "guild" vibes
 MILITARY_JOBS = {
-    "Soldier", "Commander", "Guard", "Captain", "Ranger",
-    "Archer", "Scout", "Falconer",
+    "Soldier", "Commander", "Guard", "Captain",
+    "Scout", "Falconer",
 }
 LEARNED_JOBS = {
     "Scholar", "Scribe", "Advisor", "Engineer", "Druid",
@@ -249,7 +249,7 @@ def sync_queen_to_king_spouse(characters: list[Villager], current_day: int | Non
         _append_last_action(spouse, f"became Queen (spouse of King {king.get('name','')})")
 
 
-def spouse_daily_phase(characters: list[Villager], current_day: int) -> int:
+def spouse_daily_phase(characters: list[Villager], current_day: int, bank=None) -> int:
     """
     Daily spouse logic:
     - If relationship reaches 100 and label is 'love', chance to become spouses.
@@ -277,6 +277,27 @@ def spouse_daily_phase(characters: list[Villager], current_day: int) -> int:
         if int(spouse.get("spouseId", 0) or 0) != v.get("id"):
             v["spouseId"] = 0
             v["spouseSinceDay"] = 0
+
+    # --------- Disease: spouse-to-spouse transmission (cohabit) ----------
+    try:
+        from src.services.disease_service import try_transmit, is_sick
+        for v in characters:
+            if not v.get("alive", True):
+                continue
+            sid = int(v.get("spouseId", 0) or 0)
+            if sid == 0:
+                continue
+            if int(v.get("id", 0) or 0) > sid:
+                continue  # handle pair once
+            sp = _get_by_id(characters, sid)
+            if sp is None or not sp.get("alive", True):
+                continue
+            if is_sick(v):
+                try_transmit(v, sp, current_day, "spouse")
+            if is_sick(sp):
+                try_transmit(sp, v, current_day, "spouse")
+    except Exception:
+        pass
 
     # --------- Breakup phase (very rare) ----------
     for a in characters:
@@ -375,7 +396,7 @@ def spouse_daily_phase(characters: list[Villager], current_day: int) -> int:
 
     # Late import to avoid circular dependency
     from src.services.family_service import birth_daily_phase
-    births_count = birth_daily_phase(characters, current_day=current_day)
+    births_count = birth_daily_phase(characters, current_day=current_day, bank=bank)
 
     sync_queen_to_king_spouse(characters, current_day=current_day)
     
@@ -441,7 +462,7 @@ def maybe_corrupt_from_bank(v: Villager, bank: Bank | None) -> int:
     v["coins"] = v.get("coins", 0) + stolen
 
     rep_penalty = rand_int(3, 10)
-    v["rep"] = clamp(v.get("rep", 0) - rep_penalty, -100, 100)
+    v["rep"] = v.get("rep", 0) - rep_penalty
 
     msg = f"corruption: skimmed {stolen} coins from treasury (rep -{rep_penalty})"
     if v.get("last_action"):
@@ -540,6 +561,116 @@ def king_assassination_phase(characters: list[Villager], bank: Bank | None = Non
     try:
         from src.services.chronicle_service import record_assassination
         record_assassination(king, target, day=int(current_day or 1))
+    except Exception:
+        pass
+
+    return True
+
+
+def rival_coup_phase(
+    characters: list[Villager],
+    bank: Bank | None = None,
+    current_day: int | None = None,
+) -> bool:
+    """Daily check: a perennial runner-up may plot and execute a coup
+    against the sitting King.
+
+    Eligibility for a coup attempt:
+      - Alive adult villager (age >= 18) who is not the king/queen.
+      - `consecutive_losses` >= 2 (lost at least two elections in a row).
+
+    The grudge is conceptually against THE THRONE, not the current
+    person sitting on it — election noise rotates kings, so a rival's
+    direct relationship score is often spread across multiple past
+    winners. We therefore gate on the streak itself; the rival's
+    relationship to the *current* king is folded in only as a
+    chance multiplier (deeper grudge ⇒ faster move).
+
+    Per-day base chance is small, scaled by streak length and trait
+    profile (Ambitious/Hot-headed/Deceitful push it up; Loyal/Cautious
+    push it down). Barracks/Walls add a small protective dampening
+    similar to king_assassination_phase.
+
+    Returns True if a coup occurred (king dies). Caller is expected to
+    follow up with an emergency election; the standard simulation loop
+    handles that on the next-day tick.
+    """
+    from src.services.election_service import get_traits_set
+
+    king = _get_current_king(characters)
+    if king is None or not king.get("alive", True):
+        return False
+
+    king_id = king.get("id")
+    king_spouse = int(king.get("spouseId", 0) or 0)
+
+    # Build the rival pool: streaked losers. Relationship-to-current-king
+    # is captured as a multiplier later, not as a hard gate (election
+    # noise scatters grudges across former kings — see docstring).
+    rivals: list[tuple[Villager, int, int]] = []  # (villager, streak, grudge_abs)
+    for v in characters:
+        if not v.get("alive", True):
+            continue
+        if v.get("id") == king_id or v.get("id") == king_spouse:
+            continue
+        if int(v.get("age", 0) or 0) < 18:
+            continue
+        streak = int(v.get("consecutive_losses", 0) or 0)
+        if streak < 2:
+            continue
+        rel = get_relationship_score(v, king_id)
+        # Negative rel deepens the rage; positive rel softens it but
+        # doesn't disqualify (a streaked loser still hates the throne
+        # even when polite to its current occupant).
+        grudge_abs = max(0, -rel)
+        rivals.append((v, streak, grudge_abs))
+
+    if not rivals:
+        return False
+
+    # Pick the most-motivated rival: longest streak, then deepest grudge.
+    rivals.sort(key=lambda x: (-x[1], -x[2]))
+    rival, streak, grudge = rivals[0]
+
+    # Base chance scales primarily with streak (each loss past the 2nd
+    # adds 0.5%). Direct grudge against the current king sweetens it:
+    # every 10 points of negative relationship adds 0.1%.
+    p = 0.005 + 0.005 * (streak - 1) + 0.001 * (grudge // 10)
+
+    rt = get_traits_set(rival)
+    if "Ambitious" in rt:  p += 0.010
+    if "Hot-headed" in rt: p += 0.008
+    if "Deceitful" in rt:  p += 0.006
+    if "Brave" in rt:      p += 0.003
+    if "Loyal" in rt:      p -= 0.008
+    if "Cautious" in rt:   p -= 0.005
+    if "Empathic" in rt:   p -= 0.004
+    if "Generous" in rt:   p -= 0.003
+
+    # The king's own defences cut into the coup chance.
+    if bank is not None:
+        lvl_barracks = get_building_level(bank, "barracks")
+        lvl_walls = get_building_level(bank, "walls")
+        p -= 0.002 * lvl_barracks
+        p -= 0.001 * lvl_walls
+
+    p = max(0.0, min(0.04, p))
+
+    if random.random() >= p:
+        return False
+
+    # The coup succeeds: king dies, rival's streak resets but they take
+    # a big REP hit (regicide is regicide, even if politically motivated).
+    _mark_dead(characters, king, "slain in a coup", current_day=current_day)
+    _append_last_action(rival, f"led a coup that killed King {king.get('name','?')}")
+    rival["consecutive_losses"] = 0
+    rival["rep"] = int(rival.get("rep", 0) or 0) - 25
+
+    sync_queen_to_king_spouse(characters, current_day=current_day)
+
+    try:
+        from src.services.chronicle_service import record_coup
+        record_coup(rival, king, streak, day=int(current_day or 1))
     except Exception:
         pass
 

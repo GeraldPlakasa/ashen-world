@@ -76,6 +76,12 @@ ACHIEVEMENTS = {
         "icon": "⚔️",
         "reward": {"type": "both", "stat": "atk", "value": 10, "trait": "Veteran"},
     },
+    "royal_blood": {
+        "name": "Royal Blood",
+        "description": "Born of the royal line",
+        "icon": "🩸",
+        "reward": {"type": "stat", "stat": "rep", "value": 20},
+    },
 }
 
 
@@ -173,12 +179,7 @@ def award_achievement(v: Villager, achievement_id: str) -> bool:
         stat = reward.get("stat", "")
         value = reward.get("value", 0)
         if stat and value:
-            if stat == "coins":
-                v[stat] = int(v.get(stat, 0) or 0) + value
-            elif stat == "rep":
-                v[stat] = clamp(int(v.get(stat, 0) or 0) + value, -100, 100)
-            else:
-                v[stat] = int(v.get(stat, 0) or 0) + value
+            v[stat] = int(v.get(stat, 0) or 0) + value
     
     if reward_type in ("trait", "both"):
         trait = reward.get("trait", "")
@@ -305,6 +306,17 @@ def achievement_check_phase(characters: list[Villager], current_day: int = 0) ->
 def trigger_survivor_achievement(v: Villager) -> bool:
     """Called when a villager survives a plague. Returns True if newly awarded."""
     return award_achievement(v, "survivor")
+
+
+def trigger_royal_blood(v: Villager) -> bool:
+    """
+    Mark villager as blue-blooded (sets blue_blood=1) and award the achievement.
+    Idempotent: returns False if villager already had it.
+    """
+    if int(v.get("blue_blood", 0) or 0) == 1:
+        return False
+    v["blue_blood"] = 1
+    return award_achievement(v, "royal_blood")
 
 
 def trigger_iron_will_check(v: Villager) -> bool:

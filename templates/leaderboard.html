@@ -152,6 +152,14 @@
                       <div class="reign-stat-value" style="color: var(--aw-warning);">{{ current_entry.total_corruption or 0 }}</div>
                       <div class="reign-stat-label">Corruption</div>
                     </div>
+                    <div class="reign-stat">
+                      <div class="reign-stat-value" style="color: var(--aw-dead);">{{ current_entry.crimes_committed or 0 }}</div>
+                      <div class="reign-stat-label">Crimes</div>
+                    </div>
+                    <div class="reign-stat" title="Fines / Exiles / Executions this year">
+                      <div class="reign-stat-value" style="color: var(--aw-text);">{{ current_entry.trials_held or 0 }}</div>
+                      <div class="reign-stat-label">Trials Held</div>
+                    </div>
                   </div>
                 </div>
 
@@ -284,6 +292,21 @@
                           <div style="color: var(--aw-gold);">{{ y.wealthiest_family }} ({{ y.wealthiest_family_coins or 0 }})</div>
                         </div>
                         {% endif %}
+                        <div class="col-6">
+                          <div style="color: var(--aw-text-muted);">Crimes</div>
+                          <div style="color: var(--aw-dead);">{{ y.crimes_committed or 0 }} witnessed</div>
+                        </div>
+                        <div class="col-6" title="Trials held — fines/exiles/executions">
+                          <div style="color: var(--aw-text-muted);">Justice</div>
+                          <div style="color: var(--aw-text);">
+                            {{ y.trials_held or 0 }} trials
+                            {% if (y.fines_collected or 0) + (y.exiles or 0) + (y.executions or 0) > 0 %}
+                            · <span style="color: var(--aw-gold);">{{ y.fines_collected or 0 }}g</span>
+                            · <span style="color: var(--aw-warning);">{{ y.exiles or 0 }}🏹</span>
+                            · <span style="color: var(--aw-dead);">{{ y.executions or 0 }}☠</span>
+                            {% endif %}
+                          </div>
+                        </div>
                       </div>
 
                       <div style="color: var(--aw-text-muted); font-size: 10px; margin-bottom: 6px; text-transform: uppercase;">Champions</div>

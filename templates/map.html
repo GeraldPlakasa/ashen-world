@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Ashen World • Map</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+  <style>
+    /* ---- Map frame ---- */
+    .map-frame {
+      position: relative;
+      border-radius: 12px;
+      padding: 16px;
+      background: var(--aw-bg-card);
+      border: 1px solid var(--aw-border);
+      overflow: hidden;
+    }
+
+    .map-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+    }
+
+    /* ---- Buildings ---- */
+    .b-group {
+      cursor: pointer;
+      transition: filter 0.18s ease-out;
+      filter: drop-shadow(0 3px 5px rgba(15, 23, 42, 0.12));
+    }
+    .b-group:hover {
+      filter: drop-shadow(0 5px 10px rgba(15, 23, 42, 0.18)) drop-shadow(0 0 5px rgba(0, 119, 182, 0.45));
+    }
+    .b-group:hover .b-name { fill: var(--aw-accent); }
+    .b-group.selected {
+      filter: drop-shadow(0 6px 12px rgba(15, 23, 42, 0.2)) drop-shadow(0 0 8px rgba(0, 119, 182, 0.55));
+    }
+    .b-group.selected .b-rect-outline { stroke: var(--aw-accent); stroke-width: 1.8; }
+    .b-group.unbuilt {
+      filter: none;
+      opacity: 0.85;
+    }
+    .b-group.unbuilt .b-rect,
+    .b-group.unbuilt .b-roof,
+    .b-group.unbuilt .b-door,
+    .b-group.unbuilt .b-window {
+      fill: none !important;
+    }
+    .b-group.unbuilt .b-rect-outline,
+    .b-group.unbuilt .b-roof-outline,
+    .b-group.unbuilt .b-door-outline {
+      stroke: var(--aw-text-dim);
+      stroke-dasharray: 3 3;
+      stroke-width: 1;
+    }
+    .b-group.unbuilt .b-icon { opacity: 0.4; }
+
+    .b-rect-outline,
+    .b-roof-outline,
+    .b-door-outline {
+      fill: none;
+      stroke: rgba(15, 23, 42, 0.25);
+      stroke-width: 0.8;
+      stroke-linejoin: round;
+    }
+    .b-name {
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 11px;
+      fill: #ffffff;
+      text-anchor: middle;
+      paint-order: stroke;
+      stroke: rgba(15, 23, 42, 0.78);
+      stroke-width: 2.4;
+      stroke-linejoin: round;
+      letter-spacing: 0.02em;
+    }
+    .b-icon {
+      font-size: 22px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.4));
+    }
+    .b-level-badge {
+      fill: rgba(15, 23, 42, 0.88);
+      stroke: var(--aw-accent);
+      stroke-width: 0.8;
+      rx: 6; ry: 6;
+    }
+    .b-level-text {
+      font-family: inherit;
+      font-size: 9px;
+      font-weight: 700;
+      fill: #ffffff;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      letter-spacing: 0.04em;
+    }
+    .b-health-track { fill: rgba(15, 23, 42, 0.5); rx: 1.5; ry: 1.5; }
+    .b-health-fill { rx: 1.5; ry: 1.5; }
+
+    /* ---- Roads ---- */
+    .road {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.55);
+      stroke-width: 5;
+      stroke-linecap: round;
+      stroke-dasharray: 1 6;
+    }
+    .road-shadow {
+      fill: none;
+      stroke: rgba(120, 100, 70, 0.18);
+      stroke-width: 7;
+      stroke-linecap: round;
+    }
+
+    /* ---- River ---- */
+    .river-body {
+      fill: rgba(0, 119, 182, 0.22);
+      stroke: rgba(0, 119, 182, 0.35);
+      stroke-width: 1.2;
+    }
+    .river-bank {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.5);
+      stroke-width: 3;
+      stroke-dasharray: 2 4;
+    }
+    .river-shimmer {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.7);
+      stroke-width: 0.7;
+      stroke-dasharray: 12 8;
+      animation: river-flow 8s linear infinite;
+    }
+    @keyframes river-flow {
+      to { stroke-dashoffset: -40; }
+    }
+
+    /* ---- Zone labels ---- */
+    .map-zone-label {
+      font-family: inherit;
+      font-size: 13px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      fill: rgba(15, 23, 42, 0.18);
+      text-anchor: middle;
+      font-weight: 600;
+      pointer-events: none;
+    }
+
+    /* ---- Cartouche & compass ---- */
+    .cartouche-bg {
+      fill: var(--aw-bg-card);
+      stroke: var(--aw-accent);
+      stroke-width: 1;
+      opacity: 0.92;
+    }
+    .cartouche-title {
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      fill: var(--aw-accent);
+      text-anchor: middle;
+      text-transform: uppercase;
+    }
+    .cartouche-sub {
+      font-family: inherit;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      fill: var(--aw-text-muted);
+      text-anchor: middle;
+    }
+
+    .compass-ring {
+      fill: var(--aw-bg-card);
+      stroke: var(--aw-accent);
+      stroke-width: 0.8;
+      opacity: 0.95;
+    }
+    .compass-ring-inner {
+      fill: none;
+      stroke: var(--aw-accent);
+      stroke-width: 0.5;
+      stroke-dasharray: 1 3;
+      opacity: 0.45;
+    }
+    .compass-star-main { fill: var(--aw-accent); stroke: rgba(15, 23, 42, 0.35); stroke-width: 0.4; }
+    .compass-star-side { fill: var(--aw-accent); stroke: rgba(15, 23, 42, 0.35); stroke-width: 0.4; opacity: 0.55; }
+    .compass-label {
+      font-family: inherit;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      fill: var(--aw-text);
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    /* ---- Villager dots ---- */
+    .v-dot circle.halo { fill: currentColor; opacity: 0.18; }
+    .v-dot circle.body {
+      stroke: rgba(15, 23, 42, 0.55);
+      stroke-width: 0.7;
+      transition: r 0.15s;
+    }
+    .v-dot:hover circle.body { stroke: var(--aw-accent); stroke-width: 1.5; }
+    .v-dot text.label {
+      font-family: inherit;
+      font-size: 9.5px;
+      font-weight: 600;
+      fill: #ffffff;
+      text-anchor: middle;
+      paint-order: stroke;
+      stroke: rgba(15, 23, 42, 0.85);
+      stroke-width: 2;
+      stroke-linejoin: round;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .v-dot:hover text.label { opacity: 1; }
+    .villager-layer.names-on .v-dot text.label { opacity: 0.9; }
+    .v-dot.king circle.body { stroke: var(--aw-warning); stroke-width: 1.4; }
+    .v-dot.player circle.body { stroke: var(--aw-accent); stroke-width: 2; }
+    .v-dot.player circle.halo { animation: pulse-halo 2.4s ease-in-out infinite; }
+    @keyframes pulse-halo {
+      0%, 100% { opacity: 0.18; }
+      50% { opacity: 0.42; }
+    }
+
+    /* ---- Weather ---- */
+    .rain-drop {
+      stroke: rgba(0, 119, 182, 0.5);
+      stroke-width: 0.8;
+      stroke-linecap: round;
+      animation: rain-fall 1.1s linear infinite;
+    }
+    @keyframes rain-fall {
+      0%   { transform: translate(0, -20px); opacity: 0; }
+      10%  { opacity: 0.85; }
+      90%  { opacity: 0.85; }
+      100% { transform: translate(10px, 40px); opacity: 0; }
+    }
+
+    /* ---- Toggle row ---- */
+    .map-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: var(--aw-bg-card);
+      border: 1px solid var(--aw-border);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .map-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--aw-text);
+      cursor: pointer;
+      user-select: none;
+    }
+    .map-toggle input { accent-color: var(--aw-accent); margin: 0; }
+    .map-poll-status {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--aw-text-muted);
+    }
+
+    /* ---- Legend chips ---- */
+    .map-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .map-legend .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 11px;
+      border-radius: 99px;
+      background: var(--aw-bg-card);
+      border: 1px solid var(--aw-border);
+      color: var(--aw-text);
+    }
+    .map-legend .chip .swatch {
+      width: 10px; height: 10px; border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.1);
+    }
+    .map-legend .chip.muted {
+      color: var(--aw-text-muted);
+      border-style: dashed;
+    }
+
+    /* ---- Side panel ---- */
+    .map-panel {
+      background: var(--aw-bg-card);
+      border: 1px solid var(--aw-border);
+      border-radius: 12px;
+      padding: 16px 18px 14px;
+    }
+    .map-panel .panel-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--aw-text-muted);
+      margin-bottom: 6px;
+    }
+    .map-panel .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--aw-text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+    }
+    .map-panel .panel-title .ic { font-size: 22px; }
+    .map-panel .panel-status {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 2px 9px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .map-panel .panel-status.built {
+      background: rgba(34, 197, 94, 0.12);
+      color: #15803d;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .map-panel .panel-status.unbuilt {
+      background: rgba(120,120,120,0.12);
+      color: var(--aw-text-muted);
+      border: 1px solid var(--aw-border);
+    }
+    .panel-divider {
+      height: 1px;
+      background: var(--aw-border);
+      margin: 12px 0;
+    }
+    .panel-description {
+      font-size: 13px;
+      color: var(--aw-text-muted);
+      line-height: 1.55;
+    }
+    .panel-kv {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--aw-border);
+      font-size: 13px;
+    }
+    .panel-kv:last-child { border-bottom: none; }
+    .panel-kv .k {
+      color: var(--aw-text-muted);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .panel-kv .v {
+      color: var(--aw-text);
+      font-weight: 500;
+      text-align: right;
+    }
+    .panel-section-title {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--aw-text-muted);
+      margin: 14px 0 6px;
+    }
+    .workers-list { max-height: 220px; overflow-y: auto; padding-right: 4px; }
+    .worker-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 12.5px;
+      border-bottom: 1px solid var(--aw-border);
+    }
+    .worker-row:last-child { border-bottom: none; }
+    .worker-row .name { color: var(--aw-text); }
+    .worker-row .job { color: var(--aw-text-muted); }
+
+    .weather-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      background: rgba(0, 119, 182, 0.08);
+      border: 1px solid rgba(0, 119, 182, 0.25);
+      color: var(--aw-accent);
+      margin-left: 6px;
+    }
+  </style>
+</head>
+
+<body class="game-theme">
+  <div class="aw-layout">
+    {% include '_sidebar.html' %}
+
+    <div class="aw-main-shell">
+      <div class="page-shell">
+        <header class="aw-header d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex flex-column">
+            <span class="header-title">Village Map</span>
+            <span class="header-subtitle">
+              Year {{ year }} · Day {{ day }} ·
+              {{ alive_count }}/{{ total_count }} alive
+              <span class="weather-pill">
+                {% if weather == 'rain' %}🌧 Rainy{% elif weather == 'sunny' %}☀ Sunny{% else %}{{ weather | capitalize }}{% endif %}
+              </span>
+            </span>
+          </div>
+          {% if username %}
+          <div style="color: var(--aw-text-muted); font-size: 13px;">
+            Surveying as <strong style="color: var(--aw-text);">{{ username }}</strong>
+          </div>
+          {% endif %}
+        </header>
+
+        <main class="aw-main">
+          <div class="row g-3">
+            <!-- ============================================================
+                 MAP
+                 ============================================================ -->
+            <div class="col-12 col-lg-9">
+              <div class="map-frame">
+                <svg id="village-map" class="map-svg"
+                     viewBox="0 0 {{ viewbox_w }} {{ viewbox_h }}"
+                     preserveAspectRatio="xMidYMid meet">
+
+                  <defs>
+                    <!-- Map terrain: soft warm beige (subtle, fits the light theme) -->
+                    <linearGradient id="terrainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%"   stop-color="#f5efe2" />
+                      <stop offset="50%"  stop-color="#ede4cf" />
+                      <stop offset="100%" stop-color="#e3d8bc" />
+                    </linearGradient>
+
+                    <!-- Faint contour pattern -->
+                    <pattern id="contourLines" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+                      <path d="M 0 40 Q 20 35, 40 40 T 80 40" stroke="rgba(120, 100, 70, 0.10)" stroke-width="0.5" fill="none"/>
+                      <path d="M 0 60 Q 25 56, 50 60 T 80 60" stroke="rgba(120, 100, 70, 0.08)" stroke-width="0.5" fill="none"/>
+                    </pattern>
+
+                    <!-- Hatch pattern for unbuilt sites -->
+                    <pattern id="hatchEmpty" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                      <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(0, 119, 182, 0.25)" stroke-width="0.5"/>
+                    </pattern>
+
+                    <!-- Roof gradient: subtle highlight -->
+                    <linearGradient id="roofShine" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%"   stop-color="rgba(255, 255, 255, 0.28)" />
+                      <stop offset="100%" stop-color="rgba(0, 0, 0, 0.0)" />
+                    </linearGradient>
+
+                    <!-- Vignette edge softening -->
+                    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+                      <stop offset="0%"  stop-color="rgba(0,0,0,0)" />
+                      <stop offset="80%" stop-color="rgba(0,0,0,0)" />
+                      <stop offset="100%" stop-color="rgba(120, 100, 70, 0.18)" />
+                    </radialGradient>
+
+                    <!-- Sun glow (when sunny) -->
+                    <radialGradient id="sunGlow" cx="15%" cy="20%" r="40%">
+                      <stop offset="0%"  stop-color="rgba(252, 211, 77, 0.30)" />
+                      <stop offset="100%" stop-color="rgba(252, 211, 77, 0)" />
+                    </radialGradient>
+                  </defs>
+
+                  <!-- Layer 1: Terrain -->
+                  <rect x="0" y="0" width="{{ viewbox_w }}" height="{{ viewbox_h }}" fill="url(#terrainGradient)" />
+                  <rect x="0" y="0" width="{{ viewbox_w }}" height="{{ viewbox_h }}" fill="url(#contourLines)" />
+
+                  <!-- Forest dot stamps -->
+                  <g opacity="0.45">
+                    {% for x in [40, 70, 100, 220, 250, 280, 700, 730, 760, 950] %}
+                      {% for y in [110, 220, 350, 460] %}
+                        <g transform="translate({{ x + (y % 40) - 20 }}, {{ y + (x % 25) - 10 }})">
+                          <circle r="3" fill="#7a8c50" />
+                          <circle r="1.8" fill="#9bb06a" cx="-1" cy="-1" />
+                        </g>
+                      {% endfor %}
+                    {% endfor %}
+                  </g>
+
+                  <!-- Layer 2: Roads -->
+                  <path class="road-shadow" d="M 510 0 L 510 230 Q 510 340, 405 380 L 270 460 L 510 540 L 870 480 Q 875 380, 875 230"/>
+                  <path class="road" d="M 510 0 L 510 230 Q 510 340, 405 380 L 270 460 L 510 540 L 870 480 Q 875 380, 875 230"/>
+                  <path class="road-shadow" d="M 170 305 Q 280 295, 430 280"/>
+                  <path class="road" d="M 170 305 Q 280 295, 430 280"/>
+                  <path class="road-shadow" d="M 590 280 Q 700 280, 820 230"/>
+                  <path class="road" d="M 590 280 Q 700 280, 820 230"/>
+
+                  <!-- Layer 3: River -->
+                  <path class="river-body"
+                        d="M 0 545 Q 180 510, 360 548 T 720 535 T 1000 560 L 1000 600 L 0 600 Z" />
+                  <path class="river-bank"
+                        d="M 0 540 Q 180 506, 360 543 T 720 530 T 1000 555" />
+                  <path class="river-shimmer"
+                        d="M 0 555 Q 180 525, 360 560 T 720 545 T 1000 570" />
+
+                  <!-- Layer 4: Zone labels -->
+                  <text class="map-zone-label" x="120" y="38">Fields</text>
+                  <text class="map-zone-label" x="870" y="38">Garrison</text>
+                  <text class="map-zone-label" x="510" y="207">Royal Plaza</text>
+                  <text class="map-zone-label" x="120" y="258">Halls</text>
+                  <text class="map-zone-label" x="870" y="148">Quarries</text>
+                  <text class="map-zone-label" x="365" y="368">Town</text>
+
+                  <!-- Layer 5: Buildings -->
+                  {% for b in buildings %}
+                  {% set lvl = b.level or 0 %}
+                  {% set built = b.built %}
+                  {% set cx = b.x + b.w * 0.5 %}
+                  {% set roof_peak_y = b.y - 14 %}
+                  {% set roof_overhang = 4 %}
+                  <g class="b-group {% if not built %}unbuilt{% endif %}"
+                     data-key="{{ b.key }}"
+                     data-name="{{ b.name }}"
+                     data-level="{{ lvl }}"
+                     data-health="{{ b.health or 0 }}"
+                     data-built="{{ '1' if built else '0' }}"
+                     data-zone="{{ b.zone }}"
+                     data-description="{{ b.description }}">
+
+                    {% if not built %}
+                    <rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}"
+                          fill="url(#hatchEmpty)" rx="3" ry="3" />
+                    {% endif %}
+
+                    {% if built %}
+                    <ellipse cx="{{ cx }}" cy="{{ b.y + b.h + 4 }}"
+                             rx="{{ b.w * 0.45 }}" ry="3"
+                             fill="rgba(15, 23, 42, 0.18)" />
+                    {% endif %}
+
+                    <!-- Walls -->
+                    <rect class="b-rect"
+                          x="{{ b.x }}" y="{{ b.y }}"
+                          width="{{ b.w }}" height="{{ b.h }}"
+                          rx="2" ry="2"
+                          fill="{{ b.tint }}" />
+                    <rect class="b-rect-outline"
+                          x="{{ b.x }}" y="{{ b.y }}"
+                          width="{{ b.w }}" height="{{ b.h }}"
+                          rx="2" ry="2" />
+
+                    <!-- Roof -->
+                    <polygon class="b-roof"
+                             points="{{ b.x - roof_overhang }},{{ b.y + 2 }} {{ cx }},{{ roof_peak_y }} {{ b.x + b.w + roof_overhang }},{{ b.y + 2 }}"
+                             fill="rgba(15, 23, 42, 0.42)" />
+                    <polygon class="b-roof"
+                             points="{{ b.x - roof_overhang }},{{ b.y + 2 }} {{ cx }},{{ roof_peak_y }} {{ b.x + b.w + roof_overhang }},{{ b.y + 2 }}"
+                             fill="url(#roofShine)" />
+                    <polygon class="b-roof-outline"
+                             points="{{ b.x - roof_overhang }},{{ b.y + 2 }} {{ cx }},{{ roof_peak_y }} {{ b.x + b.w + roof_overhang }},{{ b.y + 2 }}" />
+
+                    <!-- Chimney smoke for select buildings -->
+                    {% if built and b.key in ['smelter', 'blacksmith', 'tavern', 'granary'] %}
+                    <g opacity="0.55">
+                      <rect x="{{ cx - 18 }}" y="{{ roof_peak_y + 3 }}" width="4" height="6" fill="rgba(15, 23, 42, 0.7)" />
+                      <circle cx="{{ cx - 16 }}" cy="{{ roof_peak_y - 2 }}" r="2.5" fill="rgba(180, 180, 180, 0.55)" />
+                      <circle cx="{{ cx - 14 }}" cy="{{ roof_peak_y - 6 }}" r="3.2" fill="rgba(180, 180, 180, 0.45)" />
+                    </g>
+                    {% endif %}
+
+                    <!-- Door -->
+                    {% if built and b.h > 50 %}
+                    <rect class="b-door"
+                          x="{{ cx - 5 }}" y="{{ b.y + b.h - 14 }}"
+                          width="10" height="14"
+                          fill="rgba(15, 23, 42, 0.78)" />
+                    <path class="b-door-outline"
+                          d="M {{ cx - 5 }} {{ b.y + b.h }} L {{ cx - 5 }} {{ b.y + b.h - 14 }} Q {{ cx }} {{ b.y + b.h - 20 }}, {{ cx + 5 }} {{ b.y + b.h - 14 }} L {{ cx + 5 }} {{ b.y + b.h }}" />
+                    {% endif %}
+
+                    <!-- Windows -->
+                    {% if built and b.h > 50 and b.w > 95 %}
+                    <rect class="b-window" x="{{ b.x + 8 }}"  y="{{ b.y + b.h - 28 }}" width="9" height="9" fill="rgba(252, 211, 77, 0.85)" />
+                    <rect class="b-window" x="{{ b.x + b.w - 17 }}" y="{{ b.y + b.h - 28 }}" width="9" height="9" fill="rgba(252, 211, 77, 0.85)" />
+                    <line x1="{{ b.x + 8 }}" y1="{{ b.y + b.h - 23.5 }}" x2="{{ b.x + 17 }}" y2="{{ b.y + b.h - 23.5 }}" stroke="rgba(15, 23, 42, 0.55)" stroke-width="0.6"/>
+                    <line x1="{{ b.x + 12.5 }}" y1="{{ b.y + b.h - 28 }}" x2="{{ b.x + 12.5 }}" y2="{{ b.y + b.h - 19 }}" stroke="rgba(15, 23, 42, 0.55)" stroke-width="0.6"/>
+                    <line x1="{{ b.x + b.w - 17 }}" y1="{{ b.y + b.h - 23.5 }}" x2="{{ b.x + b.w - 8 }}" y2="{{ b.y + b.h - 23.5 }}" stroke="rgba(15, 23, 42, 0.55)" stroke-width="0.6"/>
+                    <line x1="{{ b.x + b.w - 12.5 }}" y1="{{ b.y + b.h - 28 }}" x2="{{ b.x + b.w - 12.5 }}" y2="{{ b.y + b.h - 19 }}" stroke="rgba(15, 23, 42, 0.55)" stroke-width="0.6"/>
+                    {% endif %}
+
+                    <!-- Icon -->
+                    <text class="b-icon" x="{{ cx }}" y="{{ b.y + b.h * 0.40 }}">{{ b.icon }}</text>
+
+                    <!-- Name -->
+                    <text class="b-name" x="{{ cx }}" y="{{ b.y + b.h + 18 }}">{{ b.name }}</text>
+
+                    <!-- Level badge -->
+                    <rect class="b-level-badge"
+                          x="{{ b.x + b.w - 32 }}" y="{{ b.y + 4 }}"
+                          width="28" height="14" />
+                    <text class="b-level-text"
+                          x="{{ b.x + b.w - 18 }}" y="{{ b.y + 12 }}">
+                      {% if built %}LV {{ lvl }}{% else %}—{% endif %}
+                    </text>
+
+                    <!-- Health bar -->
+                    {% if built %}
+                    {% set health = b.health or 0 %}
+                    {% set bar_w = b.w - 16 %}
+                    <rect class="b-health-track"
+                          x="{{ b.x + 8 }}" y="{{ b.y + b.h + 24 }}"
+                          width="{{ bar_w }}" height="3" />
+                    <rect class="b-health-fill"
+                          x="{{ b.x + 8 }}" y="{{ b.y + b.h + 24 }}"
+                          width="{{ (bar_w * health / 100) | round }}" height="3"
+                          fill="{% if health > 60 %}#22c55e{% elif health > 25 %}#f59e0b{% else %}#ef4444{% endif %}" />
+                    {% endif %}
+                  </g>
+                  {% endfor %}
+
+                  <!-- Villagers (JS) -->
+                  <g id="villager-layer" class="villager-layer"></g>
+
+                  <!-- Cartouche -->
+                  <g transform="translate(20, 50)">
+                    <path class="cartouche-bg" d="M 0 0 L 220 0 L 230 12 L 220 24 L 0 24 L -10 12 Z" />
+                    <text class="cartouche-title" x="110" y="16">Survey of the Realm</text>
+                  </g>
+                  <g transform="translate(20, 80)">
+                    <text class="cartouche-sub" x="110" y="0">Year {{ year }}, Day {{ day }}</text>
+                  </g>
+
+                  <!-- Compass rose -->
+                  <g transform="translate(945, 75)">
+                    <circle class="compass-ring" r="32" />
+                    <circle class="compass-ring-inner" r="26" />
+                    <polygon class="compass-star-main" points="0,-26 4,0 0,3 -4,0" />
+                    <polygon class="compass-star-main" points="0,26 4,0 0,-3 -4,0" />
+                    <polygon class="compass-star-main" points="-26,0 0,-4 3,0 0,4" />
+                    <polygon class="compass-star-main" points="26,0 0,-4 -3,0 0,4" />
+                    <circle r="2" fill="#ffffff" stroke="var(--aw-accent)" stroke-width="0.5" />
+                    <text class="compass-label" x="0" y="-37">N</text>
+                    <text class="compass-label" x="0" y="40">S</text>
+                    <text class="compass-label" x="38" y="1">E</text>
+                    <text class="compass-label" x="-38" y="1">W</text>
+                  </g>
+
+                  <!-- Weather overlay -->
+                  {% if weather == 'sunny' %}
+                  <rect x="0" y="0" width="{{ viewbox_w }}" height="{{ viewbox_h }}" fill="url(#sunGlow)" pointer-events="none" />
+                  <g transform="translate(120, 110)" opacity="0.45" pointer-events="none">
+                    <circle r="12" fill="rgba(252, 211, 77, 0.6)" />
+                    <circle r="20" fill="none" stroke="rgba(252, 211, 77, 0.4)" stroke-width="0.5" stroke-dasharray="2 4" />
+                  </g>
+                  {% elif weather == 'rain' %}
+                  <g pointer-events="none">
+                    {% for i in range(60) %}
+                    {% set x = (i * 73 + 47) % 1000 %}
+                    {% set y = (i * 41 + 19) % 580 %}
+                    {% set delay = (i * 91) % 1100 %}
+                    <line class="rain-drop"
+                          x1="{{ x }}" y1="{{ y }}"
+                          x2="{{ x - 6 }}" y2="{{ y + 12 }}"
+                          style="animation-delay: {{ -delay }}ms;" />
+                    {% endfor %}
+                  </g>
+                  {% endif %}
+
+                  <!-- Vignette -->
+                  <rect x="0" y="0" width="{{ viewbox_w }}" height="{{ viewbox_h }}"
+                        fill="url(#vignette)" pointer-events="none" />
+
+                  <!-- Tooltip -->
+                  <g id="villager-tooltip" style="display: none; pointer-events: none;">
+                    <rect rx="6" ry="6" fill="rgba(15, 23, 42, 0.94)" stroke="var(--aw-accent)" stroke-width="1"
+                          x="0" y="0" width="180" height="46" />
+                    <text x="9" y="18" fill="#ffffff" font-size="13" font-weight="600"></text>
+                    <text x="9" y="36" fill="#cbd5e1" font-size="11"></text>
+                  </g>
+
+                </svg>
+              </div>
+
+              <!-- Toggles -->
+              <div class="map-controls">
+                <label class="map-toggle">
+                  <input type="checkbox" id="toggle-villagers" checked />
+                  <span>Show villagers walking</span>
+                </label>
+                <label class="map-toggle">
+                  <input type="checkbox" id="toggle-names" />
+                  <span>Always show names</span>
+                </label>
+                <span class="map-poll-status" id="map-poll-status">…</span>
+              </div>
+
+              <!-- Legend -->
+              <div class="map-legend">
+                <span class="chip"><span class="swatch" style="background:#c9a227;"></span>Civic</span>
+                <span class="chip"><span class="swatch" style="background:#7a8a3f;"></span>Production</span>
+                <span class="chip"><span class="swatch" style="background:#a04848;"></span>Defense</span>
+                <span class="chip"><span class="swatch" style="background:#6a5fa8;"></span>Knowledge</span>
+                <span class="chip"><span class="swatch" style="background:#8a7050;"></span>Living</span>
+                <span class="chip"><span class="swatch" style="background:#6aa6ff;"></span>♂ Male</span>
+                <span class="chip"><span class="swatch" style="background:#f08aaf;"></span>♀ Female</span>
+                <span class="chip muted">Hatched = not built</span>
+              </div>
+            </div>
+
+            <!-- ============================================================
+                 SIDE PANEL
+                 ============================================================ -->
+            <div class="col-12 col-lg-3">
+              <div class="map-panel">
+                <div class="panel-eyebrow">Selected Building</div>
+                <div id="panel-title" class="panel-title">
+                  <span class="ic">⌖</span>
+                  <span>Select a structure</span>
+                </div>
+                <div class="panel-divider"></div>
+                <div id="panel-body" class="panel-description">
+                  Hover any structure to highlight it; click for full details — level,
+                  health, workers, and effect.
+                </div>
+              </div>
+
+              <div class="map-panel mt-3">
+                <div class="panel-eyebrow">Map Quick Stats</div>
+                <div class="panel-kv">
+                  <span class="k">Buildings constructed</span>
+                  <span class="v">{{ buildings | selectattr('built') | list | length }} / {{ buildings | length }}</span>
+                </div>
+                <div class="panel-kv">
+                  <span class="k">Villagers alive</span>
+                  <span class="v">{{ alive_count }} / {{ total_count }}</span>
+                </div>
+                <div class="panel-kv">
+                  <span class="k">Day</span>
+                  <span class="v">Y{{ year }} · D{{ day }}</span>
+                </div>
+                <div class="panel-kv">
+                  <span class="k">Weather</span>
+                  <span class="v" style="text-transform: capitalize;">{{ weather }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.AW_BUILDINGS  = {{ buildings | tojson | safe }};
+    window.AW_WORKER_MAP = {{ worker_map | tojson | safe }};
+    window.AW_USERNAME   = {{ (username or '') | tojson | safe }};
+  </script>
+
+  <script>
+    (function () {
+      const svg = document.getElementById('village-map');
+      const panelTitle = document.getElementById('panel-title');
+      const panelBody = document.getElementById('panel-body');
+      if (!svg) return;
+
+      const byKey = {};
+      (window.AW_BUILDINGS || []).forEach(b => { byKey[b.key] = b; });
+
+      function escapeHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      function renderPanel(key) {
+        const b = byKey[key];
+        if (!b) return;
+        const workers = (window.AW_WORKER_MAP || {})[key] || [];
+        const icon = b.icon || '◆';
+        const lvlBadge = b.built
+          ? `<span class="panel-status built">Lv ${b.level} · ${b.health}% HP</span>`
+          : `<span class="panel-status unbuilt">Not built</span>`;
+
+        panelTitle.innerHTML = `
+          <span class="ic">${icon}</span>
+          <span>${escapeHtml(b.name)}</span>
+          ${lvlBadge}
+        `;
+
+        let costLines = '';
+        if (b.cost_coin) {
+          costLines += `<div class="panel-kv"><span class="k">Coin cost</span><span class="v">${b.cost_coin}g</span></div>`;
+        }
+        if (b.cost_resources) {
+          const parts = Object.entries(b.cost_resources).map(([r, n]) => `${n} ${r}`).join(' · ');
+          if (parts) {
+            costLines += `<div class="panel-kv"><span class="k">Materials</span><span class="v">${escapeHtml(parts)}</span></div>`;
+          }
+        }
+        costLines += `<div class="panel-kv"><span class="k">Zone</span><span class="v" style="text-transform: capitalize;">${escapeHtml(b.zone)}</span></div>`;
+
+        let workerSection = '';
+        if (workers.length > 0) {
+          const rows = workers.slice(0, 30).map(w => `
+            <div class="worker-row">
+              <span class="name">${escapeHtml(w.name || '?')}</span>
+              <span class="job">${escapeHtml(w.job || '')}</span>
+            </div>`).join('');
+          workerSection = `
+            <div class="panel-section-title">Workers benefiting (${workers.length})</div>
+            <div class="workers-list">${rows}</div>`;
+        }
+
+        panelBody.innerHTML = `
+          <div class="panel-description" style="margin-bottom: 14px;">
+            ${escapeHtml(b.description)}
+          </div>
+          ${costLines}
+          ${workerSection}
+        `;
+      }
+
+      svg.addEventListener('click', (e) => {
+        const g = e.target.closest('.b-group');
+        if (!g) return;
+        document.querySelectorAll('.b-group.selected').forEach(el => el.classList.remove('selected'));
+        g.classList.add('selected');
+        renderPanel(g.getAttribute('data-key'));
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      const svg = document.getElementById('village-map');
+      const layer = document.getElementById('villager-layer');
+      const tooltipG = document.getElementById('villager-tooltip');
+      const statusEl = document.getElementById('map-poll-status');
+      const toggleVillagers = document.getElementById('toggle-villagers');
+      const toggleNames = document.getElementById('toggle-names');
+      if (!svg || !layer) return;
+
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+      const VIEW_W = {{ viewbox_w }};
+      const VIEW_H = {{ viewbox_h }};
+      const USERNAME = window.AW_USERNAME || '';
+
+      const byKey = {};
+      (window.AW_BUILDINGS || []).forEach(b => { byKey[b.key] = b; });
+      const OFF_MAP_HUNT = { x: 60, y: 555 };
+
+      const PRODUCER_HOME = {
+        'Farmer':     ['farm'],
+        'Shepherd':   ['farm'],
+        'Beekeeper':  ['farm'],
+        'Woodcutter': ['lumbermill'],
+        'Forester':   ['lumbermill'],
+        'Carpenter':  ['lumbermill'],
+        'Mason':      ['quarry'],
+        'Miner':      ['mine', 'quarry'],
+        'Blacksmith': ['smelter', 'blacksmith'],
+        'Fisher':     ['granary'],
+        'Cook':       ['granary'],
+        'Baker':      ['granary'],
+        'Butcher':    ['granary'],
+        'Hunter':     ['barracks'],
+      };
+      const ACTION_MAP = {
+        'work':           'market',  'study':          'library',
+        'meditate':       'temple',  'train':          'barracks',
+        'spar':           'barracks','drill':          'barracks',
+        'rest':           'housing', 'hangout':        'tavern',
+        'socialize':      'market',  'buy_food':       'market',
+        'buy_gear':       'blacksmith', 'visit_tavern':'tavern',
+        'forge_artifact': 'blacksmith','mentor':       'library',
+        'steal':          'market',  'woo':            'tavern',
+      };
+
+      function buildingCenter(key) {
+        const b = byKey[key];
+        if (!b) return null;
+        return { x: b.x + b.w / 2, y: b.y + b.h / 2 };
+      }
+      function pickBuiltOne(keys) {
+        for (const k of keys || []) {
+          const b = byKey[k];
+          if (b && b.built) return k;
+        }
+        return (keys && keys[0]) || null;
+      }
+      function targetFor(c) {
+        const action = (c.last_action || '').split(/[\s(]/)[0] || 'work';
+        const job = c.job || '';
+        if (job === 'Child') {
+          const h = buildingCenter('housing') || buildingCenter('temple');
+          if (h) return { key: 'housing', x: h.x, y: h.y };
+        }
+        if (action === 'hunt' || (action === 'dead' && /hunt/i.test(c.last_action || ''))) {
+          return { key: '__hunt__', x: OFF_MAP_HUNT.x, y: OFF_MAP_HUNT.y };
+        }
+        if (action === 'work' && PRODUCER_HOME[job]) {
+          const k = pickBuiltOne(PRODUCER_HOME[job]);
+          const c1 = buildingCenter(k);
+          if (c1) return { key: k, x: c1.x, y: c1.y };
+        }
+        if ((job === 'King' || job === 'Queen') && (action === 'work' || action === 'rest' || action === 'hangout')) {
+          const c1 = buildingCenter('royal_court');
+          if (c1) return { key: 'royal_court', x: c1.x, y: c1.y };
+        }
+        const k = ACTION_MAP[action] || 'housing';
+        const c1 = buildingCenter(k);
+        if (c1) return { key: k, x: c1.x, y: c1.y };
+        return { key: null, x: VIEW_W / 2, y: VIEW_H / 2 };
+      }
+      function jitter(p, seed) {
+        const r  = ((Math.sin(seed * 12.9898) * 43758.5453) % 1 + 1) % 1;
+        const r2 = ((Math.sin(seed * 78.233)  * 43758.5453) % 1 + 1) % 1;
+        const ang = r * Math.PI * 2;
+        const radius = 14 + r2 * 22;
+        return { x: p.x + Math.cos(ang) * radius, y: p.y + Math.sin(ang) * radius };
+      }
+
+      const state = {};
+      function ensureVillagerNode(c) {
+        if (state[c.id]) return state[c.id];
+
+        const g = document.createElementNS(SVG_NS, 'g');
+        g.classList.add('v-dot');
+        const isKing = (c.job === 'King' || c.job === 'Queen' || (c.kingTerms | 0) > 0);
+        if (isKing) g.classList.add('king');
+        const isPlayer = (c.origin === 'player' && USERNAME && c.owner === USERNAME);
+        if (isPlayer) g.classList.add('player');
+        g.dataset.id = c.id;
+
+        const color = c.gender === 'Male'   ? '#6aa6ff' :
+                      c.gender === 'Female' ? '#f08aaf' : '#9aa0a6';
+
+        const halo = document.createElementNS(SVG_NS, 'circle');
+        halo.classList.add('halo');
+        halo.setAttribute('r', isKing || isPlayer ? 9 : 6);
+        halo.style.color = color;
+        g.appendChild(halo);
+
+        const body = document.createElementNS(SVG_NS, 'circle');
+        body.classList.add('body');
+        body.setAttribute('r', isKing ? 5 : isPlayer ? 4.5 : 3.5);
+        body.setAttribute('fill', color);
+        g.appendChild(body);
+
+        const label = document.createElementNS(SVG_NS, 'text');
+        label.classList.add('label');
+        label.setAttribute('y', -9);
+        label.textContent = c.name || '?';
+        g.appendChild(label);
+
+        layer.appendChild(g);
+
+        const t = targetFor(c);
+        const p = jitter(t, c.id);
+        const rec = {
+          x: p.x, y: p.y, tx: p.x, ty: p.y,
+          targetKey: t.key,
+          group: g, body, label,
+          name: c.name, job: c.job, gender: c.gender,
+          alive: !!c.alive, isPlayer,
+        };
+        state[c.id] = rec;
+        g.addEventListener('mouseenter', () => showTooltip(rec));
+        g.addEventListener('mouseleave', hideTooltip);
+        return rec;
+      }
+      function removeVillagerNode(id) {
+        const rec = state[id];
+        if (!rec) return;
+        rec.group.remove();
+        delete state[id];
+      }
+      function prettifyTarget(key) {
+        if (!key) return 'somewhere';
+        if (key === '__hunt__') return 'the hunting grounds';
+        const b = byKey[key];
+        return b ? b.name.toLowerCase() : key;
+      }
+      function showTooltip(rec) {
+        if (!tooltipG) return;
+        const txts = tooltipG.querySelectorAll('text');
+        if (txts[0]) txts[0].textContent = rec.name || '?';
+        if (txts[1]) txts[1].textContent = `${rec.job || ''} — heading to ${prettifyTarget(rec.targetKey)}`;
+        tooltipG.style.display = 'block';
+        const x = Math.min(VIEW_W - 190, Math.max(0, rec.x + 10));
+        const y = Math.min(VIEW_H - 52, Math.max(0, rec.y - 56));
+        tooltipG.setAttribute('transform', `translate(${x},${y})`);
+      }
+      function hideTooltip() {
+        if (tooltipG) tooltipG.style.display = 'none';
+      }
+
+      function frame() {
+        for (const id in state) {
+          const r = state[id];
+          if (!r.alive) continue;
+          const dx = r.tx - r.x;
+          const dy = r.ty - r.y;
+          if (Math.abs(dx) > 0.15 || Math.abs(dy) > 0.15) {
+            r.x += dx * 0.06;
+            r.y += dy * 0.06;
+          }
+          r.group.setAttribute('transform', `translate(${r.x.toFixed(2)},${r.y.toFixed(2)})`);
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      async function poll() {
+        try {
+          const res = await fetch('/api/state', { method: 'GET', headers: { Accept: 'application/json' } });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          if (!data.characters) throw new Error('no characters');
+          const seen = new Set();
+          for (const c of data.characters) {
+            if (!c.alive) {
+              if (state[c.id]) removeVillagerNode(c.id);
+              continue;
+            }
+            seen.add(c.id);
+            const rec = ensureVillagerNode(c);
+            rec.alive = true;
+            rec.name = c.name; rec.job = c.job; rec.gender = c.gender;
+            const t = targetFor(c);
+            const p = jitter(t, c.id);
+            rec.tx = p.x; rec.ty = p.y; rec.targetKey = t.key;
+          }
+          for (const id of Object.keys(state)) {
+            if (!seen.has(parseInt(id, 10))) removeVillagerNode(id);
+          }
+          if (statusEl) statusEl.textContent = `● live · ${seen.size} villagers · Y${data.year} D${data.day}`;
+        } catch (err) {
+          if (statusEl) statusEl.textContent = '○ paused (poll error)';
+          console.error('Map poll error:', err);
+        }
+      }
+      poll();
+      setInterval(poll, 2500);
+
+      function applyVisibility() {
+        layer.style.display = (toggleVillagers && toggleVillagers.checked) ? '' : 'none';
+        if (toggleNames && toggleNames.checked) {
+          layer.classList.add('names-on');
+        } else {
+          layer.classList.remove('names-on');
+        }
+        try {
+          localStorage.setItem('aw_map_villagers', toggleVillagers.checked ? '1' : '0');
+          localStorage.setItem('aw_map_names', toggleNames.checked ? '1' : '0');
+        } catch {}
+      }
+      try {
+        const v = localStorage.getItem('aw_map_villagers');
+        const n = localStorage.getItem('aw_map_names');
+        if (v !== null && toggleVillagers) toggleVillagers.checked = v === '1';
+        if (n !== null && toggleNames) toggleNames.checked = n === '1';
+      } catch {}
+      applyVisibility();
+      if (toggleVillagers) toggleVillagers.addEventListener('change', applyVisibility);
+      if (toggleNames) toggleNames.addEventListener('change', applyVisibility);
+    })();
+  </script>
+</body>
+</html>

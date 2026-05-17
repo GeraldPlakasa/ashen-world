@@ -147,6 +147,67 @@ def settle_inheritance_phase(characters: list[Villager], bank: Bank | None, curr
         _append_last_action(deceased, f"estate: {estate} coins inherited by {heir_names}")
 
 
+def cascade_blue_blood_from_king(king: Villager, characters: list[Villager]) -> int:
+    """
+    Walk the new king's MALE descendants (sons, grandsons through sons, ...) and
+    grant blue_blood + the Royal Blood achievement. Daughters and their
+    descendants are skipped — royal blood passes strictly along the male line
+    (Salic-style succession).
+
+    Note: the king himself is not flagged — only the line below him.
+    Returns the number of villagers newly granted blue_blood.
+    """
+    if not king:
+        return 0
+
+    try:
+        from src.services.achievement_service import trigger_royal_blood
+    except Exception:
+        return 0
+
+    id_map = {int(c.get("id", 0) or 0): c for c in characters}
+    granted = 0
+    seen: set[int] = set()
+    queue: list[int] = []
+
+    for cid in _ensure_list_field(king, "childrenIds"):
+        try:
+            queue.append(int(cid or 0))
+        except Exception:
+            continue
+
+    while queue:
+        cid = queue.pop()
+        if cid <= 0 or cid in seen:
+            continue
+        seen.add(cid)
+
+        person = id_map.get(cid)
+        if person is None:
+            continue
+
+        # Female descendants don't inherit the line and don't pass it on; skip
+        # both the flagging and the recursion through their children.
+        if (person.get("gender") or "") != "Male":
+            continue
+
+        if int(person.get("blue_blood", 0) or 0) != 1:
+            try:
+                trigger_royal_blood(person)
+                granted += 1
+            except Exception:
+                person["blue_blood"] = 1
+
+        # Only traverse further down through male descendants.
+        for sub in _ensure_list_field(person, "childrenIds"):
+            try:
+                queue.append(int(sub or 0))
+            except Exception:
+                continue
+
+    return granted
+
+
 def _traits_list(v: Villager) -> list[str]:
     s = (v.get("traits", "") or "").strip()
     return [t.strip() for t in s.split(",") if t.strip()]
@@ -336,6 +397,10 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
         "achievements": "[]",
         "kingsVotedFor": "[]",
 
+        "disease": "",
+        "disease_day": 0,
+        "immunities": "[]",
+
         "last_action": f"born to {mom.get('name','?')} and {dad.get('name','?')}",
         "action_log": "",
     }
@@ -350,20 +415,69 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
     mom["last_birth_day"] = int(current_day)
     dad["last_birth_day"] = int(current_day)
 
+    # Blue blood (Salic-style male-line succession): only male children of a
+    # royal parent inherit. Daughters do not receive the flag, and their own
+    # children later won't either — which keeps royal-blood lineage strictly
+    # along the male line.
+    parent_is_royal = (
+        int(mom.get("blue_blood", 0) or 0) == 1
+        or int(dad.get("blue_blood", 0) or 0) == 1
+        or mom.get("job") == "King"
+        or dad.get("job") == "King"
+    )
+    if parent_is_royal and child.get("gender") == "Male":
+        try:
+            from src.services.achievement_service import trigger_royal_blood
+            trigger_royal_blood(child)
+        except Exception:
+            child["blue_blood"] = 1
+
     _append_last_action(mom, f"gave birth to {child['name']}")
     _append_last_action(dad, f"welcomed child {child['name']}")
 
     return child
 
 
-def birth_daily_phase(characters: list[Villager], current_day: int) -> int:
+def _food_pressure_birth_multiplier(characters: list[Villager], bank) -> float:
+    """Reduce birth rate when food is scarce so the population doesn't grow
+    faster than the village can feed it. Returns a multiplier in [0.1, 1.0].
+
+    Anchored to "days of food supply remaining" at the current adult demand:
+      ≥ 7 days  → 1.00 (no penalty)
+      4–6 days  → 0.60
+      2–3 days  → 0.30
+      < 2 days  → 0.10 (only the strongest couples bear children)
+    """
+    if not bank:
+        return 1.0
+    stock = bank.get("resources") or {}
+    food = int(stock.get("food", 0) or 0)
+    adults = sum(
+        1 for v in characters
+        if v.get("alive") and int(v.get("age", 0) or 0) > CHILD_MAX_AGE
+    )
+    if adults <= 0:
+        return 1.0
+    days_supply = food / max(1, adults)
+    if days_supply >= 7:
+        return 1.0
+    if days_supply >= 4:
+        return 0.6
+    if days_supply >= 2:
+        return 0.3
+    return 0.1
+
+
+def birth_daily_phase(characters: list[Villager], current_day: int, bank=None) -> int:
     """
     Run after spouse logic each day.
-    For each married couple, small chance to have a child.
-    
+    For each married couple, small chance to have a child. Birth rate is
+    scaled down when the food stockpile is low — a hungry village doesn't grow.
+
     Returns:
         Number of births that occurred.
     """
+    food_mult = _food_pressure_birth_multiplier(characters, bank)
     births_count = 0
     for a in characters:
         if not a.get("alive", True):
@@ -395,6 +509,7 @@ def birth_daily_phase(characters: list[Villager], current_day: int) -> int:
         p = _birth_probability(characters, mom, dad, current_day)
         if p <= 0:
             continue
+        p *= food_mult
 
         if random.random() < p:
             child = _spawn_child(characters, mom, dad, current_day)
@@ -459,7 +574,7 @@ def child_daily_phase(characters: list[Villager], current_day: int) -> None:
             _append_last_action(c, "child rested")
 
         elif act == "hangout":
-            c["rep"] = clamp(int(c.get("rep", 0) or 0) + rand_int(0, 1), -100, 100)
+            c["rep"] = int(c.get("rep", 0) or 0) + rand_int(0, 1)
             _append_last_action(c, "child hung out")
 
         else:  # socialize
@@ -472,17 +587,21 @@ def child_daily_phase(characters: list[Villager], current_day: int) -> None:
             else:
                 _append_last_action(c, "child socialized")
 
-def _assign_job_for_young_adult(p: Villager) -> str:
+def _assign_job_for_young_adult(p: Villager, characters: list[Villager] | None = None) -> str:
     """
     When a child becomes adult (age >= 17):
-    pick a job based on skills (if any), stats + traits (non-royal).
-    
-    Skills have highest priority for job assignment.
+    pick a job based on skills, parent's trade, stats + traits.
+
+    Priority: skill affinity → parent's profession (40% chance, medieval-style
+    apprenticeship) → stats/traits-weighted random. Job inheritance keeps the
+    village's producer-job ratio from drifting toward uniform-random over
+    generations, which is what causes food spirals after population growth.
     """
     from src.services.skill_service import parse_skills, get_job_from_skills
-    
+    from config import JOB_RESOURCE_YIELD
+
     pool = list(JOBS_NO_ROYAL) if JOBS_NO_ROYAL else list(JOBS_POOL)
-    
+
     # Check if villager has skills that suggest a job
     skills = parse_skills(p.get("skills", ""))
     if skills:
@@ -492,9 +611,35 @@ def _assign_job_for_young_adult(p: Villager) -> str:
             if random.random() < 0.75:
                 p["job"] = skill_job
                 return skill_job
+
+    # Profession inheritance: prefer parent's trade. Father first (traditional
+    # primary breadwinner in this kind of sim), fall back to mother. Producer
+    # parents transfer more readily (skill-passed) than non-producers.
+    if characters is not None:
+        parent_jobs: list[str] = []
+        for parent_key in ("fatherId", "motherId"):
+            pid = int(p.get(parent_key, 0) or 0)
+            if pid > 0:
+                parent = next((c for c in characters if int(c.get("id", 0) or 0) == pid), None)
+                if parent and parent.get("job"):
+                    pj = parent["job"]
+                    if pj in pool:
+                        parent_jobs.append(pj)
+        if parent_jobs:
+            primary = parent_jobs[0]
+            inherit_chance = 0.55 if primary in JOB_RESOURCE_YIELD else 0.35
+            if random.random() < inherit_chance:
+                p["job"] = primary
+                return primary
     
-    # Standard job assignment based on stats/traits
+    # Standard job assignment based on stats/traits. Producer jobs get a
+    # gentle baseline boost so the village stays food-secure as generations
+    # turn over — without it, a 100-villager village drifts from 45% producers
+    # toward ~25% (the uniform-random equilibrium).
     weights = {j: 1.0 for j in pool}
+    for producer_job in JOB_RESOURCE_YIELD.keys():
+        if producer_job in weights:
+            weights[producer_job] += 1.5
 
     def add(job: str, w: float):
         if job in weights:
@@ -508,11 +653,11 @@ def _assign_job_for_young_adult(p: Villager) -> str:
         for j in ["Scholar", "Scribe", "Advisor", "Engineer", "Alchemist", "Priest", "Healer"]:
             add(j, 2.0)
     if power >= 25:
-        for j in ["Soldier", "Guard", "Ranger", "Archer", "Scout", "Hunter"]:
+        for j in ["Soldier", "Guard", "Scout", "Hunter"]:
             add(j, 2.0)
 
     if "Brave" in t:
-        for j in ["Soldier", "Guard", "Ranger", "Archer", "Hunter"]:
+        for j in ["Soldier", "Guard", "Scout", "Hunter"]:
             add(j, 1.5)
     if "Wise" in t:
         for j in ["Scholar", "Scribe", "Advisor", "Engineer", "Druid"]:
@@ -550,7 +695,7 @@ def coming_of_age_phase(characters: list[Villager], current_day: int | None = No
             continue
         age = int(c.get("age", 0) or 0)
         if age >= (CHILD_MAX_AGE + 1) and c.get("job") == "Child":
-            new_job = _assign_job_for_young_adult(c)
+            new_job = _assign_job_for_young_adult(c, characters)
             # Assign initial MP based on new job
             from config import MAGIC_JOBS, MINOR_MAGIC_JOBS
             if new_job in MAGIC_JOBS:
