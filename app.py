@@ -59,32 +59,57 @@ def track_page_view():
 #  Background simulation
 # ---------------------------------------------------------------------------
 
+_sim_started_lock = threading.Lock()
+_sim_started = False
+
+
 def start_auto_simulation() -> None:
     """Start the background auto-simulation thread.
 
-    This is intentionally NOT called at module import time anymore — only
-    `__main__` (i.e. `python app.py`) or an explicit WSGI hook should call
-    it. Previously this fired on every `from app import app`, which caused
-    pytest fixtures and ad-hoc smoke scripts to race the live DB and on at
-    least one occasion overwrote `total_day` with a temp-DB value, rolling
-    the world back several years.
-
-    In `flask --debug` the reloader spawns two processes (parent stat-watcher
-    + child marked by `WERKZEUG_RUN_MAIN=true`). We only start the sim in
-    the child so a single process owns the daily tick.
+    Idempotent within a single process — calling it multiple times only
+    spawns the thread once. Both the module-level guard (for `flask run`)
+    and the `__main__` block (for `python app.py`) call this, and only
+    the first call lands.
     """
+    global _sim_started
     if not AUTO_SIM_ENABLED:
         return
-    import os
-    is_reloader_child = os.environ.get("WERKZEUG_RUN_MAIN") == "true"
-    is_non_debug = not app.debug
-    if not (is_reloader_child or is_non_debug):
-        logger.info("Skipping auto-sim in reloader parent process")
-        return
-    t = threading.Thread(target=auto_simulation_loop, daemon=True)
-    t.start()
+    with _sim_started_lock:
+        if _sim_started:
+            return
+        t = threading.Thread(target=auto_simulation_loop, daemon=True)
+        t.start()
+        _sim_started = True
     logger.info("Auto-simulation thread started")
 
+
+# ---------------------------------------------------------------------------
+#  Auto-start at module import — for entrypoints that never hit __main__
+#  (`flask run --debug`, `gunicorn app:app`, etc.).
+#
+# Decision matrix:
+#   * pytest fixtures monkeypatch config.DB_PATH; a background sim thread
+#     would race those patches and write temp-DB values back to the real
+#     DB. → always skip during pytest.
+#   * Werkzeug reloader child (WERKZEUG_RUN_MAIN=true) → start. This is
+#     the path used by `flask run --debug` once the child is spawned.
+#   * Werkzeug reloader parent (no WERKZEUG_RUN_MAIN, but FLASK_DEBUG set)
+#     → skip. The child will own the sim. Without this guard, the parent
+#     stat-watcher would spawn its own competing thread.
+#   * Plain import without any of the above (e.g. `python app.py`'s parent
+#     before app.run, or a hand-rolled smoke script) → skip here. The
+#     __main__ block below handles `python app.py`. WSGI hosts that
+#     bypass __main__ need to call start_auto_simulation() themselves.
+# ---------------------------------------------------------------------------
+import os as _os
+import sys as _sys
+
+_in_pytest = ("pytest" in _sys.modules) or bool(_os.environ.get("PYTEST_CURRENT_TEST"))
+_is_reloader_child = _os.environ.get("WERKZEUG_RUN_MAIN") == "true"
+
+if (not _in_pytest) and _is_reloader_child:
+    logger.info("Werkzeug reloader child — starting sim at import")
+    start_auto_simulation()
 
 logger.info("Ashen World app module loaded")
 
@@ -94,15 +119,15 @@ logger.info("Ashen World app module loaded")
 
 if __name__ == "__main__":
     logger.info("Ashen World starting up...")
-    import os
 
     # `app.run(debug=True)` below spawns a werkzeug reloader: the parent stays
     # alive as a stat-watcher, the child (marked by WERKZEUG_RUN_MAIN=true)
-    # runs the real server. Only ONE of them should own the sim thread, or
-    # they'll race on the DB and roll total_day around.
+    # runs the real server. Only the child should own the sim thread. The
+    # module-level block above already called start_auto_simulation() in the
+    # child during import; here we call it again from __main__ for safety
+    # (idempotent — no-op the second time).
     debug_mode = True
-    is_reloader_child = os.environ.get("WERKZEUG_RUN_MAIN") == "true"
-    if not debug_mode or is_reloader_child:
+    if not debug_mode or _is_reloader_child:
         start_auto_simulation()
     else:
         logger.info("Reloader parent — sim will start in the child process")
