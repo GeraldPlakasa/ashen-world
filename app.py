@@ -59,34 +59,55 @@ def track_page_view():
 #  Background simulation
 # ---------------------------------------------------------------------------
 
-with app.app_context():
+def start_auto_simulation() -> None:
+    """Start the background auto-simulation thread.
+
+    This is intentionally NOT called at module import time anymore — only
+    `__main__` (i.e. `python app.py`) or an explicit WSGI hook should call
+    it. Previously this fired on every `from app import app`, which caused
+    pytest fixtures and ad-hoc smoke scripts to race the live DB and on at
+    least one occasion overwrote `total_day` with a temp-DB value, rolling
+    the world back several years.
+
+    In `flask --debug` the reloader spawns two processes (parent stat-watcher
+    + child marked by `WERKZEUG_RUN_MAIN=true`). We only start the sim in
+    the child so a single process owns the daily tick.
     """
-    Start background auto-simulation thread at startup.
-    In debug mode Flask's reloader spawns TWO processes — the parent (stat-watcher)
-    and the child (WERKZEUG_RUN_MAIN=true).  We only start the sim thread in the
-    child to avoid running two competing simulation loops against the same database.
-    """
+    if not AUTO_SIM_ENABLED:
+        return
     import os
     is_reloader_child = os.environ.get("WERKZEUG_RUN_MAIN") == "true"
     is_non_debug = not app.debug
-
-    logger.info("Ashen World starting up...")
-    if AUTO_SIM_ENABLED and (is_reloader_child or is_non_debug):
-        t = threading.Thread(target=auto_simulation_loop, daemon=True)
-        t.start()
-        logger.info("Auto-simulation thread started")
-    elif AUTO_SIM_ENABLED:
+    if not (is_reloader_child or is_non_debug):
         logger.info("Skipping auto-sim in reloader parent process")
+        return
+    t = threading.Thread(target=auto_simulation_loop, daemon=True)
+    t.start()
+    logger.info("Auto-simulation thread started")
+
+
+logger.info("Ashen World app module loaded")
 
 # ---------------------------------------------------------------------------
 #  Main entry point
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    logger.info("Ashen World starting up...")
+    import os
 
-    # For production without auto-reloader:
-    # if AUTO_SIM_ENABLED:
-    #     t = threading.Thread(target=auto_simulation_loop, daemon=True)
-    #     t.start()
-    # app.run(debug=True, use_reloader=False)
+    # `app.run(debug=True)` below spawns a werkzeug reloader: the parent stays
+    # alive as a stat-watcher, the child (marked by WERKZEUG_RUN_MAIN=true)
+    # runs the real server. Only ONE of them should own the sim thread, or
+    # they'll race on the DB and roll total_day around.
+    debug_mode = True
+    is_reloader_child = os.environ.get("WERKZEUG_RUN_MAIN") == "true"
+    if not debug_mode or is_reloader_child:
+        start_auto_simulation()
+    else:
+        logger.info("Reloader parent — sim will start in the child process")
+
+    app.run(debug=debug_mode)
+
+    # For production without the reloader (e.g. gunicorn app:app), import
+    # `app` and call `start_auto_simulation()` once from a launcher script.

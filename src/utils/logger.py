@@ -43,6 +43,14 @@ def setup_logging() -> None:
         datefmt="%Y-%m-%d %H:%M:%S"
     )
     
+    # Reconfigure stdout to UTF-8 with replacement so emoji log messages
+    # (🌻, ⚔, ☠, …) don't blow up the Windows cp1252 console with
+    # UnicodeEncodeError tracebacks. The sim writes plenty of emoji.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
     # Console handler (INFO+ only, brief format)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
