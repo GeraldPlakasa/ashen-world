@@ -62,16 +62,28 @@ class TestTraitEffectsOnActions:
 
     @pytest.mark.unit
     def test_greedy_increases_work_and_steal(self, base_villager):
-        """Greedy trait should increase work and steal weights."""
+        """Greedy trait should increase work and steal weights.
+
+        Threshold relaxed in the 2026-05-18 crime-rate softening (steal base
+        0.10 → 0.04, Greedy +0.30 → +0.15). Compare against the no-trait
+        baseline on the same seed to keep the test about *direction*, not
+        absolute count.
+        """
         random.seed(42)
         base_villager["traits"] = "Greedy"
-        
-        actions = [choose_action(base_villager) for _ in range(100)]
-        work_count = actions.count("work")
-        steal_count = actions.count("steal")
-        
-        assert work_count > 15
-        assert steal_count > 3
+        actions = [choose_action(base_villager) for _ in range(400)]
+        greedy_steal = actions.count("steal")
+        greedy_work = actions.count("work")
+
+        random.seed(42)
+        base_villager["traits"] = ""
+        actions_plain = [choose_action(base_villager) for _ in range(400)]
+        plain_steal = actions_plain.count("steal")
+
+        assert greedy_work > 60, f"greedy work share too low: {greedy_work}/400"
+        assert greedy_steal > plain_steal, (
+            f"greedy steal {greedy_steal} should exceed plain {plain_steal}"
+        )
 
     @pytest.mark.unit
     def test_lazy_increases_rest(self, base_villager):
@@ -86,16 +98,26 @@ class TestTraitEffectsOnActions:
 
     @pytest.mark.unit
     def test_deceitful_increases_steal(self, base_villager):
-        """Deceitful trait should significantly increase steal weight."""
+        """Deceitful trait should noticeably increase steal weight relative
+        to a no-trait villager. Threshold relaxed in the 2026-05-18 crime
+        softening (steal base 0.10 → 0.04, Deceitful +0.50 → +0.25)."""
         random.seed(42)
         base_villager["traits"] = "Deceitful"
+        deceitful_steal = sum(
+            1 for _ in range(400) if choose_action(base_villager) == "steal"
+        )
 
-        actions = [choose_action(base_villager) for _ in range(100)]
-        steal_count = actions.count("steal")
+        random.seed(42)
+        base_villager["traits"] = ""
+        plain_steal = sum(
+            1 for _ in range(400) if choose_action(base_villager) == "steal"
+        )
 
-        # Threshold tuned to the rebalanced crime weights (steal base 0.10 +
-        # Deceitful +0.50). Still well above the no-trait baseline.
-        assert steal_count > 4
+        # Deceitful should at least double the plain rate (still well above
+        # the floor; absolute count remains modest with the new tuning).
+        assert deceitful_steal > max(2 * plain_steal, 5), (
+            f"deceitful steal {deceitful_steal} should clearly exceed plain {plain_steal}"
+        )
 
     @pytest.mark.unit
     def test_diligent_increases_work_and_train(self, base_villager):

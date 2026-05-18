@@ -211,6 +211,77 @@ class TestChooseAction:
             assert action in valid_actions
 
 
+class TestCrimeActionRates:
+    """Locks in the (refreshed 2026-05-18) lower crime-selection rates.
+
+    Crimes should be a deviation from daily life, not background noise. These
+    tests don't try to fix the rates exactly — they assert the loose ceilings
+    we tuned toward so accidental regressions are caught.
+    """
+
+    @staticmethod
+    def _measure(villager: dict, bank: dict, others=None, n: int = 3000) -> dict:
+        counts = {"steal": 0, "assault": 0, "murder": 0, "other": 0}
+        characters = others if others is not None else [villager]
+        for i in range(n):
+            random.seed(i)
+            a = choose_action(villager, bank, weather="sunny", all_characters=characters)
+            if a in counts:
+                counts[a] += 1
+            else:
+                counts["other"] += 1
+        return {k: v / n for k, v in counts.items()}
+
+    @pytest.mark.unit
+    def test_vanilla_villager_rarely_steals(self, sample_villager, sample_bank):
+        sample_villager["traits"] = ""
+        sample_villager["coins"] = 80
+        sample_villager["rep"] = 0
+        sample_villager["hunger"] = 30
+        shares = self._measure(sample_villager, sample_bank)
+        # Was ~1% before; baseline should now sit ≤ 1.5% to leave headroom for
+        # building/skill variants — anything higher means the floor crept back.
+        assert shares["steal"] < 0.015, f"vanilla steal share={shares['steal']:.3f}"
+        assert shares["assault"] == 0.0
+        assert shares["murder"] == 0.0
+
+    @pytest.mark.unit
+    def test_deceitful_villager_steal_capped(self, sample_villager, sample_bank):
+        sample_villager["traits"] = "Deceitful"
+        sample_villager["coins"] = 80
+        sample_villager["rep"] = 0
+        sample_villager["hunger"] = 30
+        shares = self._measure(sample_villager, sample_bank)
+        # Was ~7% per day for a Deceitful villager. Trimmed ceiling: ≤ 4%.
+        # Anything higher would mean Deceitful villagers steal almost every
+        # other week of the year (~14× year), which is what the user flagged.
+        assert shares["steal"] < 0.04, f"deceitful steal share={shares['steal']:.3f}"
+
+    @pytest.mark.unit
+    def test_hotheaded_alone_does_not_assault_constantly(self, sample_villager, sample_bank):
+        """A single Hot-headed trait at neutral rep should NOT put assault in
+        the action pool — assault requires real motive (low rep + multiple
+        aggressive traits).
+        """
+        sample_villager["traits"] = "Hot-headed"
+        sample_villager["rep"] = 0
+        sample_villager["hunger"] = 30
+        sample_villager["coins"] = 80
+        shares = self._measure(sample_villager, sample_bank)
+        # Threshold (0.22) is now above what a lone Hot-headed gives.
+        assert shares["assault"] == 0.0, f"hot-headed alone assaulted: {shares}"
+
+    @pytest.mark.unit
+    def test_worst_profile_assault_still_modest(self, sample_villager, sample_bank):
+        """Even a worst-case villager should pick assault less than 5%/day."""
+        sample_villager["traits"] = "Hot-headed,Reckless"
+        sample_villager["rep"] = -20
+        sample_villager["hunger"] = 30
+        sample_villager["coins"] = 80
+        shares = self._measure(sample_villager, sample_bank)
+        assert shares["assault"] < 0.05, f"worst-profile assault share={shares['assault']:.3f}"
+
+
 class TestMakeRow:
     """Tests for villager generation."""
 

@@ -48,7 +48,9 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         "hunt": 0.8,
         "socialize": 0.6,
         "hangout": 0.4,
-        "steal": 0.10,
+        # Theft baseline trimmed (was 0.10) — even a no-trait villager was
+        # rolling it ~1% per day. Crime should be a deviation, not background.
+        "steal": 0.04,
         "mentor": 0.0,  # Only enabled for age 20+ with skills
         "meditate": 0.0,  # Only enabled for magic-capable jobs
         "forge_artifact": 0.0,  # Only enabled for high-INT Blacksmith/Wizard/Sorcerer with treasury funds (Phase 7)
@@ -114,15 +116,15 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
             weights["study"] += 0.4
             weights["rest"] += 0.2
             weights["hunt"] -= 0.3
-            weights["steal"] -= 0.2
+            weights["steal"] -= 0.3
         if t == "Greedy":
             weights["work"] += 0.8
-            weights["steal"] += 0.30
+            weights["steal"] += 0.15
         if t in ("Generous", "Empathic"):
             weights["buy_food"] += 0.4
             weights["socialize"] += 0.4
             weights["hangout"] += 0.5
-            weights["steal"] -= 0.2
+            weights["steal"] -= 0.3
         if t in ("Wise", "Curious", "Clever"):
             weights["study"] += 0.8
             weights["socialize"] += 0.4
@@ -140,9 +142,11 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
             weights["train"] += 0.4
             weights["hunt"] += 0.4
             weights["buy_gear"] += 0.2
-            weights["steal"] += 0.20
+            weights["steal"] += 0.10
         if t == "Deceitful":
-            weights["steal"] += 0.50
+            # Was the single biggest crime driver (+0.50). Halved so even a
+            # Deceitful villager spends most days working, not stealing.
+            weights["steal"] += 0.25
             weights["socialize"] -= 0.3
         if t == "Stoic":
             weights["rest"] -= 0.3
@@ -154,7 +158,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
             weights["steal"] -= 0.3
         if t == "Loyal":
             weights["work"] += 0.4
-            weights["steal"] -= 0.4
+            weights["steal"] -= 0.5
             weights["socialize"] += 0.3
         if t == "Strict":
             weights["train"] += 0.4
@@ -187,7 +191,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         if t == "Fearless":
             weights["hunt"] += 0.8
             weights["train"] += 0.6
-            weights["steal"] += 0.15
+            weights["steal"] += 0.08
         if t == "Veteran":
             weights["hunt"] += 0.6
             weights["train"] += 0.4
@@ -197,7 +201,7 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         weights["train"] += 1.0
         weights["hunt"] += 0.5
         weights["buy_gear"] += 0.6
-        weights["steal"] -= 0.3
+        weights["steal"] -= 0.4
     if job in ["Scholar", "Scribe", "Advisor", "Engineer", "Druid", "Alchemist"]:
         weights["study"] += 1.0
         weights["socialize"] += 0.3
@@ -217,11 +221,13 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         weights["rest"] += 0.6
         weights["socialize"] += 0.6
         weights["hangout"] += 0.6
-        weights["steal"] -= 0.4
+        weights["steal"] -= 0.5
         weights["hunt"] *= 0.15
         weights["train"] *= 0.7
     if job in ["Spy"]:
-        weights["steal"] += 0.40
+        # Spies are the canonical thief class — keep the bump meaningful but
+        # not dominant. Was +0.40, now +0.22.
+        weights["steal"] += 0.22
         weights["socialize"] += 0.3
 
     # Magic jobs: prefer study/meditate, less physical work
@@ -282,47 +288,53 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
         # Tuned so that even a Hot-headed villager only commits assault a few
         # times a year — not weekly. Requires real provocation (low rep) or
         # multiple aggressive traits stacking.
-        a_base = 0.02
+        # Refresh 2026-05-18: per-trait pushes trimmed and the surface
+        # threshold raised (0.18 → 0.22) so a single hot-tempered trait no
+        # longer puts assault in the action pool every day.
+        a_base = 0.01
         for t in traits:
-            if t == "Hot-headed":  a_base += 0.18
-            if t == "Reckless":    a_base += 0.15
-            if t == "Deceitful":   a_base += 0.08
-            if t == "Greedy":      a_base += 0.04
-            if t == "Empathic":    a_base -= 0.30
-            if t == "Cautious":    a_base -= 0.25
-            if t == "Loyal":       a_base -= 0.15
-            if t == "Wise":        a_base -= 0.10
+            if t == "Hot-headed":  a_base += 0.12
+            if t == "Reckless":    a_base += 0.10
+            if t == "Deceitful":   a_base += 0.05
+            if t == "Greedy":      a_base += 0.03
+            if t == "Empathic":    a_base -= 0.35
+            if t == "Cautious":    a_base -= 0.30
+            if t == "Loyal":       a_base -= 0.20
+            if t == "Wise":        a_base -= 0.15
+            if t == "Protective":  a_base -= 0.10  # new: protective dampens aggression
         if rep_now < -5:   a_base += 0.10
         if rep_now < -15:  a_base += 0.15
         if rep_now > 10:   a_base -= 0.20
-        # Guard deterrence — strong drop when watched
+        # Guard deterrence — stronger drops when watched
         if guard_count >= 2:
-            a_base *= 0.6
-        if guard_count >= 5:
             a_base *= 0.5
-        # High threshold: only profiles with real motive land in the action pool.
-        if a_base > 0.18:
+        if guard_count >= 5:
+            a_base *= 0.35
+        # Higher threshold so only motivated profiles land in the action pool.
+        if a_base > 0.22:
             weights["assault"] = a_base
 
         # ----- Murder ----- (very rare; needs an extreme profile)
+        # Refresh 2026-05-18: personality bumps trimmed and cap tightened so
+        # murder stays a true outlier (~once per year per worst-case villager).
         m_base = 0.0
         # Personality core
         if "Deceitful" in traits and "Hot-headed" in traits:
-            m_base = 0.025
+            m_base = 0.018
         elif "Reckless" in traits and rep_now < -10:
-            m_base = 0.015
+            m_base = 0.010
         if rep_now < -20:
-            m_base += 0.04
+            m_base += 0.03
         # Predator profile: killers tend to have hunt wins
         if int(villager.get("huntWins", 0) or 0) >= 5:
-            m_base += 0.02
-        if "Empathic" in traits or "Loyal" in traits or "Wise" in traits:
-            m_base *= 0.25
+            m_base += 0.012
+        if "Empathic" in traits or "Loyal" in traits or "Wise" in traits or "Protective" in traits:
+            m_base *= 0.2
         if guard_count >= 3:
-            m_base *= 0.4
-        # Tight cap so murder stays a true outlier event
-        m_base = min(0.08, max(0.0, m_base))
-        if m_base > 0.04:
+            m_base *= 0.35
+        # Tight cap so murder stays a true outlier event (was 0.08)
+        m_base = min(0.06, max(0.0, m_base))
+        if m_base > 0.05:
             weights["murder"] = m_base
 
     # ---- Patrol gating (Guard jobs) ---------------------------------------
@@ -555,10 +567,12 @@ def choose_action(villager: Villager, bank: Bank | None = None, weather: str | N
     if coins < 20:
         weights["work"] += 0.8
         weights["buy_food"] -= 0.3
-        weights["steal"] += 0.20
+        # Hardship still pushes some villagers toward theft, but no longer
+        # doubles a Deceitful villager's steal weight on poor days.
+        weights["steal"] += 0.10
     elif coins > 150:
         weights["buy_food"] += 0.4
-        weights["steal"] -= 0.2
+        weights["steal"] -= 0.25
 
     if coins > 200 and hunger < 60:
         weights["buy_gear"] += 0.8
