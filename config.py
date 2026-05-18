@@ -5,13 +5,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# Legacy file paths — used only by migrate_legacy_files_to_sqlite() in stats_repo.
-# New data is stored in SQLite at DB_PATH.
-CSV_PATH = os.path.join(DATA_DIR, "characters.csv")
-DAY_PATH = os.path.join(DATA_DIR, "world_time.json")
-BANK_PATH = os.path.join(DATA_DIR, "bank.json")
-USERS_CSV = os.path.join(DATA_DIR, "users.csv")
-
 DB_PATH = os.path.join(DATA_DIR, "ashen_world.sqlite3")
 
 # Logging configuration

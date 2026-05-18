@@ -75,7 +75,7 @@ Auth pattern: `session.get("logged_in")` for any user, `session.get("is_admin")`
 | `world_service.py` | Orchestration: state lock, day advancement, world generation, year champions. Also detects **season transitions** and emits a chronicle entry on the crossover. | `get_current_state()` (returns `(characters, bank, year, day_in_year, total_day, weather, season)`), `advance_one_day()`, `generate_new_world()`, `compute_year_champions()`, `auto_simulation_loop()` |
 | `simulation_service.py` | One-day master loop: per-villager actions, immigrants, player inheritance | `simulate_one_day()`, `maybe_add_immigrants()`, `player_inheritance_phase()` |
 | `villager_service.py` | Villager generation + ID management | `make_row()`, `generate_characters()`, `reset_id_from_characters()` |
-| `action_service.py` | Per-villager action selection + apply (work/hunt/rest/meditate/etc.), level-ups, shop offers | `choose_action()`, `apply_action()`, `handle_level_up()`, `create_shop_offer()` |
+| `action_service.py` | **Re-export shim** for backwards compatibility. Real code lives in `src/services/actions/` (split by category — see **Actions subpackage** below). New code should import from `src.services.actions` directly. | `choose_action()`, `apply_action()`, `handle_level_up()`, `create_shop_offer()`, `append_action_history()` |
 | `combat_service.py` | Enemy creation + combat resolution + starvation damage. Hooks `artifact_service.drop_for_kill` on win | `create_enemy_for()`, `resolve_combat()`, `apply_starvation_damage()` |
 | `family_service.py` | Birth, childhood, coming-of-age, inheritance | `birth_daily_phase()`, `child_daily_phase()`, `coming_of_age_phase()`, `settle_inheritance_phase()` |
 | `relationship_service.py` | Relationship deltas, marriage, corruption, king assassination | `adjust_relationship()`, `spouse_daily_phase()`, `king_assassination_phase()` |
@@ -92,6 +92,32 @@ Auth pattern: `session.get("logged_in")` for any user, `session.get("is_admin")`
 | `disease_service.py` | Persistent per-villager illness (cough/fever/plague), infection chains via daily contact, healer-driven cures, immunity tracking. Runs `daily_disease_phase()` in the sim loop. | `infect()`, `cure()`, `try_transmit()`, `find_sick_in_circle()`, `daily_disease_phase()` |
 | `trade_service.py` | King-driven foreign trade. Imports food/wood/stone/iron when local stocks are low; exports surplus once thresholds are crossed. Trait-modulated (Greedy resists, Generous buys readily, Ambitious favors materials). | `maybe_king_imports_resources()`, `maybe_king_exports_resources()` |
 | `justice_service.py` | Crime & Justice: open pending cases when crimes (theft / assault / murder) are witnessed; per-day trial phase where the King issues verdicts (fine / exile / execution) modulated by traits and recidivism. Bumps yearly stat counters for the Leaderboard + admin Justice tab. | `maybe_witness_and_record()`, `verdict_for_king()`, `apply_verdict()`, `crime_trial_phase()` |
+
+### Actions subpackage (`src/services/actions/`)
+
+The old 2k-line `action_service.py` was split into a subpackage. Public API
+is still imported from `src.services.action_service` (a re-export shim) so
+existing callers keep working; new code should import from
+`src.services.actions` directly.
+
+| Module | Purpose |
+|--------|---------|
+| `picker.py` | `choose_action()` — single weighted-random selection function. Kept intact (not split further) because every trait/job/building/weather lever feeds the same weight table. ~570 lines. |
+| `utility.py` | `handle_level_up()`, `create_shop_offer()`, `append_action_history()`. Used by handlers + the post-action tail. |
+| `economic.py` | `apply_work`, `apply_buy_food`, `apply_buy_gear`. Work is the load-bearing one — produces coin income (taxed), resource yields (level × weather × season × building bonuses), and the Blacksmith iron sink. |
+| `welfare.py` | `apply_rest` |
+| `social.py` | `apply_socialize`, `apply_hangout`, `apply_visit_tavern`, `apply_woo` |
+| `combat.py` | `apply_train`, `apply_hunt`, `apply_spar`, `apply_drill` |
+| `crime.py` | `apply_steal`, `apply_assault`, `apply_murder`, `apply_patrol`. Each crime calls `justice_service.maybe_witness_and_record()` after the deed. |
+| `magic.py` | `apply_study`, `apply_meditate` |
+| `support.py` | `apply_mentor`, `apply_heal_sick`, `apply_forge_artifact`. Each heavily gated. |
+
+**Adding a new action**: add a base weight to the `weights` dict in
+`picker.py`, drop an `apply_<name>(v, bank, all_characters, weather,
+current_day)` function into the appropriate category module, and register
+it in the `_HANDLERS` dispatch table in `actions/__init__.py`. The post-
+action tail (`hunger` clamp, `rep` cast, `handle_level_up`) runs
+automatically for every dispatched action.
 
 ### Repositories (`src/repositories/`) — data persistence layer
 
@@ -134,6 +160,7 @@ ashen-world/
 ├── src/
 │   ├── routes/                   # 10 Flask blueprints (see Routes table)
 │   ├── services/                 # 20 service modules (see Services table)
+│   │   └── actions/              # actions subpackage: picker + per-category handlers (see Actions subpackage)
 │   ├── repositories/             # 12 repo modules (see Repositories table)
 │   ├── models/                   # TypedDicts + factories
 │   └── utils/
@@ -331,10 +358,13 @@ LOG_LEVEL=INFO              # optional: DEBUG, INFO, WARNING, ERROR
 
 ### Adding a new action
 
-1. Add weight in `choose_action()` (`action_service.py`) — keyed by trait/job/weather.
-2. Add handler branch in `apply_action()` — read `v["job"]`, mutate stats, append to `action_log`.
-3. If it can record narrative drama, call `chronicle_service.record_*()`.
-4. Add unit tests in `test_villagers_pure.py`.
+1. Add a base weight to the `weights` dict in `src/services/actions/picker.py`. Add trait/job/building/skill modifiers in the matching block below.
+2. Add `apply_<name>(v, bank, all_characters, weather, current_day)` in the appropriate category module (`economic.py` / `welfare.py` / `social.py` / `combat.py` / `crime.py` / `magic.py` / `support.py`) — read `v["job"]`, mutate stats, set `last_action`.
+3. Register the handler in `_HANDLERS` in `src/services/actions/__init__.py`.
+4. If it can record narrative drama, call `chronicle_service.record_*()`.
+5. Add unit tests in `test_villagers_pure.py`.
+
+The post-action tail (hunger clamp, rep cast, level-up check) runs automatically — don't duplicate it in the handler.
 
 ### Adding a new trait
 
