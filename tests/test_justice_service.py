@@ -170,6 +170,43 @@ class TestVerdict:
         assert exile_share < 0.15, f"first-time theft exile share too high: {exile_share:.2f}"
 
     @pytest.mark.unit
+    def test_first_time_assault_mostly_fined(self):
+        """Assault used to send ~40% of first-time offenders to exile/execution
+        (30% exile + 10% execution). Refresh: harsh outcomes should sit ~25%
+        for a no-trait king, with fines firmly in the majority."""
+        king = _v(id=99, job="King", traits="")
+        random.seed(5)
+        verdicts = [verdict_for_king(king, "assault", prior_offenses=0) for _ in range(600)]
+        fine_share = verdicts.count("fine") / len(verdicts)
+        harsh_share = (verdicts.count("exile") + verdicts.count("execution")) / len(verdicts)
+        assert fine_share > 0.65, f"assault should mostly fine, got fine={fine_share:.2f}"
+        assert harsh_share < 0.30, f"assault harsh share too high: {harsh_share:.2f}"
+
+    @pytest.mark.unit
+    def test_first_time_murder_execution_capped(self):
+        """Murder still escalates hard, but the execution share should sit
+        well below the old 35% baseline for a no-trait king."""
+        king = _v(id=99, job="King", traits="")
+        random.seed(6)
+        verdicts = [verdict_for_king(king, "murder", prior_offenses=0) for _ in range(600)]
+        exec_share = verdicts.count("execution") / len(verdicts)
+        # Base is 0.25 — give a generous tolerance for sampling noise (±0.07).
+        assert exec_share < 0.33, f"murder execution share too high: {exec_share:.2f}"
+
+    @pytest.mark.unit
+    def test_protective_king_pushes_toward_fines(self):
+        """Protective is a new modifier — it should pull verdicts toward fines."""
+        plain_king = _v(id=99, job="King", traits="")
+        protective_king = _v(id=99, job="King", traits="Protective")
+        random.seed(7)
+        plain = [verdict_for_king(plain_king, "assault") for _ in range(400)]
+        random.seed(7)  # same draw sequence — only the weights differ
+        prot = [verdict_for_king(protective_king, "assault") for _ in range(400)]
+        assert prot.count("fine") > plain.count("fine"), (
+            "Protective king should fine more than a plain king on the same RNG draws"
+        )
+
+    @pytest.mark.unit
     def test_recidivism_escalates_to_exile(self):
         """Same crime + heavy prior record should be markedly more likely to
         end in exile or execution than a clean record."""

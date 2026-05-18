@@ -214,36 +214,44 @@ def verdict_for_king(king: Villager, crime_type: str, prior_offenses: int = 0) -
 
     Verdict options: 'fine', 'exile', 'execution'.
 
-    Balance philosophy:
-      - First-offense theft: nearly always a fine — village is forgiving.
-      - Repeat offenders: escalation per prior conviction (toward exile, then
-        execution at 3+ priors for serious crimes).
-      - Exile is the harshest sentence the village should reach for casually;
-        execution should feel rare and reserved for murder / recidivism.
+    Balance philosophy (refreshed: softer harsh verdicts overall):
+      - First-offense theft: almost always a fine — village is forgiving.
+      - First-offense assault: usually a fine, with a meaningful but minority
+        chance of exile (was 30%, now ~18%).
+      - Murder still escalates hard, but execution share trimmed (was 35%,
+        now 25%) and fine share bumped slightly so a merciful king can spare
+        a killer.
+      - Recidivism still escalates, but the per-prior shift is gentler so a
+        single bad streak doesn't immediately reach exile.
+      - Harsh-trait kings (Strict / Hot-headed / Reckless) still push harder,
+        but with less swing than before.
     """
     severity = CRIME_SEVERITY.get(crime_type, 1)
     traits = _trait_set(king)
 
     # Severity-driven base weights — strongly biased toward fines for low crimes.
+    # Tuned 2026-05-18: exile/execution shares pulled down across the board.
     if severity >= 4:        # murder
-        weights = {"fine": 0.15, "exile": 0.50, "execution": 0.35}
+        weights = {"fine": 0.20, "exile": 0.55, "execution": 0.25}
     elif severity >= 2:      # assault
-        weights = {"fine": 0.60, "exile": 0.30, "execution": 0.10}
+        weights = {"fine": 0.78, "exile": 0.18, "execution": 0.04}
     else:                     # theft (and lower)
-        weights = {"fine": 0.88, "exile": 0.10, "execution": 0.02}
+        weights = {"fine": 0.94, "exile": 0.05, "execution": 0.01}
 
     # Recidivism: each prior offense shifts mass from fine toward exile, and
     # from exile toward execution at the highest counts. Hard cap at 4.
+    # Per-prior shift trimmed (0.12 -> 0.08; bleed 0.10 -> 0.06) so a few
+    # priors no longer fast-track a villager to exile/execution.
     priors = max(0, min(4, int(prior_offenses or 0)))
     if priors >= 1:
-        shift = 0.12 * priors
+        shift = 0.08 * priors
         # Move from fine -> exile
         take = min(weights["fine"] - 0.05, shift)
         weights["fine"] -= take
         weights["exile"] += take
         # At 3+ priors, also bleed exile -> execution
         if priors >= 3:
-            extra = 0.10 * (priors - 2)
+            extra = 0.06 * (priors - 2)
             take2 = min(weights["exile"] - 0.05, extra)
             weights["exile"] -= take2
             weights["execution"] += take2
@@ -254,18 +262,21 @@ def verdict_for_king(king: Villager, crime_type: str, prior_offenses: int = 0) -
         weights["exile"] = max(0.02, weights["exile"] - 0.08)
         weights["execution"] = max(0.01, weights["execution"] - 0.07)
     if "Strict" in traits:
-        # Strict prefers a strong but measured hand: more exile, modest execution.
-        weights["fine"] = max(0.05, weights["fine"] - 0.10)
-        weights["exile"] += 0.07
-        weights["execution"] += 0.03
+        # Strict prefers a firm but measured hand — slightly more exile and a
+        # touch of execution. Numbers softened from the older +0.07/+0.03.
+        weights["fine"] = max(0.05, weights["fine"] - 0.07)
+        weights["exile"] += 0.05
+        weights["execution"] += 0.02
     if "Greedy" in traits:
         # Greedy king prefers fines (treasury fills up).
         weights["fine"] += 0.20
         weights["exile"] = max(0.02, weights["exile"] - 0.10)
         weights["execution"] = max(0.01, weights["execution"] - 0.10)
-    if "Cruel" in traits or "Reckless" in traits or "Hot-headed" in traits:
-        weights["execution"] += 0.10
-        weights["fine"] = max(0.02, weights["fine"] - 0.07)
+    if "Reckless" in traits or "Hot-headed" in traits:
+        # Quick-tempered kings still bias toward execution, but the swing was
+        # +0.10 — too dominant. 0.06 keeps the flavor without crushing fines.
+        weights["execution"] += 0.06
+        weights["fine"] = max(0.02, weights["fine"] - 0.05)
     if "Wise" in traits or "Patient" in traits:
         # Measured: slightly more lenient overall — fines preferred over exile.
         weights["fine"] += 0.08
@@ -275,6 +286,13 @@ def verdict_for_king(king: Villager, crime_type: str, prior_offenses: int = 0) -
         weights["execution"] = max(0.01, weights["execution"] - 0.08)
     if "Loyal" in traits:
         # Steady, balanced — slight tilt away from execution.
+        weights["execution"] = max(0.01, weights["execution"] - 0.04)
+    if "Protective" in traits:
+        # New: protective kings shield the defendant by default. Pushes fine
+        # up and exile down a bit; execution barely moves (only the harshest
+        # circumstances justify it).
+        weights["fine"] += 0.10
+        weights["exile"] = max(0.02, weights["exile"] - 0.06)
         weights["execution"] = max(0.01, weights["execution"] - 0.04)
 
     # Normalize and roll
