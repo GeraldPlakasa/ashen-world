@@ -14,7 +14,18 @@
       "Bash(python:*)",
       "Bash(git commit:*)",
       "Bash(powershell:*)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(git push *)",
+      "WebSearch",
+      "Bash(.venv/Scripts/python.exe -m pytest -q)",
+      "PowerShell(\\(Get-Content templates\\\\features.html | Measure-Object -Line\\).Lines)",
+      "PowerShell(\\(Get-Content static\\\\js\\\\admin-charts.js | Measure-Object -Line\\).Lines)",
+      "Bash(.venv/Scripts/python -m pytest tests/test_justice_service.py -v)",
+      "Bash(tasklist)",
+      "Bash(taskkill /F /IM python.exe /T)",
+      "PowerShell(Get-Process *)",
+      "Bash(flask run *)",
+      "Bash(xargs wc -l)"
     ]
   }
 }
