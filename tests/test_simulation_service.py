@@ -164,52 +164,54 @@ class TestEnforceOnePlayerPerOwner:
     @pytest.fixture
     def multiple_players_same_owner(self):
         return [
-            {"id": 1, "name": "Player1", "owner": "user123", "isPlayer": True, "alive": True, "level": 5, "age": 25, "rep": 10},
-            {"id": 2, "name": "Player2", "owner": "user123", "isPlayer": True, "alive": True, "level": 3, "age": 20, "rep": 5},
-            {"id": 3, "name": "NPC", "owner": "", "isPlayer": False, "alive": True},
+            {"id": 1, "name": "Player1", "owner": "user123", "origin": "player", "alive": True, "level": 5, "age": 25, "rep": 10},
+            {"id": 2, "name": "Player2", "owner": "user123", "origin": "player", "alive": True, "level": 3, "age": 20, "rep": 5},
+            {"id": 3, "name": "NPC", "owner": "", "origin": "npc", "alive": True},
         ]
 
     @pytest.fixture
     def single_player_per_owner(self):
         return [
-            {"id": 1, "name": "Player1", "owner": "user123", "isPlayer": True, "alive": True},
-            {"id": 2, "name": "Player2", "owner": "user456", "isPlayer": True, "alive": True},
-            {"id": 3, "name": "NPC", "owner": "", "isPlayer": False, "alive": True},
+            {"id": 1, "name": "Player1", "owner": "user123", "origin": "player", "alive": True},
+            {"id": 2, "name": "Player2", "owner": "user456", "origin": "player", "alive": True},
+            {"id": 3, "name": "NPC", "owner": "", "origin": "npc", "alive": True},
         ]
 
     @pytest.mark.unit
     def test_handles_multiple_players_same_owner(self, multiple_players_same_owner):
-        """Should handle multiple players with same owner (demote extras)."""
+        """Should demote the lower-ranked extra when one owner has two players."""
         enforce_one_player_per_owner(multiple_players_same_owner)
-        
-        # Count remaining active player characters for user123
-        # After enforcement, extras may be demoted (isPlayer=False)
-        # Just verify no crash and structure intact
-        for v in multiple_players_same_owner:
-            assert "id" in v
-            assert "alive" in v
+
+        user123_players = [
+            v for v in multiple_players_same_owner
+            if v.get("origin") == "player" and v.get("owner") == "user123"
+        ]
+        # Exactly one player remains; the higher-ranked (level 5, id=1) wins.
+        assert len(user123_players) == 1
+        assert user123_players[0]["id"] == 1
 
     @pytest.mark.unit
     def test_keeps_different_owners(self, single_player_per_owner):
         """Should keep players with different owners."""
         enforce_one_player_per_owner(single_player_per_owner)
-        
+
         # Each owner should still have their player
-        user123_players = [v for v in single_player_per_owner if v.get("owner") == "user123" and v.get("isPlayer")]
-        user456_players = [v for v in single_player_per_owner if v.get("owner") == "user456" and v.get("isPlayer")]
+        user123_players = [v for v in single_player_per_owner if v.get("owner") == "user123" and v.get("origin") == "player"]
+        user456_players = [v for v in single_player_per_owner if v.get("owner") == "user456" and v.get("origin") == "player"]
         assert len(user123_players) == 1
         assert len(user456_players) == 1
 
     @pytest.mark.unit
     def test_npcs_unaffected(self, multiple_players_same_owner):
-        """NPCs should not be affected."""
-        npc_count_before = sum(1 for v in multiple_players_same_owner if not v.get("isPlayer"))
-        
+        """Pre-existing NPCs should never be promoted or removed."""
+        npc_before = next(v for v in multiple_players_same_owner if v["id"] == 3)
+        assert npc_before.get("origin") == "npc"
+
         enforce_one_player_per_owner(multiple_players_same_owner)
-        
-        npc_count_after = sum(1 for v in multiple_players_same_owner if not v.get("isPlayer"))
-        # NPC count may increase if players are demoted, but never decrease
-        assert npc_count_after >= npc_count_before
+
+        npc_after = next(v for v in multiple_players_same_owner if v["id"] == 3)
+        assert npc_after.get("origin") == "npc"
+        assert npc_after.get("owner") == ""
 
 
 class TestSimulateOneDay:
