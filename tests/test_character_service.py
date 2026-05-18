@@ -47,7 +47,7 @@ class TestCreatePlayerCharacter:
 
     @pytest.mark.unit
     def test_player_marked_correctly(self):
-        """Created player should have correct owner and isPlayer."""
+        """Created player should have correct owner and origin."""
         success, msg, villager = create_player_character(
             username="uniqueuser456",
             given_name="UniqueHero",
@@ -57,7 +57,7 @@ class TestCreatePlayerCharacter:
         )
         if success and villager:
             assert villager.get("owner") == "uniqueuser456"
-            assert villager.get("isPlayer") is True
+            assert villager.get("origin") == "player"
 
 
 class TestGetPinnedCharacterData:
