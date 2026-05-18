@@ -980,10 +980,10 @@
                         <ul>
                           <li><strong>Mother age:</strong> 18-50</li>
                           <li><strong>Father age:</strong> 18-75</li>
-                          <li><strong>Cooldown:</strong> 45 days after a previous birth (per parent)</li>
-                          <li><strong>Base chance:</strong> 0.6% / day per couple</li>
+                          <li><strong>Cooldown:</strong> 45 days after a previous birth (per parent). A <strong>Midwife House</strong> shortens this by 8 days per level (min 20).</li>
+                          <li><strong>Base chance:</strong> 0.8% / day per couple</li>
                           <li><strong>Love bonus:</strong> +0.2% if love ≥ 100, +0.1% if 80-99, -0.1% otherwise</li>
-                          <li><strong>Couple decay:</strong> ×0.55 per existing shared child (5th kid is rare)</li>
+                          <li><strong>Couple decay:</strong> ×0.65 per existing shared child (5th kid is rare)</li>
                           <li><strong>Family decay:</strong> ×0.85 per child already born to the dad's family</li>
                           <li><strong>Food-pressure throttle:</strong> ×0.6 at &lt;7 days supply, ×0.3 at &lt;4 days, ×0.1 at &lt;2 days. Hungry villages stop growing.</li>
                           <li><strong>Hard cap:</strong> 3% / day</li>
@@ -997,6 +997,7 @@
                           <li><strong>Family name:</strong> father's family</li>
                           <li><strong>Stats:</strong> averaged from parents × ratio + small base roll
                             (~12% for ATK/DEF, ~14% for INT) + ±1-2 noise</li>
+                          <li><strong>Newborn HP:</strong> 35-55 base, raised by <strong>+5 per Midwife House level</strong> (up to 50-70 at Lv 3 — fewer infant deaths from disease &amp; starvation)</li>
                           <li><strong>Traits:</strong> 1 from each parent + 8% chance of one random mutation</li>
                           <li><strong>Skills:</strong> rare birth roll, parent skills bias the chance (see Skill section)</li>
                           <li><strong>Royal Blood:</strong> +1 flag and +20 REP only for <strong>male children</strong> of a royal parent or the reigning King (Salic-style male-line succession — daughters do not inherit the title)</li>
@@ -1394,7 +1395,7 @@
               <!-- BUILDINGS -->
               <section class="game-card mb-3" id="buildings">
                 <div class="card-body">
-                  <h5 class="mb-3">Buildings (17 Types)</h5>
+                  <h5 class="mb-3">Buildings (18 Types)</h5>
                   <p>Buildings are constructed automatically when both treasury <em>and</em> the resource stockpile have enough materials. Upgrade material cost scales linearly with the target level (Lv 2 = 2x base bundle, Lv 3 = 3x). Max level: 3.</p>
                   
                   <div class="table-responsive">
@@ -1413,6 +1414,7 @@
                         <tr><td>Royal Court</td><td>480</td><td>50 wood, 55 stone, 5 iron</td><td>Election influence, REP bonus</td></tr>
                         <tr><td>Tax Office</td><td>320</td><td>40 wood, 25 stone, 3 iron</td><td>Tax collection efficiency</td></tr>
                         <tr><td>Tavern</td><td>240</td><td>50 wood, 10 stone, 2 iron</td><td>Socialization bonus, happiness</td></tr>
+                        <tr><td>Midwife House</td><td>290</td><td>45 wood, 15 stone, 2 iron</td><td><strong>Birth cooldown</strong> -8 days per level (min 20). <strong>Newborn HP</strong> +5 per level. Generous &amp; Wise kings prioritize.</td></tr>
                         <tr style="border-top: 2px solid var(--aw-border);"><td colspan="4" style="color: var(--aw-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 10px;">Production Buildings (boost yields per level)</td></tr>
                         <tr><td>Farm</td><td>280</td><td>50 wood, 10 stone, 2 iron</td><td>Farmer +25% / Shepherd +20% / Beekeeper +15% per level</td></tr>
                         <tr><td>Lumbermill</td><td>260</td><td>80 wood, 2 iron</td><td>Woodcutter +30% / Forester +20% / Carpenter +15% per level</td></tr>

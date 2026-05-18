@@ -287,7 +287,18 @@ def _count_family_children(characters: list[Villager], father_family: str) -> in
                 n += 1
     return n
 
-def _birth_probability(characters: list[Villager], mom: Villager, dad: Villager, current_day: int) -> float:
+def _midwife_level(bank) -> int:
+    """Read the Midwife House building level (0 if unbuilt or no bank)."""
+    if not bank:
+        return 0
+    try:
+        from src.services.building_service import get_building_level
+        return int(get_building_level(bank, "midwife"))
+    except Exception:
+        return 0
+
+
+def _birth_probability(characters: list[Villager], mom: Villager, dad: Villager, current_day: int, bank=None) -> float:
     mom_age = int(mom.get("age", 0) or 0)
     dad_age = int(dad.get("age", 0) or 0)
 
@@ -296,11 +307,12 @@ def _birth_probability(characters: list[Villager], mom: Villager, dad: Villager,
     if dad_age < 18 or dad_age > 75:
         return 0.0
 
-    # cooldown check
+    # cooldown check — Midwife House shortens the gap by 8 days per level (min 20 days)
     mom_last = int(mom.get("last_birth_day", 0) or 0)
     dad_last = int(dad.get("last_birth_day", 0) or 0)
     last = max(mom_last, dad_last)
-    if last > 0 and (current_day - last) < BIRTH_COOLDOWN_DAYS:
+    effective_cooldown = max(20, BIRTH_COOLDOWN_DAYS - 8 * _midwife_level(bank))
+    if last > 0 and (current_day - last) < effective_cooldown:
         return 0.0
 
     # base
@@ -329,9 +341,9 @@ def _birth_probability(characters: list[Villager], mom: Villager, dad: Villager,
     return max(0.0, min(0.03, p))
 
 
-def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, current_day: int) -> Villager:
+def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, current_day: int, bank=None) -> Villager:
     from src.services.skill_service import roll_birth_skills_with_inheritance, skills_to_string
-    
+
     taken_names = {c.get("name", "") for c in characters}
     child_id = _new_id(characters)
 
@@ -344,6 +356,9 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
     # Roll for skills at birth (considers parent skills for inheritance)
     birth_skills = roll_birth_skills_with_inheritance(mom, dad)
     skills_str = skills_to_string(birth_skills)
+
+    # Midwife House raises the newborn HP roll by +5 per building level.
+    hp_bonus = 5 * _midwife_level(bank)
 
     child = {
         "id": child_id,
@@ -359,7 +374,7 @@ def _spawn_child(characters: list[Villager], mom: Villager, dad: Villager, curre
         "def": _inherit_stat_small(mom.get("def", 0), dad.get("def", 0), 1, 4, 0.12),
         "int": _inherit_stat_small(mom.get("int", 0), dad.get("int", 0), 2, 6, 0.14),
 
-        "hp": rand_int(35, 55),
+        "hp": rand_int(35 + hp_bonus, 55 + hp_bonus),
         "hunger": 0,
         "coins": 0,
         "rep": 0,
@@ -506,13 +521,13 @@ def birth_daily_phase(characters: list[Villager], current_day: int, bank=None) -
         if int(mom.get("age", 0) or 0) < 18 or int(dad.get("age", 0) or 0) < 18:
             continue
 
-        p = _birth_probability(characters, mom, dad, current_day)
+        p = _birth_probability(characters, mom, dad, current_day, bank)
         if p <= 0:
             continue
         p *= food_mult
 
         if random.random() < p:
-            child = _spawn_child(characters, mom, dad, current_day)
+            child = _spawn_child(characters, mom, dad, current_day, bank)
             characters.append(child)
             births_count += 1
             try:

@@ -58,9 +58,9 @@ MAX_GRAVEYARD_YEARS = 200  # Remove from graveyard after 200 years dead
 
 CHILD_MAX_AGE = 16
 
-BIRTH_BASE_P = 0.006          # Base daily probability per eligible couple (before cooldown/decay modifiers).
+BIRTH_BASE_P = 0.008          # Base daily probability per eligible couple (before cooldown/decay modifiers).
 BIRTH_COOLDOWN_DAYS = 45      # prevents back-to-back births
-COUPLE_DECAY = 0.55           # each additional child reduces chance strongly
+COUPLE_DECAY = 0.65           # each additional child reduces chance
 FAMILY_DECAY = 0.85           # more kids under same father family -> lower chance
 
 # Weather changes every N days (re-roll on that schedule)
@@ -192,6 +192,9 @@ BUILDINGS = [
     {"key": "royal_court", "name": "Royal Court", "cost": 480, "resources": {"wood": 50, "stone": 55, "iron": 5}},
     {"key": "tax_office",  "name": "Tax Office",  "cost": 320, "resources": {"wood": 40, "stone": 25, "iron": 3}},
     {"key": "tavern",      "name": "Tavern",      "cost": 240, "resources": {"wood": 50, "stone": 10, "iron": 2}},
+    # Midwife House: shortens the birth-cooldown and raises newborn HP. Effects
+    # scale with building level — see family_service._midwife_birth_bonus().
+    {"key": "midwife",     "name": "Midwife House", "cost": 290, "resources": {"wood": 45, "stone": 15, "iron": 2}},
     # --- Production buildings (boost specific producer-job yields) ---
     {"key": "farm",        "name": "Farm",        "cost": 280, "resources": {"wood": 50, "stone": 10, "iron": 2}},
     {"key": "lumbermill",  "name": "Lumbermill",  "cost": 260, "resources": {"wood": 80, "iron": 2}},
@@ -229,6 +232,7 @@ MAP_LAYOUT = {
     "clinic":      {"x": 200, "y": 470, "w": 110, "h": 65,  "icon": "✚",  "tint": "#c25a8e", "zone": "living"},
     "granary":     {"x": 320, "y": 380, "w": 110, "h": 65,  "icon": "▦",  "tint": "#a0853c", "zone": "living"},
     "tavern":      {"x": 460, "y": 470, "w": 110, "h": 65,  "icon": "♨",  "tint": "#a06a3a", "zone": "living"},
+    "midwife":     {"x": 335, "y": 470, "w": 110, "h": 65,  "icon": "✿",  "tint": "#c08aa8", "zone": "living"},
     "blacksmith":  {"x": 600, "y": 470, "w": 110, "h": 65,  "icon": "⚒",  "tint": "#7a5040", "zone": "production"},
 }
 

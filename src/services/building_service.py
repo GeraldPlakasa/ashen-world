@@ -155,12 +155,14 @@ def building_priority_weights(king: Villager | None) -> dict[str, float]:
         w["temple"] = w.get("temple", 1.0) + 1
         w["housing"] = w.get("housing", 1.0) + 1
         w["farm"] = w.get("farm", 1.0) + 2          # feed the people
+        w["midwife"] = w.get("midwife", 1.0) + 2    # care for mothers/newborns
 
     if "Wise" in t:
         w["library"] = w.get("library", 1.0) + 2
         w["temple"] = w.get("temple", 1.0) + 1
         w["tax_office"] = w.get("tax_office", 1.0) + 1
         w["farm"] = w.get("farm", 1.0) + 1          # plan for famine
+        w["midwife"] = w.get("midwife", 1.0) + 1    # long-horizon population
 
     if "Cautious" in t:
         w["walls"] = w.get("walls", 1.0) + 2
