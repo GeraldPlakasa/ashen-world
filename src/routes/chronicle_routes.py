@@ -18,7 +18,7 @@ chronicle_bp = Blueprint("chronicle", __name__)
 @chronicle_bp.route("/chronicle", methods=["GET"])
 def chronicle():
     """Full chronicle timeline."""
-    _, _, year, day_in_year, _, _ = get_current_state()
+    _, _, year, day_in_year, _, _, _ = get_current_state()
 
     category = (request.args.get("category") or "").strip() or None
     year_filter_raw = request.args.get("year")

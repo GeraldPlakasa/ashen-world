@@ -72,6 +72,7 @@
                     <a class="list-group-item list-group-item-action" href="#resources">Resources</a>
                     <a class="list-group-item list-group-item-action" href="#buildings">Buildings</a>
                     <a class="list-group-item list-group-item-action" href="#weather">Weather</a>
+                    <a class="list-group-item list-group-item-action" href="#seasons">Seasons</a>
                     <a class="list-group-item list-group-item-action" href="#traits">Traits</a>
                   </div>
                 </div>
@@ -1434,17 +1435,78 @@
               <section class="game-card mb-3" id="weather">
                 <div class="card-body">
                   <h5 class="mb-3">Weather System</h5>
-                  <p>Weather changes every 5 days. Rain chance: 35%.</p>
-                  
+                  <p>Weather rolls every 5 days. The rain chance is season-dependent (see the Seasons table below).</p>
+
                   <div class="table-responsive">
                     <table class="table feature-table">
                       <thead><tr><th>Weather</th><th>Effect</th></tr></thead>
                       <tbody>
                         <tr><td>Sunny</td><td>Normal activities, good harvest bonus</td></tr>
-                        <tr><td>Rain</td><td>Reduced outdoor work, hunting penalty, +15% study/meditate bonus</td></tr>
+                        <tr><td>Rain</td><td>Reduced outdoor work, hunting penalty, +15% study/meditate bonus. Rendered as snow in winter.</td></tr>
                       </tbody>
                     </table>
                   </div>
+                </div>
+              </section>
+
+              <!-- SEASONS -->
+              <section class="game-card mb-3" id="seasons">
+                <div class="card-body">
+                  <h5 class="mb-3">Seasons {% if season_today %}<span class="ms-2 small text-muted">— currently: <strong>{{ season_today | capitalize }}</strong></span>{% endif %}</h5>
+                  <p>The year is split into four seasons of ~22 days each. Every season multiplies farm and hunt yields, food consumption, and the festival-event likelihood, then biases the weather roll.</p>
+
+                  <div class="table-responsive">
+                    <table class="table feature-table">
+                      <thead>
+                        <tr>
+                          <th>Season</th>
+                          <th>Farm yield</th>
+                          <th>Hunt yield</th>
+                          <th>Food draw</th>
+                          <th>Rain chance</th>
+                          <th>Festival bonus</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>🌱 Spring</td>
+                          <td>+15%</td>
+                          <td>baseline</td>
+                          <td>baseline</td>
+                          <td>45%</td>
+                          <td>+5</td>
+                        </tr>
+                        <tr>
+                          <td>☀️ Summer</td>
+                          <td>+25%</td>
+                          <td>+10%</td>
+                          <td>−5%</td>
+                          <td>20%</td>
+                          <td>+15 (peak)</td>
+                        </tr>
+                        <tr>
+                          <td>🍂 Autumn</td>
+                          <td>+30% (harvest)</td>
+                          <td>+20%</td>
+                          <td>baseline</td>
+                          <td>35%</td>
+                          <td>+10</td>
+                        </tr>
+                        <tr>
+                          <td>❄️ Winter</td>
+                          <td>−60% (fallow)</td>
+                          <td>−30%</td>
+                          <td>+25%</td>
+                          <td>50% (snow)</td>
+                          <td>none</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <p class="mt-2 small text-muted">
+                    Effects compound: a Lv 3 Farm in autumn produces dramatically more food than the same farm in winter, while the village simultaneously needs more food in winter and gets less from hunts. A run of bad winters on a thin stockpile is how famines really start.
+                  </p>
                 </div>
               </section>
 

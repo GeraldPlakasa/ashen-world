@@ -47,7 +47,7 @@ def _build_owner_indexes(characters: list[dict], owner_ids: set[int]) -> tuple[d
 @artifact_bp.route("/artifacts", methods=["GET"])
 def artifacts():
     """Catalog of all living (non-destroyed) artifacts in the world."""
-    characters, _, year, day_in_year, _, _ = get_current_state()
+    characters, _, year, day_in_year, _, _, _ = get_current_state()
 
     rows = artifact_repo.list_all_artifacts(include_destroyed=False)
 
@@ -102,7 +102,7 @@ def artifact_detail(artifact_id: int):
     if not art:
         abort(404)
 
-    characters, _, year, day_in_year, _, _ = get_current_state()
+    characters, _, year, day_in_year, _, _, _ = get_current_state()
     tpl = get_template(art.get("slug", "")) or {}
 
     history = art.get("forged_history", []) or []

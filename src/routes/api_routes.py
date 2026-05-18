@@ -26,7 +26,7 @@ def api_state():
     Now also returns village bank + building info so the admin
     auto-refresh can update KPI and buildings card.
     """
-    characters, bank, year, day_in_year, total_day, weather = get_current_state()
+    characters, bank, year, day_in_year, total_day, weather, season = get_current_state()
     graveyard_index = build_graveyard_index_for(characters)
     buildings_payload = build_building_summary(bank, include_health=True)
 
@@ -64,6 +64,7 @@ def api_state():
         "last_quest_day": bank.get("last_quest_day"),
         "last_quest_success": bank.get("last_quest_success"),
         "weather": weather,
+        "season": season,
     })
 
 
@@ -74,7 +75,7 @@ def api_analytics():
     Returns historical data for charts and statistics.
     """
     # Get current state
-    characters, bank, year, day_in_year, total_day, weather = get_current_state()
+    characters, bank, year, day_in_year, total_day, weather, _season = get_current_state()
     
     # Yearly history for charts
     yearly_stats = list_yearly_history()
@@ -299,7 +300,7 @@ def api_character_detail(char_id: int):
     """Return enriched character data (relationships, family, achievements) for any villager."""
     from src.services.character_service import get_character_detail
 
-    characters, _bank, _year, _day, _total, _weather = get_current_state()
+    characters, _bank, _year, _day, _total, _weather, _season = get_current_state()
     data = get_character_detail(char_id, characters)
     if data is None:
         return jsonify({"error": "Character not found"}), 404
@@ -310,7 +311,7 @@ def api_character_detail(char_id: int):
 def api_player_stats():
     """Player/site statistics for the Players tab."""
     users = load_users()
-    characters, bank, year, day_in_year, total_day, weather = get_current_state()
+    characters, bank, year, day_in_year, total_day, weather, _season = get_current_state()
 
     # Users by registration date
     from collections import Counter

@@ -1,0 +1,70 @@
+Worldbuilding & life systems
+
+  1. Faith / religion stat (M) — faith on each villager, prayer/sermon actions, miracles for high-faith clerics, schism events, temple level matters. Closes a gap with the magic system.
+  2. Aging / health decline (S) — older villagers slowly lose HP/stamina, get "frail" trait, become eligible for retirement. Currently old age feels abrupt.
+  3. Mental state (M) — mood/sanity stat shifting from trauma (spouse death, war, starvation), giving rise to depressed, vengeful, or fanatic traits. Like Dwarf Fortress moods but lighter.
+  4. Pets & livestock (S) — chickens / sheep / dog companions tied to buildings; affect food economy and combat (dog bonus on hunt). Adds texture without much complexity.
+  5. Dynamic traits / personality drift (M) — traits are currently static for life. Let lived experience rewrite them: surviving plague → "Hardened", witnessing a spouse murdered → "Vengeful", winning three quests in a row → "Proud", three failed elections → "Bitter", long starvation stretch → "Frugal". Add `trait_history` JSON column on villagers, hook `trait_drift_phase()` into `simulate_one_day()` after the trigger events, chronicle each change. Every existing system (leadership_score, update_tax_policy, choose_action) keys off traits so new ones do work on day one. Cap or split core-vs-acquired to avoid trait inflation.
+  6. Apprenticeship & skill succession (M) — high-skill elders mentor a young villager via a new `teach` action; apprentice gradually copies a fraction of mentor's skills + job affinity. Mentor dies before graduation = lost knowledge = real narrative beat. Gives elders mechanical purpose past 60 and stops skills dying with their owner.
+
+  Politics, society & drama
+
+  7. Factions & rivalries (M) — villager groupings emerge from shared traits ("Old Guard", "Mages' Circle") and lobby for tax cuts, war, or building priorities. Pressures the king beyond elections.
+  8. Diplomacy with rival villages (L) — promote the existing foreign-trade abstraction into 1–2 named neighbor settlements with their own simplified state; trade caravans, refugee waves, alliance marriages, declared wars. Biggest narrative unlock.
+  9. Royal court (S) — king appoints advisors (general, chancellor, spymaster) from villagers; each gives passive bonuses while in role. Cheap, adds dignity to the throne.
+  10. Inheritance laws (S) — let the king pick primogeniture / elective / partible; affects who inherits throne, treasury, artifacts.
+  11. Civil war event (M) — if king corruption + dissent crosses a threshold, faction split → battle → new dynasty. Climactic version of assassination.
+
+  Economy & buildings
+
+  12. Markets & prices (S) — supply/demand prices for food and goods; merchants gain/lose wealth with the curve.
+  13. Roads / districts (M) — village layout matters: distance between home and workplace affects fatigue. Could just be flavor data, no real map.
+  14. Inns & travelers (S) — passing strangers can become immigrants if they like the village, spreading rumors and disease.
+  15. Festivals as a king action (S) — king can spend treasury to throw a festival, boosting mood and birth rates, costing reputation if it fails. The FESTIVAL random event already exists — make it player-callable.
+  16. Smith-crafted artifacts (M) — artifacts currently only drop from combat. Let Smith villagers consume iron + wood to forge new artifact instances, quality scaling with their skill and forge-building level. Closes the loop between the multi-resource economy and the artifact system; gives the Smith job real depth beyond passive income.
+  17. Bandit raid event (S) — yearly random event that targets the treasury; outcome modulated by Guard/Captain count and wall level. Makes the patrol/witness work in justice_service matter outside of crime, and pressures the king to invest in defense. Slots into event_service alongside PLAGUE / FAMINE / etc.
+
+  Narrative & drama
+
+  18. Rumors & gossip (S) — villagers spread (sometimes false) news among each other; affects relationship deltas and election votes. Cheap chronicle fuel.
+  19. Letters / diaries (M) — high-LIT villagers occasionally write a chronicle entry from their own POV ("Dear daughter, the King has done…"). Personal narrative layer.
+  20. Prophecies & omens (S) — once per generation, a Druid/Wizard receives a prophecy that names a future king, war, or death; coming true grants the village a buff.
+  21. Heroes & legends tier (S) — when a villager dies after hitting certain milestones (kingship + quest victory + legendary artifact), they enter a "Legends" hall of fame separate from the graveyard.
+  22. Memorials & statues (S) — when a villager hits legendary criteria, auto-construct a named statue/monument building that grants a small passive bonus (reputation, mood) while it stands. Same pattern as existing buildings, pure narrative payoff. Plays nicely with #21 without being it.
+
+  Player agency
+
+  23. Player as king mechanics (M) — if player character becomes king, give actual decisions: set tax, call war, declare festival, propose marriage, exile criminal. Currently the player is mostly a spectator.
+  24. Diplomacy actions for player (S) — gift, insult, sworn friendship, romance arc with NPCs — directly affecting relationship scores.
+  25. Player faction allegiance (S) — choose to back a noble family, the mages' guild, or the temple; gives small bonuses and unique chronicle hooks.
+
+  UI / UX / polish
+
+  26. Notifications panel (S) — surface artifact drops, deaths, elections, achievements as a dismissible feed on the landing page instead of just chronicle entries. Reuse chronicle_repo filtered by importance≥4.
+  27. Search across chronicle / artifacts / families (S) — single search bar; jump to villager / artifact / family by name.
+  28. Timeline view (M) — a horizontal scrollable timeline of major chronicle events (elections, wars, plagues) for the whole world history.
+  29. Mobile responsive pass (S) — the dashboard probably doesn't shine on phones yet.
+  30. Sound / ambient music (S) — light ambient loop with day/night cues; optional toggle.
+
+  Tech debt & quality
+
+  31. Profile the sim loop after artifacts (S) — drops + effective_stats() + inheritance settle add per-tick cost. Re-measure since the last 208× save fix.
+  32. Snapshot / export / replay (M) — let users export a world snapshot (.json) and replay it deterministically. Massive for sharing stories.
+  33. Multiple concurrent worlds (L) — currently single DB / single world. Allow named worlds with switching. Doubles as a "what-if" sandbox.
+
+  ---
+  Already shipped (removed from list):
+  - Persistent disease state — src/services/disease_service.py
+  - Crime & justice — src/services/justice_service.py + pending_crimes docket + crime_record column
+  - More resources — food / wood / stone / iron in bank_state
+  - Village map view — /map route + templates/map.html
+  - test_player_marked_correctly fix — commit da182ec
+  - Seasons (Spring/Summer/Autumn/Winter) — config.SEASON_MODIFIERS + season_for_*() helpers; modulates farm yield, hunt yield, food consumption, weather rain chance, and festival event weight; surfaces on landing + features page; chronicled on transition
+
+  ---
+  Top picks if I had to rank for biggest impact-per-effort (refreshed 2026-05-18, post-Seasons):
+  1. Player-as-king mechanics (M) — the player ceiling right now is low
+  2. Dynamic traits / personality drift (M) — biggest narrative ceiling lift; traits already drive half the sim, so new ones do real work immediately
+  3. Notifications panel (S) — half a day's work for a big feel upgrade given how much drama already flows through chronicle
+  4. Diplomacy with rival villages (L) — the big swing if you want a 2026 second-half headline feature; trade_service already does half the work
+  5. Apprenticeship & skill succession (M) — gives elders mechanical purpose and pairs naturally with the new winter pressure (a village that loses an elder Farmer in winter feels different)

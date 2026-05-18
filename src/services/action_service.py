@@ -8,6 +8,8 @@ from config import (
 from src.utils.world_utils import (
     clamp,
     rand_int,
+    season_for_total_day,
+    season_modifier,
 )
 from src.services.building_service import (
     get_building_level,
@@ -930,9 +932,16 @@ def apply_action(
                         if lvl > 0:
                             building_mult += job_bonus[job] * lvl
 
+                # Seasonal modifier on food output only — wood/stone/iron yields
+                # are unaffected. Winter cuts farm yields hard; autumn is peak
+                # harvest; summer/spring sit just above baseline.
+                season_now = season_for_total_day(int(current_day or 0))
+                farm_mult = season_modifier(season_now, "farm_mult", 1.0)
+
                 total_mult = level_mult * weather_mult * building_mult
                 for res, amt in yield_table.items():
-                    gain = max(1, int(round(amt * total_mult)))
+                    res_mult = total_mult * (farm_mult if res == "food" else 1.0)
+                    gain = max(1, int(round(amt * res_mult)))
                     stock[res] = int(stock.get(res, 0)) + gain
                     produced[res] = gain
 
@@ -2053,7 +2062,10 @@ def apply_action(
                 tier_mult = {"common": 1, "elite": 2, "legendary": 3}.get(
                     str(enemy.get("tier", "common")).lower(), 1
                 )
-                meat_gain = HUNT_FOOD_PER_KILL * tier_mult
+                # Seasonal hunt yield: game is fat in autumn, scarce in winter.
+                season_now = season_for_total_day(int(current_day or 0))
+                hunt_mult = season_modifier(season_now, "hunt_food_mult", 1.0)
+                meat_gain = max(1, int(round(HUNT_FOOD_PER_KILL * tier_mult * hunt_mult)))
                 stock = bank.setdefault("resources", {"food": 0, "wood": 0, "stone": 0, "iron": 0})
                 stock["food"] = int(stock.get("food", 0)) + meat_gain
 

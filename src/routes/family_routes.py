@@ -21,7 +21,7 @@ def families():
         return redirect(url_for("auth.login"))
 
     username = session.get("username")
-    characters, bank, year, day_in_year, _, weather = get_current_state()
+    characters, bank, year, day_in_year, _, weather, _season = get_current_state()
 
     all_families = get_all_families(characters)
 
@@ -45,7 +45,7 @@ def family_tree():
     username = session.get("username")
     is_admin = bool(session.get("is_admin"))
 
-    characters, bank, year, day_in_year, _, weather = get_current_state()
+    characters, bank, year, day_in_year, _, weather, _season = get_current_state()
 
     # default root: user's player character
     root = None

@@ -20,7 +20,7 @@ def landing():
     - Read-only table of villagers
     - Shows pinned character for logged-in user (if any).
     """
-    characters, village_bank, year, day_in_year, total_day, weather = get_current_state()
+    characters, village_bank, year, day_in_year, total_day, weather, season = get_current_state()
 
     total = len(characters)
     alive_count = sum(1 for c in characters if c.get("alive", True))
@@ -110,6 +110,7 @@ def landing():
         pinned_father=pinned_father,
         pinned_children=pinned_children,
         weather_today=weather,
+        season_today=season,
         chronicle_headlines=chronicle_headlines,
     )
 
@@ -117,7 +118,7 @@ def landing():
 @main_bp.route("/features", methods=["GET"])
 def features():
     """Static feature showcase page."""
-    _, _, year, day_in_year, _, weather = get_current_state()
+    _, _, year, day_in_year, _, weather, season = get_current_state()
 
     return render_template(
         "features.html",
@@ -125,4 +126,5 @@ def features():
         username=session.get("username"),
         year=year,
         day=day_in_year,
+        season_today=season,
     )

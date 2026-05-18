@@ -4,7 +4,11 @@ Unit tests for world_utils.py - pure utility functions.
 import pytest
 import random
 
-from src.utils.world_utils import clamp, exp_to_next_level, is_child, pick, rand_int, pick_weighted
+from src.utils.world_utils import (
+    clamp, exp_to_next_level, is_child, pick, rand_int, pick_weighted,
+    season_for_day, season_for_total_day, season_modifier,
+)
+from config import DAYS_PER_YEAR, SEASONS, SEASON_MODIFIERS
 
 
 class TestClamp:
@@ -263,3 +267,61 @@ class TestPickWeighted:
 
         # "common" should be picked much more often
         assert counts["common"] > counts["rare"] * 5
+
+
+class TestSeasons:
+    """Tests for the season helpers in world_utils."""
+
+    @pytest.mark.unit
+    def test_first_day_is_spring(self):
+        assert season_for_day(0) == "spring"
+
+    @pytest.mark.unit
+    def test_last_day_is_winter(self):
+        assert season_for_day(DAYS_PER_YEAR - 1) == "winter"
+
+    @pytest.mark.unit
+    def test_each_season_appears_once_across_the_year(self):
+        seen = {season_for_day(d) for d in range(DAYS_PER_YEAR)}
+        assert seen == set(SEASONS)
+
+    @pytest.mark.unit
+    def test_seasons_progress_in_order(self):
+        # Sample the middle of each season — not the boundary, which can fall
+        # either side depending on float rounding.
+        quarter = DAYS_PER_YEAR / 4.0
+        samples = [int((i + 0.5) * quarter) for i in range(4)]
+        assert [season_for_day(d) for d in samples] == SEASONS
+
+    @pytest.mark.unit
+    def test_season_for_total_day_wraps_into_year_two(self):
+        # Day DAYS_PER_YEAR + 1 starts year 2; same season as day_in_year=0 (spring).
+        assert season_for_total_day(DAYS_PER_YEAR + 1) == "spring"
+
+    @pytest.mark.unit
+    def test_season_for_total_day_clamps_below_one(self):
+        # Defensive: invalid inputs fall back to year 1 day 0 (spring), never crash.
+        assert season_for_total_day(0) == "spring"
+        assert season_for_total_day(-100) == "spring"
+
+    @pytest.mark.unit
+    def test_modifier_default_for_unknown_season(self):
+        # Unknown season slug returns the supplied default — no exceptions.
+        assert season_modifier("not-a-season", "farm_mult", 1.0) == 1.0
+        assert season_modifier("", "farm_mult", 2.5) == 2.5
+
+    @pytest.mark.unit
+    def test_winter_reduces_farm_and_hunt_yields(self):
+        # Tuning invariant: winter should cut farm and hunt yields below 1.0,
+        # while summer/autumn should stay at or above baseline. If these
+        # invert, the seasonal pressure design is broken.
+        assert season_modifier("winter", "farm_mult", 1.0) < 1.0
+        assert season_modifier("winter", "hunt_food_mult", 1.0) < 1.0
+        assert season_modifier("summer", "farm_mult", 1.0) >= 1.0
+        assert season_modifier("autumn", "farm_mult", 1.0) >= 1.0
+
+    @pytest.mark.unit
+    def test_winter_raises_food_need(self):
+        # Winter needs more food per villager; summer needs slightly less.
+        assert season_modifier("winter", "food_need_mult", 1.0) > 1.0
+        assert season_modifier("summer", "food_need_mult", 1.0) <= 1.0

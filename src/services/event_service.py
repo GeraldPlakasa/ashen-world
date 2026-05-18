@@ -21,8 +21,8 @@ import random
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from config import DAYS_PER_YEAR
-from src.utils.world_utils import clamp, rand_int
+from config import DAYS_PER_YEAR, SEASON_MODIFIERS
+from src.utils.world_utils import clamp, rand_int, season_for_total_day
 from src.services.building_service import get_building_level
 from src.services.achievement_service import trigger_survivor_achievement
 
@@ -91,12 +91,30 @@ def _record_event(event_type: str, day: int, details: str, affected_count: int =
     return event
 
 
-def _pick_event_type() -> str:
-    """Pick a random event type based on weights."""
-    total = sum(EVENT_WEIGHTS.values())
+def _pick_event_type(current_day: int = 0) -> str:
+    """Pick a random event type based on weights.
+
+    Season bias: each season can add a `festival_weight` bonus to FESTIVAL
+    (summer/autumn boost; winter zeroes the bonus). The base weight remains
+    intact so winter festivals are still possible — just rarer than the
+    harvest-time celebrations in autumn.
+    """
+    weights = dict(EVENT_WEIGHTS)
+    season = season_for_total_day(int(current_day or 0))
+    s_table = SEASON_MODIFIERS.get(season) or {}
+    try:
+        bonus = int(s_table.get("festival_weight", 0) or 0)
+    except (TypeError, ValueError):
+        bonus = 0
+    if bonus:
+        weights["FESTIVAL"] = max(0, int(weights.get("FESTIVAL", 0)) + bonus)
+
+    total = sum(weights.values())
+    if total <= 0:
+        return "GOOD_HARVEST"
     r = random.random() * total
     cumulative = 0
-    for event_type, weight in EVENT_WEIGHTS.items():
+    for event_type, weight in weights.items():
         cumulative += weight
         if r <= cumulative:
             return event_type
@@ -877,9 +895,9 @@ def maybe_trigger_event(
 
     # Today is the event day! Trigger the event
     bank["event_triggered_this_year"] = True
-    
-    # Pick and apply event
-    event_type = _pick_event_type()
+
+    # Pick and apply event (festival weight scales with season)
+    event_type = _pick_event_type(current_day)
     
     event_handlers = {
         "PLAGUE": _apply_plague,

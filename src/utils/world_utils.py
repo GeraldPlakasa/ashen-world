@@ -11,7 +11,7 @@ This module provides common utilities used across services:
 from __future__ import annotations
 
 import random
-from config import CHILD_MAX_AGE
+from config import CHILD_MAX_AGE, DAYS_PER_YEAR, SEASONS, SEASON_MODIFIERS
 from src.models.villager import Villager
 
 
@@ -72,3 +72,40 @@ def safe_int(x, default: int = 0) -> int:
 def is_child(v: Villager) -> bool:
     """Child if age <= CHILD_MAX_AGE."""
     return int(v.get("age", 0) or 0) <= CHILD_MAX_AGE
+
+
+# ---------------------------------------------------------------------------
+#  Seasons
+# ---------------------------------------------------------------------------
+
+def season_for_day(day_in_year: int) -> str:
+    """Map a 0..DAYS_PER_YEAR-1 day index to a season slug.
+
+    Splits the year into four equal-ish quarters. Anything outside the year
+    range is wrapped via modulo so callers can pass total_day-derived indices.
+    """
+    if DAYS_PER_YEAR <= 0:
+        return SEASONS[0]
+    d = int(day_in_year or 0) % DAYS_PER_YEAR
+    quarter = DAYS_PER_YEAR / 4.0
+    # idx is 0..3; the final season absorbs any rounding remainder.
+    idx = min(int(d / quarter), len(SEASONS) - 1)
+    return SEASONS[idx]
+
+
+def season_for_total_day(total_day: int) -> str:
+    """Convenience: derive a season from a 1-based monotonic total_day."""
+    td = max(1, int(total_day or 1))
+    day_in_year = (td - 1) % DAYS_PER_YEAR
+    return season_for_day(day_in_year)
+
+
+def season_modifier(season: str, key: str, default: float = 1.0) -> float:
+    """Look up a per-season multiplier with a safe default."""
+    table = SEASON_MODIFIERS.get((season or "").lower())
+    if not table:
+        return default
+    try:
+        return float(table.get(key, default))
+    except (TypeError, ValueError):
+        return default

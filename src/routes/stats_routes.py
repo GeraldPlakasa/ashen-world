@@ -15,7 +15,7 @@ def leaderboard():
     if not session.get("logged_in"):
         return redirect(url_for("auth.login"))
 
-    characters, bank, year, day_in_year, total_day, weather = get_current_state()
+    characters, bank, year, day_in_year, total_day, weather, _season = get_current_state()
 
     history_sorted = list_yearly_history(finalized_only=True)
     current_entry = get_year_entry(year)
@@ -150,7 +150,7 @@ def download_quest_csv():
     if not session.get("logged_in"):
         return redirect(url_for("auth.login"))
 
-    characters, bank, year, day_in_year, total_day, weather = get_current_state()
+    characters, bank, year, day_in_year, total_day, weather, _season = get_current_state()
     quest_history = bank.get("quest_history", [])
     if not isinstance(quest_history, list):
         quest_history = []
@@ -233,7 +233,7 @@ def download_quest_csv():
 @stats_bp.route("/quests", methods=["GET"])
 def quest_history():
     """Quest history page showing all completed quests."""
-    _, bank, year, day_in_year, _, _ = get_current_state()
+    _, bank, year, day_in_year, _, _, _ = get_current_state()
     
     quest_history_data = bank.get("quest_history", [])
     if not isinstance(quest_history_data, list):

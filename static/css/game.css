@@ -988,6 +988,55 @@ body.game-theme hr { border-color: var(--aw-border); opacity: 1; }
 }
 
 /* =========================================================
+   Season Indicators (sit next to weather badge)
+   ========================================================= */
+.season-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.season-indicator.spring {
+  background: linear-gradient(135deg, rgba(122,196,106,0.18), rgba(80,160,80,0.10));
+  color: #4d8a3f;
+  border: 1px solid rgba(122,196,106,0.35);
+  box-shadow: 0 2px 8px rgba(122,196,106,0.15);
+}
+.season-indicator.summer {
+  background: linear-gradient(135deg, rgba(226,181,58,0.18), rgba(245,158,11,0.10));
+  color: #b07a14;
+  border: 1px solid rgba(226,181,58,0.35);
+  box-shadow: 0 2px 8px rgba(226,181,58,0.15);
+}
+.season-indicator.autumn {
+  background: linear-gradient(135deg, rgba(201,122,58,0.20), rgba(170,90,40,0.10));
+  color: #8a4f1f;
+  border: 1px solid rgba(201,122,58,0.35);
+  box-shadow: 0 2px 8px rgba(201,122,58,0.15);
+}
+.season-indicator.winter {
+  background: linear-gradient(135deg, rgba(138,172,204,0.20), rgba(96,140,180,0.10));
+  color: #3d6b94;
+  border: 1px solid rgba(138,172,204,0.35);
+  box-shadow: 0 2px 8px rgba(138,172,204,0.15);
+}
+
+.season-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.season-text {
+  letter-spacing: 0.02em;
+}
+
+/* =========================================================
    Feature Box
    ========================================================= */
 .feature-box {

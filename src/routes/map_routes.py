@@ -57,7 +57,7 @@ def _job_assignments_by_building(characters: list[dict]) -> dict[str, list[dict]
 @map_bp.route("/map", methods=["GET"])
 def map_view():
     """Top-down village map page."""
-    characters, bank, year, day_in_year, total_day, weather = get_current_state()
+    characters, bank, year, day_in_year, total_day, weather, season = get_current_state()
 
     # Build per-building runtime info
     summary_rows = build_building_summary(bank, include_health=True)

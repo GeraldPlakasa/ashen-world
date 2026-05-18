@@ -72,7 +72,7 @@ Auth pattern: `session.get("logged_in")` for any user, `session.get("is_admin")`
 
 | Service | Purpose | Key entrypoints |
 |---------|---------|-----------------|
-| `world_service.py` | Orchestration: state lock, day advancement, world generation, year champions | `get_current_state()`, `advance_one_day()`, `generate_new_world()`, `compute_year_champions()`, `auto_simulation_loop()` |
+| `world_service.py` | Orchestration: state lock, day advancement, world generation, year champions. Also detects **season transitions** and emits a chronicle entry on the crossover. | `get_current_state()` (returns `(characters, bank, year, day_in_year, total_day, weather, season)`), `advance_one_day()`, `generate_new_world()`, `compute_year_champions()`, `auto_simulation_loop()` |
 | `simulation_service.py` | One-day master loop: per-villager actions, immigrants, player inheritance | `simulate_one_day()`, `maybe_add_immigrants()`, `player_inheritance_phase()` |
 | `villager_service.py` | Villager generation + ID management | `make_row()`, `generate_characters()`, `reset_id_from_characters()` |
 | `action_service.py` | Per-villager action selection + apply (work/hunt/rest/meditate/etc.), level-ups, shop offers | `choose_action()`, `apply_action()`, `handle_level_up()`, `create_shop_offer()` |
@@ -118,7 +118,7 @@ Auth pattern: `session.get("logged_in")` for any user, `session.get("is_admin")`
 
 | File | Purpose |
 |------|---------|
-| `world_utils.py` | Pure helpers: `pick()`, `rand_int()`, `clamp()`, `pick_weighted()`, `exp_to_next_level()`, `safe_int()`, `is_child()` |
+| `world_utils.py` | Pure helpers: `pick()`, `rand_int()`, `clamp()`, `pick_weighted()`, `exp_to_next_level()`, `safe_int()`, `is_child()`, `season_for_day()`, `season_for_total_day()`, `season_modifier()` |
 | `logger.py` | Centralized logging — rotating file handler in `data/logs/ashen_world.log` (5 MB × 3 files). Use `get_logger(__name__)` everywhere |
 
 ## Project Structure
@@ -195,8 +195,17 @@ REPAIR_THRESHOLD = 60            # repair if health < 60%
 
 # Weather
 WEATHER_CHANGE_DAYS = 5
-WEATHER_RAIN_CHANCE = 0.35
+WEATHER_RAIN_CHANCE = 0.35     # fallback when a season has no rain_chance override
 WEATHER_TYPES = ["sunny", "rain"]
+
+# Seasons (derived from day_in_year; not stored separately)
+SEASONS = ["spring", "summer", "autumn", "winter"]
+SEASON_MODIFIERS = {           # per-season multipliers on the sim
+    "spring": {"farm_mult": 1.15, "hunt_food_mult": 1.00, "food_need_mult": 1.00, "rain_chance": 0.45, "festival_weight":  5},
+    "summer": {"farm_mult": 1.25, "hunt_food_mult": 1.10, "food_need_mult": 0.95, "rain_chance": 0.20, "festival_weight": 15},
+    "autumn": {"farm_mult": 1.30, "hunt_food_mult": 1.20, "food_need_mult": 1.00, "rain_chance": 0.35, "festival_weight": 10},
+    "winter": {"farm_mult": 0.40, "hunt_food_mult": 0.70, "food_need_mult": 1.25, "rain_chance": 0.50, "festival_weight":  0},
+}
 
 # Magic
 MAGIC_JOBS = ["Wizard", "Sorcerer", "Bard", "Cleric", "Druid", "Alchemist"]
@@ -244,7 +253,7 @@ Indexes are created in `_ensure_indexes()` — covers `villagers.alive/owner/fam
 
 `advance_one_day()` (in `world_service.py`) holds `_state_lock` and runs `simulate_one_day()` from `simulation_service.py`, which performs roughly:
 
-1. Roll weather (every `WEATHER_CHANGE_DAYS` days) → save to world_state.
+1. Roll weather (every `WEATHER_CHANGE_DAYS` days, season-biased rain chance) → save to world_state. Season is recomputed every day from `day_in_year`; `world_service.advance_one_day()` detects a season transition between yesterday's and today's `total_day` and emits a `record_season_change()` chronicle entry.
 2. **Sorted action pass:** `simulate_one_day()` sorts characters so Guard/Captain/Soldier/Commander act FIRST. This makes any `patrol` action visible to subsequent crime witness rolls in the same tick. For each alive villager: `choose_action()` → `apply_action()` (work/hunt/rest/meditate/study/theft/assault/murder/patrol/...). Hunting kicks off combat via `combat_service`; victories may roll an artifact drop via `artifact_service.drop_for_kill()`. Crimes call `justice_service.maybe_witness_and_record()` which may open a pending case on the bank.
 3. Apply starvation damage (`combat_service.apply_starvation_damage`).
 4. Disease progression (`disease_service.daily_disease_phase`) — HP drain, lethality rolls, recovery, ambient infection.
@@ -283,6 +292,7 @@ Pytest suite in `tests/` — 22 files, ~460 tests. Run with `pytest`.
 | `test_villagers_pure.py` | `make_row`, `generate_characters`, action selection |
 | `test_villagers_social_pure.py` | Leadership scoring, relationship labels, marriage eligibility |
 | `test_villager_service.py` | Generation edge cases |
+| `test_seasons.py` | Seasonal modifier integration: food consumption, farm/hunt yield deltas, festival event bias, season-change chronicle hook |
 | `test_storage.py` | Villager/bank/day persistence + graveyard + year math |
 | `test_normalized_repos.py` | `villager_relationships` / `_achievements` / `_votes` repos |
 | `test_app_integration.py` | `advance_one_day`, `/api/state`, year champions, family graph |
@@ -391,6 +401,7 @@ pytest -k "artifact"       # focus area
 - **Festival events are filtered** out of "Recent News" on landing/api_state because they crowd out signal events; they still appear in the chronicle.
 - **`init_db()` is cached** per DB path. Tests that swap `config.DB_PATH` must call `reset_init_cache()` (in `base.py`) — the `test_db_connection` fixture does this.
 - **PowerShell shell** is the default on this machine; chained commands need `;` not `&&`. The Bash tool is also available for POSIX scripts.
+- **Seasons are derived, not stored.** `day_in_year` is the source of truth; `season_for_day()` / `season_for_total_day()` in `world_utils.py` map it to a slug (`spring|summer|autumn|winter`). `world_repo.load_world_payload()` always recomputes `season` on read so old payloads upgrade transparently. The action/work and hunt branches in `action_service.py` plus `consume_food_phase` in `simulation_service.py` apply the per-season multipliers from `SEASON_MODIFIERS`. `event_service._pick_event_type(current_day)` adds the seasonal `festival_weight` to the FESTIVAL roll. `world_repo._roll_weather_if_needed()` reads `season.rain_chance` for the per-roll precipitation odds. **Don't hard-code 0.35 anywhere** — go through `SEASON_MODIFIERS` so winter snow and summer drought stay coherent.
 - **Guards act first.** `simulate_one_day()` sorts the action loop so jobs in `{Guard, Captain, Soldier, Commander}` run before everyone else. This is load-bearing for `justice_service.witness_chance()` — patrollers must have their `last_action` stamped before crimes are rolled later in the tick. Don't change the sort without rethinking the witness pipeline.
 - **`pending_crimes` is on the bank.** Open court cases live in `bank["pending_crimes"]` (a JSON list). The trial phase clears the list when a King is sitting; if there's no king, cases accumulate until an election seats one — this is intentional drama, not a bug.
 - **Justice stat bumps are best-effort.** `_bump_stats()` in `justice_service.py` swallows all exceptions — never let a stat-write break the trial phase. Always pass `int()`-cast values to `bump_yearly_justice()`.

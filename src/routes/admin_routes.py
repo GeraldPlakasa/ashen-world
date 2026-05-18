@@ -249,7 +249,7 @@ def admin():
             return redirect(url_for("admin.admin"))
 
     # GET: load current state (thread-safe)
-    characters, village_bank, year, day_in_year, _, weather = get_current_state()
+    characters, village_bank, year, day_in_year, _, weather, season = get_current_state()
 
     graveyard_index = build_graveyard_index_for(characters)
     village_buildings = build_building_summary(village_bank, include_health=True)
@@ -303,7 +303,7 @@ def admin_snapshot():
     if not session.get("logged_in") or not session.get("is_admin"):
         return jsonify({"ok": False, "error": "forbidden"}), 403
 
-    characters, bank, year, day_in_year, _, _ = get_current_state()
+    characters, bank, year, day_in_year, _, _, _ = get_current_state()
     return jsonify({
         "ok": True,
         "year": year,

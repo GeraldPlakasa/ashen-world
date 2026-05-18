@@ -27,7 +27,7 @@ def create_character():
     username = session.get("username") or ""
 
     # Get current state (characters + world time)
-    characters, bank, year, day_in_year, _, weather = get_current_state()
+    characters, bank, year, day_in_year, _, weather, _season = get_current_state()
 
     # Check if this user already has a player character
     existing_player = None

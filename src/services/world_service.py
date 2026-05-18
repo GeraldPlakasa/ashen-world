@@ -33,6 +33,7 @@ from src.repositories.world_repo import (
     load_world_payload,
     save_world_payload,
     load_weather,
+    load_season,
 )
 from src.repositories.bank_repo import load_bank, save_bank
 from src.repositories.stats_repo import (
@@ -58,6 +59,7 @@ from src.services.building_service import (
 )
 from src.services.family_service import settle_inheritance_phase
 from src.services.event_service import clear_event_history
+from src.utils.world_utils import season_for_total_day
 
 _state_lock = threading.Lock()
 
@@ -87,21 +89,22 @@ def compute_year_champions(characters: list[Villager]) -> YearlyChampions:
     }
 
 
-def get_current_state() -> tuple[list[Villager], Bank, int, int, int, str]:
+def get_current_state() -> tuple[list[Villager], Bank, int, int, int, str, str]:
     """
     Thread-safe helper: read current characters + world time.
 
     Returns:
-        (characters, bank, year, day_in_year, total_day, weather)
+        (characters, bank, year, day_in_year, total_day, weather, season)
     """
     with _state_lock:
         characters = load_villagers()
         total_day = load_day()
         bank = load_bank()
         weather = load_weather()
+        season = load_season()
 
     year, day_in_year = compute_year_and_day(total_day)
-    return characters, bank, year, day_in_year, total_day, weather
+    return characters, bank, year, day_in_year, total_day, weather, season
 
 
 def load_characters_locked() -> list[Villager]:
@@ -163,6 +166,11 @@ def advance_one_day() -> tuple:
         old_year_idx = (old_total_day - 1) // DAYS_PER_YEAR
         new_year_idx = (new_total_day - 1) // DAYS_PER_YEAR
         crossed_year = new_year_idx > old_year_idx
+
+        # --- Season transition check (independent of year boundary) ---
+        old_season = season_for_total_day(old_total_day)
+        new_season = season_for_total_day(new_total_day)
+        season_changed = old_season != new_season
 
         if crossed_year:
             old_year = old_year_idx + 1
@@ -276,6 +284,14 @@ def advance_one_day() -> tuple:
                 record_world_event(event_message, day=new_total_day)
         except Exception:
             pass
+
+        # Chronicle season transition (low-importance world entry)
+        if season_changed:
+            try:
+                from src.services.chronicle_service import record_season_change
+                record_season_change(new_season, day=new_total_day)
+            except Exception:
+                pass
 
         settle_inheritance_phase(characters, bank, current_day=new_total_day)
 

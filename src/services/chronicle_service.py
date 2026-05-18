@@ -474,6 +474,52 @@ def record_trade_export(king: dict, sales: list, total_earned: int, day: int) ->
     )
 
 
+def record_season_change(new_season: str, day: int) -> None:
+    """Best-effort chronicle entry on a season transition.
+
+    Emits a low-importance world entry so the seasonal rhythm is visible in
+    the Town Crier feed without crowding out plagues / wars / elections.
+    """
+    season = (new_season or "").strip().lower()
+    if not season:
+        return
+    year, _ = _yd(day)
+    pool = {
+        "spring": [
+            "Spring arrives — fields thaw, blossoms return.",
+            "The first warm winds blow through the valley. Spring has come.",
+            "Spring breaks the grip of winter. Sowing begins.",
+        ],
+        "summer": [
+            "Summer settles over the village. The sun bakes the high road.",
+            "Long summer days return. Markets bustle past dusk.",
+            "Summer is here — the granaries empty as the fields grow tall.",
+        ],
+        "autumn": [
+            "Autumn comes; the harvest begins.",
+            "Leaves turn. The barns fill with the year's grain.",
+            "Autumn winds carry woodsmoke through every lane.",
+        ],
+        "winter": [
+            "Winter descends. The first snows quiet the streets.",
+            "The cold months begin. Hearths burn long and food is rationed.",
+            "Winter comes for the village. Fields lie fallow under frost.",
+        ],
+    }.get(season, [f"A new season begins: {season}."])
+    icons = {"spring": "🌱", "summer": "☀️", "autumn": "🍂", "winter": "❄️"}
+    headline = f"{icons.get(season, '·')} {season.capitalize()} begins"
+    body = random.choice(pool)
+    _safe_record(
+        day=day,
+        year=year,
+        category="world",
+        headline=headline,
+        body=body,
+        actors=[],
+        importance=2,
+    )
+
+
 def record_world_event(message: str, day: int) -> None:
     if not message:
         return

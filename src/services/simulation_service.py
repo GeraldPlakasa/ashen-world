@@ -15,6 +15,8 @@ from src.utils.world_utils import (
     clamp,
     rand_int,
     is_child,
+    season_for_total_day,
+    season_modifier,
 )
 from src.services.building_service import (
     get_building_level,
@@ -406,7 +408,7 @@ def player_inheritance_phase(characters: list[Villager], current_day: int = 0) -
             heir["last_action"] = note
 
 
-def consume_food_phase(characters: list[Villager], bank: Bank) -> dict[str, int]:
+def consume_food_phase(characters: list[Villager], bank: Bank, current_day: int = 0) -> dict[str, int]:
     """Drain the town's food stockpile and feed the adult population.
 
     When supply meets demand, each adult eats and their hunger drops. When
@@ -425,6 +427,13 @@ def consume_food_phase(characters: list[Villager], bank: Bank) -> dict[str, int]
 
     if get_building_level(bank, "granary") > 0:
         need = max(1, int(round(need * GRANARY_CONSUMPTION_MULT)))
+
+    # Seasonal pressure: winter raises village food draw (cold → more calories,
+    # more wood for fires that are part of daily prep). Summer trims slightly.
+    season_now = season_for_total_day(int(current_day or 0))
+    food_need_mult = season_modifier(season_now, "food_need_mult", 1.0)
+    if food_need_mult != 1.0 and need > 0:
+        need = max(1, int(round(need * food_need_mult)))
 
     available = int(stock.get("food", 0) or 0)
     fed = min(available, need)
@@ -531,7 +540,8 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     # Runs after the action loop so a Farmer's daily harvest is on the shelf
     # before the village eats. Shortages bump hunger across the population,
     # which the next day's starvation pass will translate into HP loss.
-    consume_food_phase(characters, bank)
+    # Pass current_day so consumption can scale up in winter.
+    consume_food_phase(characters, bank, current_day=current_day)
 
     # 1.5) Passive MP regeneration (magic jobs regen more)
     for v in characters:

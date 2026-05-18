@@ -70,6 +70,65 @@ WEATHER_RAIN_CHANCE = 0.35
 
 WEATHER_TYPES = ["sunny", "rain"]
 
+# ============================================================================
+#  SEASONS
+# ============================================================================
+# The year is divided into four seasons. day_in_year is 0..DAYS_PER_YEAR-1, so
+# each season covers roughly DAYS_PER_YEAR / 4 days (rounded up for the last
+# season so the boundaries cover the full year exactly).
+#
+# Each season is a soft multiplier on production, hunt yield, food consumption,
+# weather rain chance, and the festival event's relative weight. The numbers
+# are intentionally gentle (±25% range) so a single bad season doesn't crash
+# the village, but a string of harsh winters compounds with low stockpiles.
+SEASONS = ["spring", "summer", "autumn", "winter"]
+
+# Display metadata for templates / chronicle. Keep slugs lower-case; UI uses
+# `.title()` for the friendly label.
+SEASON_META = {
+    "spring": {"icon": "🌱", "label": "Spring", "tint": "#7ac46a"},
+    "summer": {"icon": "☀️",  "label": "Summer", "tint": "#e2b53a"},
+    "autumn": {"icon": "🍂", "label": "Autumn", "tint": "#c97a3a"},
+    "winter": {"icon": "❄️", "label": "Winter", "tint": "#8aaccc"},
+}
+
+# Per-season modifiers. Keys are stable; missing values default to 1.0.
+#   farm_mult       — multiplier on Farmer/Shepherd/Beekeeper raw food yields.
+#   hunt_food_mult  — multiplier on HUNT_FOOD_PER_KILL meat drops.
+#   food_need_mult  — multiplier on village daily food consumption.
+#   rain_chance     — overrides WEATHER_RAIN_CHANCE for weather rolls.
+#   festival_weight — extra weight added to the FESTIVAL event roll in-season.
+SEASON_MODIFIERS = {
+    "spring": {
+        "farm_mult":       1.15,   # planting yields slightly above baseline
+        "hunt_food_mult":  1.00,
+        "food_need_mult":  1.00,
+        "rain_chance":     0.45,   # rainy season
+        "festival_weight": 5,      # small boost — spring fairs
+    },
+    "summer": {
+        "farm_mult":       1.25,   # peak growing season
+        "hunt_food_mult":  1.10,
+        "food_need_mult":  0.95,   # warmth → slightly lower draw
+        "rain_chance":     0.20,   # dry months
+        "festival_weight": 15,     # midsummer festivals strongly biased here
+    },
+    "autumn": {
+        "farm_mult":       1.30,   # harvest
+        "hunt_food_mult":  1.20,   # game fattened for winter
+        "food_need_mult":  1.00,
+        "rain_chance":     0.35,   # baseline
+        "festival_weight": 10,     # harvest festivals
+    },
+    "winter": {
+        "farm_mult":       0.40,   # fields are fallow
+        "hunt_food_mult":  0.70,   # animals scarce / hiding
+        "food_need_mult":  1.25,   # villagers need more food to stay warm
+        "rain_chance":     0.50,   # rendered as snow in UI
+        "festival_weight": 0,      # cold months — festivals are rare
+    },
+}
+
 NAME_PREFIX = [
     "Aer", "Ael", "Al", "An", "Ar", "Ash", "Aur", "Bel", "Ben", "Bryn", "Cal",
     "Cae", "Cor", "Crae", "Da", "Dar", "Dae", "Dra", "Eir", "El", "Eld", "Ely",

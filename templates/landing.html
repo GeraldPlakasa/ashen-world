@@ -17,7 +17,7 @@
     window.addEventListener('load', function () { window.scrollTo(0, 0); });
   </script>
 </head>
-<body class="game-theme" data-weather="{{ (weather_today or 'sunny') | lower }}">
+<body class="game-theme" data-weather="{{ (weather_today or 'sunny') | lower }}" data-season="{{ (season_today or 'spring') | lower }}">
 
   <div class="aw-layout">
     {% include '_sidebar.html' %}
@@ -37,9 +37,17 @@
               Year {{ year }} · Day {{ day }} · {{ total_villagers }} villagers
             </span>
           </div>
-          <div class="weather-indicator {{ (weather_today or 'sunny') | lower }}" id="weather-badge">
-            <span class="weather-icon">{% if weather_today == 'rain' %}🌧️{% else %}☀️{% endif %}</span>
-            <span class="weather-text">{% if weather_today == 'rain' %}Rainy{% else %}Sunny{% endif %}</span>
+          <div class="d-flex align-items-center gap-2">
+            {% set _season = (season_today or 'spring') | lower %}
+            {% set _season_icons = {'spring': '🌱', 'summer': '☀️', 'autumn': '🍂', 'winter': '❄️'} %}
+            <div class="season-indicator {{ _season }}" id="season-badge" title="Current season — affects farm/hunt yields, food consumption, and weather.">
+              <span class="season-icon">{{ _season_icons.get(_season, '🌱') }}</span>
+              <span class="season-text">{{ _season | capitalize }}</span>
+            </div>
+            <div class="weather-indicator {{ (weather_today or 'sunny') | lower }}" id="weather-badge">
+              <span class="weather-icon">{% if weather_today == 'rain' %}{% if _season == 'winter' %}❄️{% else %}🌧️{% endif %}{% else %}☀️{% endif %}</span>
+              <span class="weather-text">{% if weather_today == 'rain' %}{% if _season == 'winter' %}Snowy{% else %}Rainy{% endif %}{% else %}Sunny{% endif %}</span>
+            </div>
           </div>
         </header>
 
