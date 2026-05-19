@@ -221,6 +221,14 @@ def choose_action(
         weights["steal"] -= 0.5
         weights["hunt"] *= 0.15
         weights["train"] *= 0.7
+    if job in ("King", "Queen"):
+        # Royals never pickpocket — they already have an abuse-of-power
+        # mechanic (corruption tracking + assassination risk in
+        # relationship_service.king_assassination_phase). The key stays
+        # in the dict because later modifiers read `weights["steal"]`
+        # unconditionally; instead it's zeroed here and re-zeroed AFTER
+        # the floor sweep at the end of this function.
+        weights["steal"] = 0.0
     if job in ["Spy"]:
         # Spies are the canonical thief class — keep the bump meaningful but
         # not dominant. Was +0.40, now +0.22.
@@ -558,9 +566,16 @@ def choose_action(
         if weights[k] < 0.05:
             weights[k] = 0.05
 
+    # Royal theft exclusion — re-applied after the floor sweep so the 0.05
+    # floor can't reintroduce a theft chance for King / Queen.
+    if job in ("King", "Queen"):
+        weights["steal"] = 0.0
+
     actions = list(weights.keys())
     probs = [weights[a] for a in actions]
     total = sum(probs)
+    if total <= 0:
+        return "rest"
     probs = [p / total for p in probs]
 
     return random.choices(actions, probs, k=1)[0]
