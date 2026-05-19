@@ -177,7 +177,7 @@
               <!-- JOBS -->
               <section class="game-card mb-3" id="jobs">
                 <div class="card-body">
-                  <h5 class="mb-3">Jobs (55 Total)</h5>
+                  <h5 class="mb-3">Jobs (53 Total)</h5>
                   <p>Each adult villager is assigned a job that determines their work income and behavior. Children become adults at age 17.</p>
                   
                   <div class="row g-3">
@@ -257,7 +257,7 @@
                         <tr><td><strong>Train</strong></td><td>+ATK, +DEF, +EXP</td><td>Brave trait, military job</td></tr>
                         <tr><td><strong>Study</strong></td><td>+INT, +EXP</td><td>Wise trait, learned job</td></tr>
                         <tr><td><strong>Hunt</strong></td><td>Combat for coins/food</td><td>Brave, hungry, hunter job</td></tr>
-                        <tr><td><strong>Rest</strong></td><td>Restore HP</td><td>Low HP, Lazy trait</td></tr>
+                        <tr><td><strong>Rest</strong></td><td>Restore HP — <code>max(2-6, 0.05 × ATK)</code> so high-stat fighters regen enough to offset combat wounds. Clinic ×1.25/lvl, Tavern ×1.10/lvl multiplier on the base roll.</td><td>Low HP, Lazy trait</td></tr>
                         <tr><td><strong>Socialize</strong></td><td>+REP, relationship gains</td><td>Charming, Sociable traits</td></tr>
                         <tr><td><strong>Buy Food</strong></td><td>Reduce hunger (-10 coins)</td><td>High hunger, has coins</td></tr>
                         <tr><td><strong>Buy Gear</strong></td><td>+ATK or +DEF</td><td>Has excess coins</td></tr>
@@ -501,7 +501,7 @@
                           <li><strong>Win probability</strong> via logistic curve on <code>(char_power - enemy_power)</code></li>
                           <li><strong>Win rewards:</strong> coins, EXP, food (hunger reduction), small REP gain</li>
                           <li><strong>Loss risk:</strong> HP damage scaled by margin; HP ≤ 0 = death</li>
-                          <li><strong>Scratch damage on win:</strong> ~20% of damage variance even when victorious</li>
+                          <li><strong>Scratch damage on win:</strong> 10% of damage variance, capped at 25% of current HP — a wounded winner can't be 0-shot on the same fight they survived</li>
                           <li><strong>Artifact drop chance:</strong> 0.1% common · 0.7% elite · 8% legendary kills</li>
                         </ul>
                       </div>
@@ -870,14 +870,14 @@
                       <table class="table feature-table">
                         <thead><tr><th>Crime</th><th>Fine</th><th>Exile</th><th>Execution</th></tr></thead>
                         <tbody>
-                          <tr><td>Theft (first offense)</td><td><strong>88%</strong></td><td>10%</td><td>2%</td></tr>
-                          <tr><td>Assault (first offense)</td><td><strong>60%</strong></td><td>30%</td><td>10%</td></tr>
-                          <tr><td>Murder (first offense)</td><td>15%</td><td><strong>50%</strong></td><td>35%</td></tr>
+                          <tr><td>Theft (first offense)</td><td><strong>94%</strong></td><td>5%</td><td>1%</td></tr>
+                          <tr><td>Assault (first offense)</td><td><strong>78%</strong></td><td>18%</td><td>4%</td></tr>
+                          <tr><td>Murder (first offense)</td><td>20%</td><td><strong>55%</strong></td><td>25%</td></tr>
                         </tbody>
                       </table>
                     </div>
                     <p class="mt-2" style="color: var(--aw-text-muted); font-size: 13px;">
-                      <strong>Recidivism:</strong> each prior conviction shifts +12% from <em>fine</em> → <em>exile</em>. At 3+ priors, mass bleeds from <em>exile</em> → <em>execution</em>. A 4-time petty thief is more likely to be exiled than fined.
+                      <strong>Recidivism:</strong> each prior conviction shifts +5% from <em>fine</em> → <em>exile</em> (capped at 4 priors). At 3+ priors, an additional +4% bleeds from <em>exile</em> → <em>execution</em> per extra prior. A first or second offense rarely escalates past a fine.
                     </p>
                   </div>
 
@@ -888,10 +888,12 @@
                         <ul>
                           <li><strong>Greedy:</strong> +20% fine — the treasury wins</li>
                           <li><strong>Empathic / Generous:</strong> +15% fine, -8% exile, -7% execution</li>
-                          <li><strong>Strict:</strong> +7% exile, +3% execution</li>
-                          <li><strong>Cruel / Reckless / Hot-headed:</strong> +10% execution</li>
-                          <li><strong>Wise / Patient:</strong> +8% fine — measured justice</li>
-                          <li><strong>Cautious:</strong> +10% fine — avoids extreme verdicts</li>
+                          <li><strong>Strict:</strong> +5% exile, +2% execution — firm but measured</li>
+                          <li><strong>Reckless / Hot-headed:</strong> +6% execution</li>
+                          <li><strong>Wise / Patient:</strong> +8% fine, -5% execution</li>
+                          <li><strong>Cautious:</strong> +10% fine, -8% execution</li>
+                          <li><strong>Loyal:</strong> -4% execution — steady, balanced</li>
+                          <li><strong>Protective:</strong> +10% fine, -6% exile, -4% execution — shields the accused</li>
                         </ul>
                       </div>
                     </div>
@@ -900,7 +902,7 @@
                         <h6>Verdict Outcomes</h6>
                         <ul>
                           <li><strong>Fine:</strong> coins transferred from criminal → treasury (whatever they can pay). REP -5.</li>
-                          <li><strong>Exile:</strong> villager removed from the village (alive=False, distinct cause). REP -10. Family tree still records them.</li>
+                          <li><strong>Exile:</strong> villager removed from the village (alive=False, distinct cause). REP -10. Chronicle records the banishment under <code>justice</code> but does <em>not</em> emit a separate "X has died" family entry — exile is a removal, not a killing. Family tree still preserves their lineage.</li>
                           <li><strong>Execution:</strong> public death by the King's order. REP -15. Chronicle importance 5.</li>
                           <li>Each verdict stamps the criminal's <code>crime_record</code> — used by future trials for recidivism scaling.</li>
                           <li>If the criminal died before trial, the case is marked <em>died_before_trial</em> and quietly closed.</li>

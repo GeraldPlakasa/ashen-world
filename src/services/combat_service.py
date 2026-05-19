@@ -293,8 +293,14 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
         v["rep"]   += rep_gain
         v["exp"]   += exp_gain
 
-        # Scratch damage even on win (balanced for unlimited HP)
-        scratch = max(1, round(dmg_var * 0.20))
+        # Scratch damage even on win. Halved from 0.20 -> 0.10 because at
+        # high levels enemy atk mirrors the villager's own atk and dmg_var
+        # grows in lockstep — the old multiplier turned routine wins into
+        # "won but died from wounds". Also cap each scratch at 25% of
+        # current HP so one fight never 0-shots a wounded winner.
+        raw_scratch = round(dmg_var * 0.10)
+        hp_cap = max(1, int(v["hp"] * 0.25))
+        scratch = max(1, min(raw_scratch, hp_cap))
         v["hp"] = max(0, v["hp"] - scratch)
 
         died_after_win = (v["hp"] <= 0)

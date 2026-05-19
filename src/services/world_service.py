@@ -241,7 +241,10 @@ def advance_one_day() -> tuple:
         # this pass with HP <= 0 but their last_action doesn't explain why,
         # annotate it as "died after: <prior action>" — this is a safety net
         # so future HP-drain bugs are always visible in the death cause.
-        _DEATH_WORDS = ("died", "killed", "dead", "succumbed", "passed away", "murdered", "slain", "perished")
+        # "exiled" is treated as a non-death cause: the villager leaves the
+        # active population but the justice chronicle already narrates it,
+        # so we suppress the duplicate "X has died" family entry.
+        _DEATH_WORDS = ("died", "killed", "dead", "succumbed", "passed away", "murdered", "slain", "perished", "exiled")
         new_deaths_today: list[dict] = []
         for v in characters:
             if not v.get("alive", True) or v.get("hp", 0) <= 0:
@@ -268,11 +271,15 @@ def advance_one_day() -> tuple:
                         v["last_action"] = f"died after: {last}"
                     new_deaths_today.append(v)
 
-        # Chronicle deaths (best-effort)
+        # Chronicle deaths (best-effort). Exiles are filtered out — the trial
+        # verdict already records a justice entry ("X exiled for theft"), and
+        # an additional "X has died" family entry implies they were killed.
         try:
             from src.services.chronicle_service import record_death
             for v in new_deaths_today:
                 cause = (v.get("last_action") or "").strip() or "unknown causes"
+                if "exiled" in cause.lower():
+                    continue
                 record_death(v, cause, day=new_total_day)
         except Exception:
             pass

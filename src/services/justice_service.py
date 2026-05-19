@@ -240,18 +240,18 @@ def verdict_for_king(king: Villager, crime_type: str, prior_offenses: int = 0) -
 
     # Recidivism: each prior offense shifts mass from fine toward exile, and
     # from exile toward execution at the highest counts. Hard cap at 4.
-    # Per-prior shift trimmed (0.12 -> 0.08; bleed 0.10 -> 0.06) so a few
-    # priors no longer fast-track a villager to exile/execution.
+    # Per-prior shift trimmed again (0.08 -> 0.05; bleed 0.06 -> 0.04) so a
+    # 2-prior thief no longer fast-tracks to exile.
     priors = max(0, min(4, int(prior_offenses or 0)))
     if priors >= 1:
-        shift = 0.08 * priors
+        shift = 0.05 * priors
         # Move from fine -> exile
         take = min(weights["fine"] - 0.05, shift)
         weights["fine"] -= take
         weights["exile"] += take
         # At 3+ priors, also bleed exile -> execution
         if priors >= 3:
-            extra = 0.06 * (priors - 2)
+            extra = 0.04 * (priors - 2)
             take2 = min(weights["exile"] - 0.05, extra)
             weights["exile"] -= take2
             weights["execution"] += take2

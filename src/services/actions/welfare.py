@@ -16,7 +16,12 @@ def apply_rest(
     weather: str | None = None,
     current_day: int | None = None,
 ) -> None:
-    hp_delta     = rand_int(2, 6)
+    # Base regen is small; scale a chunk with the villager's atk so resting
+    # can keep up with combat damage (which scales with enemy atk, which in
+    # turn mirrors the villager's own atk via create_enemy_for).
+    base_hp      = rand_int(2, 6)
+    atk_scaled   = int(round(0.05 * int(v.get("atk", 0) or 0)))
+    hp_delta     = max(base_hp, atk_scaled)
     hunger_delta = rand_int(5, 15)
 
     if bank is not None:
