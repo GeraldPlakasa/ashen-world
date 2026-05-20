@@ -875,7 +875,7 @@ DISEASES = {
         "spouse_transmission": 0.35,
         "duration_days":      10,
         "daily_hp_loss":      (3, 6),
-        "lethal_chance":      0.012,
+        "lethal_chance":      0.018,
         "recover_chance":     0.12,
         "cure_chance_base":   0.40,
         "icon":               "🤒",
@@ -886,7 +886,7 @@ DISEASES = {
         "spouse_transmission": 0.20,
         "duration_days":      14,
         "daily_hp_loss":      (5, 9),
-        "lethal_chance":      0.045,
+        "lethal_chance":      0.060,
         "recover_chance":     0.06,
         "cure_chance_base":   0.25,
         "icon":               "☠️",
@@ -895,7 +895,7 @@ DISEASES = {
 
 # Baseline chance per alive villager per day of catching an illness from
 # outside (immigrants, traveling merchants, contaminated water).
-DISEASE_AMBIENT_CHANCE = 0.0025
+DISEASE_AMBIENT_CHANCE = 0.0040
 # Bias of which disease an ambient case is — same order as DISEASES, weight list
 DISEASE_AMBIENT_WEIGHTS = {"cough": 0.65, "fever": 0.27, "plague": 0.08}
 

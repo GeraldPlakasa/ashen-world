@@ -329,7 +329,7 @@ def resolve_combat(v: Villager, enemy: Enemy, bank: Bank | None = None, weather:
     heavy = max(2, round(dmg_var * (1.4 + random.random() * 0.8)))
     v["hp"] = max(0, v["hp"] - heavy)
 
-    death_prob = 0.07
+    death_prob = 0.10
     if bank is not None:
         lvl_clinic = get_building_level(bank, "clinic")
         lvl_temple = get_building_level(bank, "temple")
