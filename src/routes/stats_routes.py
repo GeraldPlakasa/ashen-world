@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, redirect, url_for, session, Respon
 
 from src.services.world_service import get_current_state, compute_year_champions
 from src.repositories.stats_repo import list_yearly_history, get_year_entry, get_all_time_leaders
+from src.utils.world_utils import compute_death_buckets_by_year
 
 stats_bp = Blueprint("stats", __name__)
 
@@ -21,6 +22,12 @@ def leaderboard():
     current_entry = get_year_entry(year)
 
     current_champions = compute_year_champions(characters)
+
+    # Death-cause breakdown per year. Only the last MAX_DEAD_YEARS years
+    # have classifiable data (older deaths are pruned to graveyard without
+    # last_action); the template falls back to exiles+executions counters
+    # from yearly_stats for older reigns.
+    death_buckets_by_year = compute_death_buckets_by_year(characters)
 
     # All-time legends from archived years
     all_time = get_all_time_leaders(finalized_only=True) or {}
@@ -49,6 +56,7 @@ def leaderboard():
         current_champions=current_champions,
         all_time=all_time,
         current_wealthiest_family=current_wealthiest_family,
+        death_buckets_by_year=death_buckets_by_year,
     )
 
 
@@ -59,7 +67,15 @@ def download_history_csv():
         return redirect(url_for("auth.login"))
 
     history = list_yearly_history(finalized_only=True)
-    
+
+    # Death-cause breakdown is computed live from villagers' last_action;
+    # only years within MAX_DEAD_YEARS have classifiable data. Older years
+    # get blank cells in the breakdown columns (graveyard doesn't preserve
+    # cause). The persisted Exiles/Executions counters cover the judicial
+    # signal for those older years.
+    characters, _bank, _y, _d, _td, _w, _s = get_current_state()
+    death_buckets_by_year = compute_death_buckets_by_year(characters)
+
     # CSV header
     headers = [
         "Year",
@@ -90,6 +106,13 @@ def download_history_csv():
         "Fines (gold)",
         "Exiles",
         "Executions",
+        # Death-cause breakdown (blank for years older than MAX_DEAD_YEARS)
+        "Deaths Judicial",
+        "Deaths Disease",
+        "Deaths Combat",
+        "Deaths Starvation",
+        "Deaths Age",
+        "Deaths Other",
     ]
     
     lines = [",".join(headers)]
@@ -104,6 +127,7 @@ def download_history_csv():
         return s
     
     for y in history:
+        bucket = death_buckets_by_year.get(int(y.get("year", 0) or 0))
         row = [
             str(y.get("year", "")),
             esc(y.get("king_name", "")),
@@ -132,6 +156,12 @@ def download_history_csv():
             str(y.get("fines_collected", 0)),
             str(y.get("exiles", 0)),
             str(y.get("executions", 0)),
+            str(bucket["judicial"])   if bucket else "",
+            str(bucket["disease"])    if bucket else "",
+            str(bucket["combat"])     if bucket else "",
+            str(bucket["starvation"]) if bucket else "",
+            str(bucket["age"])        if bucket else "",
+            str(bucket["other"])      if bucket else "",
         ]
         lines.append(",".join(row))
     
