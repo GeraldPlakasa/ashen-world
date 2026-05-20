@@ -12,7 +12,7 @@ from config import TRAITS
 from src.services.action_service import choose_action, apply_action
 from src.services.combat_service import resolve_combat, create_enemy_for
 from src.services.skill_service import (
-    SKILLS, parse_skills, get_skill_info, apply_skill_bonuses,
+    SKILLS, parse_skills, get_skill_info,
     SKILL_BIRTH_CHANCE, SECOND_SKILL_CHANCE
 )
 from src.services.event_service import (

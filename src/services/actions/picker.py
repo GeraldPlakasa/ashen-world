@@ -19,7 +19,6 @@ from config import (
     MAGIC_JOBS,
     MINOR_MAGIC_JOBS,
 )
-from src.utils.world_utils import clamp, rand_int
 from src.services.building_service import get_building_level
 from src.services.skill_service import parse_skills, get_skill_info
 from src.models.villager import Villager

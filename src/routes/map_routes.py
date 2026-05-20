@@ -1,11 +1,11 @@
 """
 Map routes: top-down stylized village map.
 """
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session
 
 from config import MAP_LAYOUT, MAP_VIEWBOX, BUILDINGS, PRODUCTION_BUILDING_BONUS
 from src.services.world_service import get_current_state
-from src.services.building_service import get_building_level, build_building_summary
+from src.services.building_service import build_building_summary
 
 map_bp = Blueprint("map", __name__)
 

@@ -18,7 +18,6 @@ from src.services.skill_service import (
     roll_birth_skills,
     parse_skills,
     skills_to_string,
-    apply_skill_bonuses,
     get_job_from_skills,
     get_all_categories,
 )
@@ -138,18 +137,6 @@ class TestSkillParsing:
 
 class TestSkillBonuses:
     """Tests for skill action bonuses (skills no longer add stats at birth)."""
-
-    @pytest.mark.unit
-    def test_apply_skill_bonuses_deprecated(self):
-        """apply_skill_bonuses is now a no-op (skills apply during actions)."""
-        villager = {
-            "skills": "Bladesong",
-            "atk": 10,
-            "def": 10,
-        }
-        apply_skill_bonuses(villager)
-        # Skills no longer add stats at birth
-        assert villager["atk"] == 10
 
     @pytest.mark.unit
     def test_get_train_bonus(self):

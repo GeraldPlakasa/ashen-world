@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-
 import config
 from src.repositories.base import db_conn, init_db
 from src.models.stats import AllTimeLeader, YearlyChampions, YearStats

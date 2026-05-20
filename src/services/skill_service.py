@@ -393,14 +393,6 @@ def skills_to_string(skills: list[str]) -> str:
     return ", ".join(skills)
 
 
-def apply_skill_bonuses(villager: "Villager") -> None:
-    """
-    DEPRECATED: Skills no longer add stats at birth.
-    Kept for backwards compatibility.
-    """
-    pass  # Skills provide bonuses during actions, not at birth
-
-
 # ============================================================================
 # SKILL BONUSES DURING ACTIONS
 # ============================================================================

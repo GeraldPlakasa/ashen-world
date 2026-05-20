@@ -8,7 +8,6 @@ from src.services.family_tree_service import build_graveyard_index_for
 from src.services.building_service import build_building_summary
 from src.repositories.stats_repo import list_yearly_history
 from src.repositories.user_repo import load_users
-from src.repositories.bank_repo import load_bank
 from src.services.event_service import get_event_history
 from src.services.skill_service import SKILLS
 from src.services.achievement_service import ACHIEVEMENTS

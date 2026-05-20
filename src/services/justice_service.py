@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import json
 import random
-from typing import Any
 
 from config import (
     CRIME_SEVERITY,

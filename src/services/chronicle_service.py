@@ -13,7 +13,6 @@ Categories: royal, family, combat, magic, economy, scandal, disaster, world
 from __future__ import annotations
 
 import random
-from typing import Any
 
 from src.repositories.chronicle_repo import record_event
 from src.repositories.world_repo import compute_year_and_day

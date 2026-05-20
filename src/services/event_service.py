@@ -18,7 +18,6 @@ Event Timing:
 from __future__ import annotations
 
 import random
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from config import DAYS_PER_YEAR, SEASON_MODIFIERS

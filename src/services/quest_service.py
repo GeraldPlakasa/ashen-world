@@ -27,7 +27,6 @@ Risks:
 from __future__ import annotations
 
 import random
-import json
 from typing import TYPE_CHECKING
 
 from config import DAYS_PER_YEAR, QUEST_INTERVAL_YEARS

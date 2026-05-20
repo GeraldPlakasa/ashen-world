@@ -6,11 +6,8 @@ Achievements are tracked per-villager and can unlock traits or grant stat bonuse
 from __future__ import annotations
 
 import json
-import random
-from typing import Callable
 
 from src.models.villager import Villager
-from src.utils.world_utils import clamp
 
 
 # ===========================================================================
