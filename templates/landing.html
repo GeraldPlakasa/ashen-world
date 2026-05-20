@@ -482,17 +482,17 @@
     const _pinnedId = {{ pinned_character.id | tojson if pinned_character else 'null' }};
 
     const ACHIEVEMENT_MAP = {
-      dynasty_founder: { name: 'Dynasty Founder', icon: '👨‍👩‍👧‍👦' },
-      kingmaker:       { name: 'Kingmaker',       icon: '🗳️' },
-      centurion:       { name: 'Centurion',       icon: '🎂' },
-      legendary_hunter:{ name: 'Legendary Hunter', icon: '🏹' },
-      wealthy:         { name: 'Wealthy',          icon: '💰' },
-      survivor:        { name: 'Survivor',         icon: '🛡️' },
-      elder_statesman: { name: 'Elder Statesman',  icon: '👑' },
-      iron_will:       { name: 'Iron Will',        icon: '💪' },
-      questmaster:     { name: 'Questmaster',      icon: '⚔️' },
-      first_blood:     { name: 'First Blood',      icon: '🗡️' },
-      royal_blood:     { name: 'Royal Blood',      icon: '🩸' },
+      dynasty_founder: { name: 'Dynasty Founder',  icon: '👨‍👩‍👧‍👦', desc: 'Have 5 or more children' },
+      kingmaker:       { name: 'Kingmaker',        icon: '🗳️',  desc: 'Vote for 5 different kings' },
+      centurion:       { name: 'Centurion',        icon: '🎂',  desc: 'Reach age 100' },
+      legendary_hunter:{ name: 'Legendary Hunter', icon: '🏹',  desc: 'Win 500 hunts total' },
+      wealthy:         { name: 'Wealthy',          icon: '💰',  desc: 'Accumulate 10000 coins' },
+      survivor:        { name: 'Survivor',         icon: '🛡️',  desc: 'Survive a plague event' },
+      elder_statesman: { name: 'Elder Statesman',  icon: '👑',  desc: 'Become King at age 80+' },
+      iron_will:       { name: 'Iron Will',        icon: '💪',  desc: 'Survive combat with HP below 80 five times' },
+      questmaster:     { name: 'Questmaster',      icon: '⚔️',  desc: 'Complete 5 successful quests' },
+      first_blood:     { name: 'First Blood',      icon: '🗡️',  desc: 'Win your first hunt' },
+      royal_blood:     { name: 'Royal Blood',      icon: '🩸',  desc: 'Born of the royal line' },
     };
 
     const LABEL_COLORS = {
@@ -656,7 +656,10 @@
       if (achList.length > 0) {
         achList.forEach(function(aid) {
           const def = ACHIEVEMENT_MAP[aid];
-          if (def) achHtml += '<span class="achievement-badge" title="' + _esc(def.name) + '">' + def.icon + ' ' + _esc(def.name) + '</span>';
+          if (def) {
+            const tip = def.desc ? def.name + ' — ' + def.desc : def.name;
+            achHtml += '<span class="achievement-badge" title="' + _esc(tip) + '">' + def.icon + ' ' + _esc(def.name) + '</span>';
+          }
         });
       } else {
         achHtml = '<span style="color:var(--aw-text-dim);font-size:12px;">No achievements yet</span>';

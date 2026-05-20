@@ -268,7 +268,7 @@ def record_militarization_decree(king: dict, conscripts: list[dict], day: int) -
         headline=headline,
         body=random.choice(body_choices),
         actors=actors,
-        importance=4,
+        importance=5,
     )
 
 
@@ -881,7 +881,7 @@ def record_trial_verdict(
         body = f"By order of King {kname}, {cname} was put to death for {crime_type}."
         if vname:
             body += f" Justice for {vname}."
-        importance = 5
+        importance = 4
     else:
         return
 
