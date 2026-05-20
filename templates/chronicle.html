@@ -152,6 +152,12 @@
                 <option value="{{ c }}" {% if c == category %}selected{% endif %}>{{ c | capitalize }}</option>
               {% endfor %}
             </select>
+            <select name="king" title="Filter to events involving this monarch">
+              <option value="">All kings</option>
+              {% for k in all_kings %}
+                <option value="{{ k }}" {% if k == king %}selected{% endif %}>♔ {{ k }}</option>
+              {% endfor %}
+            </select>
             <select name="year">
               <option value="">All years</option>
               {% for y in all_years %}
@@ -166,7 +172,7 @@
               <option value="5" {% if min_importance == 5 %}selected{% endif %}>Legendary only</option>
             </select>
             <button type="submit" class="btn btn-sm btn-outline-light">Apply</button>
-            {% if q or category or year_filter or min_importance > 1 %}
+            {% if q or category or year_filter or king or min_importance > 1 %}
               <a href="{{ url_for('chronicle.chronicle') }}" class="btn btn-sm btn-link" style="color: var(--aw-text-muted);">Clear</a>
             {% endif %}
           </form>
@@ -174,7 +180,7 @@
           {% if not events %}
             <div class="empty-state">
               <div class="empty-state-icon">📜</div>
-              {% if q or category or year_filter or min_importance > 1 %}
+              {% if q or category or year_filter or king or min_importance > 1 %}
                 <div>No entries match your filters.</div>
                 <div style="font-size: 12px; margin-top: 8px;">Try a different search term or clear the filters.</div>
               {% else %}
@@ -202,11 +208,11 @@
             <div class="pager">
               {% if page > 1 %}
                 <a class="btn btn-sm btn-outline-light"
-                   href="{{ url_for('chronicle.chronicle', page=page-1, q=q or '', category=category or '', year=year_filter or '', min_importance=min_importance) }}">‹ Newer</a>
+                   href="{{ url_for('chronicle.chronicle', page=page-1, q=q or '', category=category or '', king=king or '', year=year_filter or '', min_importance=min_importance) }}">‹ Newer</a>
               {% endif %}
               {% if has_more %}
                 <a class="btn btn-sm btn-outline-light"
-                   href="{{ url_for('chronicle.chronicle', page=page+1, q=q or '', category=category or '', year=year_filter or '', min_importance=min_importance) }}">Older ›</a>
+                   href="{{ url_for('chronicle.chronicle', page=page+1, q=q or '', category=category or '', king=king or '', year=year_filter or '', min_importance=min_importance) }}">Older ›</a>
               {% endif %}
             </div>
           {% endif %}

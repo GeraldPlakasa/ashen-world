@@ -9,6 +9,7 @@ from src.repositories.chronicle_repo import (
     list_top_recent,
     list_categories,
     list_years,
+    list_kings,
     count_events,
 )
 
@@ -31,6 +32,7 @@ def chronicle():
     except (TypeError, ValueError):
         min_importance = 1
     q = (request.args.get("q") or "").strip() or None
+    king = (request.args.get("king") or "").strip() or None
 
     try:
         page = max(1, int(request.args.get("page", 1)))
@@ -46,9 +48,14 @@ def chronicle():
         year=year_filter,
         min_importance=min_importance,
         q=q,
+        actor_name=king,
     )
     total = count_events(
-        category=category, year=year_filter, q=q, min_importance=min_importance
+        category=category,
+        year=year_filter,
+        q=q,
+        min_importance=min_importance,
+        actor_name=king,
     )
     has_more = (offset + len(events)) < total
 
@@ -63,11 +70,13 @@ def chronicle():
         year_filter=year_filter,
         min_importance=min_importance,
         q=q,
+        king=king,
         page=page,
         has_more=has_more,
         total=total,
         all_categories=list_categories(),
         all_years=list_years(),
+        all_kings=list_kings(),
     )
 
 

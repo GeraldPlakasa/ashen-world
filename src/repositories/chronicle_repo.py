@@ -57,31 +57,23 @@ def list_events(
     year: int | None = None,
     min_importance: int = 1,
     q: str | None = None,
+    actor_name: str | None = None,
 ) -> list[dict[str, Any]]:
     """Return chronicle events, newest first, optionally filtered.
     `q` does a case-insensitive substring match against headline + body.
+    `actor_name` keeps only events whose `actors` JSON contains a
+    member with the exact `name` field — used by the chronicle page's
+    king filter, but the predicate is generic.
     """
     init_db()
-    where = ["importance >= ?"]
-    params: list[Any] = [int(min_importance)]
-    if category:
-        where.append("category = ?")
-        params.append(category)
-    if year is not None:
-        where.append("year = ?")
-        params.append(int(year))
-    if q:
-        like = f"%{q.strip()}%"
-        where.append("(headline LIKE ? COLLATE NOCASE OR body LIKE ? COLLATE NOCASE)")
-        params.extend([like, like])
-    where_sql = "WHERE " + " AND ".join(where)
+    where, params = _build_where(category, year, min_importance, q, actor_name)
     params.extend([int(limit), int(offset)])
     with db_conn() as conn:
         rows = conn.execute(
             f"""
             SELECT id, day, year, category, headline, body, actors, importance, created_at
             FROM chronicle_events
-            {where_sql}
+            {where}
             ORDER BY day DESC, id DESC
             LIMIT ? OFFSET ?;
             """,
@@ -98,6 +90,39 @@ def list_events(
         return out
 
 
+def _build_where(
+    category: str | None,
+    year: int | None,
+    min_importance: int,
+    q: str | None,
+    actor_name: str | None,
+) -> tuple[str, list[Any]]:
+    """Shared WHERE-clause builder for list_events and count_events.
+    Returns (where_sql, params)."""
+    clauses = ["importance >= ?"]
+    params: list[Any] = [int(min_importance)]
+    if category:
+        clauses.append("category = ?")
+        params.append(category)
+    if year is not None:
+        clauses.append("year = ?")
+        params.append(int(year))
+    if q:
+        like = f"%{q.strip()}%"
+        clauses.append("(headline LIKE ? COLLATE NOCASE OR body LIKE ? COLLATE NOCASE)")
+        params.extend([like, like])
+    if actor_name:
+        # SQLite JSON1: walk the actors array, match the exact `name` field.
+        # Handles unicode names (D'Arion etc.) correctly — LIKE would have
+        # to match the JSON-escaped form `’` which is brittle.
+        clauses.append(
+            "EXISTS (SELECT 1 FROM json_each(actors) je "
+            "WHERE json_extract(je.value, '$.name') = ?)"
+        )
+        params.append(actor_name)
+    return "WHERE " + " AND ".join(clauses), params
+
+
 def list_top_recent(limit: int = 5, min_importance: int = 3) -> list[dict[str, Any]]:
     """Top N high-importance events, newest first. For the landing widget."""
     return list_events(limit=limit, min_importance=min_importance)
@@ -108,21 +133,10 @@ def count_events(
     year: int | None = None,
     q: str | None = None,
     min_importance: int = 1,
+    actor_name: str | None = None,
 ) -> int:
     init_db()
-    where = ["importance >= ?"]
-    params: list[Any] = [int(min_importance)]
-    if category:
-        where.append("category = ?")
-        params.append(category)
-    if year is not None:
-        where.append("year = ?")
-        params.append(int(year))
-    if q:
-        like = f"%{q.strip()}%"
-        where.append("(headline LIKE ? COLLATE NOCASE OR body LIKE ? COLLATE NOCASE)")
-        params.extend([like, like])
-    where_sql = "WHERE " + " AND ".join(where)
+    where_sql, params = _build_where(category, year, min_importance, q, actor_name)
     with db_conn() as conn:
         row = conn.execute(
             f"SELECT COUNT(*) AS c FROM chronicle_events {where_sql};",
@@ -138,6 +152,20 @@ def list_categories() -> list[str]:
             "SELECT DISTINCT category FROM chronicle_events ORDER BY category;"
         ).fetchall()
         return [r["category"] for r in rows]
+
+
+def list_kings() -> list[str]:
+    """All distinct king names that ever held the throne, alphabetically.
+    Pulled from yearly_stats (authoritative) rather than chronicle actors,
+    so a king with zero chronicle entries still appears in the filter."""
+    init_db()
+    with db_conn() as conn:
+        rows = conn.execute(
+            "SELECT DISTINCT king_name FROM yearly_stats "
+            "WHERE king_name IS NOT NULL AND king_name != '' "
+            "ORDER BY king_name;"
+        ).fetchall()
+        return [r["king_name"] for r in rows]
 
 
 def list_years() -> list[int]:
