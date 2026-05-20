@@ -149,6 +149,12 @@ class TestFindSickInCircle:
 
 
 class TestDailyPhase:
+    @pytest.fixture(autouse=True)
+    def _isolate_db(self, test_db_connection):
+        """daily_disease_phase writes chronicle entries via record_death and
+        record_disease_outbreak. Force them to a temp DB."""
+        return
+
     @pytest.mark.unit
     def test_progression_drains_hp(self):
         random.seed(42)

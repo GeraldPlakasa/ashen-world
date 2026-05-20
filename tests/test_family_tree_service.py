@@ -75,6 +75,15 @@ class TestParseRelationshipIds:
 class TestFindPerson:
     """Tests for finding person by ID."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_db(self, test_db_connection):
+        """find_person falls back to graveyard_get when the id isn't in the
+        characters list. Without isolation that READS from the live DB
+        and can return a real villager — making test_find_in_empty_list
+        and test_find_nonexistent non-deterministic depending on the
+        user's actual graveyard."""
+        return
+
     @pytest.fixture
     def characters(self):
         return [

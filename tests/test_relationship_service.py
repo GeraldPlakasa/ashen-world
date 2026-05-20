@@ -162,6 +162,12 @@ class TestRelationshipLabel:
 class TestSpouseDailyPhase:
     """Tests for spouse/marriage phase."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_db(self, test_db_connection):
+        """spouse_daily_phase writes chronicle entries via record_marriage.
+        Force them to a temp DB so the live chronicle is never polluted."""
+        return
+
     @pytest.fixture
     def eligible_villagers(self):
         return [
@@ -300,6 +306,12 @@ class TestMaybeCorruptFromBank:
 
 class TestKingAssassinationPhase:
     """Tests for king assassination."""
+
+    @pytest.fixture(autouse=True)
+    def _isolate_db(self, test_db_connection):
+        """king_assassination_phase writes chronicle entries via
+        record_assassination. Force them to a temp DB."""
+        return
 
     @pytest.fixture
     def kingdom(self):

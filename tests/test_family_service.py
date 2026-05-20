@@ -17,6 +17,12 @@ from src.services.family_service import (
 class TestBirthDailyPhase:
     """Tests for daily birth phase."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_db(self, test_db_connection):
+        """birth_daily_phase writes chronicle entries via record_birth.
+        Force them to a temp DB so the live chronicle is never polluted."""
+        return
+
     @pytest.fixture
     def married_couple(self):
         return [
@@ -186,6 +192,12 @@ class TestChildDailyPhase:
 
 class TestComingOfAgePhase:
     """Tests for coming of age (age 17)."""
+
+    @pytest.fixture(autouse=True)
+    def _isolate_db(self, test_db_connection):
+        """coming_of_age_phase reassigns jobs which may emit chronicle
+        entries; force any DB writes to a temp DB."""
+        return
 
     @pytest.fixture
     def teen_family(self):

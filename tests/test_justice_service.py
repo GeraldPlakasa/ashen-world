@@ -80,6 +80,12 @@ class TestWitnessChance:
 # ---------------------------------------------------------------------------
 
 class TestRecording:
+    @pytest.fixture(autouse=True)
+    def _isolate_db(self, test_db_connection):
+        """maybe_witness_and_record writes chronicle entries via record_crime
+        and stat bumps via bump_yearly_justice. Force them to a temp DB."""
+        return
+
     @pytest.mark.unit
     def test_record_pending_crime_appends_case_and_record(self):
         bank = _bank()
@@ -302,6 +308,12 @@ class TestApplyVerdict:
 # ---------------------------------------------------------------------------
 
 class TestTrialPhase:
+    @pytest.fixture(autouse=True)
+    def _isolate_db(self, test_db_connection):
+        """crime_trial_phase writes chronicle entries via record_trial_verdict
+        and stat bumps via bump_yearly_justice. Force them to a temp DB."""
+        return
+
     @pytest.mark.unit
     def test_no_king_no_resolution(self):
         criminal = _v(id=1)

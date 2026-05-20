@@ -217,6 +217,13 @@ class TestEnforceOnePlayerPerOwner:
 class TestSimulateOneDay:
     """Tests for full day simulation."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_db(self, test_db_connection):
+        """simulate_one_day writes chronicle entries via record_birth /
+        record_death / record_trial_verdict / etc. Pull in the conftest
+        fixture so those writes go to a temp DB, never the live one."""
+        return
+
     @pytest.fixture
     def village(self):
         return [
