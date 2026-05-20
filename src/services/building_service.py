@@ -314,14 +314,20 @@ def maybe_construct_building(
     else:
         event_text = f"Village built {choice['name']} for {cost} coins."
 
-    # Chronicle the build, attributed to the sitting king (best-effort)
+    # Append to the year-bucket buffer. world_service emits a single summary
+    # chronicle entry at year boundary so the rebuild-after-collapse cycle
+    # doesn't flood the chronicle with one row per build.
     try:
-        from src.services.chronicle_service import record_construction
-        king = next(
-            (v for v in characters if v.get("job") == "King" and v.get("alive", True)),
-            None,
-        )
-        record_construction(king, choice["name"], 1, cost, int(current_day or 0))
+        activity = bank.setdefault("building_activity_year", [])
+        if isinstance(activity, list):
+            activity.append({
+                "day": int(current_day or 0),
+                "key": key,
+                "name": choice["name"],
+                "action": "build",
+                "level": 1,
+                "cost": cost,
+            })
     except Exception:
         pass
 
@@ -458,22 +464,26 @@ def maybe_upgrade_building(
         return bank, None
 
     # Snapshot the cost before the upgrade mutates state; needed for the
-    # chronicle line.
+    # year-summary chronicle line.
     cost_for_chronicle = upgrade_cost(key, bank)
 
     bank, event_text = upgrade_building(key, bank, current_day)
     if event_text:
         try:
-            from src.services.chronicle_service import record_construction
             base = _find_building(key)
             name = base["name"] if base else key
             levels, _ = _ensure_building_dicts(bank)
             new_lvl = int(levels.get(key, 1) or 1)
-            king = next(
-                (v for v in characters if v.get("job") == "King" and v.get("alive", True)),
-                None,
-            )
-            record_construction(king, name, new_lvl, cost_for_chronicle, int(current_day or 0))
+            activity = bank.setdefault("building_activity_year", [])
+            if isinstance(activity, list):
+                activity.append({
+                    "day": int(current_day or 0),
+                    "key": key,
+                    "name": name,
+                    "action": "upgrade",
+                    "level": new_lvl,
+                    "cost": cost_for_chronicle,
+                })
         except Exception:
             pass
 

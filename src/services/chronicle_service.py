@@ -271,50 +271,76 @@ def record_militarization_decree(king: dict, conscripts: list[dict], day: int) -
     )
 
 
-def record_construction(king: dict | None, building_name: str, level: int, cost: int, day: int) -> None:
-    """A new building was commissioned (level=1) or upgraded (level>1).
-    Records the king if there is one — otherwise the village acts collectively.
+def record_year_construction_summary(
+    king: dict | None,
+    activity: list[dict],
+    year: int,
+    day: int,
+) -> None:
+    """End-of-year roll-up of all building activity. Emits a single chronicle
+    entry naming the buildings that went up or were upgraded — collapsing
+    the rebuild-after-collapse cycle into "rebuilt N times" rather than
+    flooding the feed with one row per build.
+
+    `activity` is the bank["building_activity_year"] buffer: a list of
+    {key, name, action, level, day, cost} dicts.
     """
-    if not building_name:
+    if not activity:
         return
-    year, _ = _yd(day)
-    actors: list[dict] = [_actor(king)] if king else []
+
+    # Aggregate by (key, action). For builds, count rebuilds within the
+    # year; for upgrades, remember the highest level reached.
+    agg: dict[tuple[str, str], dict] = {}
+    for e in activity:
+        bkey = str(e.get("key") or "")
+        action = str(e.get("action") or "")
+        if not bkey or action not in ("build", "upgrade"):
+            continue
+        slot = agg.setdefault((bkey, action), {"name": e.get("name") or "?", "count": 0, "level": 1})
+        slot["count"] += 1
+        if action == "upgrade":
+            slot["level"] = max(int(slot.get("level", 1)), int(e.get("level", 1) or 1))
+
+    builds, upgrades = [], []
+    for (bkey, action), info in agg.items():
+        name = info["name"]
+        n = info["count"]
+        if action == "build":
+            if n > 1:
+                builds.append(f"{name} (rebuilt {n - 1}×)")
+            else:
+                builds.append(name)
+        else:  # upgrade
+            lvl = info["level"]
+            if n > 1:
+                upgrades.append(f"{name} → Lv {lvl} ({n}×)")
+            else:
+                upgrades.append(f"{name} → Lv {lvl}")
+
+    parts = []
+    if builds:
+        parts.append("Built: " + ", ".join(sorted(builds)))
+    if upgrades:
+        parts.append("Upgraded: " + ", ".join(sorted(upgrades)))
+    if not parts:
+        return
+    summary = ". ".join(parts) + "."
+
     kname = king.get("name") if king else None
-
-    if level <= 1:
-        # First-time construction
-        if kname:
-            headline = f"King {kname} commissioned the {building_name}"
-            body_choices = [
-                f"Under King {kname}'s direction, the village raised a new {building_name} (cost: {cost} coins).",
-                f"King {kname} broke ground on the {building_name} — {cost} coins of the treasury went into the foundation.",
-                f"By order of King {kname}, the {building_name} now stands in the village.",
-            ]
-        else:
-            headline = f"The village raised a new {building_name}"
-            body_choices = [
-                f"With no king on the throne, the villagers themselves pooled {cost} coins and built a {building_name}.",
-            ]
+    if kname:
+        headline = f"King {kname}'s building program in Year {year}"
+        body = f"Under King {kname} in Year {year}. {summary}"
     else:
-        # Upgrade
-        if kname:
-            headline = f"{building_name} upgraded to Lv {level} under King {kname}"
-            body_choices = [
-                f"King {kname} ordered the {building_name} expanded — it now stands at Level {level}, paid for with {cost} coins.",
-                f"{cost} coins from the treasury raised the {building_name} to Level {level} during King {kname}'s reign.",
-            ]
-        else:
-            headline = f"{building_name} upgraded to Lv {level}"
-            body_choices = [
-                f"The {building_name} was expanded to Level {level} at a cost of {cost} coins.",
-            ]
+        headline = f"Building works in Year {year} (no king)"
+        body = f"Year {year}, with the throne empty. {summary}"
 
+    actors = [_actor(king)] if king else []
     _safe_record(
         day=day,
         year=year,
         category="royal",
         headline=headline,
-        body=random.choice(body_choices),
+        body=body,
         actors=actors,
         importance=3,
     )

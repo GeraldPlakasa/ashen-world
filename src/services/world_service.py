@@ -194,6 +194,25 @@ def advance_one_day() -> tuple:
             except Exception as e:
                 logger.warning("Yearly resource snapshot failed: %s", e)
 
+            # Emit a single chronicle line summarizing all builds and
+            # upgrades during the year that just ended, then clear the
+            # buffer. King attribution uses the sitting king at year-end —
+            # close enough for the rare mid-year election case.
+            try:
+                from src.services.chronicle_service import record_year_construction_summary
+                activity = bank.get("building_activity_year") or []
+                if isinstance(activity, list) and activity:
+                    end_of_year_king = next(
+                        (v for v in characters if v.get("job") == "King" and v.get("alive", True)),
+                        None,
+                    )
+                    record_year_construction_summary(
+                        end_of_year_king, activity, old_year, old_total_day
+                    )
+                bank["building_activity_year"] = []
+            except Exception as exc:
+                logger.warning("Year-end building summary failed: %s", exc)
+
             # Prune chronicle once per year (drop importance 1-2 events older than 3 years)
             try:
                 from src.repositories.chronicle_repo import prune_low_importance
