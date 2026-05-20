@@ -119,7 +119,15 @@
                     <div class="monarch-icon">♔</div>
                     <div class="monarch-info">
                       <div class="monarch-label">Reigning Monarch</div>
-                      <div class="monarch-name">{{ current_entry.king_name or "No King" }}</div>
+                      <div class="monarch-name">
+                        {% if current_entry.king_name %}
+                          <a href="{{ url_for('chronicle.chronicle', king=current_entry.king_name) }}"
+                             title="Read this reign in the chronicle"
+                             style="color: inherit; text-decoration: none; border-bottom: 1px dotted var(--aw-text-muted);">{{ current_entry.king_name }}</a>
+                        {% else %}
+                          No King
+                        {% endif %}
+                      </div>
                       {% if current_entry.king_trait %}
                       <div class="monarch-trait">{{ current_entry.king_trait }}</div>
                       {% endif %}
@@ -273,7 +281,15 @@
                         <span style="font-size: 1.25rem;">♔</span>
                         <div>
                           <div style="color: var(--aw-text-muted); font-size: 10px;">Monarch</div>
-                          <div style="color: var(--aw-king); font-weight: 600;">{{ y.king_name or "No King" }}</div>
+                          <div style="color: var(--aw-king); font-weight: 600;">
+                            {% if y.king_name %}
+                              <a href="{{ url_for('chronicle.chronicle', king=y.king_name) }}"
+                                 title="Read this reign in the chronicle"
+                                 style="color: inherit; text-decoration: none; border-bottom: 1px dotted var(--aw-text-muted);">{{ y.king_name }}</a>
+                            {% else %}
+                              No King
+                            {% endif %}
+                          </div>
                           {% if y.king_trait %}
                           <div style="color: var(--aw-text-muted); font-size: 10px;">{{ y.king_trait }}</div>
                           {% endif %}
