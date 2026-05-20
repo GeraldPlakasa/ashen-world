@@ -130,7 +130,6 @@ function updateTables(data) {
 }
 
 function renderAllCharts(data) {
-  renderPopulationTreasuryChart(data);
   renderDemographicsChart(data);
   renderGenderChart(data);
   renderAgeChart(data);
@@ -190,12 +189,39 @@ function renderJusticeYearlyChart(history) {
   // Filter to the same year range as the rest of the dashboard.
   const sorted = filterYearlyData(history.slice().reverse());
   const labels = sorted.map(h => 'Yr ' + h.year);
+  const kingNames = sorted.map(h => h.king || 'No King');
   // Stack VERDICT COUNTS only — fines/exiles/executions live on the same
   // count scale. Gold (fines_gold) is reported via the KPI, not here.
   const fines   = sorted.map(h => h.fines_count || 0);
   const exiles  = sorted.map(h => h.exiles || 0);
   const execs   = sorted.map(h => h.executions || 0);
   const crimes  = sorted.map(h => h.crimes || 0);
+
+  // King-change vertical annotations
+  const kingChangeAnnotations = {};
+  for (let i = 1; i < sorted.length; i++) {
+    const prevKing = sorted[i - 1].king || '';
+    const currKing = sorted[i].king || '';
+    if (currKing && prevKing !== currKing) {
+      kingChangeAnnotations['king-' + i] = {
+        type: 'line',
+        xMin: i,
+        xMax: i,
+        borderColor: 'rgba(255, 215, 0, 0.6)',
+        borderWidth: 2,
+        borderDash: [4, 4],
+        label: {
+          display: true,
+          content: '♔ ' + currKing,
+          position: 'start',
+          backgroundColor: 'rgba(255, 215, 0, 0.95)',
+          color: '#111',
+          font: { size: 10, weight: 'bold' },
+          padding: 4,
+        },
+      };
+    }
+  }
 
   if (window._justiceChart) window._justiceChart.destroy();
   window._justiceChart = new Chart(canvas, {
@@ -220,6 +246,7 @@ function renderJusticeYearlyChart(history) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
       scales: {
         x: { stacked: true, ticks: { color: '#999' }, grid: { color: 'rgba(255,255,255,0.05)' } },
         y: {
@@ -237,7 +264,19 @@ function renderJusticeYearlyChart(history) {
           beginAtZero: true,
         },
       },
-      plugins: { legend: { labels: { color: '#ccc' } } },
+      plugins: {
+        legend: { labels: { color: '#ccc' } },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              if (!items.length) return '';
+              const idx = items[0].dataIndex;
+              return `${labels[idx]} — King: ${kingNames[idx]}`;
+            },
+          },
+        },
+        annotation: { annotations: kingChangeAnnotations },
+      },
     },
   });
 }
@@ -275,22 +314,16 @@ function filterYearlyData(yearly) {
   return filtered.slice().reverse();
 }
 
-function renderPopulationTreasuryChart(data) {
-  const ctx = document.getElementById('chart-population-treasury');
+function renderDemographicsChart(data) {
+  const ctx = document.getElementById('chart-demographics');
   if (!ctx) return;
-  
+
   // Filter returns chronological order (oldest first, newest last = left to right)
   const yearly = filterYearlyData(data.yearly_stats || []);
   const labels = yearly.map(y => 'Y' + y.year);
-  
-  // Store king names for tooltip
   const kingNames = yearly.map(y => y.king_name || 'No King');
-  
-  const treasuryData = yearly.map(y => y.treasury_end || y.treasury_start || 0);
-  
-  if (charts['population-treasury']) charts['population-treasury'].destroy();
 
-  // Detect king changes for vertical annotation lines
+  // King-change vertical annotations
   const kingChangeAnnotations = {};
   for (let i = 1; i < yearly.length; i++) {
     const prevKing = yearly[i - 1].king_name || '';
@@ -310,90 +343,67 @@ function renderPopulationTreasuryChart(data) {
           backgroundColor: 'rgba(255, 215, 0, 0.15)',
           color: 'rgba(255, 215, 0, 0.9)',
           font: { size: 10 },
-          padding: 3
-        }
+          padding: 3,
+        },
       };
     }
   }
 
-  charts['population-treasury'] = new Chart(ctx, {
+  if (charts['demographics']) charts['demographics'].destroy();
+
+  charts['demographics'] = new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
       datasets: [
         {
-          label: 'Net Population Change',
-          data: yearly.map(y => (y.total_births || 0) + (y.total_immigrants || 0) - (y.total_deaths || 0)),
-          borderColor: COLORS.primary,
-          backgroundColor: 'rgba(99, 102, 241, 0.1)',
-          fill: true,
+          label: 'Births',
+          data: yearly.map(y => y.total_births || 0),
+          borderColor: COLORS.success,
+          backgroundColor: COLORS.success + '22',
           tension: 0.3,
-          yAxisID: 'y'
+          fill: false,
+          pointRadius: 2,
         },
         {
-          label: 'Treasury',
-          data: treasuryData,
-          borderColor: COLORS.success,
-          backgroundColor: 'transparent',
-          borderDash: [5, 5],
+          label: 'Deaths',
+          data: yearly.map(y => y.total_deaths || 0),
+          borderColor: COLORS.danger,
+          backgroundColor: COLORS.danger + '22',
           tension: 0.3,
-          yAxisID: 'y1'
-        }
-      ]
+          fill: false,
+          pointRadius: 2,
+        },
+        {
+          label: 'Immigrants',
+          data: yearly.map(y => y.total_immigrants || 0),
+          borderColor: COLORS.info,
+          backgroundColor: COLORS.info + '22',
+          tension: 0.3,
+          fill: false,
+          pointRadius: 2,
+        },
+      ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { intersect: false, mode: 'index' },
       plugins: {
-        legend: { position: 'top' },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 14 } },
         tooltip: {
           callbacks: {
             title: (items) => {
               if (!items.length) return '';
               const idx = items[0].dataIndex;
               return `${labels[idx]} — King: ${kingNames[idx]}`;
-            }
-          }
+            },
+          },
         },
-        annotation: {
-          annotations: kingChangeAnnotations
-        }
+        annotation: { annotations: kingChangeAnnotations },
       },
-      scales: {
-        y: { position: 'left', title: { display: true, text: 'Pop Change' } },
-        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Treasury' } }
-      }
-    }
-  });
-}
-
-function renderDemographicsChart(data) {
-  const ctx = document.getElementById('chart-demographics');
-  if (!ctx) return;
-  
-  // Filter returns chronological order (oldest first, newest last = left to right)
-  const yearly = filterYearlyData(data.yearly_stats || []);
-  const labels = yearly.map(y => 'Y' + y.year);
-  
-  if (charts['demographics']) charts['demographics'].destroy();
-  
-  charts['demographics'] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        { label: 'Births', data: yearly.map(y => y.total_births || 0), backgroundColor: COLORS.success },
-        { label: 'Deaths', data: yearly.map(y => y.total_deaths || 0), backgroundColor: COLORS.danger },
-        { label: 'Immigrants', data: yearly.map(y => y.total_immigrants || 0), backgroundColor: COLORS.info }
-      ]
+      scales: { y: { beginAtZero: true } },
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' } },
-      scales: { x: { stacked: false }, y: { beginAtZero: true } }
-    }
   });
 }
 
@@ -860,10 +870,11 @@ function renderResourcesYearlyChart(data) {
   const yearly = filterYearlyData(data.yearly_stats || []);
   const labels = yearly.map(r => 'Y' + r.year);
   const kingNames = yearly.map(r => r.king_name || 'No King');
-  const food  = yearly.map(r => r.stock_food_end  || 0);
-  const wood  = yearly.map(r => r.stock_wood_end  || 0);
-  const stone = yearly.map(r => r.stock_stone_end || 0);
-  const iron  = yearly.map(r => r.stock_iron_end  || 0);
+  const food     = yearly.map(r => r.stock_food_end  || 0);
+  const wood     = yearly.map(r => r.stock_wood_end  || 0);
+  const stone    = yearly.map(r => r.stock_stone_end || 0);
+  const iron     = yearly.map(r => r.stock_iron_end  || 0);
+  const treasury = yearly.map(r => r.treasury_end || r.treasury_start || 0);
 
   // King-change vertical annotations — same pattern as Population chart
   const kingChangeAnnotations = {};
@@ -897,10 +908,11 @@ function renderResourcesYearlyChart(data) {
     data: {
       labels,
       datasets: [
-        { label: 'Food',  data: food,  borderColor: RESOURCE_COLORS.food,  backgroundColor: RESOURCE_COLORS.food  + '33', tension: 0.25, fill: false, pointRadius: 2 },
-        { label: 'Wood',  data: wood,  borderColor: RESOURCE_COLORS.wood,  backgroundColor: RESOURCE_COLORS.wood  + '33', tension: 0.25, fill: false, pointRadius: 2 },
-        { label: 'Stone', data: stone, borderColor: RESOURCE_COLORS.stone, backgroundColor: RESOURCE_COLORS.stone + '33', tension: 0.25, fill: false, pointRadius: 2 },
-        { label: 'Iron',  data: iron,  borderColor: RESOURCE_COLORS.iron,  backgroundColor: RESOURCE_COLORS.iron  + '33', tension: 0.25, fill: false, pointRadius: 2 },
+        { label: 'Food',     data: food,     borderColor: RESOURCE_COLORS.food,  backgroundColor: RESOURCE_COLORS.food  + '33', tension: 0.25, fill: false, pointRadius: 2, yAxisID: 'y' },
+        { label: 'Wood',     data: wood,     borderColor: RESOURCE_COLORS.wood,  backgroundColor: RESOURCE_COLORS.wood  + '33', tension: 0.25, fill: false, pointRadius: 2, yAxisID: 'y' },
+        { label: 'Stone',    data: stone,    borderColor: RESOURCE_COLORS.stone, backgroundColor: RESOURCE_COLORS.stone + '33', tension: 0.25, fill: false, pointRadius: 2, yAxisID: 'y' },
+        { label: 'Iron',     data: iron,     borderColor: RESOURCE_COLORS.iron,  backgroundColor: RESOURCE_COLORS.iron  + '33', tension: 0.25, fill: false, pointRadius: 2, yAxisID: 'y' },
+        { label: 'Treasury', data: treasury, borderColor: COLORS.success,        backgroundColor: 'transparent',                tension: 0.25, fill: false, pointRadius: 2, yAxisID: 'y1', borderDash: [5, 4] },
       ],
     },
     options: {
@@ -925,8 +937,9 @@ function renderResourcesYearlyChart(data) {
         },
       },
       scales: {
-        y: { beginAtZero: true, title: { display: true, text: 'Units in stockpile' } },
-        x: { title: { display: false } },
+        y:  { position: 'left',  beginAtZero: true, title: { display: true, text: 'Units in stockpile' } },
+        y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Treasury (coins)' } },
+        x:  { title: { display: false } },
       },
     },
   });

@@ -166,19 +166,22 @@
               </select>
             </div>
             <div class="row g-3 mb-3">
-              <!-- Population Over Time -->
+              <!-- Birth/Death/Immigration Trends (moved to top) -->
               <div class="col-12">
                 <div class="chart-card">
-                  <div class="chart-title">Population & Treasury Over Time</div>
+                  <div class="chart-title">Births, Deaths & Immigration by Year</div>
                   <div class="chart-container-lg">
-                    <canvas id="chart-population-treasury"></canvas>
+                    <canvas id="chart-demographics"></canvas>
                   </div>
                 </div>
               </div>
-              <!-- Stockpile by Year -->
+            </div>
+
+            <div class="row g-3 mb-3">
+              <!-- Stockpile & Treasury -->
               <div class="col-12">
                 <div class="chart-card">
-                  <div class="chart-title">Stockpile by Year (end-of-year snapshot)</div>
+                  <div class="chart-title">Stockpile & Treasury by Year (end-of-year snapshot)</div>
                   <div class="chart-container-lg">
                     <canvas id="chart-resources-yearly"></canvas>
                   </div>
@@ -187,30 +190,12 @@
             </div>
 
             <div class="row g-3 mb-3">
-              <!-- Birth/Death/Immigration Trends -->
-              <div class="col-12 col-md-6">
+              <!-- Crime & Verdicts (moved from Justice tab) -->
+              <div class="col-12">
                 <div class="chart-card">
-                  <div class="chart-title">Births, Deaths & Immigration by Year</div>
-                  <div class="chart-container">
-                    <canvas id="chart-demographics"></canvas>
-                  </div>
-                </div>
-              </div>
-              <!-- Gender Distribution -->
-              <div class="col-12 col-md-3">
-                <div class="chart-card">
-                  <div class="chart-title">Gender Distribution</div>
-                  <div class="chart-container">
-                    <canvas id="chart-gender"></canvas>
-                  </div>
-                </div>
-              </div>
-              <!-- Age Distribution -->
-              <div class="col-12 col-md-3">
-                <div class="chart-card">
-                  <div class="chart-title">Age Distribution</div>
-                  <div class="chart-container">
-                    <canvas id="chart-age"></canvas>
+                  <div class="chart-title">Crime & Verdicts by Year</div>
+                  <div class="chart-container-lg">
+                    <canvas id="chart-justice-yearly"></canvas>
                   </div>
                 </div>
               </div>
@@ -227,6 +212,27 @@
                   <div class="chart-title">Alive Population Over Time</div>
                   <div class="chart-container-lg">
                     <canvas id="chart-population-timeline"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <!-- Gender Distribution (moved from Overview) -->
+              <div class="col-12 col-md-6">
+                <div class="chart-card">
+                  <div class="chart-title">Gender Distribution</div>
+                  <div class="chart-container">
+                    <canvas id="chart-gender"></canvas>
+                  </div>
+                </div>
+              </div>
+              <!-- Age Distribution (moved from Overview) -->
+              <div class="col-12 col-md-6">
+                <div class="chart-card">
+                  <div class="chart-title">Age Distribution</div>
+                  <div class="chart-container">
+                    <canvas id="chart-age"></canvas>
                   </div>
                 </div>
               </div>
@@ -921,18 +927,6 @@
                     <span style="color: var(--aw-dead); margin-left: 6px;" id="kpi-justice-execs-year">0</span>☠
                   </div>
                   <div style="color: var(--aw-text-muted); font-size: 12px;">All-time: <span id="kpi-justice-exiles-all">0</span> exiled · <span id="kpi-justice-execs-all">0</span> executed</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Yearly trend chart -->
-            <div class="row g-3 mb-3">
-              <div class="col-12">
-                <div class="chart-card">
-                  <div class="chart-title">Crime &amp; Verdicts by Year</div>
-                  <div class="chart-container-lg">
-                    <canvas id="chart-justice-yearly"></canvas>
-                  </div>
                 </div>
               </div>
             </div>
