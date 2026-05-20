@@ -241,7 +241,14 @@ class TestHoldElection:
     """Tests for election process."""
 
     @pytest.fixture
-    def election_candidates(self):
+    def election_candidates(self, test_db_connection):
+        # `test_db_connection` (from conftest) patches config.DB_PATH to a
+        # temp file. hold_election() writes chronicle entries via
+        # record_election() and maybe_militarization_decree(); without the
+        # patch those go straight to the live data/ashen_world.sqlite3 and
+        # show up forever as "King Albert elected first King" with the
+        # other test names. Pulling the fixture in here protects every
+        # test method below transitively.
         return [
             {
                 "id": 1,
