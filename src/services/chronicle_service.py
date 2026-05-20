@@ -272,6 +272,55 @@ def record_militarization_decree(king: dict, conscripts: list[dict], day: int) -
     )
 
 
+def record_construction(king: dict | None, building_name: str, level: int, cost: int, day: int) -> None:
+    """A new building was commissioned (level=1) or upgraded (level>1).
+    Records the king if there is one — otherwise the village acts collectively.
+    """
+    if not building_name:
+        return
+    year, _ = _yd(day)
+    actors: list[dict] = [_actor(king)] if king else []
+    kname = king.get("name") if king else None
+
+    if level <= 1:
+        # First-time construction
+        if kname:
+            headline = f"King {kname} commissioned the {building_name}"
+            body_choices = [
+                f"Under King {kname}'s direction, the village raised a new {building_name} (cost: {cost} coins).",
+                f"King {kname} broke ground on the {building_name} — {cost} coins of the treasury went into the foundation.",
+                f"By order of King {kname}, the {building_name} now stands in the village.",
+            ]
+        else:
+            headline = f"The village raised a new {building_name}"
+            body_choices = [
+                f"With no king on the throne, the villagers themselves pooled {cost} coins and built a {building_name}.",
+            ]
+    else:
+        # Upgrade
+        if kname:
+            headline = f"{building_name} upgraded to Lv {level} under King {kname}"
+            body_choices = [
+                f"King {kname} ordered the {building_name} expanded — it now stands at Level {level}, paid for with {cost} coins.",
+                f"{cost} coins from the treasury raised the {building_name} to Level {level} during King {kname}'s reign.",
+            ]
+        else:
+            headline = f"{building_name} upgraded to Lv {level}"
+            body_choices = [
+                f"The {building_name} was expanded to Level {level} at a cost of {cost} coins.",
+            ]
+
+    _safe_record(
+        day=day,
+        year=year,
+        category="royal",
+        headline=headline,
+        body=random.choice(body_choices),
+        actors=actors,
+        importance=3,
+    )
+
+
 # ---------------------------------------------------------------------------
 #  Family
 # ---------------------------------------------------------------------------
