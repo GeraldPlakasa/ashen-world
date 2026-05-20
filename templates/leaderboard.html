@@ -136,17 +136,26 @@
                       <div class="reign-stat-value" style="color: var(--aw-alive);">{{ current_entry.total_births or 0 }}</div>
                       <div class="reign-stat-label">Births</div>
                     </div>
-                    <div class="reign-stat" title="Judicial = exile + execution · Disease · Combat = hunt/spar · Starvation · Age = peaceful · Other = unclassified">
+                    <div class="reign-stat" title="judicial = exile + execution · disease · combat = hunt/spar · starvation · age = peaceful · other = unclassified">
                       <div class="reign-stat-value" style="color: var(--aw-dead);">{{ current_entry.total_deaths or 0 }}</div>
                       <div class="reign-stat-label">Deaths</div>
                       {% set _db = death_buckets_by_year.get(current_entry.year) %}
                       {% if _db %}
-                      <div style="font-size: 10px; color: var(--aw-text-muted); margin-top: 4px; line-height: 1.5;">
-                        ⚖ {{ _db.judicial }} · 🤒 {{ _db.disease }} · ⚔ {{ _db.combat }} · 🍞 {{ _db.starvation }} · 👴 {{ _db.age }}{% if _db.other %} · ? {{ _db.other }}{% endif %}
-                      </div>
+                        {% set _parts = [] %}
+                        {% if _db.judicial   %}{% set _ = _parts.append('judicial ' ~ _db.judicial) %}{% endif %}
+                        {% if _db.disease    %}{% set _ = _parts.append('disease ' ~ _db.disease) %}{% endif %}
+                        {% if _db.combat     %}{% set _ = _parts.append('combat ' ~ _db.combat) %}{% endif %}
+                        {% if _db.starvation %}{% set _ = _parts.append('starvation ' ~ _db.starvation) %}{% endif %}
+                        {% if _db.age        %}{% set _ = _parts.append('age ' ~ _db.age) %}{% endif %}
+                        {% if _db.other      %}{% set _ = _parts.append('other ' ~ _db.other) %}{% endif %}
+                        {% if _parts %}
+                        <div style="font-size: 10px; color: var(--aw-text-muted); margin-top: 4px; line-height: 1.5;">
+                          {{ _parts | join(' · ') }}
+                        </div>
+                        {% endif %}
                       {% elif (current_entry.exiles or 0) + (current_entry.executions or 0) > 0 %}
                       <div style="font-size: 10px; color: var(--aw-text-muted); margin-top: 4px; line-height: 1.5;">
-                        ⚖ {{ (current_entry.exiles or 0) + (current_entry.executions or 0) }} · other {{ (current_entry.total_deaths or 0) - (current_entry.exiles or 0) - (current_entry.executions or 0) }}
+                        judicial {{ (current_entry.exiles or 0) + (current_entry.executions or 0) }} · other {{ (current_entry.total_deaths or 0) - (current_entry.exiles or 0) - (current_entry.executions or 0) }}
                       </div>
                       {% endif %}
                     </div>
@@ -272,17 +281,26 @@
                       </div>
 
                       <div class="row g-2 mb-3" style="font-size: 12px;">
-                        <div class="col-6" title="Judicial / Disease / Combat / Starvation / Age (recent reigns) — older years fall back to judicial vs other.">
+                        <div class="col-6" title="judicial / disease / combat / starvation / age (recent reigns) — older years fall back to judicial vs other.">
                           <div style="color: var(--aw-text-muted);">Deaths</div>
                           <div style="color: var(--aw-dead);">{{ y.total_deaths or 0 }}</div>
                           {% set _db = death_buckets_by_year.get(y.year) %}
                           {% if _db %}
-                          <div style="font-size: 10px; color: var(--aw-text-muted); margin-top: 2px;">
-                            ⚖{{ _db.judicial }} 🤒{{ _db.disease }} ⚔{{ _db.combat }} 🍞{{ _db.starvation }} 👴{{ _db.age }}{% if _db.other %} ?{{ _db.other }}{% endif %}
-                          </div>
+                            {% set _parts = [] %}
+                            {% if _db.judicial   %}{% set _ = _parts.append('judicial ' ~ _db.judicial) %}{% endif %}
+                            {% if _db.disease    %}{% set _ = _parts.append('disease ' ~ _db.disease) %}{% endif %}
+                            {% if _db.combat     %}{% set _ = _parts.append('combat ' ~ _db.combat) %}{% endif %}
+                            {% if _db.starvation %}{% set _ = _parts.append('starvation ' ~ _db.starvation) %}{% endif %}
+                            {% if _db.age        %}{% set _ = _parts.append('age ' ~ _db.age) %}{% endif %}
+                            {% if _db.other      %}{% set _ = _parts.append('other ' ~ _db.other) %}{% endif %}
+                            {% if _parts %}
+                            <div style="font-size: 10px; color: var(--aw-text-muted); margin-top: 2px;">
+                              {{ _parts | join(' · ') }}
+                            </div>
+                            {% endif %}
                           {% elif (y.exiles or 0) + (y.executions or 0) > 0 %}
                           <div style="font-size: 10px; color: var(--aw-text-muted); margin-top: 2px;">
-                            ⚖{{ (y.exiles or 0) + (y.executions or 0) }} · other {{ (y.total_deaths or 0) - (y.exiles or 0) - (y.executions or 0) }}
+                            judicial {{ (y.exiles or 0) + (y.executions or 0) }} · other {{ (y.total_deaths or 0) - (y.exiles or 0) - (y.executions or 0) }}
                           </div>
                           {% endif %}
                         </div>
@@ -322,8 +340,8 @@
                             {{ y.trials_held or 0 }} trials
                             {% if (y.fines_collected or 0) + (y.exiles or 0) + (y.executions or 0) > 0 %}
                             · <span style="color: var(--aw-gold);">{{ y.fines_collected or 0 }}g</span>
-                            · <span style="color: var(--aw-warning);">{{ y.exiles or 0 }}🏹</span>
-                            · <span style="color: var(--aw-dead);">{{ y.executions or 0 }}☠</span>
+                            · <span style="color: var(--aw-warning);">{{ y.exiles or 0 }} exiled</span>
+                            · <span style="color: var(--aw-dead);">{{ y.executions or 0 }} executed</span>
                             {% endif %}
                           </div>
                         </div>
