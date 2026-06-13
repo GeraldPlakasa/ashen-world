@@ -14,6 +14,7 @@ from flask import request as flask_request
 
 from config import AUTO_SIM_ENABLED, ENV_FLASK_SECRET_KEY
 from src.utils.logger import get_logger
+from src.utils.csrf import init_csrf
 from src.repositories.site_stats_repo import increment_stat
 from src.services.world_service import (
     auto_simulation_loop,
@@ -38,7 +39,28 @@ __all__ = [
 # ---------------------------------------------------------------------------
 
 app = Flask(__name__)
+
+# Secret key is mandatory — sessions/CSRF/flash all degrade silently if it's
+# None, and a 500 buried deep in a request is worse than a fast crash at boot.
+if not ENV_FLASK_SECRET_KEY:
+    raise RuntimeError(
+        "FLASK_SECRET_KEY env var is required. Set it in .env or your shell."
+    )
 app.secret_key = ENV_FLASK_SECRET_KEY
+
+# Tighten session cookies. SECURE is auto-enabled in production
+# (FLASK_ENV=production or FLASK_DEBUG unset); kept relaxed in debug so the
+# dev server on http://localhost still receives them.
+import os as _bootstrap_os
+_is_prod = _bootstrap_os.environ.get("FLASK_DEBUG", "0") != "1"
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=_is_prod,
+)
+
+# CSRF protection on every state-changing request (POST/PUT/PATCH/DELETE).
+init_csrf(app)
 
 # Register all route blueprints
 register_blueprints(app)
@@ -120,13 +142,17 @@ logger.info("Ashen World app module loaded")
 if __name__ == "__main__":
     logger.info("Ashen World starting up...")
 
-    # `app.run(debug=True)` below spawns a werkzeug reloader: the parent stays
-    # alive as a stat-watcher, the child (marked by WERKZEUG_RUN_MAIN=true)
-    # runs the real server. Only the child should own the sim thread. The
+    # Debug mode is gated on FLASK_DEBUG=1 (default OFF). Werkzeug's debugger
+    # exposes a Python REPL via PIN — leaving debug on for any host reachable
+    # from the network is RCE. Keep this off unless you're actively developing
+    # on a local machine.
+    debug_mode = _os.environ.get("FLASK_DEBUG", "0") == "1"
+
+    # When debug_mode is on, app.run() spawns a werkzeug reloader: the parent
+    # stays alive as a stat-watcher, the child (WERKZEUG_RUN_MAIN=true) runs
+    # the real server. Only the child should own the sim thread. The
     # module-level block above already called start_auto_simulation() in the
-    # child during import; here we call it again from __main__ for safety
-    # (idempotent — no-op the second time).
-    debug_mode = True
+    # child during import; here we call it again for safety (idempotent).
     if not debug_mode or _is_reloader_child:
         start_auto_simulation()
     else:

@@ -51,6 +51,7 @@
               <span class="refresh-label">Refresh</span>
             </button>
             <form method="POST" class="m-0 d-flex gap-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
               <button type="submit" name="op" value="next_day" class="btn btn-outline-light btn-sm">+1 Day</button>
               <button type="submit" name="op" value="generate" class="btn btn-danger btn-sm">Reset World</button>
             </form>
