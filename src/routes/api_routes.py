@@ -1,7 +1,7 @@
 """
 API routes: JSON endpoints for frontend.
 """
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, session
 
 from src.services.world_service import get_current_state
 from src.services.family_tree_service import build_graveyard_index_for
@@ -308,7 +308,13 @@ def api_character_detail(char_id: int):
 
 @api_bp.route("/api/player-stats", methods=["GET"])
 def api_player_stats():
-    """Player/site statistics for the Players tab."""
+    """Player/site statistics for the Players tab. Admin-only — exposes
+    usernames + registration dates which we don't want anonymous scrapers
+    pulling. The other /api/* endpoints are intentionally public (game UX
+    feeds; no PII)."""
+    if not session.get("logged_in") or not session.get("is_admin"):
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
     users = load_users()
     characters, bank, year, day_in_year, total_day, weather, _season = get_current_state()
 
