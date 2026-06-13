@@ -136,13 +136,14 @@ class TestTraitEffectsOnActions:
         """Stoic trait should reduce rest tendency."""
         random.seed(42)
         base_villager["traits"] = "Stoic"
-        actions_stoic = [choose_action(base_villager) for _ in range(100)]
-        
+        actions_stoic = [choose_action(base_villager) for _ in range(500)]
+
         base_villager["traits"] = ""
         random.seed(42)
-        actions_normal = [choose_action(base_villager) for _ in range(100)]
-        
-        # Stoic should rest less than normal
+        actions_normal = [choose_action(base_villager) for _ in range(500)]
+
+        # Stoic should rest less than normal (statistical — needs a large
+        # sample so single-trial swings don't flip the comparison).
         assert actions_stoic.count("rest") <= actions_normal.count("rest")
 
     @pytest.mark.unit

@@ -278,13 +278,25 @@ def _count_couple_children(characters: list[Villager], mom_id: int, dad_id: int)
     return n
 
 def _count_family_children(characters: list[Villager], father_family: str) -> int:
+    """Count current MINOR (under 16) children in the family for birth-rate
+    decay. Used to be "anyone with a recorded parent in the family", but that
+    inflated indefinitely across generations — by Y100 a single family had
+    20-30 living members born in-village, making FAMILY_DECAY^N ≈ 0 and
+    silently sterilising the whole village. We now only count actual children
+    being raised, which is what the decay was meant to model.
+    """
     if not father_family:
         return 0
     n = 0
     for c in characters:
-        if c.get("family") == father_family:
-            if int(c.get("fatherId", 0) or 0) > 0 or int(c.get("motherId", 0) or 0) > 0:
-                n += 1
+        if c.get("family") != father_family:
+            continue
+        if not c.get("alive", True):
+            continue
+        if int(c.get("age", 0) or 0) >= CHILD_MAX_AGE:
+            continue
+        if int(c.get("fatherId", 0) or 0) > 0 or int(c.get("motherId", 0) or 0) > 0:
+            n += 1
     return n
 
 def _midwife_level(bank) -> int:

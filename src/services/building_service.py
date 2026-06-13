@@ -507,8 +507,13 @@ def decay_buildings(bank: Bank, current_day: int | None = None) -> tuple[Bank, l
             continue
 
         cur = int(health.get(key, 100))
-        # slower decay; higher level decays slightly slower
-        drop = rand_int(1, 25)
+        # Higher level decays slower so the King isn't rebuilding the same
+        # hut 7-8x per year. Lv1: 1-4/day (~40d lifespan), Lv2: 1-3 (~50d),
+        # Lv3: 1-2 (~66d). REPAIR_THRESHOLD=60 still triggers patrol-priority
+        # repairs well before collapse.
+        lvl_int = max(1, int(lvl or 1))
+        max_drop = max(2, 5 - lvl_int)
+        drop = rand_int(1, max_drop)
 
         next_hp = max(0, cur - drop)
         if cur > 0 and next_hp == 0:

@@ -560,13 +560,20 @@ def choose_action(
     except Exception:
         pass
 
-    # Avoid negative or near-zero weights
+    # Clip negative weights (from heavy stacked penalties) to 0, and give
+    # tiny positives a 0.05 floor so unusual actions stay possible. Explicit
+    # zeros are preserved so gated-out actions (drill without Barracks,
+    # spar for children, visit_tavern when broke, etc.) stay disabled — the
+    # previous unconditional `< 0.05 → 0.05` quietly re-enabled all of them.
     for k in list(weights.keys()):
-        if weights[k] < 0.05:
+        w = weights[k]
+        if w < 0:
+            weights[k] = 0.0
+        elif 0 < w < 0.05:
             weights[k] = 0.05
 
-    # Royal theft exclusion — re-applied after the floor sweep so the 0.05
-    # floor can't reintroduce a theft chance for King / Queen.
+    # Royal theft exclusion — kept as defense-in-depth even though the
+    # floor sweep above now preserves the explicit 0.0 above.
     if job in ("King", "Queen"):
         weights["steal"] = 0.0
 
