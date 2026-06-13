@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import random
 
+from src.utils.logger import get_logger
 from config import (
     JOBS_NO_ROYAL,
     MAGIC_JOBS,
@@ -54,6 +55,8 @@ from src.services.quest_service import maybe_trigger_quest
 from src.repositories.world_repo import load_weather
 from src.models.villager import Villager
 from src.models.bank import Bank
+
+logger = get_logger(__name__)
 
 
 # ===========================================================================
@@ -533,8 +536,8 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     try:
         from src.services.disease_service import daily_disease_phase
         daily_disease_phase(characters, bank, current_day)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Disease phase failed on day %s: %s", current_day, exc)
 
     # 1.4) Town-wide food consumption from the shared stockpile.
     # Runs after the action loop so a Farmer's daily harvest is on the shelf
@@ -571,8 +574,8 @@ def simulate_one_day(characters: list[Villager], bank: Bank, current_day: int = 
     try:
         from src.services.justice_service import crime_trial_phase
         crime_trial_phase(characters, bank, current_day)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Crime trial phase failed on day %s: %s", current_day, exc)
 
     # 3.5) Player inheritance
     player_inheritance_phase(characters, current_day=current_day)

@@ -1,9 +1,20 @@
 """
 API routes: JSON endpoints for frontend.
 """
+import threading
+
 from flask import Blueprint, jsonify, session
 
 from src.services.world_service import get_current_state
+
+
+# /api/analytics aggregates across all villagers + yearly history + chronicle
+# every call — heavy enough that the admin dashboard refreshing every second
+# noticeably loads the sim thread. Cache per simulated day; the sim only
+# advances total_day in one place under _state_lock, so a tick-keyed cache is
+# safe to compute outside that lock.
+_analytics_cache: dict = {"total_day": None, "payload": None}
+_analytics_lock = threading.Lock()
 from src.services.family_tree_service import build_graveyard_index_for
 from src.services.building_service import build_building_summary
 from src.repositories.stats_repo import list_yearly_history
@@ -75,6 +86,11 @@ def api_analytics():
     """
     # Get current state
     characters, bank, year, day_in_year, total_day, weather, _season = get_current_state()
+
+    # Serve from cache if the world hasn't advanced since the last build.
+    cached = _analytics_cache
+    if cached["total_day"] == total_day and cached["payload"] is not None:
+        return jsonify(cached["payload"])
     
     # Yearly history for charts
     yearly_stats = list_yearly_history()
@@ -128,7 +144,7 @@ def api_analytics():
         achs_raw = c.get("achievements", "[]")
         try:
             achs = json.loads(achs_raw) if isinstance(achs_raw, str) else achs_raw
-        except:
+        except (ValueError, TypeError):
             achs = []
         for ach in (achs or []):
             # Skip progress trackers like iron_will_count_1, iron_will_count_2, etc.
@@ -180,7 +196,7 @@ def api_analytics():
                     trait_counts[trait] = trait_counts.get(trait, 0) + 1
     top_traits = sorted(trait_counts.items(), key=lambda x: -x[1])[:10]
     
-    return jsonify({
+    payload = {
         "ok": True,
         "current": {
             "year": year,
@@ -218,7 +234,11 @@ def api_analytics():
         "skill_definitions": {name: {"category": data.get("category", ""), "rarity": data.get("rarity", "")} for name, data in SKILLS.items()},
         "achievement_definitions": {aid: {"name": data["name"], "icon": data.get("icon", "🏆")} for aid, data in ACHIEVEMENTS.items()},
         "justice": _build_justice_payload(yearly_stats, year),
-    })
+    }
+    with _analytics_lock:
+        _analytics_cache["total_day"] = total_day
+        _analytics_cache["payload"] = payload
+    return jsonify(payload)
 
 
 def _build_justice_payload(yearly_stats: list[dict], current_year: int) -> dict:
