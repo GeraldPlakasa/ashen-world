@@ -11,6 +11,10 @@ from typing import Generator, Callable
 
 import pytest
 
+# app.py fail-fasts at import when FLASK_SECRET_KEY is missing; give the test
+# suite a deterministic key so it runs without a local .env or exported var.
+os.environ.setdefault("FLASK_SECRET_KEY", "test-secret-key")
+
 # Add parent directory to path so we can import project modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

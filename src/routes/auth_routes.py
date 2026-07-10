@@ -17,6 +17,9 @@ auth_bp = Blueprint("auth", __name__)
 
 _MIN_PASSWORD_LEN = 8
 _USERNAME_RE = re.compile(r"^[A-Za-z0-9_.-]{3,30}$")
+# Deliberately loose: one @, no whitespace, a dot in the domain. Full RFC
+# validation is a losing game; this just blocks garbage like "asdf".
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def _password_is_strong(pw: str) -> tuple[bool, str]:
@@ -52,6 +55,13 @@ def register():
     Saves user to database, then redirect to login.
     """
     if request.method == "POST":
+        # Same rationale as /login: account creation writes DB rows, so an
+        # unthrottled loop is a spam vector. 10 attempts per IP per 10 min
+        # leaves room for humans failing validation a few times.
+        if rate_limit_hit("register", limit=10, window_seconds=600):
+            flash("Too many registration attempts. Try again in a few minutes.", "info")
+            return render_template("register.html"), 429
+
         username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "").strip()
@@ -63,6 +73,10 @@ def register():
 
         if not _USERNAME_RE.match(username):
             flash("Username must be 3-30 characters, letters/digits/._- only.", "info")
+            return render_template("register.html")
+
+        if not _EMAIL_RE.match(email) or len(email) > 254:
+            flash("Please enter a valid email address.", "info")
             return render_template("register.html")
 
         if password != confirm:

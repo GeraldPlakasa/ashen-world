@@ -27,6 +27,23 @@ from src.repositories.site_stats_repo import get_stats_by_type, get_all_stats_su
 api_bp = Blueprint("api", __name__)
 
 
+def _mask_owner(payload: dict) -> dict:
+    """Hide the owning username unless the viewer is that owner or an admin.
+
+    The map page needs `owner` to highlight the viewer's own character, so the
+    field survives when it matches the session user. Other users' usernames
+    are account data, not game data; they stay private on public endpoints.
+    Mutates and returns `payload` (callers pass freshly built dicts).
+    """
+    own = payload.get("owner") or ""
+    if not own:
+        return payload
+    if session.get("is_admin") or own == (session.get("username") or ""):
+        return payload
+    payload["owner"] = ""
+    return payload
+
+
 @api_bp.route("/api/state", methods=["GET"])
 def api_state():
     """
@@ -44,7 +61,7 @@ def api_state():
     slim_chars = []
     for c in characters:
         slim = {k: v for k, v in c.items() if k not in ("action_log", "relationships", "kingsVotedFor")}
-        slim_chars.append(slim)
+        slim_chars.append(_mask_owner(slim))
 
     return jsonify({
         "ok": True,
@@ -323,6 +340,7 @@ def api_character_detail(char_id: int):
     data = get_character_detail(char_id, characters)
     if data is None:
         return jsonify({"error": "Character not found"}), 404
+    _mask_owner(data.get("character") or {})
     return jsonify(data)
 
 
