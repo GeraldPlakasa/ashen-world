@@ -48,15 +48,15 @@ if not ENV_FLASK_SECRET_KEY:
     )
 app.secret_key = ENV_FLASK_SECRET_KEY
 
-# Tighten session cookies. SECURE is auto-enabled in production
-# (FLASK_ENV=production or FLASK_DEBUG unset); kept relaxed in debug so the
-# dev server on http://localhost still receives them.
+# Tighten session cookies. SECURE must be opt-in (COOKIE_SECURE=1): browsers
+# silently drop Secure cookies on plain-HTTP sites, which kills the session
+# and with it every CSRF token. Enable it only once TLS terminates in front
+# of this app (e.g. a cloudflared tunnel or nginx with certs).
 import os as _bootstrap_os
-_is_prod = _bootstrap_os.environ.get("FLASK_DEBUG", "0") != "1"
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=_is_prod,
+    SESSION_COOKIE_SECURE=_bootstrap_os.environ.get("COOKIE_SECURE", "0") == "1",
 )
 
 # CSRF protection on every state-changing request (POST/PUT/PATCH/DELETE).
