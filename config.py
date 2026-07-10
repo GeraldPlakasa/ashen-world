@@ -24,8 +24,9 @@ DAYS_PER_YEAR = 90
 # WARNING: in Flask debug mode, reloader can spawn twice; start auto-sim with use_reloader=False.
 # Backend auto-simulation config
 AUTO_SIM_ENABLED = True          # set to False if you ever want to disable auto-run
-AUTO_SIM_SECONDS = 1.0           # real seconds per simulated day
-# AUTO_SIM_SECONDS = 960.0
+# Production pace: one simulated day per real hour. Override via env for
+# local development, e.g. AUTO_SIM_SECONDS=1 python3 app.py.
+AUTO_SIM_SECONDS = float(os.getenv("AUTO_SIM_SECONDS", "3600"))
 
 ENV_ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
 ENV_ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
