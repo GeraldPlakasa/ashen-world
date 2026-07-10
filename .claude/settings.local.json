@@ -25,7 +25,12 @@
       "Bash(taskkill /F /IM python.exe /T)",
       "PowerShell(Get-Process *)",
       "Bash(flask run *)",
-      "Bash(xargs wc -l)"
+      "Bash(xargs wc -l)",
+      "Bash(tasklist /FI \"IMAGENAME eq python.exe\" /V)",
+      "Bash(node --check static/js/admin-charts.js)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mk.gerald.plakasa\\\\Downloads\\\\Berkas Gerald\\\\game\\\\village\\\\ashen-world\" -Recurse -Include \"*.py\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(pip show *)"
     ]
   }
 }
